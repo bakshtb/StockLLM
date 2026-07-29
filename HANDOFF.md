@@ -1,18 +1,24 @@
-# StockLLM — Handoff to Claude Code
+# StockLLM — Handoff
 
-This document captures everything decided and built so far in a separate chat
-(claude.ai), before the person switched to Claude Code to continue development.
-Read this fully before making changes — it explains *why* things are built the
-way they are, not just what's in the code.
+This document captures everything decided and built so far, across a claude.ai
+chat (original build) and a Claude Code session (data-layer hardening +
+expansion). Read this fully before making changes — it explains *why* things
+are built the way they are, not just what's in the code.
+
+**Repo**: https://github.com/bakshtb/StockLLM (branch `main`). To pick up on a
+new machine: clone it, `pip install -r requirements.txt`, then run
+`python main.py check AAPL --dry-run` first (no API key needed) to confirm the
+free data layer works before touching anything else.
 
 ## Project goal
 
-A personal research tool: give it a stock ticker, it gathers real data
-(price/technicals, fundamentals, balance sheet, insider transactions,
-institutional ownership, SEC filings, news) and runs it through a multi-agent
-LLM pipeline (Bull / Bear / Skeptic / Judge) that produces a structured
-buy/sell/hold recommendation with confidence and reasoning, printed to the
-terminal.
+A personal research tool: give it a stock ticker, it gathers real data (price/
+technicals, fundamentals, short interest, balance sheet, income statement,
+insider transactions, Form 144 sale notices, 13D/13G beneficial ownership,
+institutional ownership, 10-K/10-Q/8-K filings, DEF 14A proxy, news) and runs
+it through a multi-agent LLM pipeline (Bull / Bear / Skeptic / Judge) that
+produces a structured buy/sell/hold recommendation with confidence and
+reasoning, printed to the terminal.
 
 **Hard constraints — do not violate these without explicit user confirmation:**
 - This is a decision-support/research tool, NOT an auto-trading system. It must
@@ -30,13 +36,19 @@ terminal.
 StockLLM/
 ├── data/                          # data fetching layer
 │   ├── fetch_prices.py            # price history + RSI/MACD/moving averages (free, yfinance)
-│   ├── fetch_fundamentals.py      # P/E, market cap, analyst targets (free, yfinance)
+│   ├── fetch_fundamentals.py      # P/E, market cap, analyst targets, short interest (free, yfinance)
 │   ├── fetch_balance_sheet.py     # debt, cash, free cash flow (free, yfinance)
+│   ├── fetch_income_statement.py  # revenue/margins/EPS: latest annual + ALL recent quarters (free, yfinance)
 │   ├── fetch_insider.py           # SEC Form 4 insider transactions (free, SEC EDGAR)
+│   ├── fetch_form144.py           # proposed insider sale notices -- leading signal (free, SEC EDGAR)
+│   ├── fetch_beneficial_ownership.py  # Schedule 13D/13G >5% stakes, active vs passive (free, SEC EDGAR)
 │   ├── fetch_institutional.py     # institutional holder snapshot (free, yfinance)
-│   ├── fetch_filings.py           # 10-Q/10-K/8-K fetch + Haiku digest (SMALL LLM COST)
-│   ├── fetch_news.py              # headlines (free) + full-article Haiku digest (SMALL LLM COST)
-│   ├── edgar_utils.py             # shared SEC EDGAR helpers (CIK lookup, rate-limited requests)
+│   ├── fetch_filings.py           # 10-K + 10-Q + 8-K raw fetch (free) + combined Haiku digest (SMALL LLM COST)
+│   ├── fetch_proxy.py             # DEF 14A proxy, Compensation Discussion & Analysis section (free, SEC EDGAR)
+│   ├── fetch_news.py              # headlines (free) + full-article raw fetch (free) + Haiku digest (SMALL LLM COST)
+│   ├── edgar_utils.py             # shared SEC EDGAR helpers: CIK lookup, rate-limited requests,
+│   │                               #   exhibit-document discovery, XML namespace stripping
+│   ├── edgar_text.py              # shared HTML-to-text stripping + section-window selection
 │   └── bundle.py                  # assembles all of the above into one research bundle
 ├── agents/
 │   ├── prompts/{bull,bear,skeptic,judge}.md   # role instructions, grounding rules
@@ -47,19 +59,29 @@ StockLLM/
 │   ├── schema.sql                 # runs, research_bundles, agent_outputs, outcomes tables
 │   └── db.py                      # SQLite helpers
 ├── config.py                      # model choices per agent, pricing table, spend limit
-├── main.py                        # CLI entrypoint: `python main.py check TICKER [--dry-run]`
+├── main.py                        # CLI entrypoint: `python main.py check TICKER [--dry-run] [--output PATH]`
 ├── backtest/                      # empty placeholder, not built yet
 ├── requirements.txt
 ├── .env.example
-└── README.md
+├── README.md
+└── aapl_dryrun.json, mobileye.json, AAPL.json, qqq.json, spcx.json
+    # example dry-run output bundles from this session -- useful as a live
+    # reference for the exact current schema shape
 ```
 
 ## Key design decisions and why
 
-1. **Deterministic data layer vs. LLM reasoning layer are strictly separated.**
-   Everything in `data/` except `fetch_filings.py` and the digest half of
-   `fetch_news.py` makes zero LLM calls — pure API/data fetching. This keeps
-   inputs reproducible and debuggable.
+1. **Raw data fetching and LLM summarization are two strictly separate stages,
+   and this now goes much deeper than just "which modules call the API."**
+   `data/bundle.py` always runs a full "Stage 1: raw data" pass — this
+   includes not just prices/fundamentals but the *full text* of the latest
+   10-K, 10-Q, 8-K (incl. earnings press release exhibit), DEF 14A proxy, and
+   as many full news article bodies as are fetchable. None of that needs an
+   API key. Only "Stage 2: digests" (`filings_digest`, `news_digest` — Haiku
+   summarizing that raw text down) is gated behind `run_digests=True` /
+   having `ANTHROPIC_API_KEY` set. `--dry-run` runs Stage 1 in full and skips
+   Stage 2 entirely. This means dry-run genuinely gets *all* the data, not a
+   thinner version of it — see `data/bundle.py`'s module docstring.
 
 2. **Model assignment per agent role (not all Opus):**
    - Bull, Bear, and the digest steps (filings/news summarization) → Haiku 4.5
@@ -92,87 +114,150 @@ StockLLM/
 6. **`--dry-run` flag** on `python main.py check TICKER` skips ALL LLM calls
    (including the filings/news digest steps, not just the reasoning pipeline) —
    pure free data fetch + a data-quality health check printed to terminal. No
-   API key required in this mode. This was added specifically because the person
-   couldn't pay for Claude Pro/API access yet and wanted to validate the data
-   layer for free first.
+   API key required in this mode. Add `--output PATH` / `-o PATH` to write the
+   full JSON bundle to a file instead of dumping it to the terminal (summary
+   lines still print either way).
 
-7. **Data completeness expansion** (the most recent work session): the person
-   pushed back that the original data bundle (just price + headlines + basic
-   fundamentals) wasn't "the full picture" compared to what a real analyst uses.
-   Added, in order of person's stated priority: insider transactions, balance
-   sheet health, SEC filings digest, full news article digest, technical
-   indicators, institutional ownership. All six were built in this pass.
+7. **Fetch ALL of 10-K, 10-Q, and 8-K independently — never pick just one.**
+   `fetch_filings.py`'s `fetch_filings_raw()` returns
+   `{"10-K": {...}, "10-Q": {...}, "8-K": {...}}`. Earlier versions picked
+   whichever of the three was chronologically most recent, which meant the
+   10-K (annual report — the only place with the *full* Risk Factors section
+   and full-year audited financials; a 10-Q just references it) would get
+   silently skipped whenever a newer 10-Q or 8-K existed. They cover
+   different things and none is a superset of another.
+
+8. **8-K earnings press release exhibit discovery uses SEC's own document
+   Type metadata, not filename guessing.** An 8-K's `primaryDocument` is just
+   the boilerplate cover page ("see attached exhibit") — the actual earnings
+   release with real numbers and management quotes is a separate exhibit
+   file in the same accession. Filers name that file however they want (one
+   real example: Procter & Gamble's was `moellerpressrelease.htm`, no "ex99"
+   anywhere in the name). `edgar_utils.find_exhibit_document()` instead
+   parses the filing's own `-index.html` page, where SEC assigns an
+   authoritative `Type` (e.g. `EX-99.1`) per document regardless of filename.
+
+9. **MD&A / Compensation-Discussion-and-Analysis section extraction uses a
+   "last occurrence wins" heuristic, not a naive `text[:max_chars]` cap.**
+   10-Q/10-K/DEF 14A documents open with a cover page, hidden inline-XBRL
+   metadata (stripped separately — see `edgar_text.strip_html`), financial
+   statement tables (redundant with `income_statement`/`balance_sheet_health`
+   anyway), and only later reach the actual prose unique to the document.
+   `edgar_text.select_prose_window()` searches for the section heading
+   (prefixed with its item number — "Item 7" for a 10-K's MD&A, "Item 2" for
+   a 10-Q's — to filter out most incidental cross-references) and jumps to
+   its **last** occurrence in the document. This is a verified structural
+   invariant, not a guess: a document only ever cites its own later section
+   by name *before* that section (table of contents, forward-looking-
+   statements boilerplate), never after. Confirmed correct against AAPL's and
+   MBLY's actual 10-K/10-Q text, including cases where the naive "2nd
+   occurrence" heuristic picked the wrong spot.
+
+10. **`income_statement.quarterly` returns ALL available recent quarters
+    (~5), not just the latest one.** A single latest-quarter + latest-annual
+    snapshot can invisibly skip an intermediate quarter with a major one-off
+    event. Concretely found live: Mobileye's $3.79B goodwill impairment
+    landed in the one quarter between the latest annual figure (FY2025) and
+    the latest quarterly figure (Q2 2026) — completely invisible until the
+    module was changed to return every quarter yfinance has.
+
+11. **Short interest needed no new data source** — yfinance's `info` dict
+    already surfaces `sharesShort`, `sharesShortPriorMonth`, `shortRatio`,
+    `shortPercentOfFloat`, `dateShortInterest`. Just added to
+    `fetch_fundamentals.py`'s output as a `short_interest` sub-dict; no FINRA
+    scraping needed.
+
+12. **13D/13G beneficial ownership can materially disagree with yfinance's
+    "top holders" list, and that's a real signal, not noise to reconcile.**
+    Concretely found live: Intel's actual Schedule 13G stake in Mobileye is
+    **79.8%** (includes non-traded Class B super-voting shares), vs. the
+    19.81% / 50M shares yfinance's float-based top-holders snapshot shows.
+    `fetch_beneficial_ownership.py` also distinguishes 13D (active holder,
+    stated "Purpose of Transaction") from 13G (passive) and flags amendments.
+
+13. **SEC XML parsing gotchas worth knowing before touching any `fetch_*`
+    module that parses EDGAR XML** (`fetch_insider.py`, `fetch_form144.py`,
+    `fetch_beneficial_ownership.py`):
+    - `primaryDocument` for ownership forms (4, 144) sometimes points into an
+      XSL *viewer* subfolder (e.g. `xslF345X06/form4.xml`) that EDGAR serves
+      as pre-rendered HTML, not the raw XML the parser expects. Strip that
+      folder prefix to get the real machine-readable XML sitting at the
+      accession root under the same filename.
+    - Form 4's `isOfficer`/`isDirector` flags are `"1"`/`"0"` in some filings
+      and `"true"`/`"false"` in others depending on schema version/filer —
+      check both.
+    - Unlike Form 4, the newer 13D/13G XML schema declares a default XML
+      namespace, so plain `ElementTree.find("tagName")` silently returns
+      nothing. `edgar_utils.strip_xml_namespaces()` handles this.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
-- **Institutional ownership** (`fetch_institutional.py`) is a current snapshot
-  only (top holders, % institutional/insider), NOT a true quarter-over-quarter
-  13F delta. Real "who's been buying" trend tracking would require diffing
-  consecutive 13F filings from SEC EDGAR over time — not implemented.
+- **Institutional ownership** (`fetch_institutional.py`) is still a current
+  snapshot only (top holders, % institutional/insider) — NOT a true
+  quarter-over-quarter 13F delta. `fetch_beneficial_ownership.py` (13D/13G)
+  now covers >5% stakes with amendment tracking, which is a real
+  improvement, but it's a different, narrower thing than a full 13F trend.
+- **DEF 14A proxy and the combined 10-K/10-Q/8-K text are not both digested
+  down.** Only `filings_raw` (10-K/10-Q/8-K) gets a Haiku digest step;
+  `proxy_raw` is fetched in full but currently sits in the bundle
+  un-summarized — the agents still see it (everything in the bundle is
+  visible to them), it's just not pre-condensed the way filings/news are.
+- **Earnings call transcripts were explicitly evaluated and declined**, not
+  just "not gotten to." SEC filings never contain them (not a regulatory
+  requirement); free options are fragile/ToS-grey scraping (e.g. Motley
+  Fool) and reliable options are paid APIs (FMP, Finnhub premium, AlphaSense).
+  Decision: financial statements (now much more complete — see above) are
+  sufficient; revisit only if live recommendations turn out to miss
+  something that only shows up in call commentary/tone.
 - **News full-text fetching** (`fetch_news.py` → `_fetch_article_text`) will
   fail for many paywalled/blocked sources by design; it falls back to
-  headline + snippet for those. This is expected, logged via
-  `articles_with_full_text` count in the digest result, not a bug to "fix" by
-  trying harder to bypass paywalls.
+  headline + snippet for those. Expected, not a bug to "fix" by trying
+  harder to bypass paywalls.
 - **No real analyst reports.** Institutional research products aren't
   accessible for free anywhere; using yfinance's analyst rating/price-target
   aggregates as a thinner free proxy.
-- **Backtesting is not built.** `backtest/` is an empty placeholder. The person
-  was told explicitly: do NOT trust any live recommendation until this exists
-  and has been run over historical data with strict point-in-time data
-  discipline (no lookahead bias — a backtest for date X must only use news/
-  filings/prices that existed as of date X).
+- **Backtesting is not built.** `backtest/` is an empty placeholder. Do NOT
+  trust any live recommendation until this exists and has been run over
+  historical data with strict point-in-time data discipline (no lookahead
+  bias — a backtest for date X must only use news/filings/prices that
+  existed as of date X).
 
 ## What has been tested, and how (important: read before assuming things work)
 
-The environment these were built in (claude.ai's sandboxed tool) has network
-access to `api.anthropic.com` but NOT to Yahoo Finance, SEC EDGAR, or general
-websites (locked-down egress allowlist). This means:
+**Verified working against REAL live services this session** (previously only
+unit-tested against synthetic data — this is a meaningful upgrade in
+confidence):
+- Full `python main.py check TICKER --dry-run` end-to-end run — confirmed
+  clean (no errors, no warnings) for AAPL and MBLY.
+- Every `yfinance`-backed module (price/technicals incl. RSI/MACD,
+  fundamentals, short interest, balance sheet, income statement, institutional
+  holders, news headlines) — confirmed against live Yahoo Finance data.
+- Every SEC EDGAR-backed module — CIK lookup, submissions JSON, Form 4/144
+  XML parsing, 13D/13G XML parsing (incl. namespace handling), 10-K/10-Q/8-K
+  fetch + text extraction (incl. MD&A section targeting and 8-K exhibit
+  discovery), DEF 14A fetch — confirmed against live SEC EDGAR responses for
+  both AAPL and MBLY, plus spot-checks against several other tickers
+  (MSFT, PG, KO, JPM, NVDA, META, TSLA, GOOGL, IBM, V) to validate edge cases
+  like non-earnings 8-Ks and non-standard exhibit filenames.
+- Real bugs found and fixed via this live testing (not hypothetical):
+  a trailing NaN price row from yfinance breaking all technicals; Form 4's
+  primaryDocument pointing at a pre-rendered HTML viewer instead of raw XML;
+  Form 4 title parsing missing the `"true"/"false"` flag convention; a hidden
+  inline-XBRL metadata block consuming the entire filing-text budget before
+  reaching any real prose; the MD&A "2nd occurrence" heuristic landing on the
+  wrong spot for some filers; 8-K exhibit filenames not containing "ex99" at
+  all for some filers.
 
-**Verified working (unit-tested with synthetic/mocked data in that sandbox):**
-- RSI and MACD math (`data/fetch_prices.py`) — tested against synthetic
-  uptrend/downtrend price series, confirmed RSI >70 on uptrend, <30 on
-  downtrend, MACD histogram sign matches trend direction.
-- Form 4 XML parsing (`data/fetch_insider.py` `_parse_form4_xml`) — tested
-  against a realistic sample Form 4 XML structure, correctly extracts owner
-  name, title, transaction direction (buy/sell), shares, price.
-- HTML-to-text stripping for filings (`data/fetch_filings.py` `_strip_html`) —
-  confirmed scripts/styles are removed, body text preserved.
-- JSON extraction from LLM responses (`agents/client.py` `_extract_json`) —
-  tested against clean JSON, markdown-fenced JSON, and JSON with stray
-  surrounding text.
-- Prompt templating for skeptic/judge (placeholder substitution) — verified no
-  leftover `{{...}}` placeholders after filling.
-- Full pipeline wiring (`agents/pipeline.py` `run_pipeline`) — ran against a
-  synthetic bundle with a fake `run_id`; confirmed it fails at exactly the
-  expected point (missing `ANTHROPIC_API_KEY`) with correct error wrapping,
-  meaning all the logic before the actual API call (db writes, cost
-  accumulation via `starting_cost_usd`, run_id threading) is sound.
-- All modules import cleanly and compile without syntax errors.
-
-**NOT tested end-to-end against real services** (because the build environment
-couldn't reach them):
-- `yfinance` calls (price, fundamentals, balance sheet, institutional holders,
-  news headlines) — should work fine on a normal internet connection, but has
-  not been run against live Yahoo Finance data.
-- SEC EDGAR calls (`edgar_utils.py`, insider transactions, filings fetch) — CIK
-  lookup, submissions JSON parsing, and document fetching are implemented per
-  SEC's documented API structure but not verified against live responses.
-  Watch for: EDGAR's real JSON structure sometimes has quirks not visible from
-  documentation alone (e.g. array alignment between `form`, `accessionNumber`,
-  `primaryDocument` in the "recent" filings block).
-- Actual Anthropic API calls with a real API key — the four reasoning agents
-  and the two digest calls have never actually executed against the live model.
-  Verify the JSON schemas the models actually return match what the parsing
-  code expects (agent prompts ask for exact schemas but models sometimes drift).
-- Full end-to-end `python main.py check TICKER` run (no `--dry-run`) — never
-  completed successfully since no API key has been available yet in any
-  session so far.
-
-**The person's very next step was going to be**: run `python main.py check AAPL
---dry-run` locally (free, no API key) to validate the expanded data layer, then
-add their Anthropic API key and run a real full check for the first time.
+**STILL NOT tested end-to-end** (the actual gap remaining):
+- **Real Anthropic API calls** — the four reasoning agents (bull/bear/skeptic/
+  judge) and the two digest calls (`filings_digest`, `news_digest`) have never
+  executed against the live model in any session so far. No API key has been
+  used yet. This is the single biggest untested surface. Verify the JSON
+  schemas the models actually return match what the parsing code expects —
+  prompts ask for exact schemas but models sometimes drift.
+- **Full `python main.py check TICKER` (no `--dry-run`)** — never completed
+  successfully, same reason.
 
 ## Explicitly deferred (do not build unless asked)
 
@@ -183,14 +268,19 @@ add their Anthropic API key and run a real full check for the first time.
 - Backtesting implementation (folder exists, empty)
 - Auto-trading / broker integration — permanently out of scope, not just deferred
 - Web UI
+- Earnings call transcripts — evaluated and declined, see "Known limitations" above
 
-## Suggested next steps for this Claude Code session
+## Suggested next steps
 
-1. Run `python main.py check AAPL --dry-run` for real and fix whatever breaks —
-   this is the first real-world test of yfinance + SEC EDGAR calls.
-2. Once dry-run is clean, help the person get their Anthropic API key set up and
-   run one real full check — this is the first real test of the 4-agent
-   pipeline and the digest steps against the live API. Watch closely for JSON
-   schema drift from what the prompts specify.
-3. Only after both of those work reliably: discuss backtesting before touching
+1. **The actual next milestone**: add a real `ANTHROPIC_API_KEY` to `.env` and
+   run `python main.py check AAPL` (no `--dry-run`) — the first real test of
+   the 4-agent pipeline and the two digest calls against the live API. Watch
+   closely for JSON schema drift from what `agents/prompts/*.md` specify.
+2. Once that works reliably, sanity-check whether the combined 10-K/10-Q/8-K
+   digest and the news digest are giving good signal-to-noise — may be worth
+   tuning `MAX_FILING_CHARS` or the digest prompts based on what actually
+   comes back.
+3. Consider whether `proxy_raw` (DEF 14A) is worth a digest step of its own,
+   same pattern as `summarize_filing`/`summarize_news`.
+4. Only after the above work reliably: discuss backtesting before touching
    Telegram/scheduler, per the person's own stated priority order.
