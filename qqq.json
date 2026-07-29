@@ -1,0 +1,248 @@
+{
+  "ticker": "QQQ",
+  "fetched_at": "2026-07-29T12:27:35.306695Z",
+  "price": {
+    "current_price": 682.12,
+    "ma20": 710.49,
+    "ma50": 717.24,
+    "ma200": 642.31,
+    "52w_high": 745.34,
+    "52w_low": 551.23,
+    "volatility_20d": 0.0147,
+    "volume_trend": "decreasing",
+    "pct_change_20d": -5.79,
+    "pct_change_1y": 20.83,
+    "rsi_14": 36.7,
+    "macd": -7.194,
+    "macd_signal": -3.507,
+    "macd_histogram": -3.687
+  },
+  "fundamentals": {
+    "pe_ratio": 29.975063,
+    "forward_pe": null,
+    "market_cap": null,
+    "sector": null,
+    "industry": null,
+    "next_earnings_date": null,
+    "analyst_recommendation": null,
+    "target_mean_price": null,
+    "short_interest": {
+      "shares_short": null,
+      "shares_short_prior_month": null,
+      "short_change_pct": null,
+      "short_ratio_days_to_cover": null,
+      "short_pct_of_float": null,
+      "as_of_date": null
+    }
+  },
+  "balance_sheet_health": {
+    "total_debt": null,
+    "total_cash": null,
+    "debt_to_equity": null,
+    "current_ratio": null,
+    "free_cash_flow": null,
+    "operating_cash_flow": null,
+    "note": "Most recent annual figures available from Yahoo Finance; coverage varies by ticker/exchange."
+  },
+  "income_statement": {
+    "annual": null,
+    "quarterly": null,
+    "note": null
+  },
+  "insider_transactions": {
+    "transactions": [],
+    "note": null
+  },
+  "institutional_ownership": {
+    "top_institutional_holders": [],
+    "pct_held_by_institutions": null,
+    "pct_held_by_insiders": null,
+    "note": "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented."
+  },
+  "news_headlines": [
+    {
+      "headline": "CSD and VEGN Both Beat the S&P 500 but One Thrives When Markets Punish Tech",
+      "source": "24/7 Wall St.",
+      "date": "2026-07-29",
+      "snippet": "Two rules-based ETFs have both outrun the S&P 500, yet they are built on completely opposite bets, and the same market conditions that reward one will likely punish the other.",
+      "url": "https://247wallst.com/investing/etf/2026/07/29/csd-and-vegn-both-beat-the-sp-500-but-one-thrives-when-markets-punish-tech/"
+    },
+    {
+      "headline": "Zacks Investment Ideas feature highlights: Nasdaq 100 Index ETF, Microsoft, Meta Platforms, Tesla and Alphabet",
+      "source": "Zacks",
+      "date": "2026-07-29",
+      "snippet": "QQQ rebounded with Wall Street as investors brace for a pivotal Wednesday featuring Big Tech earnings and a Fed rate decision that could drive market volatility.",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/zacks-investment-ideas-feature-highlights-075600832.html"
+    },
+    {
+      "headline": "Dow Ends Higher For Third Straight Session As Oil Cools, Nasdaq Slides On Chipmaker Rout \u2014 PYPL, SPCX, AAPL, V, F Stocks In Focus",
+      "source": "Stocktwits",
+      "date": "2026-07-28",
+      "snippet": "Nasdaq dropped for the fifth straight session on Tuesday, its longest losing streak since January this year.",
+      "url": "https://stocktwits.com/news-articles/markets/equity/nasdaq-continues-to-drop-on-chipmaker-rout/cZZ6TnzRJbt"
+    },
+    {
+      "headline": "Nasdaq-100 is on the edge of correction territory as semiconductor stocks take another beating",
+      "source": "MarketWatch",
+      "date": "2026-07-28",
+      "snippet": "Just weeks after driving major indexes such as the S 500 and Nasdaq Composite to record highs, semiconductor stocks are taking a beating once again.",
+      "url": "https://www.marketwatch.com/story/nasdaq-100-is-on-the-edge-of-correction-territory-as-semiconductor-stocks-take-another-beating-580d3ee7"
+    },
+    {
+      "headline": "Non-Tech Defensive Stocks Could Be Headed for a Downturn",
+      "source": "Barrons.com",
+      "date": "2026-07-28",
+      "snippet": "The summertime rotation out of tech stocks could face big near-terms risks, says BTIG\u2019s Jonathan Krinsky.",
+      "url": "https://www.barrons.com/articles/markets-tech-stocks-rotation-91a51127?siteid=yhoof2&yptr=yahoo"
+    },
+    {
+      "headline": "Invesco Q2 Earnings Call Highlights",
+      "source": "MarketBeat",
+      "date": "2026-07-28",
+      "snippet": "Invesco (NYSE:IVZ) reported record second-quarter net long-term inflows and higher profitability as demand for ETFs, fixed income, separately managed accounts and private-market strategies helped push",
+      "url": "https://www.marketbeat.com/instant-alerts/invesco-q2-earnings-call-highlights-2026-07-28/?utm_source=yahoofinance&utm_medium=yahoofinance"
+    },
+    {
+      "headline": "Wall Street Rebounds Ahead of FOMC & Big Tech Earnings",
+      "source": "Zacks",
+      "date": "2026-07-28",
+      "snippet": "Wednesday will be another volatile session with big tech earnings and a Fed interest rate decision on deck.",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/wall-street-rebounds-ahead-fomc-181400369.html"
+    },
+    {
+      "headline": "Exchange-Traded Funds Rise, US Equities Mixed After Midday",
+      "source": "MT Newswires",
+      "date": "2026-07-28",
+      "snippet": "Broad Market Indicators Broad-market exchange-traded funds IWM and IVV edged higher. Actively",
+      "url": "https://finance.yahoo.com/markets/articles/exchange-traded-funds-rise-us-171204936.html"
+    },
+    {
+      "headline": "How Much Of Your Portfolio Is Really Apple (AAPL)?",
+      "source": "Trefis",
+      "date": "2026-07-28",
+      "snippet": "You bought a diversified fund, but one high-flying stock may now be quietly driving your returns and your risk.",
+      "url": "https://www.trefis.com/articles/609130/how-much-of-your-portfolio-is-really-apple-aapl/2026-07-28"
+    },
+    {
+      "headline": "Exchange-Traded Funds, Equity Futures Mixed Pre-Bell Tuesday Amid Renewed Pressure on Semiconductor Stocks",
+      "source": "MT Newswires",
+      "date": "2026-07-28",
+      "snippet": "The broad market exchange-traded fund SPDR S&P 500 ETF Trust (SPY) was up 0.02%, and the actively tr",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-equity-futures-130015574.html"
+    }
+  ],
+  "news_articles_raw": [
+    {
+      "headline": "CSD and VEGN Both Beat the S&P 500 but One Thrives When Markets Punish Tech",
+      "source": "24/7 Wall St.",
+      "date": "2026-07-29",
+      "text": "ETF CSD's 29-stock spin-off strategy returned 53% over the past year, nearly doubling VEGN's 30% gain with far less tech concentration. Both funds crushed SPY's 16% annual return, but VEGN's semiconductor tilt makes it largely redundant for investors already holding QQQ. VEGN behaves like a duration trade dressed as an ethics screen, making it vulnerable whenever rising rates reprice mega-cap semis. Many financial professionals are salespeople paid on what they push, not whether you end up wealthier. A fiduciary is the opposite. The SEClegally requiresthem to put your interests first. Advisor.com's free matching tool pairs you withvetted fiduciariesfrom major national firms, all in under three minutes.See who you match with today. Sending You to Google News in3 \u00a9 24/7 Wall St. Two rules-based ETFs, both beating the S&P 500, have almost nothing else in common.Invesco S&P Spin-Off ETF(NYSEARCA:CSD) versusUS Vegan Climate ETF(NASDAQ:VEGN): one is a concentrated basket of corporate castoffs; the other is a tech-heavy large-cap fund filtered through animal-welfare and climate screens. Both have outrun the index, but their underlying engines differ fundamentally, and that difference dictates when each fund wins. CSD holds recently separated U.S. companies, typically within roughly four years of a spin-off, tracking the S&P U.S. Spin-Off Index. It is a catalyst strategy betting that newly independent management teams, cleaner capital structures, and forced institutional selling around separation create a mispricing window. The portfolio is tiny by ETF standards, holding about 30 positions with heavy weights in industrial and infrastructure spin-offs like GE Vernova at 9.3%, Qnity at 8.0%, and GE HealthCare at 6.9%. SanDisk, at 9.5%, is the largest single equity. This is a mid-cap, cyclical, industrial-tilted basket with essentially zero overlap with the S&P 500\u2019s mega-cap leadership. VEGN runs the opposite trade. Its Beyond Investing US Vegan Climate Index starts with the U.S. large-cap universe and excludes companies tied to animal exploitation, fossil fuel extraction, defense, tobacco, and human rights abuses. What survives resembles the Nasdaq-100 with financials added. Top holdings are Micron at 5.9%, AMD at 4.6%, Applied Materials at 3.9%, and Apple at 3.8%. Semiconductors and software dominate. The implicit bet is that ethical screens push toward asset-light, high-margin businesses that win in growth regimes. The past year makes the contrast clear. CSD returned 53.0% over the trailing 12 months and is up 34.5% year to date. VEGN returned 30.0% over one year and 20.6% year to date. SPY is up 16.3% over one year and 8.6% YTD. QQQ trailed VEGN slightly at 18.9% over the year. Over five years, CSD\u2019s edge widens: 108.0% for CSD versus 84.2% for VEGN and 68.8% for SPY. VEGN\u2019s tech tilt punished it during the 2022 rate shock while CSD\u2019s cyclical, mid-cap industrial book held up materially better. When the market punishes duration, VEGN is a duration trade dressed as an ethics screen. Note the concentration gap. CSD is concentrated into fewer than three dozen names. VEGN spreads capital across roughly 260 positions, most of them tiny. CSD behaves like a concentrated event-driven strategy in ETF wrapping; VEGN behaves like a large-cap growth index with an ESG filter. These funds serve different roles. CSD suits investors holding a broad-market core who want targeted exposure to mid-cap corporate catalysts with low S&P 500 overlap. It is a diversifier that also generates return. VEGN suits investors wanting large-cap U.S. equity exposure aligned with values, accepting concentrated semiconductor and mega-cap tech risk. For investors who already own QQQ or a tech-heavy fund, VEGN adds mostly correlated risk. A sustained rate shock or industrial recession would pressure CSD\u2019s cyclical book harder than VEGN\u2019s balance sheets. A broad rerating of mega-cap semis would erase VEGN\u2019s edge over the S&P 500 in a single quarter.  Contact[email\u00a0protec",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Zacks Investment Ideas feature highlights: Nasdaq 100 Index ETF, Microsoft, Meta Platforms, Tesla and Alphabet",
+      "source": "Zacks",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong Chicago, IL \u2013 July 29, 2026 \u2013 Today, Zacks Investment Ideas feature highlights Nasdaq 100 Index ETF QQQ, Microsoft MSFT, Meta Platforms META, Tesla TSLA and Alphabet GOOGL. Wall Street Rebounds Ahead of FOMC & Big Tech Earnings Today's Market Update: Tuesday, the wild summer volatility continued on Wall Street. However, unlike recent sessions, the bulls showed some fight and rallied stocks off the bloody red morning lows. A few positives helped to buoy equities today, including: \u00b7Geopolitical Cooling:Oil prices finally retreated sharply after a pause in military strikes between the U.S. and Iran and a resumption of peace talks. Lower prices have helped relieve immediate inflation fears. \u00b7Bullish Macro Data:Flash PMI data continues to show solid expansion in the U.S. manufacturing and services areas. Currently, Wall Street is a tale of two markets: tech and everything else. Until the past month or so, tech stocks led the market higher. However, a combination of improving Chinese competition and credit and CAPEX spending concerns has brought many AI leaders back to earth. The divergence between tech and the general market is staggering, with the S&P 500 Index less than 3% off all-time highs. At the same time, the tech-heavyNasdaq 100 Index ETFbriefly went into correction territory Tuesday morning before paring losses. (defined as -10% off all-time highs). Wednesday Will Be a Market-Moving Day Big Tech Earnings Loom As if the market has not been volatile enough, Wednesday will be full of catalysts. Big tech giantsMicrosoftandMeta Platformswill report earnings on Wednesday after the equity market closes. After the outsized post-EPS moves in reaction to increased CAPEX spending inTeslaandAlphabet, all eyes will be on CAPEX guidance.You can read my Q2 META EPS Preview here. Key Fed Decision Day Meanwhile,Kevin Warsh will have a chance to prove his mettle as Fed Chair in a difficult environment. According to reports, Citadel expects the Fed to raise interest rates this week \u2013 which would be a huge surprise. That said, betting markets like Polymarket have high conviction that there will be no change in rate policy (80% odds). Typically, I defer to betting markets as they represent real dollars at risk. Bottom Line Tuesday offered some relief for beaten-down bulls. However, Wednesday will likely be another volatile session with big tech earnings and a Fed interest rate decision on deck. Why Haven't You Looked at Zacks' Top Stocks? Since 2000, our top stock-picking strategies have blown away the S&P's +7.7% average gain per year. Amazingly, they soared with average gains of+48.4%, +50.2%and+56.7%per year. Today you can access their live picks without cost or obligation. See Stocks Free >> Media Contact Zacks Investment Research 800-767-3771 ext. 9339 support@zacks.com https://www.zacks.com Past performance is no guarantee of future results. Inherent in any investment is the potential for loss. This material is being provided for informational purposes only and nothing herein constitutes investment, legal, accounting or tax advice, or a recommendation to buy, sell or hold a security. No recommendation or advice is being given as to whether any investment is suitable for a particular investor. It should not be assumed\u00a0that any investments in securities, companies, sectors or markets identified and described were or will be profitable. All information is current as of the date of herein and\u00a0is subject to change without notice. Any views or opinions expressed may not reflect those of the firm as a whole. Zacks Investment Research does not engage in investment banking, market making or asset management activities of any securities. These returns are from hypothetical portfolios consisting of stocks with Zacks Rank = 1 that were rebalanced monthly with zero transaction costs. These are not the returns of actual portfolios of stocks. The S&P 500 is an unmanaged index. Visit https://www.zacks.com/performance\u00a0for infor",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Dow Ends Higher For Third Straight Session As Oil Cools, Nasdaq Slides On Chipmaker Rout \u2014 PYPL, SPCX, AAPL, V, F Stocks In Focus",
+      "source": "Stocktwits",
+      "date": "2026-07-28",
+      "text": "Advertisement|Remove ads. Advertisement|Remove ads. The S&P 500 ended 0.2% higher, while the Nasdaq 100 slipped 1% and the Dow Jones Industrial Average added 1%. The Russell 2000, which tracks stocks with small market capitalizations, rose 0.2%. Among ETFs tracking benchmark indexes, theSPDR S&P 500 ETF (SPY)added 0.3% andInvesco QQQ Trust(QQQ) ended Tuesday 0.7% lower, while theSPDR Dow Jones Industrial Average ETF Trust(DIA) rose 1%.  Advertisement|Remove ads. Meanwhile, the VanEck Semiconductor ETF (SMH) fell 3.3%, down for the fourth straight session, pulled down by weakness in AMD (AMD), Broadcom (AVGO) and Micron Tech (MU). The broader Vanguard Information Technology ETF (VGT) fell 1.1%, tracking weakness in Tesla (TSLA) and Amazon (AMZN). Retail sentiment on Stocktwits for QQQ dropped to the \u2018extremely bearish\u2019 zone, while sentiment for SPY was \u2018bearish\u2019 and \u2018neutral\u2019 for the DIA with \u2018high\u2019 message volumes. The Philadelphia Semiconductor Index (SOX) is heading to its worst month since 2002 as investors continue to rotate out of chipmaker stocks over rising concerns of the sustainability of the AI boom. Advertisement|Remove ads. \u201cWe maintain a constructive outlook on semis amid robust AI demand, but we believe the recent divergence in sector performance is in line with our view that there are more ways to participate in potential market gains than through a narrow set of AI-linked stocks,\u201d said Ulrike Hoffmann-Burchardi at UBS Chief Investment Office to Bloomberg in an interview. Moreover, West Texas Intermediate crude futures fell about 4% to $79.26 per barrel and international Brent crude shed 4.8% to end at $84.09, supporting the broader S&P500 and the Dow Jones. Tech earnings remain in focus this week as investors await results from Amazon, Apple, Meta Platforms and Microsoft. Traders are also watching Wednesday's Federal Reserve rate decision for further clues on the interest rate outlook. Advertisement|Remove ads. The CME FedWatch Tool indicated a 25-basis-point interest rate increase in September. Market participants anticipate that the central bank will keep rates unchanged for now, though they will be looking for increased transparency regarding the subsequent direction of monetary policy. PayPal (PYPL): The company reported a beat-and-raise second quarter. Wall Street analysts remained focused on PayPal\u2019s ongoing transformation strategy and said a near-term buyout is unlikely. SpaceX (SPCX): In a major bid to accelerate American dominance in the commercial space sector, the Trump administration announced a proposal allowing the Federal Aviation Administration (FAA) to bypass lengthy environmental reviews for rocket launches, spacecraft reentries, and commercial launch site approvals. Advertisement|Remove ads. Apple (AAPL): Apple Inc. on Tuesday became the second company in the world to top $5 trillion in market capitalization, a day after overtaking Nvidia Corp. (NVDA) to become the most valuable company. Visa (V): Payments giant Visa (V) is reportedly planning to cut 2,600 jobs, which is around 7% of its workforce, as part of a broader restructuring effort. Ford (F): The automaker reported better-than-expected adjusted second-quarter earnings and raised its full-year 2026 financial guidance. Advertisement|Remove ads. For updates and corrections, email newsroom[at]stocktwits[dot]com. Comments posted here will also appear on symbol pages. Advertisement|Remove ads.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Nasdaq-100 is on the edge of correction territory as semiconductor stocks take another beating",
+      "source": "MarketWatch",
+      "date": "2026-07-28",
+      "text": "Just weeks after driving major indexes such as the S 500 and Nasdaq Composite to record highs, semiconductor stocks are taking a beating once again.",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Non-Tech Defensive Stocks Could Be Headed for a Downturn",
+      "source": "Barrons.com",
+      "date": "2026-07-28",
+      "text": "The summertime rotation out of tech stocks could face big near-terms risks, says BTIG\u2019s Jonathan Krinsky.",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Invesco Q2 Earnings Call Highlights",
+      "source": "MarketBeat",
+      "date": "2026-07-28",
+      "text": "InvescoNYSE: IVZreported record second-quarter net long-term inflows and higher profitability as demand for ETFs, fixed income, separately managed accounts and private-market strategies helped push assets under management to $2.5 trillion. President and CEO Andrew Schlossberg said the firm generated $45.1 billion of net long-term inflows during the quarter, representing nearly 9% annualized organic growth and extending its streak of positive flows to 12 consecutive quarters. Including liquidity inflows, Invesco recorded $13.2 billion in global liquidity inflows and ended the period with $215 billion in liquidity assets. For the first half of 2026, Schlossberg said Invesco posted record net inflows of $67 billion, or a 7% annualized organic growth rate. Net revenue rose 17% from the prior-year first half, while operating income increased 35% and the operating margin expanded by nearly 470 basis points. Chief Financial Officer Allison Dukes said second-quarter net revenue totaled $1.3 billion, increasing $65 million from the first quarter and $224 million from a year earlier. The increase was primarily driven by investment-management fees tied to higher average assets under management, as well as the year-over-year effect of the QQQ fund\u2019s reclassification to fee earnings. Adjusted operating income increased 14% sequentially to nearly $500 million, while adjusted diluted earnings per share rose to $0.71 from $0.57 in the first quarter. Compared with the same quarter last year, adjusted operating income rose 45% and adjusted EPS nearly doubled from $0.36. Adjusted operating expenses were essentially flat sequentially, rising $2 million, while net revenue increased 5%. That produced nearly 500 basis points of positive operating leverage and lifted the adjusted operating margin by 300 basis points from the prior quarter to 37.5%. Dukes said Invesco remains focused on expanding and sustaining operating margins in the high 30% range over the near to medium term. She added that expense growth continues to be influenced by the company\u2019s hybrid investment-platform implementation, which incurred $14 million in one-time costs during the second quarter. The company\u2019s second-quarter net revenue yield was 22.4 basis points, with an exit rate of 22 basis points. Dukes attributed the lower exit yield to strong flows and market appreciation in lower-fee products, including QQQ, QQQM and RSP. ETF and index assets ended the quarter at a record $753 billion, or nearly $1.25 trillion including QQQ. The category generated a record $30 billion of net inflows during the quarter, equivalent to 17% annualized organic growth. Schlossberg said the company\u2019s QQQ Innovation Suite and quality and momentum equity factor funds led ETF demand. The factor funds raised a record $7 billion in net inflows during the quarter, while QQQ drew $14 billion of net inflows, representing 12% annualized organic growth. Invesco expanded its ETF lineup with seven new BulletShares funds in the U.S. and five ETF launches in Europe, the Middle East and Africa, including two active funds. The company manages $25 billion in active ETFs across more than 40 products, a figure that rises above $40 billion when including index strategies run by active investment teams. During the question-and-answer session, Schlossberg and Dukes emphasized QQQ\u2019s scale, liquidity and brand recognition in discussing competitive pricing for similar products. Schlossberg said the fund is the fifth-largest ETF and the second-most actively traded ETF globally, while Dukes said the company does not plan a short-term competitive pricing response. The QQQ franchise also continued its international expansion. QQQ is cross-listed in Hong Kong and Tokyo, where it has accumulated more than $10 billion in combined assets in a relatively short period, according to Schlossberg. Fixed-income demand remained broad across regions and channels. While the company reported $4 billion of net inflows in its fundamental fixe",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Wall Street Rebounds Ahead of FOMC & Big Tech Earnings",
+      "source": "Zacks",
+      "date": "2026-07-28",
+      "text": "Oops, something went wrong Tuesday, the wild summer volatility continued on Wall Street. However, unlike recent sessions, the bulls showed some fight and rallied stocks off the bloody red morning lows. A few positives helped to buoy equities today, including: \u00b7Geopolitical Cooling:Oil prices finally retreated sharply after a pause in military strikes between the U.S. and Iran and a resumption of peace talks. Lower prices have helped relieve immediate inflation fears. \u00b7Bullish Macro Data:Flash PMI data continues to show solid expansion in the U.S. manufacturing and services areas. Currently, Wall Street is a tale of two markets: tech and everything else. Until the past month or so, tech stocks led the market higher. However, a combination of improving Chinese competition and credit and CAPEX spending concerns has brought many AI leaders back to earth. The divergence between tech and the general market is staggering, with the S&P 500 Index less than 3% off all-time highs. At the same time, the tech-heavyNasdaq 100 Index ETF (QQQ)briefly went into correction territory Tuesday morning before paring losses. (defined as -10% off all-time highs). As if the market has not been volatile enough, Wednesday will be full of catalysts. Big tech giantsMicrosoft (MSFT)andMeta Platforms (META)will report earnings on Wednesday after the equity market closes. After the outsized post-EPS moves in reaction to increased CAPEX spending inTesla (TSLA)andAlphabet (GOOGL), all eyes will be on CAPEX guidance.You can read my Q2 META EPS Preview here. Meanwhile,Kevin Warsh will have a chance to prove his mettle as Fed Chair in a difficult environment. According to reports, Citadel expects the Fed to raise interest rates this week \u2013 which would be a huge surprise. That said, betting markets like Polymarket have high conviction that there will be no change in rate policy (80% odds). Typically, I defer to betting markets as they represent real dollars at risk. Bottom Line Tuesday offered some relief for beaten-down bulls. However, Wednesday will likely be another volatile session with big tech earnings and a Fed interest rate decision on deck. Want the latest recommendations from Zacks Investment Research? Today, you can download 7 Best Stocks for the Next 30 Days.Click to get this free report Microsoft Corporation (MSFT) : Free Stock Analysis Report Tesla, Inc. (TSLA) : Free Stock Analysis Report Invesco QQQ (QQQ): ETF Research Reports Alphabet Inc. (GOOGL) : Free Stock Analysis Report Meta Platforms, Inc. (META) : Free Stock Analysis Report This article originally published on Zacks Investment Research (zacks.com). Zacks Investment Research",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Exchange-Traded Funds Rise, US Equities Mixed After Midday",
+      "source": "MT Newswires",
+      "date": "2026-07-28",
+      "text": "Oops, something went wrong Broad Market Indicators Broad-market exchange-traded funds IWM and IVV edged higher. Actively",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "How Much Of Your Portfolio Is Really Apple (AAPL)?",
+      "source": "Trefis",
+      "date": "2026-07-28",
+      "text": "You bought a diversified fund, but one high-flying stock may now be quietly driving your returns and your risk.",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Exchange-Traded Funds, Equity Futures Mixed Pre-Bell Tuesday Amid Renewed Pressure on Semiconductor Stocks",
+      "source": "MT Newswires",
+      "date": "2026-07-28",
+      "text": "The broad market exchange-traded fund SPDR S&P 500 ETF Trust (SPY) was up 0.02%, and the actively tr",
+      "full_text_fetched": false
+    }
+  ],
+  "filings_raw": {
+    "10-K": {
+      "filing_type": "10-K",
+      "filing_date": null,
+      "text": null,
+      "note": "No recent 10-K filing found."
+    },
+    "10-Q": {
+      "filing_type": "10-Q",
+      "filing_date": null,
+      "text": null,
+      "note": "No recent 10-Q filing found."
+    },
+    "8-K": {
+      "filing_type": "8-K",
+      "filing_date": "2014-09-08",
+      "text": "8-K 1 a14-20543_28k.htm 8-K UNITED STATES SECURITIES AND EXCHANGE COMMISSION WASHINGTON, DC 20549 FORM\u00a08-K Current Report Pursuant to Section\u00a013 or 15(d)\u00a0of The Securities Exchange Act of 1934 Date of Report (Date of earliest event reported): September\u00a03, 2014 PowerShares QQQ Trust, Series\u00a01 (Exact name of registrant as specified in its charter) New York 000-51054 811-08947 13-7173427 (State or other jurisdiction of incorporation or organization) (Commission File Number) (IRS Employer Identification No.) 3500 Lacey Road Suite\u00a0700 Downers Grove,\u00a0IL 60515 (Address of principal executive offices) (Zip Code) Registrant\u0092s telephone number, including area code: (630) 684-6000 N/A (Former name or former address, if changed since last report) Check the appropriate box below if the Form\u00a08-K filing is intended to simultaneously satisfy the filing obligation of the registrant under any of the following provisions (see General Instruction A.2. below): o Written communications pursuant to Rule\u00a0425 under the Securities Act (17 CFR 230.425) o Soliciting material pursuant to Rule\u00a014a-12 under the Exchange Act (17 CFR 240.14a-12) o Pre-commencement communications pursuant to Rule\u00a014d-2(b)\u00a0under the Exchange Act (17 CFR 240.14d-2(b)) o Pre commencement communications pursuant to Rule\u00a013e-4(c)\u00a0under the Exchange Act (17 CFR 240.13e-4(c)) Item 4.01 Changes in Registrant\u0092s Certifying Accountant. On September\u00a03, 2014, PowerShares QQQ Trust, Series\u00a01 (the \u0093Trust\u0094) retained PricewaterhouseCoopers LLP (\u0093PwC\u0094) as its independent registered public accounting firm. During the Trust\u0092s fiscal years ended September\u00a030, 2013 and September\u00a030, 2012, and during the interim period between September\u00a030, 2013 and September\u00a03, 2014, neither the Trust, nor anyone acting on its behalf, consulted PwC regarding either: 1. The application of accounting principles to a specified transaction, either completed or proposed; or the type of audit opinion that might be rendered on the registrant\u0092s financial statements; or 2. Any matter that was the subject of a disagreement (as defined in Item 304 of Regulation S-K), or a \u0093reportable event\u0094 as that term is described in Item 304 (a)(1)(v)\u00a0of Regulation S-K. Signatures Pursuant to the requirements of the Securities Exchange Act of 1934, the registrant has duly caused this report to be signed on its behalf by the undersigned hereunto duly authorized. PowerShares   QQQ Trust, Series\u00a01 By:\u00a0Invesco   PowerShares Capital Management, its Sponsor Date:   September\u00a08, 2014 /s/   Deanna B. Marotz Deanna   B. Marotz Chief   Compliance Officer",
+      "note": null
+    }
+  },
+  "form144_notices": {
+    "notices": [],
+    "note": null
+  },
+  "beneficial_ownership": {
+    "filings": [],
+    "note": null
+  },
+  "proxy_raw": {
+    "filing_date": "2025-08-18",
+    "text": "DEF 14A 1 definitiveproxy.htm UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 SCHEDULE 14A Proxy Statement Pursuant to Section\u00a014(a) of the Securities Exchange Act of 1934 (Amendment No.\u00a0\u00a0\u00a0\u00a0\u00a0) Filed by the Registrant \u2611 Filed by a Party other than the Registrant \u2610 Check the appropriate box: \u2610 Preliminary Proxy Statement \u2610 Confidential, for Use of the Commission Only (as permitted by Rule\u00a014a-6(e)(2)) \u2611 Definitive Proxy Statement \u2610 Definitive Additional Materials \u2610 Soliciting Material Pursuant to \u00a7240.14a-12 Invesco QQQ Trust SM , Series 1 (Names of Registrant as Specified In Its Charter) (Name of Person(s) Filing Proxy Statement, if other than the Registrant) Payment of Filing Fee (Check the appropriate box): \u2611 No fee required. \u2610 Fee paid previously with preliminary materials. \u2610 Fee computed on table in exhibit required by Item 25(b) per Exchange Act Rules\u00a014a-6(i)(1) and 0-11 Invesco QQQ Trust SM , Series 1 3500 Lacey Road, Suite 700 Downers Grove, Illinois 60515 August 18 , 2025 Dear Shareholder: We are writing to you to seek your help in modernizing the structure of Invesco QQQ Trust SM , Series 1 (the \u201cTrust\u201d or \u201cQQQ\u201d) in order to\n    help optimize its operations and reduce its overall expense ratio.\u00a0 You are receiving this letter because you were a beneficial owner of shares of the Trust as of August 15, 2025 (the \u201cRecord Date\u201d). As more fully discussed below, we at Invesco believe that the time has come to modernize and optimize the way that QQQ operates, by changing\n    it from a structure known as a unit investment trust (\u201cUIT\u201d) to the form of investment company employed by the vast majority of exchange traded funds (\u201cETFs\u201d) on the market .\u00a0 Importantly, though, QQQ will continue to be an ETF and the\n    transition will be seamless (and tax-free) for you.\u00a0 There will be one significant change upon completion of this effort : QQQ\u2019s expense ratio will decrease.\u00a0 As a part of the modernization of QQQ, and based on information as of the\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    Trust\u2019s most recent fiscal year end, the Trust\u2019s total expense ratio will decrease from a maximum of 20 basis points per year (i.e., 0.20% of QQQ\u2019s average annual net assets) to 18 basis points per year (0.18% of QQQ\u2019s average annual net\n      assets ), which represents an estimated cost savings to the Trust and its shareholders of more than $70 million based on QQQ\u2019s assets as of July 1, 2025. QQQ is one of the earliest ETFs brought to market. When QQQ was created in 1999, it was structured to be classified as a UIT, which is a type of\n    investment company under investment company laws and regulations. QQQ is operated pursuant to laws and rules pertaining to UITs under the Investment Company Act of 1940, as amended, as well as pursuant to an exemptive order from the Securities and\n    Exchange Commission (\u201cSEC\u201d) .\u00a0 At the time of QQQ\u2019s creation , UITs were the principal structure used for ETFs.\u00a0 Since that time, however, almost every ETF on the market has been organized to operate as a different type of investment\n    company, generally referred to as an \u201cOpen-End Fund\u201d ETF. As we discuss more fully in the enclosed proxy statement, ETFs that operate as Open-End Funds have certain features that differentiate them from UIT\n    ETFs that we at Invesco believe ultimately make the Open-End Fund structure a better ETF vehicle for shareholders.\u00a0 Open-End Fund ETFs are managed by an external investment adviser that can utilize certain tools in managing passive ETFs, such as\n    flexible (or \u201ccustom\u201d) redemption baskets, while UITs are operated pursuant to complex written rules that are rigid in application (and do not allow for flexible redemption baskets).\u00a0 Second, ETFs operated as Open-End Funds currently enjoy greater\n    regulatory certainty.\u00a0 Most current SEC rules that are designed to protect shareholders and generally improve the investment experience that apply to ETFs are written with Open-End Fund structures in mind and are not applicable or required for\n    UITs (even UIT ETFs).\u00a0 Invesco believes that this regulatory certainty provides inherent value for shareholders.\u00a0 In light of these benefits, we believe that the time has come to seek to convert QQQ from a UIT ETF to an Open-End Fund\n    ETF.\u00a0 In doing so, we believe shareholders will have the opportunity to take advantage of genuine benefits flowing from the conversion. Importantly, these changes will not change the key attributes of investing in QQQ: the Trust will continue to operate as an ETF and will continue to\n    seek to track the investment results, before fees and expenses, of the Nasdaq-100 Index.\u00a0 The Trust\u2019s performance history, its process of buying/selling shares (daily trading) and its investment exposures and risks will remain\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n    the same.\u00a0 Also, the conversion will not be a taxable event, so the transition for you, as a shareholder, will be seamless. In order to implement the proposed changes, we will need your approval of three separate proposals, which will be considered at a special meeting of\n    the shareholders of the Trust scheduled to be held on October 24, 2025, at 11:00 a.m., Central Time, at the offices of the Trust\u2019s sponsor, Invesco Capital Management LLC (\u201c Invesco \u201d), 3500 Lacey Road, Suite 700, Downers Grove, Illinois\n    60515 (the \u201cMeeting\u201d). These three proposals are: 1. Approve amendments to the Trust\u2019s Trust Indenture and Agreement and Standard Terms and Conditions of Trust that are intended to change the Trust\u2019s\n              classification under the Investment Company Act of 1940, as amended, from a UIT to an Open-End Fund (i.e., an open-end management investment company). 2. Approve the election of nine (9) trustees to serve on a newly established Board of Trustees of the Trust. 3. Approve an investment advisory agreement between the Trust and Invesco. The proposed conversion of QQQ from a UIT to an Open-End Fund will not occur unless shareholders approve all three proposals. \u00a0\n    Detailed information about the proposals is contained in the enclosed materials.\u00a0 Please review and consider the enclosed materials carefully, and then please take a moment to vote. Attendance at the Meeting will be limited to beneficial owners of the Trust (i.e., shareholders of the Trust) as of the Record Date.\u00a0\n    Photographic identification will be required for admission to the Meeting.\u00a0 Whether or not you plan to attend the Meeting in person, your vote is needed.\u00a0 You are entitled to notice of, and to vote at, the Meeting and any adjournment of the Meeting,\n    even if you no longer hold shares of the Trust.\u00a0 Your vote is important no matter how many shares you own.\u00a0 It is important that your vote be received no later than the time of the Meeting. Voting is quick and easy.\u00a0 Everything you need to vote is enclosed. You may vote by: (i) attending\n    the Meeting in person, (ii) signing, dating and mailing your proxy card in the enclosed postage-paid return envelope, (iii) calling the toll-free telephone number listed on your proxy card, or (iv) visiting the Internet website listed on your proxy\n    card and following the instructions provided on the website.\u00a0 You may receive more than one set of proxy materials if you hold shares in more than one account.\u00a0 Please be sure to vote each proxy card you receive.\u00a0 If we do not hear from you, our proxy\n    solicitor, Sodali & Co. Fund Services, may contact you.\u00a0 This will ensure that your vote is counted even if you cannot or do not wish to attend the Meeting in person. Your vote is important to us.\u00a0 Thank you for your response and for your investment. Sincerely, Brian Hartigan Chief Executive Officer Invesco Capital Management LLC Invesco QQQ Trust SM , Series 1 3500 Lacey Road, Suite 700 Downers Grove, Illinois 60515 NOTICE OF SPECIAL MEETING OF BENEFICIAL OWNERS NOTICE IS HEREBY GIVEN that a special meeting of the beneficial owners of the shares of\n    Invesco QQQ Trust SM , Series 1 (the \u201cTrust\u201d) will be held on October 24, 2025 at 11:00 a.m., Central Time, at the offices of the Trust\u2019s sponsor, Invesco Capital Management LLC  (\u201cInvesco\u201d or the \u201cSponsor\u201d) , located at 3500 Lacey\n    Road, Suite 700, Downers Grove, Illinois 60515 (the \u201cMeeting\u201d).\u00a0 At the Meeting, beneficial owners of the Trust (\u201cShareholders\u201d) will be asked to consider the following proposals (collectively, the \u201cProposals\u201d) and to act upon any other business which\n    may properly come before the Meeting or any adjournment or postponement thereof: Proposal 1: To approve amendments to the Trust\u2019s Trust Indenture and Agreement and Standard Terms and Conditions of Trust (the \u201cGoverning Instruments\u201d) that are intended\n            to change the Trust\u2019s classification under the Investment Company Act of 1940, as amended, from a unit investment trust to an open-end management investment company. Proposal 2: To approve the election of nine (9) trustees to serve on the Board of Trustees of the Trust following the amendment of the Governing Instruments (Proposal 1)\n            replacing the existing trustee (a bank) with a slate of individual trustees. Proposal 3: To approve an investment advisory agreement between the Trust and Invesco Capital Management LLC. Invesco, the Sponsor of the Trust, believes that the Proposals are in the best interests of the Trust and its shareholders and\n    therefore recommends that you approve each Proposal. The proposed conversion of the Trust from a unit investment trust to an open-end management investment company will not occur unless shareholders\n      approve all three Proposals. \u00a0 The Proposals are discussed in greater detail in the enclosed proxy statement.\u00a0 Please read the proxy statement carefully for information concerning the Proposals. The person(s) named as proxies will vote in his or her discretion on any other business that may properly come before the Meeting or any adjournments\n    or postponements thereof.\u00a0 If the necessary quorum to transact business is not present at the Meeting, the chair of the Meeting may adjourn the Meeting to a designated time and place to permit further solicitation of proxies, in accordance with\n    applicable law and the Governing Instruments of the Trust.\u00a0 Even if quorum is present at the Meeting, the chair of the Meeting may adjourn the Meeting. As of August 8, 2025, there were 634,150,000 shares of the Trust outstanding. \u00a0 Shareholders at the close of business on August 15, 2025 (the\n    \u201cRecord Date\u201d) are entitled to receive notice of, and to vote at, the Meeting and any adjournments or postponements thereof. Each Shareholder of the Trust as of the Record Date is invited to attend the Meeting in person.\u00a0 However, if you cannot be present at the\n    Meeting, we urge you to complete, sign and date the enclosed proxy card, and return it in the accompanying postage-paid envelope as promptly as possible, or to take advantage of the telephonic or electronic voting procedures described on the\n    proxy card. Please notify us by calling 1-800-952-3502 if you plan to attend the Meeting.\u00a0 Shareholders who intend to attend the Meeting in person will need to\n    bring proof of share ownership, such as a statement or letter from a custodian or broker-dealer confirming ownership, as of the Record Date, and a valid picture identification, such as a driver\u2019s license or passport, for admission to the Meeting.\u00a0\n    Shareholders whose shares are held in \u201cstreet name\u201d through their broker will need to obtain a legal proxy from their broker and present it at the Meeting in order to vote in person.\u00a0 You may revoke your proxy at any time before or at the Meeting, and\n    you may attend the Meeting to vote in person even though a proxy card already may have been returned.\u00a0 However, whether or not you expect to attend the Meeting in person, we urge you to complete, date, sign and return the enclosed proxy card in the\n    enclosed postage-paid envelope or vote by telephone or through the Internet.\u00a0 If you have any questions about the foregoing information, you may call 1-800-886-4839. Your vote is important to us.\u00a0 Thank you for taking the time to consider the Proposals. Brian Hartigan Chief Executive Officer Invesco Capital Management LLC August 18 , 2025 PROXY STATEMENT for Invesco QQQ Trust SM , Series 1 3500 Lacey Road, Suite 700 Downers Grove, Illinois 60515 PROXY STATEMENT FOR THE SPECIAL MEETING OF BENEFICIAL OWNERS TO BE HELD ON OCTOBER 24, 2025 INTRODUCTION This proxy statement (\u201cProxy Statement\u201d) is being furnished to you in connection with the solicitation of proxies by Invesco Capital Management LLC,\n    the sponsor of Invesco QQQ Trust SM , Series 1 (the \u201cTrust\u201d or \u201cQQQ\u201d ) to be voted at a special meeting of beneficial owners of the Trust to be held on October 24, 2025 at 11:00 a.m., Central Time, at the offices of the Trust\u2019s\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n      sponsor, Invesco Capital Management LLC (\u201cInvesco\u201d or the \u201cSponsor\u201d), located at 3500 Lacey Road, Suite 700, Downers Grove, Illinois 60515, and at any adjournments or postponements thereof\n    (the \u201cMeeting\u201d). This Proxy Statement provides you with information you should review before voting on the matters listed in the Notice of Special Meeting of\n    Beneficial Owners.\u00a0 Much of the information in this Proxy Statement is required under rules of the Securities and Exchange Commission (\u201cSEC\u201d).\u00a0 If there is anything you do not understand, you may call 1-800-886-4839 for assistance.\u00a0 This Proxy\n    Statement, the Notice of Special Meeting of Beneficial Owners and related proxy card(s) are first being mailed to beneficial owners of the Trust (\u201cShareholders\u201d) on or about August 25, 2025 . Important Notice Regarding the Availability of Proxy Materials for the Meeting This Proxy Statement and a copy of the proxy card (together, the \u201cProxy Materials\u201d) are available at https:// proxyvotinginfo.com/p/qqq .\u00a0 The\n    Proxy Materials will be available on this website through the day of the Meeting. Notice Regarding the Trust\u2019s Most Recent Shareholder Report Copies of the Trust\u2019s most recent annual report, including financial statements, have previously been mailed to Shareholders of the Trust . If\n    you have not received such report or would like to receive an additional copy, without charge, a request should be directed to the Sponsor by calling 1-800-983-0903. These materials and other information about the Trust are also available at www.invesco.com/qqqproxy . Householding Householding is an option available to certain investors of the Trust.\u00a0 Householding is a method of delivery, based on the preference of the\n    individual investor, in which a single copy of certain shareholder documents can be delivered to investors who share the same address, even if their accounts are registered 1 under different names.\u00a0 Householding for the Trust is available through certain broker-dealers.\u00a0 If you currently are enrolled in householding, the\n    Trust may mail only one copy of this Proxy Statement to you, unless the Trust has rec",
+    "note": null
+  },
+  "news_digest": null,
+  "filings_digest": null,
+  "data_notes": [
+    "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented.",
+    "No recent 10-K filing found.",
+    "No recent 10-Q filing found.",
+    "Skipped (dry run).",
+    "Skipped (dry run)."
+  ]
+}

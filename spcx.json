@@ -1,0 +1,392 @@
+{
+  "ticker": "SPCX",
+  "fetched_at": "2026-07-29T12:18:13.626271Z",
+  "price": {
+    "current_price": 113.5,
+    "ma20": 139.06,
+    "ma50": null,
+    "ma200": null,
+    "52w_high": 211.39,
+    "52w_low": 113.5,
+    "volatility_20d": 0.0407,
+    "volume_trend": "stable",
+    "pct_change_20d": -30.87,
+    "pct_change_1y": -29.48,
+    "rsi_14": 18.46,
+    "macd": null,
+    "macd_signal": null,
+    "macd_histogram": null
+  },
+  "fundamentals": {
+    "pe_ratio": null,
+    "forward_pe": 128.91473,
+    "market_cap": "1.53T",
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "next_earnings_date": "2026-08-04",
+    "analyst_recommendation": "buy",
+    "target_mean_price": 236.7143,
+    "short_interest": {
+      "shares_short": 165048407,
+      "shares_short_prior_month": 23341117,
+      "short_change_pct": 607.11,
+      "short_ratio_days_to_cover": 1.34,
+      "short_pct_of_float": 0.026700001,
+      "as_of_date": "2026-07-15"
+    }
+  },
+  "balance_sheet_health": {
+    "total_debt": 30602999808,
+    "total_cash": 23675000832,
+    "debt_to_equity": 73.597,
+    "current_ratio": 1.217,
+    "free_cash_flow": -14121000000.0,
+    "operating_cash_flow": 6785000000.0,
+    "note": "Most recent annual figures available from Yahoo Finance; coverage varies by ticker/exchange."
+  },
+  "income_statement": {
+    "annual": {
+      "period_end": "2025-12-31",
+      "total_revenue": 18674000000.0,
+      "gross_profit": 9223000000.0,
+      "operating_income": -2064000000.0,
+      "net_income": -4937000000.0,
+      "diluted_eps": -0.51,
+      "gross_margin_pct": 49.39,
+      "operating_margin_pct": -11.05,
+      "net_margin_pct": -26.44,
+      "revenue_growth_yoy_pct": 33.24,
+      "net_income_growth_yoy_pct": -724.15,
+      "eps_growth_yoy_pct": -25857.58
+    },
+    "quarterly": [
+      {
+        "period_end": "2026-03-31",
+        "total_revenue": 4694000000.0,
+        "gross_profit": 2306000000.0,
+        "operating_income": -1954000000.0,
+        "net_income": -4276000000.0,
+        "diluted_eps": -0.41,
+        "gross_margin_pct": 49.13,
+        "operating_margin_pct": -41.63,
+        "net_margin_pct": -91.1,
+        "revenue_growth_qoq_pct": 15.42,
+        "net_income_growth_qoq_pct": 709.85
+      },
+      {
+        "period_end": "2025-03-31",
+        "total_revenue": 4067000000.0,
+        "gross_profit": 2105000000.0,
+        "operating_income": 55000000.0,
+        "net_income": -528000000.0,
+        "diluted_eps": -0.049778,
+        "gross_margin_pct": 51.76,
+        "operating_margin_pct": 1.35,
+        "net_margin_pct": -12.98
+      }
+    ],
+    "note": "Not enough quarterly history for a same-quarter YoY comparison on the oldest quarters shown."
+  },
+  "insider_transactions": {
+    "transactions": [
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-02-02",
+        "direction": "buy",
+        "shares": 511289725.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-02-02",
+        "direction": "buy",
+        "shares": 78395.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-03-23",
+        "direction": "sell",
+        "shares": 25172695.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-04-02",
+        "direction": "sell",
+        "shares": 11390.0,
+        "price_per_share": 105.318
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-04-02",
+        "direction": "sell",
+        "shares": 480.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-04-02",
+        "direction": "sell",
+        "shares": 186545.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-06-15",
+        "direction": "buy",
+        "shares": 282614850.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-06-15",
+        "direction": "buy",
+        "shares": 18518500.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Musk Elon",
+        "title": "CEO, CTO & Chairman",
+        "date": "2026-06-15",
+        "direction": "buy",
+        "shares": 14792900.0,
+        "price_per_share": null
+      }
+    ],
+    "note": null
+  },
+  "institutional_ownership": {
+    "top_institutional_holders": [
+      {
+        "holder": "Mirae Asset Global Investments Co., Ltd.",
+        "shares": 26056048,
+        "pct_out": 0.0034999999,
+        "value": 3033184643
+      },
+      {
+        "holder": "Swedbank AB",
+        "shares": 3561427,
+        "pct_out": 0.0005,
+        "value": 414585730
+      },
+      {
+        "holder": "Hyperion Asset Management Ltd",
+        "shares": 1177203,
+        "pct_out": 0.0002,
+        "value": 137038205
+      },
+      {
+        "holder": "Cannae Holdings, Inc.",
+        "shares": 649350,
+        "pct_out": 0.0001,
+        "value": 75590835
+      },
+      {
+        "holder": "Cisco Systems, Inc.",
+        "shares": 237375,
+        "pct_out": null,
+        "value": 27632824
+      }
+    ],
+    "pct_held_by_institutions": null,
+    "pct_held_by_insiders": null,
+    "note": "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented."
+  },
+  "news_headlines": [
+    {
+      "headline": "If SpaceX Stock Falls Below $100, One Analyst Shares This Warning",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "snippet": "Negative sentiment may be clouding investors' ability to see SpaceX's long-term potential.",
+      "url": "https://www.fool.com/investing/2026/07/29/if-spacex-stock-falls-below-100-analyst-shares-thi/"
+    },
+    {
+      "headline": "SpaceX Is Down More Than 40% From All-Time Highs. Here's What a $10,000 Investment Will Be Worth If Wall Street Analysts Are Correct",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "snippet": "After an early pop following its record initial public offering, SpaceX shares have struggled.",
+      "url": "https://www.fool.com/investing/2026/07/29/spacex-is-down-40-from-all-time-highs-heres-what-a/"
+    },
+    {
+      "headline": "SpaceX Has Lost Over $1 Trillion in Value Since Its IPO. Here's What Changed.",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "snippet": "The largest IPO of all time has cooled off. Here's what investors need to know.",
+      "url": "https://www.fool.com/investing/2026/07/29/spacex-has-lost-over-1-trillion-in-value-since-its/"
+    },
+    {
+      "headline": "Social Buzz: Wallstreetbets Stocks Mostly Higher Pre-Bell Wednesday; Bloom Energy, Seagate Technology to Advance",
+      "source": "MT Newswires",
+      "date": "2026-07-29",
+      "snippet": "The most-talked-about stocks in the Reddit subforum Wallstreetbets were mostly higher hours before W",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/social-buzz-wallstreetbets-stocks-mostly-103834483.html"
+    },
+    {
+      "headline": "Only 2 \"Magnificent Seven\" Stocks Are Beating the Market This Year. What's Going On?",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "snippet": "The market has hit new records this year, but it isn't the \"Magnificent Seven\" stocks that are leading the way.",
+      "url": "https://www.fool.com/investing/2026/07/29/only-2-magnificent-seven-stocks-are-beating-the-ma/"
+    },
+    {
+      "headline": "You bought SpaceX shares at the IPO price \u2014 and now you\u2019re losing money. Is it safe to buy the dip?",
+      "source": "Moneywise",
+      "date": "2026-07-29",
+      "snippet": "Short interest in the stock keeps climbing, but Musk says those betting against SpaceX have a \u2018very low\u2019 chance of surviving.",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/bought-spacex-shares-ipo-price-100500603.html"
+    },
+    {
+      "headline": "Prediction: 3 Unstoppable Artificial Intelligence (AI) Stocks That Will Join the $2 Trillion Club by 2027 (Hint: Not SpaceX)",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "snippet": "The $2 trillion club is going to get more crowded during the next year.",
+      "url": "https://www.fool.com/investing/2026/07/29/prediction-3-unstoppable-artificial-intelligence-a/"
+    },
+    {
+      "headline": "\"Hope Is Not an Investment Strategy,\" Says the Lone Wall Street Analyst Who Hasn't Been Wrong About SpaceX",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "snippet": "Thirty-seven analysts have placed a buy- or hold-equivalent rating on SpaceX stock over the last seven weeks -- and they've all been wrong.",
+      "url": "https://www.fool.com/investing/2026/07/29/hope-not-investment-strategy-wall-st-analyst-spcx/"
+    },
+    {
+      "headline": "Meta to report Q2 earnings amid AI investing concerns",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "snippet": "Meta will report its Q2 earnings after the bell on Wednesday.",
+      "url": "https://finance.yahoo.com/news/meta-to-report-q2-earnings-amid-ai-investing-concerns-121325403.html"
+    },
+    {
+      "headline": "6 members of Congress have bought SpaceX stock, including one Democrat",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "snippet": "The recent entry of Elon Musk's SpaceX into public markets has garnered investing interest on Capitol Hill.",
+      "url": "https://finance.yahoo.com/markets/article/6-members-of-congress-have-bought-spacex-stock-including-one-democrat-130256608.html"
+    }
+  ],
+  "news_articles_raw": [
+    {
+      "headline": "If SpaceX Stock Falls Below $100, One Analyst Shares This Warning",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "text": "As of early-morning trading on July 27, theSpace Exploration Technologies(SPCX+2.56%)stock price was trading below $110 per share. As it opened at $150 when it began trading to the public on June 12, this may not be the early result some shareholders were expecting. With SpaceX set to report 2026 second-quarter earnings on Aug. 4, there's concern that some insiders may sell their shares, putting more downward pressure on the stock price. If SpaceX's stock price were to fall to $100, however, one analyst has a warning about what that would represent. Image source: The Motley Fool. In a note shared by Bloomberg,Morgan Stanleyanalyst Adam Jonas wrote to clients about a disconnect between investing sentiment around SpaceX and its fundamentals. And if theSpaceX stock pricefalls below $100 per share, it may be a warning that investors are undervaluing, or not valuing at all, SpaceX's artificial intelligence (AI) efforts. \"Most investors we speak with significantly discount Grok & Cursor,\" Jonas wrote in the note. \"Many ascribe zero or even negative value for AI given the high capex requirements relative to Space & Connectivity, largely uncertain economics, and the high degree of management time devoted to the business.\" Grok is an AI chatbot that was formerly a part of one of Elon Musk's other companies, xAI, which SpaceX acquired in February. To bolster its AI capabilities even further, SpaceX entered into a definitive agreement to acquire Cursor, an AI coding and software platform, in an all-stock transaction valued at $60 billion. The deal is expected to close in the third quarter of this year. With where the stock is trading, Jonas added in his note that, \"We see the current valuation as an attractive entry point.\" According to Bloomberg data, 80% of analysts covering the company recommend buying shares. And with an average price target of $232, that suggests SpaceX may indeed be undervalued. In addition to Grok and Cursor, SpaceX is also building out AI infrastructure assets, which are helping the company generate revenue as it scales up its broader plans. Anthropic,Alphabet, and Reflection AI are all renting compute capacity from SpaceX, with the deals from just Anthropic and Alphabet potentially generating a combined $26 billion annually for SpaceX. Eventually, SpaceX plans to launch data centers in space, furthering its ability to becomea leader in AI infrastructure. Of course, the risks are plentiful. SpaceX's orbital data centers aren't expected to start launching until 2028, and it will need to spend aggressively to commercialize AI infrastructure in space. It already is, as its AI division is easily its most capital-intensive. SpaceX spent $12.7 billion in 2025 on its AI segment, compared to $3.8 billion on the space segment and $4.1 billion on its connectivity division. For the first quarter of 2026, capital expenditures for the AI segment were already $7.7 billion. For what's ahead, especially depending on the second-quarter results and how many insider shares are ultimately sold, the stock price could continue to drop. The upside is certainly there, but this is still a stock meant for more aggressive investors who can handle the jarring dips in exchange for potential long-term rewards. *Average returns of all recommendations since inception. Cost basis and return based on previous market day close. Invest better with The Motley Fool. Get stock recommendations, portfolio guidance, and more from The Motley Fool's premium services.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "SpaceX Is Down More Than 40% From All-Time Highs. Here's What a $10,000 Investment Will Be Worth If Wall Street Analysts Are Correct",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "text": "Space Exploration Technologies Corp(SPCX+2.56%)went public with a pop. After listing at $135 per share, the stock quickly jumped, reaching an intraday high of $225. However, about six weeks after its initial public offering (IPO), SpaceX is experiencing a post-debut hangover, with shares down more than 40% to $116 (as of July 28). This is by no means the end of the road for SpaceX, and no one truly knows what will happen to the company during the next five years. In fact, Wall Street analysts are bullish on the stock. Here's what a $10,000investment in SpaceXcould be worth if Wall Street is correct. Image source: The Motley Fool. Few deny that SpaceX is a great company with tremendous potential. The question is: What are the company's assets truly worth? SpaceX has three core businesses. There's the launch business, which makes everything else at the company possible. There's Starlink, SpaceX's low-Earth-orbit satellite internet service that can provide high-speed access in areas without good connections to traditional internet infrastructure. Then there is theartificial intelligence(AI) division, which has a wide umbrella. AI houses the social platform X, Grok intelligence, SpaceX's data centers, a future terafab facility, and future enterprise applications that the company produces. It's this division that will make or break the stock. According to SpaceX's registration statement, the AI division has a total addressable market (TAM) of $26.5 trillion. However, SpaceX needs to get its reusable, super-heavy-lift rocket Starship fully operational to power everything it wants to achieve, including the further build-out of Starlink and the development of orbital data centers, which have the potential to quickly gobble up a significant share of the AI compute market. Of the 31 Wall Street analysts who have issued price targets on SpaceX since it went public and even before, 23 have a buy rating on the stock; seven say hold; and one says sell. The average price target of roughly $235 per share implies more than a doubling for the stock during the next year, according to TipRanks. In this scenario, a $10,000 investment turns into more than $20,000 in about 12 to 18 months. However, there is a wide dispersion among this group of analysts, showing thatSpaceXis clearly more of a battleground stock at this valuation. Before its IPO,Morningstaranalyst Nicolas Owens issued a sell rating and a $63-per-share price target. Notably, Owens said that even in its most optimistic scenario, in which the company would be worth nearly $2 trillion, or $154 per share, he and his team would grant the company many of its assumptions, including that Starship could achieve multiple launches per week, or even one a day. In this scenario, Morningstar also assumes that orbital data centers are operational and that SpaceX provides 11.6 gigawatts of AI computing capacity, generating $225 billion in annual revenue. On the other end of the spectrum,Raymond James' analyst Brian Gesuale is by far the most bullish analyst on the Street, assigning SpaceX an $800 price target and valuing the company at about $10 trillion. Gesaule called the company \"the most significant infrastructure convergence since the advent of the Internet,\" one that will be as influential as the advent of railroads or electricity. He also foresees SpaceX's rockets and Starship evolving into a \"commercial aviation-like\" operation with \"continuously declining unit costs.\" Gesuale is projecting more than $837 billion in revenue by 2031, with $696 billion in EBITDA (earnings before interest, taxes, depreciation, and amortization), implying a 27 times discounted cash flow exit multiple based on 2031 EBITDA. In my mind, it's still too early for investors to have enough information to make a wise decision on the stock, given the sheer number of variables. My advice would be to continue waiting and gathering information, or to only take a small, speculative position at this time. Even if SpaceX achiev",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "SpaceX Has Lost Over $1 Trillion in Value Since Its IPO. Here's What Changed.",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "text": "Space Exploration Technologies(SPCX+2.56%), better known as SpaceX, hasn't exactly been a great performer on the public markets, losing more than $1 trillion in market value since its June peak. It went public at $135 per share, but quickly soared to a peak of $225.64 just days later. As of this writing, the stock trades for less than $110. Despite the slump in the stock price, there isn't much that has gone wrong with the actual business. Here's a quick overview of what has changed for better or worse since SpaceX went public, and what to watch going forward. First, the trillion-dollar figure refers to the difference between SpaceX's current market cap and its peak shortly after its initial public offering. Compared with the IPO price, which valued the company at more than $1.7 trillion, SpaceX is down by less than 20%. Image source: The Motley Fool. Even so, a nearly 20% decline in less than two months raises the question of what went wrong. The short answer is \"not much.\" The flagship rocket program, Starship, temporarily delayed its launch, which may have spooked investors. But that's par for the course when it comes tospace companies, and the launch successfully took place on July 24. There's also anticipation that insiders may begin cashing out as lockup periods expire. SpaceX is using a non-traditional lockup expiration schedule, with a significant amount of stock set to become available for trading after it reports second-quarter earnings on Aug. 4. It's worth pointing out that sinceSpaceXwent public, the news has generally been positive for the business and for overall sentiment. Just to name some of the key developments: In a nutshell, although the numbers are admittedly huge, the percentage move hasn't been too unusual. Several other recent IPOs that received a lot of attention (such asFigma(FIG+6.28%)) cooled off even more in the weeks after going public. With SpaceX set to report earnings for the first time as a public company on Aug. 4, investors will get a glimpse of how the business is actually performing and a clearer picture of whether the current valuation is cheap or expensive. *Average returns of all recommendations since inception. Cost basis and return based on previous market day close. Invest better with The Motley Fool. Get stock recommendations, portfolio guidance, and more from The Motley Fool's premium services.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Social Buzz: Wallstreetbets Stocks Mostly Higher Pre-Bell Wednesday; Bloom Energy, Seagate Technology to Advance",
+      "source": "MT Newswires",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong The most-talked-about stocks in the Reddit subforum Wallstreetbets were mostly higher hours before W",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Only 2 \"Magnificent Seven\" Stocks Are Beating the Market This Year. What's Going On?",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "text": "The \"Magnificent Seven\" are a group of the world's largest tech stocks. Because they have become the predominant winners in the market during the past decade or so, all of the largest companies in the world are tech stocks. The first large company that isn't, drugmakerEly Lilly, is the ninth most-valuable company in the world. The Magnificent Seven, in order of value as of this writing, includeApple(AAPL+0.94%),Nvidia(NVDA+0.25%),Alphabet,Microsoft,Amazon,Meta Platforms, andTesla. Today,BroadcomandSpace Exploration Technologiesare both larger than Tesla by market cap. These companies, which are allartificial intelligence(AI) stocks, have soared to their current rankings due to rapid growth, much of which is recently associated with the explosion of AI. However, only two of them were beating theS&P 500as of this writing: Apple and Nvidia.  ^SPXdata byYCharts. Is this an ominous warning about what's happening in the markets? This is the fourth straight year that the S&P 500 is showing a gain. It's not uncommon for the marketto remain in bull territoryfor four years in a row, and during the past 25 years -- since it recovered from the dot-com bubble -- it has lost value only four times annually. As of this writing, the S&P 500 is up about 8% year to date. However, it's off its record high, and it has been little changed during the past two months. Investors have been worried about high oil prices due to the Iran war, AI spending, and a richly valued stock market.Oil prices have been up and downsince the war started in February, and that volatility has the market concerned about longer-term effects. Higher oil prices can trickle down to higher prices in nearly every industry, since many companies rely on oil for production, and they have to pass along higher costs to consumers. As for AI spending, Amazon stock has borne the brunt of the market's worries about it for the past few months. However, Alphabet's recent announcement about its own capital expenditure forecast, which topped Amazon's outlook at $205 billion, sent its stock down as well. In fact, Alphabet stock had been beating the market as well until the announcement. But all of the large companies have been spending quite freely, and that's worrying investors. Lastly, investors also recognize that the market is heading toward its highest-ever valuation. The price-to-earnings ratio (P/E) is the standard valuation metric for most companies, but it has its drawbacks. It's unusable for companies that aren't profitable, and it doesn't account for anomalies, such as tax-advantaged or disadvantaged profits, one-time deviations, and inflation that distorts historical averages. The cyclically adjusted P/E ratio, or CAPE ratio, was developed to account for most of these irregularities, and today, it stands at 41. Not only is that its second-highest figure ever since the metric was created, but it's also more than double the historical average of 17.8. Nvidia and Apple have both been up and down this year, but the market may see certain advantages in these stocks, the two most valuable companies in the world, as valuations rise and volatility increases. Many of the hottest AI stocks have begun to falter as fantastic gains outpace fundamental performance. For example, chipmakerSandiskcontinues to demonstrate phenomenal performance, but its P/E ratio has expanded as well, implying that stock growth is exceeding earnings growth. Many of the AI-adjacent stocks are in the same boat, and many have headed down recently. Apple, on the other hand, laid low as AI exploded, and its cautious approach to AI development has proved to be savvy. Its iPhone remains the backbone of the company as it continues to be a hot seller, again proving that investing in its hardware, the known entity, rather than costly AI, was the right move. Nvidia, at the same time, remains at the epicenter of the AI revolution for a number of reasons. It controls as much as 90% of the AI chip market, and it's deeply embedd",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "You bought SpaceX shares at the IPO price \u2014 and now you\u2019re losing money. Is it safe to buy the dip?",
+      "source": "Moneywise",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong Moneywise and Yahoo Finance LLC may earn commission or revenue through links in the content below. SpaceX has erased almost $1 trillion in stock market value in five weeks \u2014 more than most individual companies in the world are worth (1). Retail investors who fought for shares at the $135 IPO price are down over 18% as of July 27 (2). Those who bought four days later, at the June 16 peak of $225.64, are down over 50%. A 50% discount on the hottest company in the world may look like an obvious buy, but that instinct is exactly what needs examining. Jeff Bezos backs a platform that lets anyone invest in rental homes for as little as $100 \u20146 ways to build wealth like a landlord without actually being one JPMorgan still sees gold hitting $5,000/oz by Q4 \u2014 and savvy investors are protecting their wealth with a tax-advantaged Gold IRA.Learn more with a free guidefrom Priority Gold The tax breaks in Trump's 'big beautiful bill' expire after 2028 \u2014 and experts say most people won't act in time.What to do before the window closes \"Hype and quality are not the same thing,\" Matthew Fleissig, CEO of the wealth management firm Pathstone, warned in a recent MarketWatch column (3). The next two weeks will test which one SpaceX has been trading on. SpaceX (NASDAQ:SPCX) is set to report its first earnings as a public company on Aug. 4 and two trading days after that, hundreds of millions of insider shares will become eligible to sell for the first time (4). Short sellers already control close to a third of the stock's tradable float. SpaceX priced its IPO at $135 a share on June 11, raising $85.7 billion in what became the largest public offering in history (5). Shares jumped to $160.95 on their first day of trading on June 12, then kept climbing (6). By June 16, the stock touched an intraday high of $225.64, pushing the company's valuation briefly past $2 trillion. It's been mostly downhill since. And the company's own missteps haven't helped. SpaceX postponed a Falcon 9 launch that was supposed to put 24 Starlink satellites in orbit and pushed back its 13th Starship test after several engines failed to start \u2014 two of them had to be pulled and replaced (7). Growth is slowing too. SpaceX grew revenue 33% in 2025; in the first quarter of this year, that rate fell to 15%. And the company is still deep in the red \u2014 with a $4.9 billion net loss last year on $18.7 billion in revenue (8). Along the way, Meta passed SpaceX in market value \u2014 $1.64 trillion to $1.59 trillion (9). Read More:Millionaires under 43 hold only 25% of their wealth in stocks. Here's where their money is actually going Short interest in SpaceX keeps climbing (10). It stood at 5% to 7% of the tradable float back in June. It was 185 million shares, 29% of the float, as of July 16. It's near 206 million shares, or 32%, as of July 24 \u2014 roughly $25 billion riding on the stock falling further, according to S3 Partners. The firm's head of research, Matthew Unterman, told CNBC, \"We continue to see short sellers adding exposure ahead of several key upcoming catalysts.\" Shorts are deliberately positioning for Aug. 4 and the share unlocks behind it (11). That 32% is a level almost unheard of for a company this size; Apple's short interest hovers near 1% (12). Musk isn't taking any of this quietly. Firms that keep betting against SpaceX, he wrote on X, have a \"very low\" chance of surviving \u2014 and he repeated his claim that, if goals are met, the company \"will be worth more than Earth\" (13). His own fortune is riding on it. Forbes' Real-Time Billionaires Index put his net worth above $1 trillion on IPO day; by July 24, it was down to roughly $725 billion (14). The short sellers, for now, are winning the argument, as they were sitting on an estimated $8.7 billion in paper profits as of mid-July (15). SpaceX deliberately spread its insider sales across several dates instead of one, so the market wouldn't get flooded all at once. The first release is still massive. Two",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Prediction: 3 Unstoppable Artificial Intelligence (AI) Stocks That Will Join the $2 Trillion Club by 2027 (Hint: Not SpaceX)",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "text": "A while ago,Space Exploration Technologies(SPCX+2.56%), better known as SpaceX, was a member of the $2 trillion club. However, it has sold off and fallen out of that group, and I don't think it has what it takes to get back above the $2 trillion threshold for a while. Instead, I'm focusing on other stocks with fairly defined growth rates and profit levels that look like genius buys right now. The three that I think can get above $2 trillion by 2027 at the latest areBroadcom(AVGO-0.60%),Micron(MU-8.85%), andMeta Platforms(META-0.08%). All three are fantastic investments and will be there before investors know it. Image source: Getty Images. Broadcom is only a stone's throw away from the $2 trillion club, with a market cap of more than $1.8 trillion. However, I think it could cross the $2 trillion threshold before 2026 is over. That would be a solid gain in just about five months, but investors also need to be ready for what is coming in 2027. While Broadcom does a lot as a company, its biggest growth area is custom artificial intelligence (AI) chips, which are becoming increasingly popular among AI hyperscalers. These specialized computing units excel in one area, and when used with a specific workload, they provide superior cost performance versus training using graphics processing units (GPUs). As a result, AI hyperscalers are deploying large numbers of these units. Orders are ramping up, and management expects more than $100 billion in AI semiconductor revenue in 2027. For reference, AI semiconductor revenue was $10.8 billion in Q2 (or about $43.2 billion annualized). That's a huge jump, and will easily helpBroadcom reach the $2 trillion markif it can live up to that expectation. Micron(MU-8.85%)is the furthest from $2 trillion, with a $940 billion valuation. If it more than doubles during the next year and a half, it'll be an excellent investment, and I think Micron could achieve it. It's a memory chip fabricator, and memory chips are in short supply right now, causing prices to skyrocket. This has led to soaring Micron revenue and profit.  MU Revenue (TTM)data byYCharts However, Micron's growth is far from done. During fiscal 2027 (ending August 2027), Wall Street analysts estimate Micron's revenue growth at 84% and that its earnings per share (EPS) will more than double from $73.44 to $153.74. With the stock trading at just 5.8 times 2027's earnings estimates, I thinkMicron stockcould easily double during the next year and a half, leading to strong gains for investors. Last up is Meta Platforms, which is currently viewed negatively by the AI investment community. Investors are worried about how much money Meta is dumping into AI without much to show for it. Still, they are ignoring a strong advertising business that's benefiting from some of Meta's AI tools. Furthermore, Meta may launch a cloud computing business unit. If Meta can turn the corner on its AI technology and offer something that rivals one of the other hyperscalers' products, then Meta could easily become a beloved stock on Wall Street and surge from its current $1.5 trillion valuation, easily crossing the $2 trillion mark along the way. The company has a ways to go before this happens, but withMeta stocktrading at an attractive 19 times forward earnings right now, it has plenty of room for its valuation to expand to pass the $2 trillion level in its current state, not to mention what it could be by the end of next year. *Average returns of all recommendations since inception. Cost basis and return based on previous market day close. Invest better with The Motley Fool. Get stock recommendations, portfolio guidance, and more from The Motley Fool's premium services.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "\"Hope Is Not an Investment Strategy,\" Says the Lone Wall Street Analyst Who Hasn't Been Wrong About SpaceX",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "text": "Roughly seven weeks ago, on June 12, Elon Musk's trillion-dollar artificial intelligence (AI) and space economy goliath,Space Exploration Technologies(SpaceX)(SPCX+2.56%), etched its name in Wall Street lore. The $85.7 billion raised from itsinitial public offering (IPO)nearly tripled the previous recordholder. When SpaceX went public, it had an astonishing21underwriters, withGoldman Sachsleading the way. Given that underwriters typically purchase shares of the companies they bring public, it's common for these financial institutions to bestow buy ratings and lofty price targets on these businesses. Image source: Getty Images. Spanning seven weeks, 38 Wall Street analysts have weighed in on SpaceX. Unsurprisingly, 30 of these analysts have rated it a buy, with an additional seven chiming in with a hold-equivalent rating. But with SpaceX trading 15% below its IPO price and nearly 50% off its all-time high (as of July 24), these 37 analysts have, thus far, been wrong. Only one Wall Street analyst has hit the nail on the head with SpaceX: CFRA Research's Keith Snyder. Shortly after Musk's company debuted, Snyder issued a sell rating and a (now prescient) $115 price target. While Snyder acknowledged in a CNBC interview that he'd like to see SpaceX succeed, he firmly proclaimed that \"hope is not an investment strategy.\" SpaceX in IPO filing: \"We believe we have identified the largest actionable total addressable market in human history. We estimate that our quantifiable TAM is $28.5 trillion, consisting of $370 billion in Space from space-enabled solutions; $1.6 trillion in Connectivity across...https://t.co/CBTpfJECikpic.twitter.com/yh54mKFlQE  Specifically, CFRA's senior research analyst notes that thefundamental outlook for SpaceXdoesn't match where Wall Street and retail investors were valuing the company. Snyder questioned how SpaceX arrived at its $28.5 trillion total addressable market, and he highlighted several potential speed bumps for the company, including space-based data centers and the evolution of Starship. The SpaceX prospectus backs up this skepticism. Despite several years of positive adjustedEBITDA, Musk's company isn't yet generating recurring profits. This is a highly capital-intensive business that's prone to delays, which hasn't yet proved it's sustainable. Image source: Getty Images. However, the strongest argument Snyder makes against owning SpaceX stock is something that Wall Street analystsrarelytackle. In response to CNBC host Brian Sullivan's statement that investors are buying SpaceX because of the prior success of Musk in proving doubters wrong, Snyder retorted: Musk has done incredible things. But, he's not infallible. They have a lot on their plate right now, and they have a lot of different moving parts that all are required to make this success story a reality. And they all have to go right. Acknowledging thatSpaceX CEO Elon Musk isn't perfectis something we rarely see, but it's central to the thesis of skeptics. For example, Musk has been promising Level 5 full self-driving forTesla's electric vehicles annually for over a decade, but this has never come to fruition. Likewise, he promised 1 million robotaxis on public roads by the end of 2020, which also failed to materialize. Musk frequently makes bold claims that end up baked into his public companies' share prices, butthese visions rarely go as planned. Put plainly, SpaceX is a \"show-me stock\" that's being valued as if it's proven itself for the last decade. Among a veritable sea of bulls, CFRA's Keith Snyder is the only analyst who's been right about SpaceX. *Average returns of all recommendations since inception. Cost basis and return based on previous market day close. Invest better with The Motley Fool. Get stock recommendations, portfolio guidance, and more from The Motley Fool's premium services.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Meta to report Q2 earnings amid AI investing concerns",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "text": "Meta will report its Q2 earnings after the bell on Wednesday.",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "6 members of Congress have bought SpaceX stock, including one Democrat",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "text": "The recent entry of Elon Musk's SpaceX into public markets has garnered investing interest on Capitol Hill.",
+      "full_text_fetched": false
+    }
+  ],
+  "filings_raw": {
+    "10-K": {
+      "filing_type": "10-K",
+      "filing_date": null,
+      "text": null,
+      "note": "No recent 10-K filing found."
+    },
+    "10-Q": {
+      "filing_type": "10-Q",
+      "filing_date": null,
+      "text": null,
+      "note": "No recent 10-Q filing found."
+    },
+    "8-K": {
+      "filing_type": "8-K",
+      "filing_date": "2026-06-26",
+      "text": "8-K 1 spcx-closing8xkjune2026.htm 8-K Document UNITED STATES SECURITIES AND EXCHANGE COMMISSION WASHINGTON, D.C. 20549 FORM 8-K CURRENT REPORT Pursuant to Section 13 or 15(d) of the Securities Exchange Act of 1934 Date of Report (Date of earliest event reported): June\u00a026, 2026 Space Exploration Technologies Corp. (Exact name of registrant as specified in its charter) Texas 001-43344 01-0627671 (State or other jurisdiction of incorporation) (Commission File Number) (IRS Employer Identification No.) 1 Rocket Road Starbase, TX 78521 (Address of principal executive offices and zip code) Registrant\u2019s telephone number, including area code: (310) 363-6000 Check the appropriate box below if the Form 8-K filing is intended to simultaneously satisfy the filing obligation of the registrant under any of the following provisions: \u00a8 Written communications pursuant to Rule 425 under the Securities Act (17 CFR 230.425) \u00a8 Soliciting material pursuant to Rule 14a-12 under the Exchange Act (17 CFR 240.14a-12) \u00a8 Pre-commencement communications pursuant to Rule 14d-2(b) under the Exchange Act (17 CFR 240.14d-2(b)) \u00a8 Pre-commencement communications pursuant to Rule 13e-4(c) under the Exchange Act (17 CFR 240.13e-4(c)) Securities registered pursuant to Section 12(b) of the Act: Title of each class Trading Symbol(s) Name of each exchange on which registered Class A common stock, par value $0.001 per share SPCX The Nasdaq Stock Market LLC Class A common stock, par value $0.001 per share SPCX Nasdaq Texas, LLC Indicate by check mark whether the registrant is an emerging growth company as defined in Rule 405 of the Securities Act of 1933 (\u00a7\u2009230.405 of this chapter) or Rule 12b-2 of the Securities Exchange Act of 1934 (\u00a7\u2009240.12b-2 of this chapter). Emerging growth company \u00a8 If an emerging growth company, indicate by check mark if the registrant has elected not to use the extended transition period for complying with any new or revised financial accounting standards provided pursuant to Section 13(a) of the Exchange Act. \u00a8 Item\u00a08.01. Other Events. Notes Offering On June\u00a022, 2026, Space Exploration Technologies Corp. (the \u201cCompany\u201d) commenced an offering of senior unsecured notes (the \u201cOffering\u201d). On June\u00a026, 2026, the Company entered into an indenture (the \u201cIndenture\u201d) with The Bank of New York Mellon Trust Company, N.A., as trustee (the \u201ctrustee\u201d), pursuant to which the Company issued $7.0\u00a0billion aggregate principal amount of its 5.350% Senior Notes due 2031 (the \u201c2031\u00a0Notes\u201d), $6.0\u00a0billion aggregate principal amount of its 5.650% Senior Notes due 2033 (the \u201c2033\u00a0Notes\u201d), $6.0\u00a0billion aggregate principal amount of its 5.875% Senior Notes due 2036 (the \u201c2036\u00a0Notes\u201d), $2.5\u00a0billion aggregate principal amount of its 6.600% Senior Notes due 2046 (the \u201c2046\u00a0Notes\u201d), and $3.5\u00a0billion aggregate principal amount of its 6.650% Senior Notes due 2056 (the \u201c2056\u00a0Notes\u201d and, together with the 2031\u00a0Notes, the 2033\u00a0Notes, the 2036\u00a0Notes, and the 2046\u00a0Notes, the \u201cNotes\u201d). The Notes were offered and sold only to persons reasonably believed to be qualified institutional buyers in reliance on Rule\u00a0144A under the Securities Act of 1933, as amended (the \u201cSecurities Act\u201d), and outside the United States, only to non-U.S. persons pursuant to Regulation\u00a0S under the Securities Act. The Notes bear interest at a rate of 5.350% per annum with respect to the 2031\u00a0Notes, 5.650% per annum with respect to the 2033\u00a0Notes, 5.875% per annum with respect to the 2036\u00a0Notes, 6.600% per annum with respect to the 2046\u00a0Notes, and 6.650% per annum with respect to the 2056\u00a0Notes.  Interest on the Notes is payable semi-annually in arrears on January\u00a015 and July\u00a015 of each year, beginning on January\u00a015, 2027.  The Company will pay interest to those persons who were holders of record at the close of business on the January\u00a01 or July\u00a01 immediately preceding each interest payment date.  The Notes are unsecured obligations of the Company and rank equally in right of payment with all existing and future unsubordinated indebtedness, liabilities and other obligations of the Company.  The Indenture also contains customary event of default provisions. The Notes of each series will be redeemable, in whole or in part, at the Company\u2019s option at any time and from time to time prior to the applicable Par Call Date (as set forth in the table below), at a redemption price calculated by the Company (expressed as a percentage of principal amount and rounded to three decimal places) equal to the greater of: 1. (a) the sum of the present values of the remaining scheduled payments of principal and interest thereon discounted to the redemption date (assuming the Notes matured on the applicable Par Call Date) on a semi-annual basis (assuming a 360-day year consisting of twelve 30-day months) at the Treasury Rate (as defined below) plus the Applicable Spread for such Notes (as set forth below) less (b) interest accrued and unpaid thereon to the date of redemption, and 2. 100% of the principal amount of the Notes to be redeemed, plus , in either case, accrued and unpaid interest, if any, thereon to, but excluding, the redemption date. Series Par Call Date Applicable Spread 2031\u00a0Notes: June\u00a015, 2031 (one\u00a0month prior to maturity) +20\u00a0basis points 2033\u00a0Notes: May\u00a015, 2033 (two\u00a0months prior to maturity) +20\u00a0basis points 2036\u00a0Notes: April\u00a015, 2036 (three\u00a0months prior to maturity) +25\u00a0basis points 2046\u00a0Notes: January\u00a015, 2046 (six\u00a0months prior to maturity) +25\u00a0basis points 2056\u00a0Notes: January\u00a015, 2056 (six\u00a0months prior to maturity) +30\u00a0basis points The Notes of each series will be redeemable, in whole or in part, at the Company\u2019s option at any time and from time to time on or after the applicable Par Call Date, at a redemption price equal to 100% of the principal amount of the Notes being redeemed, plus accrued and unpaid interest, if any, thereon to, but excluding, the date of redemption. On June\u00a026, 2026, the Company entered into a registration rights agreement (the \u201cRegistration Rights Agreement\u201d) with BofA Securities, Inc., Citigroup Global Markets Inc., Goldman Sachs & Co. LLC, J.P.\u00a0Morgan Securities LLC, and Morgan Stanley & Co. LLC, as representatives of the several initial purchasers, pursuant to which the Company agreed to use commercially reasonable efforts to: \u2022 file a registration statement with respect to a registered offer to exchange the Notes for new exchange notes, which will have terms substantially identical in all material respects to the Notes (except that, among other things, the new exchange notes will not contain terms with respect to transfer restrictions and additional interest); \u2022 cause the exchange offer registration statement to be declared effective under the Securities Act; and \u2022 consummate the registered exchange offer no later than 540 days after the issue date of the Notes. The foregoing description of the Indenture, the Notes and the Registration Rights Agreement does not purport to be complete and is qualified in its entirety by reference to the entire text of the Indenture, the forms of the 2031\u00a0Notes, the 2033\u00a0Notes, the 2036\u00a0Notes, the 2046\u00a0Notes, the 2056\u00a0Notes, and the Registration Rights Agreement, copies of which are filed hereto as Exhibit\u00a04.1 through Exhibit\u00a04.7 and are incorporated by reference herein. Item 9.01. Financial Statements and Exhibits. (d)\u00a0Exhibits Exhibit Number Description 4.1 Indenture, dated as of June\u00a026, 2026, between Space Exploration Technologies Corp. and The Bank of New York Mellon Trust Company, N.A., as trustee. 4.2 Form of 5.350% Senior Notes due 2031 (included in Exhibit 4.1). 4.3 Form of 5.650% Senior Notes due 2033 (included in Exhibit 4.1). 4.4 Form of 5.875% Senior Notes due 2036 (included in Exhibit 4.1). 4.5 Form of 6.600% Senior Notes due 2046 (included in Exhibit 4.1). 4.6 Form of 6.650% Senior Notes due 2056 (included in Exhibit 4.1). 4.7 Registration Rights Agreement, dated as of June\u00a026, 2026, among Space Exploration Technologies Corp. and BofA Securities, Inc., Citigroup Global Markets Inc., Goldman Sachs & Co. LLC, J.P.\u00a0Morgan Securities LLC, and Morgan Stanley & Co. LLC. SIGNATURE Pursuant to the requirements of the Securities Exchange Act of 1934, the registrant has duly caused this report to be signed on its behalf by the undersigned hereunto duly authorized. Space Exploration Technologies Corp. Date:\u00a0June\u00a026,\u00a02026 By: /s/ Bret Johnsen Name:\u00a0Bret Johnsen Title:\u00a0\u00a0\u00a0Chief Financial Officer",
+      "note": null
+    }
+  },
+  "form144_notices": {
+    "notices": [],
+    "note": null
+  },
+  "beneficial_ownership": {
+    "filings": [],
+    "note": null
+  },
+  "proxy_raw": {
+    "filing_date": null,
+    "text": null,
+    "note": "No recent DEF 14A proxy statement found."
+  },
+  "news_digest": null,
+  "filings_digest": null,
+  "data_notes": [
+    "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented.",
+    "Not enough quarterly history for a same-quarter YoY comparison on the oldest quarters shown.",
+    "No recent 10-K filing found.",
+    "No recent 10-Q filing found.",
+    "No recent DEF 14A proxy statement found.",
+    "Skipped (dry run).",
+    "Skipped (dry run)."
+  ]
+}

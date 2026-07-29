@@ -1,0 +1,574 @@
+{
+  "ticker": "AAPL",
+  "fetched_at": "2026-07-29T12:16:40.974194Z",
+  "price": {
+    "current_price": 336.91,
+    "ma20": 317.04,
+    "ma50": 306.99,
+    "ma200": 276.07,
+    "52w_high": 336.91,
+    "52w_low": 201.58,
+    "volatility_20d": 0.0183,
+    "volume_trend": "stable",
+    "pct_change_20d": 19.58,
+    "pct_change_1y": 60.1,
+    "rsi_14": 72.09,
+    "macd": 8.931,
+    "macd_signal": 7.822,
+    "macd_histogram": 1.109
+  },
+  "fundamentals": {
+    "pe_ratio": 41.17191,
+    "forward_pe": 35.25559,
+    "market_cap": "4.99T",
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "next_earnings_date": "2026-07-30",
+    "analyst_recommendation": "buy",
+    "target_mean_price": 319.71722,
+    "short_interest": {
+      "shares_short": 146547784,
+      "shares_short_prior_month": 144248476,
+      "short_change_pct": 1.59,
+      "short_ratio_days_to_cover": 2.28,
+      "short_pct_of_float": 0.01,
+      "as_of_date": "2026-07-15"
+    }
+  },
+  "balance_sheet_health": {
+    "total_debt": 84710998016,
+    "total_cash": 68507000832,
+    "debt_to_equity": 79.548,
+    "current_ratio": 1.07,
+    "free_cash_flow": 98767000000.0,
+    "operating_cash_flow": 111482000000.0,
+    "note": "Most recent annual figures available from Yahoo Finance; coverage varies by ticker/exchange."
+  },
+  "income_statement": {
+    "annual": {
+      "period_end": "2025-09-30",
+      "total_revenue": 416161000000.0,
+      "gross_profit": 195201000000.0,
+      "operating_income": 133050000000.0,
+      "net_income": 112010000000.0,
+      "diluted_eps": 7.46,
+      "gross_margin_pct": 46.91,
+      "operating_margin_pct": 31.97,
+      "net_margin_pct": 26.92,
+      "revenue_growth_yoy_pct": 6.43,
+      "net_income_growth_yoy_pct": 19.5,
+      "eps_growth_yoy_pct": 22.7
+    },
+    "quarterly": [
+      {
+        "period_end": "2026-03-31",
+        "total_revenue": 111184000000.0,
+        "gross_profit": 54781000000.0,
+        "operating_income": 35885000000.0,
+        "net_income": 29578000000.0,
+        "diluted_eps": 2.01,
+        "gross_margin_pct": 49.27,
+        "operating_margin_pct": 32.28,
+        "net_margin_pct": 26.6,
+        "revenue_growth_qoq_pct": -22.66,
+        "net_income_growth_qoq_pct": -29.74,
+        "revenue_growth_yoy_pct": 16.6,
+        "net_income_growth_yoy_pct": 19.36,
+        "eps_growth_yoy_pct": 21.82
+      },
+      {
+        "period_end": "2025-12-31",
+        "total_revenue": 143756000000.0,
+        "gross_profit": 69231000000.0,
+        "operating_income": 50852000000.0,
+        "net_income": 42097000000.0,
+        "diluted_eps": 2.84,
+        "gross_margin_pct": 48.16,
+        "operating_margin_pct": 35.37,
+        "net_margin_pct": 29.28,
+        "revenue_growth_qoq_pct": 40.3,
+        "net_income_growth_qoq_pct": 53.27
+      },
+      {
+        "period_end": "2025-09-30",
+        "total_revenue": 102466000000.0,
+        "gross_profit": 48341000000.0,
+        "operating_income": 32427000000.0,
+        "net_income": 27466000000.0,
+        "diluted_eps": 1.85,
+        "gross_margin_pct": 47.18,
+        "operating_margin_pct": 31.65,
+        "net_margin_pct": 26.8,
+        "revenue_growth_qoq_pct": 8.96,
+        "net_income_growth_qoq_pct": 17.21
+      },
+      {
+        "period_end": "2025-06-30",
+        "total_revenue": 94036000000.0,
+        "gross_profit": 43718000000.0,
+        "operating_income": 28202000000.0,
+        "net_income": 23434000000.0,
+        "diluted_eps": 1.57,
+        "gross_margin_pct": 46.49,
+        "operating_margin_pct": 29.99,
+        "net_margin_pct": 24.92,
+        "revenue_growth_qoq_pct": -1.39,
+        "net_income_growth_qoq_pct": -5.43
+      },
+      {
+        "period_end": "2025-03-31",
+        "total_revenue": 95359000000.0,
+        "gross_profit": 44867000000.0,
+        "operating_income": 29589000000.0,
+        "net_income": 24780000000.0,
+        "diluted_eps": 1.65,
+        "gross_margin_pct": 47.05,
+        "operating_margin_pct": 31.03,
+        "net_margin_pct": 25.99
+      }
+    ],
+    "note": null
+  },
+  "insider_transactions": {
+    "transactions": [
+      {
+        "owner": "Newstead Jennifer",
+        "title": "SVP, GC and Secretary",
+        "date": "2026-06-15",
+        "direction": "buy",
+        "shares": 30104.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Newstead Jennifer",
+        "title": "SVP, GC and Secretary",
+        "date": "2026-06-15",
+        "direction": "sell",
+        "shares": 16238.0,
+        "price_per_share": 296.42
+      },
+      {
+        "owner": "Borders Ben",
+        "title": "Principal Accounting Officer",
+        "date": "2026-06-15",
+        "direction": "buy",
+        "shares": 240.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Borders Ben",
+        "title": "Principal Accounting Officer",
+        "date": "2026-06-15",
+        "direction": "sell",
+        "shares": 124.0,
+        "price_per_share": 296.42
+      },
+      {
+        "owner": "Borders Ben",
+        "title": "Principal Accounting Officer",
+        "date": "2026-06-16",
+        "direction": "sell",
+        "shares": 116.0,
+        "price_per_share": 295.14
+      },
+      {
+        "owner": "LEVINSON ARTHUR D",
+        "title": "Director",
+        "date": "2026-05-27",
+        "direction": "sell",
+        "shares": 50000.0,
+        "price_per_share": 311.02
+      },
+      {
+        "owner": "LEVINSON ARTHUR D",
+        "title": "Director",
+        "date": "2026-05-27",
+        "direction": "sell",
+        "shares": 65000.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Borders Ben",
+        "title": "Principal Accounting Officer",
+        "date": "2026-05-08",
+        "direction": "sell",
+        "shares": 1274.0,
+        "price_per_share": 290.0
+      },
+      {
+        "owner": "LEVINSON ARTHUR D",
+        "title": "Director",
+        "date": "2026-05-06",
+        "direction": "sell",
+        "shares": 149527.0,
+        "price_per_share": 284.57
+      },
+      {
+        "owner": "LEVINSON ARTHUR D",
+        "title": "Director",
+        "date": "2026-05-06",
+        "direction": "sell",
+        "shares": 100473.0,
+        "price_per_share": 285.04
+      },
+      {
+        "owner": "LEVINSON ARTHUR D",
+        "title": "Director",
+        "date": "2026-05-06",
+        "direction": "sell",
+        "shares": 5000.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Parekh Kevan",
+        "title": "Senior Vice President, CFO",
+        "date": "2026-04-23",
+        "direction": "sell",
+        "shares": 1534.0,
+        "price_per_share": 275.0
+      },
+      {
+        "owner": "Borders Ben",
+        "title": "Principal Accounting Officer",
+        "date": "2026-04-15",
+        "direction": "buy",
+        "shares": 1717.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Borders Ben",
+        "title": "Principal Accounting Officer",
+        "date": "2026-04-15",
+        "direction": "sell",
+        "shares": 892.0,
+        "price_per_share": 266.43
+      },
+      {
+        "owner": "Parekh Kevan",
+        "title": "Senior Vice President, CFO",
+        "date": "2026-04-15",
+        "direction": "buy",
+        "shares": 10928.0,
+        "price_per_share": null
+      },
+      {
+        "owner": "Parekh Kevan",
+        "title": "Senior Vice President, CFO",
+        "date": "2026-04-15",
+        "direction": "sell",
+        "shares": 4793.0,
+        "price_per_share": 266.43
+      }
+    ],
+    "note": null
+  },
+  "institutional_ownership": {
+    "top_institutional_holders": [
+      {
+        "holder": "Blackrock Inc.",
+        "shares": 1144695425,
+        "pct_out": 0.0779,
+        "value": 389288004763
+      },
+      {
+        "holder": "Vanguard Capital Management LLC",
+        "shares": 953847648,
+        "pct_out": 0.064899996,
+        "value": 324384495323
+      },
+      {
+        "holder": "State Street Corporation",
+        "shares": 602341409,
+        "pct_out": 0.040999997,
+        "value": 204844258284
+      },
+      {
+        "holder": "Geode Capital Management, LLC",
+        "shares": 368616954,
+        "pct_out": 0.0251,
+        "value": 125359248766
+      },
+      {
+        "holder": "Vanguard Portfolio Management LLC",
+        "shares": 331437055,
+        "pct_out": 0.0226,
+        "value": 112715109213
+      }
+    ],
+    "pct_held_by_institutions": null,
+    "pct_held_by_insiders": null,
+    "note": "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented."
+  },
+  "news_headlines": [
+    {
+      "headline": "Apple to report Q3 earnings following price hikes on Macs, iPads",
+      "source": "Yahoo Finance",
+      "date": "2026-07-29",
+      "snippet": "Apple will report its third quarter earnings on Thursday.",
+      "url": "https://finance.yahoo.com/technology/article/apple-to-report-q3-earnings-following-price-hikes-on-macs-ipads-115246491.html"
+    },
+    {
+      "headline": "Apple Q3 Earnings Preview: What To Expect From Upcoming Report",
+      "source": "GuruFocus.com",
+      "date": "2026-07-29",
+      "snippet": "Apple Earnings Loom as Wall Street Braces for Historic CEO Shift",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-q3-earnings-preview-expect-121156179.html"
+    },
+    {
+      "headline": "How much cash do you need invested in 2026 to completely live off dividends? Probably less than you think",
+      "source": "Moneywise",
+      "date": "2026-07-29",
+      "snippet": "The mainstream index funds don\u2019t offer attractive dividend yields, but that doesn\u2019t mean you need a fortune to retire on dividend income.",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/much-cash-invested-2026-completely-111500635.html"
+    },
+    {
+      "headline": "Explainer-What are credit default swaps and why are they spooking AI investors?",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "snippet": "By Amanda Cooper July 29 (Reuters) - Shares in companies driving the AI boom have been under pressure for weeks.",
+      "url": "https://finance.yahoo.com/markets/options/articles/explainer-credit-default-swaps-why-110342195.html"
+    },
+    {
+      "headline": "SKHY, MU, Samsung's Memory Technology Lead Over China\u2019s CXMT Unlikely To Narrow Soon, Says Futurum Analyst",
+      "source": "Stocktwits",
+      "date": "2026-07-29",
+      "snippet": "During an interview with CNBC, Futurum analyst Rolf Bulk cited the performance edge that SK Hynix, Micron, and Samsung have over CXMT chips.",
+      "url": "https://stocktwits.com/news-articles/markets/equity/skhy-mu-samsung-memory-tech-two-three-generation-advantage-cxmt-analyst/cZNRAAMRJRk"
+    },
+    {
+      "headline": "Social Buzz: Wallstreetbets Stocks Mostly Higher Pre-Bell Wednesday; Bloom Energy, Seagate Technology to Advance",
+      "source": "MT Newswires",
+      "date": "2026-07-29",
+      "snippet": "The most-talked-about stocks in the Reddit subforum Wallstreetbets were mostly higher hours before W",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/social-buzz-wallstreetbets-stocks-mostly-103834483.html"
+    },
+    {
+      "headline": "Only 2 \"Magnificent Seven\" Stocks Are Beating the Market This Year. What's Going On?",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "snippet": "The market has hit new records this year, but it isn't the \"Magnificent Seven\" stocks that are leading the way.",
+      "url": "https://www.fool.com/investing/2026/07/29/only-2-magnificent-seven-stocks-are-beating-the-ma/"
+    },
+    {
+      "headline": "Mag 7 earnings: Alphabet 'really set the tone,' strategist says",
+      "source": "Yahoo Finance Video",
+      "date": "2026-07-28",
+      "snippet": "Meta Platforms (META), Microsoft (MSFT), Amazon (AMZN), and Apple (AAPL) are the next Big Tech names \u2014 part of the Magnificent Seven \u2014 to report quarterly earnings results this week. Zacks Investment ",
+      "url": "https://finance.yahoo.com/video/mag-7-earnings-alphabet-really-set-the-tone-strategist-says-194621871.html"
+    },
+    {
+      "headline": "CLARITY Act hits summer roadblock",
+      "source": "Yahoo Finance Video",
+      "date": "2026-07-28",
+      "snippet": "Scott Melker dives into the roadblocks delaying the CLARITY Act, CME\u2019s expansion into near round-the-clock futures trading, and the surge in blockchain activity as token prices cool. \"The Daily Wolf w",
+      "url": "https://finance.yahoo.com/video/clarity-act-hits-summer-roadblock-155743444.html"
+    },
+    {
+      "headline": "Why this analyst is down on Apple stock even as it hovers near record highs",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "snippet": "A big bear on Apple emerges ahead of earnings.",
+      "url": "https://finance.yahoo.com/markets/article/why-this-analyst-is-down-on-apple-stock-even-as-it-hovers-near-record-highs-130907412.html"
+    }
+  ],
+  "news_articles_raw": [
+    {
+      "headline": "Apple to report Q3 earnings following price hikes on Macs, iPads",
+      "source": "Yahoo Finance",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong Apple's (AAPL) third quarter earnings are on deck Thursday, setting up a potential reprieve from the week's chip and AI stock sell-off. Shares of the iPhone maker have benefited from their general lack of exposure to the AI trade, with investors flocking to the stock as a safety play and briefly sending the company'smarket capitalization to around the $5 trillion mark on Tuesday. Apple stock is up some 24% year to date, easily outpacing the rest of the \"Magnificent Seven\" stocks. Goog (GOOG,GOOGL) is the second-best performer of the lot in the period, climbing roughly 7%. For the third quarter, Apple is expected to report earnings per share (EPS) of $1.89 on revenue of $108.8 billion. That would mark a jump from the EPS of $1.57 and $94 billion in revenue the company saw in the same period last year. Apple's iPhone revenue is projected to hit $53.5 billion, a 20% increase from the $44.5 billion the company brought in in Q3 2025. Services, Apple's second-largest business, is anticipated to see revenue of $31.3 billion, up 14%. Revenue out of China is expected to grow 27% to $19.5 billion. While Apple's stock has outperformed its Big Tech peers, the Cupertino, Calif.-based company is still facing its own AI-induced headache: rising memory and storage costs, thanks to the global AI build-out. That has driven the company toincrease the price of its Macs and iPads, though the iPhone has been spared at least for now. Apple is widely expected to boost the price of its next-generation iPhones when it unveils the products at its annual showcase in September. According to Jefferies analyst Edison Lee, the increases in memory prices could pressure Apple's iPhone margins going forward. \"We estimate the memory cost would rise further in [the second half of 2026], and assuming similar price hikes with iPad (except the 512GB version, where we assume a US$300 price hike vs 200 for iPad), the incremental [gross margins] would only be 21%. That could reduce the overall iPhone GM from 38% to 34.5%,\" Lee wrote in an investor note. But Brandon Nispel of KeyBank Capital Markets sees a potential iPhone price increase as a far larger issue for Apple than simply an impact on gross margins. \"With [Apple] providing a safe haven to the sell-off in semis, we think they are missing the bigger picture, which squarely fits our thesis: as [Apple] raises iPhone prices, unit growth will slow, and as unit growth slows, so will user growth, which we think ultimately will slow Services growth,\" Nispel wrote in a note to investors. But Apple's new Apple Upgrade service, which was announced Tuesday and allows customers to lease devices from iPhones to Macs, could help address those concerns. All of this will fall on incoming CEO John Ternus, who will take over the role from Tim Cook beginning Sept. 1. Thursday's earnings will be Cook's last in the position. Email Daniel Howley at dhowley@yahoofinance.com. Follow him on X at@DanielHowley. Click here for the latest technology news that will impact the stock market. Read the latest financial and business news from Yahoo Finance",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Apple Q3 Earnings Preview: What To Expect From Upcoming Report",
+      "source": "GuruFocus.com",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong This article first appeared onGuruFocus. Apple (NASDAQ:AAPL) is scheduled to report fiscal third-quarter results after Thursday's market close, with investors expected to focus on services growth, artificial intelligence initiatives, and a planned leadership transition. Wall Street forecasts Apple will post fiscalthird-quarter earnings of $1.89 per shareon revenue of about $108.9 billion. Apple has exceeded both earnings and revenue estimates for the past eight consecutive quarters. Investors are also expected to monitor iPhone demand, updates on the iPhone 17 launch cycle, and continued expansion of the company's higher-margin services business. Warning! GuruFocus has detected 3 Warning Sign with AMZN. Is AAPL fairly valued? Test your thesis with our free DCF calculator. Apple reported record fiscal second-quarter revenue of $111.2 billion and earnings per share of $2.01, up about 17% and 22% year over year, respectively. Services revenue reached a record $31 billion, contributing to stronger gross margins as recurring revenue continued to expand. Earlier this month, Chinese regulators cleared Apple Intelligence, powered by Alibaba's Qwen AI model, for rollout in Greater China, potentially expanding AI features to millions of iPhone users. Analysts also are expected to watch Apple's earnings call for commentary on the planned CEO succession, with Tim Cook anticipated to hand leadership to hardware chief John Ternus. Bank of America recently reiterated its Buy rating and $380 price target, citing resilient iPhone demand and growing AI adoption, while Wall Street maintains an overall Buy consensus on Apple.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "How much cash do you need invested in 2026 to completely live off dividends? Probably less than you think",
+      "source": "Moneywise",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong Moneywise and Yahoo Finance LLC may earn commission or revenue through links in the content below. Dividend investing probably isn't as fashionable as it once was, because the stock market and investor behavior has evolved away from it. Many investors are now focused on passively investing in index funds, while the dividend yield from these mainstream funds has gradually declined. The S&P 500, for instance, offered a whopping 5.36% dividend yield at the end of 1981, per Multpl (1). In 2026, that yield has dropped to just 1.09%. This is at least partly because the largest and most profitable companies in the S&P 500 simply don't offer attractive yields. As of July 28, Nvidia offers just 0.51% (2), while Apple and Microsoft offer 0.32% (3) and 0.94% (4) respectively, according to Seeking Alpha. Jeff Bezos backs a platform that lets anyone invest in rental homes for as little as $100 \u20146 ways to build wealth like a landlord without actually being one JPMorgan still sees gold hitting $5,000/oz by Q4 \u2014 and savvy investors are protecting their wealth with a tax-advantaged Gold IRA.Learn more with a free guidefrom Priority Gold The tax breaks in Trump's 'big beautiful bill' expire after 2028 \u2014 and experts say most people won't act in time.What to do before the window closes Even the \"aristocrats\" of dividend stocks, or companies that have increased their yields every year for at least 25-years, struggle to reach a high-water mark of 5.51%, according to Morningstar (5). Simply put, the conventional investing strategy that focuses on tech giants or index funds probably isn't the best fit if you're trying to live off dividends in 2026. But that doesn't mean it's impossible. There are ways to generate lucrative dividends even with relatively modest portfolios, and \u2014 if you're willing to branch out \u2014 there are opportunities outside of stocks as well. Here's how. To generate meaningful dividends in 2026, you'll need to look beyond traditional index funds to funds that are specifically designed to generate passive income for investors. The John Hancock Preferred Income ETF (JHPI) (6), for instance, is focused on generating dividends from a portfolio exclusively dedicated to preferred stock. Unlike common stock, preferred stocks have fixed dividends and higher yields. As of July 28, this fund offers a 5.95% 30-day SEC dividend yield \u2014 beating out some of the aristocrats mentioned above. Similarly, the Vanguard Total Bond Market ETF (BND) (7) capitalizes on rising interest rates. The fund manages a vast portfolio of over 11,000 bonds and offers a 4.61% dividend yield. Finally, the State Street SPDR Portfolio S&P 500 High Dividend ETF (SPYD) (8) tracks only 78 stocks out of the S&P 500 with the best dividend yields. At the time of writing, it offers a 4.24% yield to investors over the same 30-day SEC dividend period. Simply put, if you're seeking dividends, there are funds specifically designed to help you. If you're looking to generate $40,000 in annual passive income and a combination of these stock and bond funds can help you achieve a 5% yield, you would need a portfolio worth only $800,000. Living off dividends is clearly a possibility in 2026, but it's far from your only option \u2014 plus there's the risk of going all in, not to mention liquidity concerns. Even a high-yield savings account can offer you better yields than most index funds or large-cap stocks. A high-yield account like aWealthfront Cash Accountcan be a great place to grow your uninvested cash, offering both competitive interest rates and easy access to your money when you need it. A Wealthfront Cash Account currently offers a base APY of 3.30% through program banks, and new clients can get an extra 0.75% boost during their first three months on up to $150,000 fora total variable APY of 4.05%. That's 10 times the national deposit savings rate, according to the FDIC's June report. Additionally, Wealthfront is offering new clients who enable direct depo",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Explainer-What are credit default swaps and why are they spooking AI investors?",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong By Amanda Cooper July 29 (Reuters) - Shares in companies driving the AI boom have been under pressure for weeks. Now their bonds are coming under strain too, pushing up the cost of insuring debt issued by companies such as Oracle, Nvidia and Apple against default. The move reflects growing \u200cconcern among investors about when the billions of dollars being poured into artificial intelligence will generate returns. Technology companies have raised billions of dollars in \u200cdebt this year to fund AI investments, with firms including Nvidia tapping bond markets for the first time. But the cost of the AI build-out is so high that even blockbuster earnings have failed to \u200breassure some investors about the durability of future returns. Demand for AI-linked credit default swaps (CDS), a form of insurance against default that gained prominence during the 2008 financial crisis, has surged. WHAT IS A CDS? A CDS is a derivative that provides protection against the risk that a bond issuer, such as a company or government, fails to meet its debt obligations. Bond investors expect to receive interest payments and repayment of principal when a bond matures, but they bear the risk that those payments may not be made. CDS help investors hedge that \u200crisk by effectively providing insurance against a default or other \u2060credit event. IS THIS A BIG MARKET? The market for single-name CDS, which cover the bonds of a single issuer, is worth about $9 trillion, according to the International Swaps and Derivatives Association (ISDA). That is a small portion of global bond markets, which have more than $150 trillion \u2060of debt securities outstanding, according to the Bank for International Settlements. The biggest CDS market is for government debt. Saudi Arabia's CDS were the most actively traded in the second quarter, with average daily notional trading of about $500 million, according to Depositary Trust & Clearing Corporation (DTCC) data. Average daily CDS trading across the market was $16 billion in the second quarter, up from $13 billion a year \u200bearlier. Banks \u200bdominate the corporate CDS market, but technology companies are gaining ground. Trading linked to the sector \u200breached nearly $650 million in the second quarter, up 20% from the \u200cfirst quarter and almost 600% from a year earlier, helped by new entrants such as Meta, Nvidia and Alphabet, DTCC data shows. But CDS trading can be relatively thin. Average daily trades, even for large companies, can sometimes be in the single digits, meaning small transactions can have an outsized impact on prices. WHO BUYS CDS? Bond investors typically buy CDS through an intermediary, often an investment bank, which then finds a financial firm to issue an insurance policy on the bonds. These are \"over-the-counter\" deals that do not go through a central clearing house. Hedge funds also participate in the market, selling CDS to investors seeking to hedge exposure. The buyer pays a fee, called a premium, at \u200cregular intervals to the seller, which assumes the risk of a credit event. CDS are quoted as \u200ba credit spread, which is the number of basis points (bps) that the seller of the derivative charges \u200bthe buyer for providing protection. The higher the perceived risk of a \u200bcredit event, the wider the spread. A CDS quoted at 100 bps costs $1 annually to insure every $100 of debt. Oracle CDS trade around 200 \u200cbps, according to S&P Global Market Intelligence data, well above those \u200bof other AI-linked companies. Nvidia CDS have also \u200brisen sharply this week, but trade below Oracle at around 78 bps. Meta trades near 93 bps. By comparison, an index of investment-grade CDS is trading around 53 bps. WHAT TRIGGERS A CDS PAYOUT? A CDS pays out following a credit event, which can include a bankruptcy or a failure by an issuer to \u200bmake bond payments. When concerns about an issuer's creditworthiness increase, demand \u200cfor protection typically rises, widening CDS spreads. IF IT'S INSURANCE, WHAT'S THE PROBLEM? CDS p",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "SKHY, MU, Samsung's Memory Technology Lead Over China\u2019s CXMT Unlikely To Narrow Soon, Says Futurum Analyst",
+      "source": "Stocktwits",
+      "date": "2026-07-29",
+      "text": "Advertisement|Remove ads. Advertisement|Remove ads. SK Hynix Inc. (SKHY), Micron Technology Inc. (MU), and Samsung Electronics (SSNLF) have an advantage of about two to three generations over Chinese memory manufacturer ChangXin Memory Technologies (CXMT), according to Futurum\u2019s Head of Semiconductor & Infrastructure Equity Research, Rolf Bulk. During an interview with CNBC, Bulk cited the performance edge that SK Hynix, Micron, and Samsung have over CXMT's chips. SK Hynix\u2019s American Depositary Receipts(ADR) were up more than 1% in Wednesday\u2019s pre-market trade, whileMicron shareswere up nearly 2%. SKHY was among the top trending tickers on Stocktwits at the time of writing. Advertisement|Remove ads. The Roundhill Memory ETF (DRAM), edged up by 0.1%, while the iShares Semiconductor ETF (SOXX) was up 0.01%. Bulk also highlighted that CXMT has to incur a higher cost in manufacturing its chips when compared to rivals SK Hynix, Micron, and Samsung. \u201cCXMT is still two to three generations behind SK Hynix, Samsung, and Micron when it comes to the performance of their chips. So for every chip they produce, they have to spend 20% to 30% more on a cost per bit basis,\u201d he said. Advertisement|Remove ads. Bulk also believes that CXMT may not catch up to SK Hynix, Samsung, and Micron anytime soon due to constraints in building out its fabrication facilities and procuring tools from companies like ASML Holding (ASML). However, he said that the supply and demand imbalance is so severe that CXMT\u2019s profitability and demand continue to remain good. \u201cThey will probably do revenues of $50 billion this year and gross margins of around 70% with chips lagging a few generations compared to the incumbents,\u201d Bulk added. Bulk also said that Apple Inc.\u2019s (AAPL) attempt at diversifying its memory supply beyond SK Hynix, Micron, and Samsung is \u201cunderstandable\u201d as the iPhone maker tries to negotiate prices down amid the ongoing supply crunch. Advertisement|Remove ads. He also said that Apple had previously tried to add Chinese memory manufacturer Yangtze Memory Technologies (YMTC) to its list of vendors for iPhones sold in China. \u201cHowever, it is a real security concern in Washington, and I think that the chances of Apple adopting CXMT and YMTC remain fairly low,\u201d Bulk said. Bulk said that long-term agreements will provide better earnings visibility for memory chip makers going forward, as companies like Micron and now SK Hynix are focusing on these deals to lock in revenue and margins. Advertisement|Remove ads. \u201cWe\u2019re moving from a market that is almost entirely driven by cyclicality, to a market where around half of revenue is locked in through these long-term supply agreements at gross margins of 50% to 60%,\u201d he added. Bulk said that these deals create a very different investment setup for companies in this sector compared to the previous thesis of playing the boom-and-bust cycles in the memory industry. He added that the earnings visibility of companies in this sector is already \u201cimproving materially.\u201d The Futurum analyst also said that while memory chip makers may have approached \u201cpeak profitability,\u201d he does not expect the current gross margins to nosedive. Advertisement|Remove ads. \u201cHowever, given the supply constraints that we continue to see and the very strong demand driven by AI, which is also sustainable in our perspective, we don\u2019t expect margins to collapse from here,\u201d he said. Bulk believes that the gross margins of memory chip manufacturers could increase slightly from current levels through the end of this year, then stabilize around 70% to 75% before gradually declining over the next decade. The S&P 500 ETF Trust (SPY) is up 16% over the past 12 months, while the Invesco QQQ Trust (QQQ) is up 19%. The iShares U.S. Technology ETF (IYW) is up 28% during this period. Advertisement|Remove ads. Also See:FOMC Meet: Fed Is Largely Expected To Keep Rates Unchanged, But Economists Say The Risks Have Shifted For updates and corrections, email newsroom",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Social Buzz: Wallstreetbets Stocks Mostly Higher Pre-Bell Wednesday; Bloom Energy, Seagate Technology to Advance",
+      "source": "MT Newswires",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong The most-talked-about stocks in the Reddit subforum Wallstreetbets were mostly higher hours before W",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Only 2 \"Magnificent Seven\" Stocks Are Beating the Market This Year. What's Going On?",
+      "source": "Motley Fool",
+      "date": "2026-07-29",
+      "text": "The \"Magnificent Seven\" are a group of the world's largest tech stocks. Because they have become the predominant winners in the market during the past decade or so, all of the largest companies in the world are tech stocks. The first large company that isn't, drugmakerEly Lilly, is the ninth most-valuable company in the world. The Magnificent Seven, in order of value as of this writing, includeApple(AAPL+0.94%),Nvidia(NVDA+0.25%),Alphabet,Microsoft,Amazon,Meta Platforms, andTesla. Today,BroadcomandSpace Exploration Technologiesare both larger than Tesla by market cap. These companies, which are allartificial intelligence(AI) stocks, have soared to their current rankings due to rapid growth, much of which is recently associated with the explosion of AI. However, only two of them were beating theS&P 500as of this writing: Apple and Nvidia.  ^SPXdata byYCharts. Is this an ominous warning about what's happening in the markets? This is the fourth straight year that the S&P 500 is showing a gain. It's not uncommon for the marketto remain in bull territoryfor four years in a row, and during the past 25 years -- since it recovered from the dot-com bubble -- it has lost value only four times annually. As of this writing, the S&P 500 is up about 8% year to date. However, it's off its record high, and it has been little changed during the past two months. Investors have been worried about high oil prices due to the Iran war, AI spending, and a richly valued stock market.Oil prices have been up and downsince the war started in February, and that volatility has the market concerned about longer-term effects. Higher oil prices can trickle down to higher prices in nearly every industry, since many companies rely on oil for production, and they have to pass along higher costs to consumers. As for AI spending, Amazon stock has borne the brunt of the market's worries about it for the past few months. However, Alphabet's recent announcement about its own capital expenditure forecast, which topped Amazon's outlook at $205 billion, sent its stock down as well. In fact, Alphabet stock had been beating the market as well until the announcement. But all of the large companies have been spending quite freely, and that's worrying investors. Lastly, investors also recognize that the market is heading toward its highest-ever valuation. The price-to-earnings ratio (P/E) is the standard valuation metric for most companies, but it has its drawbacks. It's unusable for companies that aren't profitable, and it doesn't account for anomalies, such as tax-advantaged or disadvantaged profits, one-time deviations, and inflation that distorts historical averages. The cyclically adjusted P/E ratio, or CAPE ratio, was developed to account for most of these irregularities, and today, it stands at 41. Not only is that its second-highest figure ever since the metric was created, but it's also more than double the historical average of 17.8. Nvidia and Apple have both been up and down this year, but the market may see certain advantages in these stocks, the two most valuable companies in the world, as valuations rise and volatility increases. Many of the hottest AI stocks have begun to falter as fantastic gains outpace fundamental performance. For example, chipmakerSandiskcontinues to demonstrate phenomenal performance, but its P/E ratio has expanded as well, implying that stock growth is exceeding earnings growth. Many of the AI-adjacent stocks are in the same boat, and many have headed down recently. Apple, on the other hand, laid low as AI exploded, and its cautious approach to AI development has proved to be savvy. Its iPhone remains the backbone of the company as it continues to be a hot seller, again proving that investing in its hardware, the known entity, rather than costly AI, was the right move. Nvidia, at the same time, remains at the epicenter of the AI revolution for a number of reasons. It controls as much as 90% of the AI chip market, and it's deeply embedd",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Mag 7 earnings: Alphabet 'really set the tone,' strategist says",
+      "source": "Yahoo Finance Video",
+      "date": "2026-07-28",
+      "text": "Oops, something went wrong Meta Platforms (META), Microsoft (MSFT), Amazon (AMZN), and Apple (AAPL) are the next Big Tech names \u2014 part of the Magnificent Seven \u2014 to report quarterly earnings results this week. Zacks Investment Research stock strategist Ethan Feller weighs in on investors' expectations for these Magnificent Seven member stocks. are great earnings reports, is that enough to impress, you know, you know, Mag 7 investors or no, we we already know they're going to be great. I mean, I think Google really set the tone. Those were exceptional earnings. I mean, for a company Cloud business going gangbusters. Yeah. Insane. 84% year-over- year, accelerating from 64% year-over- year in the prior quarter. So I think as I I anticipate Mag 7 will continue to put up good numbers like that. Um but everyone's going to be laser focused on this dwindling free cash flow and these growing capex numbers and I think it'll probably fade like the rest of them, good results. Um but I think there's other factors that are kind of, you know, pulling on pulling the market lower. Um and I don't think the the bearish AI narrative is really the only thing. And I think part of it is that rotation out of these uh you know, memory, you know, uh Micron and and SK Hix, but uh, you know, there's a real macro factor at play. Uh we have the FOMC tomorrow and we've seen oil rally considerably uh over the last couple of weeks. And, you know, that that plays into inflation, that plays into the potential for the Fed to actually rate hike hike rates. and we've seen the odds of a rate hike uh at this coming meeting in the last week uh double. So, um, you know, if you look at the odds, they're really up in the air for what they're going to do. Um so you know, if if investors are anticipating uh rates a a rate a rising rates, um it's really going to tighten financial conditions and that's going to weigh on stocks. So, I think the narrative has somewhat followed, you know, weakening stocks and it's really come to the forefront, but I think it's a real factor. Uh having said all that, when you look at at uh the Mag 7 right now, are there names where you say, okay, having said all that, the risk reward on these names looks good. I think a lot of them stand out. Um outside of Tesla, which has uh an uber rich valuation, uh and Apple, which has really been bid up lately. I think they all look pretty interesting. They're all if you look at a forward earnings multiple, uh at the lower uh bottom of the range of historically. Um I would say meta really stands out. It's trading at just 18 times forward earnings. Um I don't think we're going to get any results from their new meta compute, but they're pretty much entering the um uh cloud computing industry. Um but but they're all, you know, uh high teens, mid 20s. So I think they're all quite compelling and uh if uh you see further sell off, I think very compelling.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "CLARITY Act hits summer roadblock",
+      "source": "Yahoo Finance Video",
+      "date": "2026-07-28",
+      "text": "Scott Melker dives into the roadblocks delaying the CLARITY Act, CME\u2019s expansion into near round-the-clock futures trading, and the surge in blockchain activity as token prices cool. \"The Daily Wolf w",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Why this analyst is down on Apple stock even as it hovers near record highs",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "text": "A big bear on Apple emerges ahead of earnings.",
+      "full_text_fetched": false
+    }
+  ],
+  "filings_raw": {
+    "10-K": {
+      "filing_type": "10-K",
+      "filing_date": "2025-10-31",
+      "text": "aapl-20250927 UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 FORM 10-K (Mark One) \u2612 ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the fiscal year ended September\u00a027 , 2025 or \u2610 TRANSITION REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the transition period from to . Commission File Number: 001-36743 Apple Inc. (Exact name of Registrant as specified in its charter) California 94-2404110 (State or other jurisdiction of incorporation or organization) (I.R.S. Employer Identification No.) One Apple Park Way Cupertino , California 95014 (Address of principal executive offices) (Zip Code) ( 408 ) 996-1010 (Registrant\u2019s telephone number, including area code) Securities registered pursuant to Section 12(b) of the Act: Title of each class Trading symbol(s) Name of each exchange on which registered Common Stock, $0.00001 par value per share AAPL The Nasdaq Stock Market LLC 0.000% Notes due 2025 \u2014 The Nasdaq Stock Market LLC 1.625% Notes due 2026 \u2014 The Nasdaq Stock Market LLC 2.000% Notes due 2027 \u2014 The Nasdaq Stock Market LLC 1.375% Notes due 2029 \u2014 The Nasdaq Stock Market LLC 3.050% Notes due 2029 \u2014 The Nasdaq Stock Market LLC 0.500% Notes due 2031 \u2014 The Nasdaq Stock Market LLC 3.600% Notes due 2042 \u2014 The Nasdaq Stock Market LLC Securities registered pursuant to Section 12(g) of the Act:  None Indicate by check mark if the Registrant is a well-known seasoned issuer, as defined in Rule [...skipped ahead to Management's Discussion and Analysis...] Item 7.\u00a0\u00a0\u00a0\u00a0Management\u2019s Discussion and Analysis of Financial Condition and Results of Operations The following discussion should be read in conjunction with the consolidated financial statements and accompanying notes included in Part II, Item 8 of this Form 10-K. This Item generally discusses 2025 and 2024 items and year-to-year comparisons between 2025 and 2024. Discussions of 2023 items and year-to-year comparisons between 2024 and 2023 are not included, and can be found in \u201cManagement\u2019s Discussion and Analysis of Financial Condition and Results of Operations\u201d in Part II, Item 7 of the Company\u2019s Annual Report on Form 10-K for the fiscal year ended September\u00a028, 2024. Product, Service and Software Announcements The Company announces new product, service and software offerings at various times during the year. Significant announcements during fiscal year 2025 included the following: First Quarter 2025: \u2022 MacBook Pro \u2022 Mac mini \u2022 iMac \u2022 iPad mini Second Quarter 2025: \u2022 iPhone 16e \u2022 iPad Air \u2022 iPad \u2022 MacBook Air \u2022 Mac Studio Third Quarter 2025: \u2022 iOS 26, macOS Tahoe 26, iPadOS 26, watchOS 26, visionOS 26 and tvOS 26 Fourth Quarter 2025: \u2022 iPhone 17, iPhone Air, iPhone 17 Pro and iPhone 17 Pro Max \u2022 Apple Watch Series 11, Apple Watch SE 3 and Apple Watch Ultra 3 \u2022 AirPods Pro 3 Fiscal Period The Company\u2019s fiscal year is the 52- or 53-week period that ends on the last Saturday of September. An additional week is included in the first fiscal quarter every five or six years to realign the Company\u2019s fiscal quarters with calendar quarters, which occurred in the first quarter of 2023. The Company\u2019s fiscal years 2025 and 2024 spanned 52 weeks each, whereas fiscal year 2023 spanned 53 weeks. Macroeconomic Conditions Macroeconomic conditions, including inflation, interest rates and currency fluctuations, have directly and indirectly impacted, and could in the future materially impact, the Company\u2019s results of operations and financial condition. Apple Inc. | 2025 Form 10-K | 21 Tariffs and Other Measures Beginning in the second quarter of 2025, new U.S. Tariffs were announced, including additional tariffs on imports from China, India, Japan, South Korea, Taiwan, Vietnam and the EU, among others. In response, several countries have imposed, or threatened to impose, reciprocal tariffs on imports from the U.S. and other retaliatory measures. Various modifications to the U.S. Tariffs have been announced and further changes could be made in the future, which may include additional sector-based tariffs or other measures. For example, the U.S. Department of Commerce has initiated an investigation under Section 232 of the Trade Expansion Act of 1962, as amended, into, among other things, imports of semiconductors, semiconductor manufacturing equipment, and their derivative products, including downstream products that contain semiconductors. Tariffs and other measures that are applied to the Company\u2019s products or their components can have a material adverse impact on the Company\u2019s business, results of operations and financial condition, including impacting the Company\u2019s supply chain, the availability of rare earths and other raw materials and components, pricing and gross margin. The ultimate impact remains uncertain and will depend on several factors, including whether additional or incremental U.S. Tariffs or other measures are announced or imposed, to what extent other countries implement tariffs or other retaliatory measures in response, and the overall magnitude and duration of these measures. Trade and other international disputes can have an adverse impact on the overall macroeconomic environment and result in shifts and reductions in consumer spending and negative consumer sentiment for the Company\u2019s products and services, all of which can further adversely affect the Company\u2019s business and results of operations. Segment Operating Performance The following table shows net sales by reportable segment for 2025, 2024 and 2023 (dollars in millions): 2025 Change 2024 Change 2023 Americas $ 178,353 7 % $ 167,045 3 % $ 162,560 Europe 111,032 10 % 101,328 7 % 94,294 Greater China 64,377 (4) % 66,952 (8) % 72,559 Japan 28,703 15 % 25,052 3 % 24,257 Rest of Asia Pacific 33,696 10 % 30,658 4 % 29,615 Total net sales $ 416,161 6 % $ 391,035 2 % $ 383,285 Americas Americas net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPhone and Services. The weakness in foreign currencies relative to the U.S. dollar had an unfavorable year-over-year impact on Americas net sales during 2025. Europe Europe net sales increased during 2025 compared to 2024 primarily due to higher net sales of Services, iPhone and Mac. Greater China Greater China net sales decreased during 2025 compared to 2024 primarily due to lower net sales of iPhone, partially offset by higher net sales of Mac. Japan Japan net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPhone, Services and iPad. Rest of Asia Pacific Rest of Asia Pacific net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPhone, Services and Mac. Apple Inc. | 2025 Form 10-K | 22 Products and Services Performance The following table shows net sales by category for 2025, 2024 and 2023 (dollars in millions): 2025 Change 2024 Change 2023 iPhone $ 209,586 4 % $ 201,183 \u2014 % $ 200,583 Mac 33,708 12 % 29,984 2 % 29,357 iPad 28,023 5 % 26,694 (6) % 28,300 Wearables, Home and Accessories 35,686 (4) % 37,005 (7) % 39,845 Services (1) 109,158 14 % 96,169 13 % 85,200 Total net sales $ 416,161 6 % $ 391,035 2 % $ 383,285 (1) Services net sales include amortization of the deferred value of services bundled in the sales price of certain products. iPhone iPhone net sales increased during 2025 compared to 2024 due to higher net sales of Pro models. Mac Mac net sales increased during 2025 compared to 2024 primarily due to higher net sales of laptops and desktops. iPad iPad net sales increased during 2025 compared to 2024 primarily due to higher net sales of iPad Air, iPad mini and iPad, partially offset by lower net sales of iPad Pro. Wearables, Home and Accessories Wearables, Home and Accessories net sales decreased during 2025 compared to 2024 primarily due to lower net sales of Accessories and Wearables. Services Services net sales increased during 2025 compared to 2024 primarily due to higher net sales from advertising, the App Store and cloud services. Apple Inc. | 2025 Form 10-K | 23 Gross Margin Products and Services gross margin and gross margin percentage for 2025, 2024 and 2023 were as follows (dollars in millions): 2025 2024 2023 Gross margin: Products $ 112,887 $ 109,633 $ 108,803 Services 82,314 71,050 60,345 Total gross margin $ 195,201 $ 180,683 $ 169,148 Gross margin percentage: Products 36.8 % 37.2 % 36.5 % Services 75.4 % 73.9 % 70.8 % Total gross margin percentage 46.9 % 46.2 % 44.1 % Products Gross Margin Products gross margin increased during 2025 compared to 2024 primarily due to favorable costs and a different mix of products, partially offset by tariff costs. Products gross margin percentage decreased during 2025 compared to 2024 primarily due to a different mix of products and tariff costs, partially offset by other favorable costs. Services Gross Margin Services gross margin increased during 2025 compared to 2024 primarily due to higher Services net sales and a different mix of services. Services gross margin percentage increased during 2025 compared to 2024 primarily due to a different mix of services, partially offset by higher costs. The Company\u2019s future gross margins can be impacted by a variety of factors, as discussed in Part I, Item 1A of this Form 10-K under the heading \u201cRisk Factors.\u201d As a result, the Company believes, in general, gross margins will be subject to volatility and downward pressure. Operating Expenses Operating expenses for 2025, 2024 and 2023 were as follows (dollars in millions): 2025 Change 2024 Change 2023 Research and development $ 34,550 10 % $ 31,370 5 % $ 29,915 Percentage of total net sales 8 % 8 % 8 % Selling, general and administrative $ 27,601 6 % $ 26,097 5 % $ 24,932 Percentage of total net sales 7 % 7 % 7 % Total operating expenses $ 62,151 8 % $ 57,467 5 % $ 54,847 Percentage of total net sales 15 % 15 % 14 % Research and Development The growth in R&D expense during 2025 compared to 2024 was primarily driven by increases in headcount-related expenses and infrastructure-related costs. Selling, General and Administrative The growth in selling, general and administrative expense during 2025 compared to 2024 was primarily driven by increases in headcount-related expenses and variable selling expenses. Apple Inc. | 2025 Form 10-K | 24 Provision for Income Taxes Provision for income taxes, effective tax rate and statutory federal income tax rate for 2025, 2024 and 2023 were as follows (dollars in millions): 2025 2024 2023 Provision for income taxes $ 20,719 $ 29,749 $ 16,741 Effective tax rate 15.6 % 24.1 % 14.7 % Statutory federal income tax rate 21 % 21 % 21 % The Company\u2019s effective tax rate for 2025 was lower than the statutory federal income tax rate primarily due to a lower effective tax rate on foreign earnings, including the impact of changes in unrecognized tax benefits, the impact of the U.S. federal R&D credit, and tax benefits from share-based compensation, partially offset by a change in valuation allowance and state income taxes. The Company\u2019s effective tax rate for 2025 was lower compared to 2024 due to a $10.7 billion year-over-year decrease in the provision for income taxes related to the State Aid Decision (refer to Note 7, \u201cIncome Taxes\u201d in the Notes to Consolidated Financial Statements in Part II, Item 8 of this Form 10-K) and the impact of changes in unrecognized tax benefits, partially offset by a change in valuation allowance and a higher effective tax rate on foreign earnings. Liquidity and Capital Resources The Company believes its balances of cash, cash equivalents and marketable securities, which totaled $132.4\u00a0billion as of September\u00a027, 2025, along with cash generated by ongoing operations and continued access to debt markets, will be sufficient to satisfy its cash requirements and capital return program over the next 12 months and beyond. The Company\u2019s material cash requirements include the following contractual obligations: Debt As of September\u00a027, 2025, the Company had outstanding fixed-rate notes with varying maturities for an aggregate principal amount of $91.3 billion (collectively the \u201cNotes\u201d), with $12.4 billion payable within 12 months. Future interest payments associated with the Notes total $37.0 billion, with $2.6 billion payable within 12 months. The Company also issues unsecured short-term promissory notes pursuant to a commercial paper program. As of September\u00a027, 2025, the Company had $8.0 billion of commercial paper outstanding, which was payable within 12 months. Leases The Company has lease arrangements for certain equipment and facilities, including corporate, data center, manufacturing and retail space. As of September\u00a027, 2025, the Company had fixed lease payment obligations of $16.8 billion, with $2.6 billion payable within 12 months. Manufacturing Purchase Obligations The Company utilizes several outsourcing partners to manufacture subassemblies for the Company\u2019s products and to perform final assembly and testing of finished products. The Company also obtains individual components for its products from a wide variety of individual suppliers. As of September\u00a027, 2025, the Company had manufacturing purchase obligations of $56.2 billion, with $55.4 billion payable within 12 months. Other Purchase Obligations The Company\u2019s other purchase obligations primarily consist of noncancelable obligations to acquire capital assets, including assets related to product manufacturing, and noncancelable obligations related to supplier arrangements, licensed intellectual property and content, and distribution rights. As of September\u00a027, 2025, the Company had other purchase obligations of $14.8 billion, with $7.0 billion payable within 12 months. Deemed Repatriation Tax Payable As of September\u00a027, 2025, the balance of the deemed repatriation tax payable imposed by the U.S. Tax Cuts and Jobs Act of 2017 (\u201cTCJA\u201d) was $8.8\u00a0billion, which was payable within 12 months. Apple Inc. | 2025 Form 10-K | 25 Capital Return Program In addition to its contractual cash requirements, the Company has an authorized share repurchase program. The program does not obligate the Company to acquire a minimum amount of shares. As of September\u00a027, 2025, the Company\u2019s quarterly cash dividend was $0.26 per share. The Company intends to increase its dividend on an annual basis, subject to declaration by the Board. In May 2025, the Company announced a new share repurchase program of up to $100 billion and raised its quarterly dividend from $0.25 to $0.26 per share beginning in May 2025. During 2025, the Company repurchased $89.3 billion of its common stock and paid dividends and dividend equivalents of $15.4 billion. Recent Accounting Pronouncements Internal-Use Software In September 2025, the Financial Accounting Standards Board (\u201cFASB\u201d) issued Accounting Standards Update (\u201cASU\u201d) No. 2025-06, Intangibles\u2014Goodwill and Other\u2014Internal-Use Software (Subtopic 350-40): Targeted Improvements to the Accounting for Internal-Use Software (\u201cASU 2025-06\u201d), which modernizes the accounting for internal-use so",
+      "note": null
+    },
+    "10-Q": {
+      "filing_type": "10-Q",
+      "filing_date": "2026-05-01",
+      "text": "aapl-20260328 UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 FORM 10-Q (Mark One) \u2612 QUARTERLY REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the quarterly period ended March\u00a028, 2026 or \u2610 TRANSITION REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the transition period from to . Commission File Number: 001-36743 Apple Inc. (Exact name of Registrant as specified in its charter) California 94-2404110 (State or other jurisdiction of incorporation or organization) (I.R.S. Employer Identification No.) One Apple Park Way Cupertino , California 95014 (Address of principal executive offices) (Zip Code) ( 408 ) 996-1010 (Registrant\u2019s telephone number, including area code) Securities registered pursuant to Section 12(b) of the Act: Title of each class Trading symbol(s) Name of each exchange on which registered Common Stock, $0.00001 par value per share AAPL The Nasdaq Stock Market LLC 1.625% Notes due 2026 \u2014 The Nasdaq Stock Market LLC 2.000% Notes due 2027 \u2014 The Nasdaq Stock Market LLC 1.375% Notes due 2029 \u2014 The Nasdaq Stock Market LLC 3.050% Notes due 2029 \u2014 The Nasdaq Stock Market LLC 0.500% Notes due 2031 \u2014 The Nasdaq Stock Market LLC 3.600% Notes due 2042 \u2014 The Nasdaq Stock Market LLC Indicate by check mark whether the Registrant (1)\u00a0has filed all reports required to be filed by Section 13 or 15(d) of the Securities Exchange Act of 1934 during the preceding 12 months (or for such shorter  [...skipped ahead to Management's Discussion and Analysis...] Item 2.\u00a0\u00a0\u00a0\u00a0Management\u2019s Discussion and Analysis of Financial Condition and Results of Operations This Item and other sections of this Quarterly Report on Form 10-Q (\u201cForm 10-Q\u201d) contain forward-looking statements, within the meaning of the Private Securities Litigation Reform Act of 1995, that involve risks and uncertainties. Forward-looking statements provide current expectations of future events based on certain assumptions and include any statement that does not directly relate to any historical or current fact. For example, statements in this Form 10-Q regarding the potential future impact of macroeconomic conditions and tariffs and other measures on the Company\u2019s business and results of operations are forward-looking statements . Forward-looking statements can also be identified by words such as \u201cfuture,\u201d \u201canticipates,\u201d \u201cbelieves,\u201d \u201cestimates,\u201d \u201cexpects,\u201d \u201cintends,\u201d \u201cplans,\u201d \u201cpredicts,\u201d \u201cwill,\u201d \u201cwould,\u201d \u201ccould,\u201d \u201ccan,\u201d \u201cmay,\u201d and similar terms. Forward-looking statements are not guarantees of future performance and the Company\u2019s actual results may differ significantly from the results discussed in the forward-looking statements. Factors that might cause such differences include, but are not limited to, those discussed in Part I, Item 1A of the 2025 Form 10-K and Part II, Item 1A of this Form 10-Q, in each case under the heading \u201cRisk Factors.\u201d The Company assumes no obligation to revise or update any forward-looking statements for any reason, except as required by law. Unless otherwise stated, all information presented herein is based on the Company\u2019s fiscal calendar, and references to particular years, quarters, months or periods refer to the Company\u2019s fiscal years ended in September and the associated quarters, months and periods of those fiscal years. The following discussion should be read in conjunction with the 2025 Form 10-K filed with the U.S. Securities and Exchange Commission (\u201cSEC\u201d) and the condensed consolidated financial statements and accompanying notes included in Part I, Item 1 of this Form 10-Q. Available Information The Company periodically provides certain information for investors on its corporate website, www.apple.com, and its investor relations website, investor.apple.com. This includes press releases and other information about financial performance, information on corporate governance, and details related to the Company\u2019s annual meeting of shareholders. The information contained on the websites referenced in this Form 10-Q is not incorporated by reference into this filing. Further, the Company\u2019s references to website URLs are intended to be inactive textual references only. Business Seasonality and Product Introductions The Company has historically experienced higher net sales in its first quarter compared to other quarters in its fiscal year due in part to seasonal holiday demand. Additionally, new product and service introductions can significantly impact net sales, cost of sales and operating expenses. The timing of product introductions can also impact the Company\u2019s net sales to its indirect distribution channels as these channels are filled with new inventory following a product launch, and channel inventory of an older product often declines as the launch of a newer product approaches. Net sales can also be affected when consumers and distributors anticipate a product introduction. During the second quarter of 2026, the Company announced the following new or updated products: \u2022 iPad Air \u00ae \u2022 iPhone 17e \u2022 MacBook Pro \u00ae \u2022 MacBook Air \u00ae \u2022 MacBook Neo\u2122 \u2022 AirPods Max \u00ae 2 Macroeconomic Conditions Macroeconomic conditions, including inflation, interest rates, component pricing and currency fluctuations, have directly and indirectly impacted, and could in the future materially impact, the Company\u2019s results of operations and financial condition. The Company is experiencing a period of supply constraints and increasing costs for components driven by factors such as industry supply-demand imbalances for components, including advanced semiconductors, storage (NAND) and memory (DRAM). The Company expects these trends to intensify, which, together with actions that may be taken by the Company in response to such trends, may materially adversely affect demand for the Company\u2019s products and negatively impact the Company\u2019s revenue, costs, gross margin, results of operations and financial condition. Apple Inc. | Q2 2026 Form 10-Q | 13 Tariffs and Other Measures Beginning in the second quarter of 2025, new tariffs were announced on imports to the U.S., including additional tariffs on imports from China, India, Japan, South Korea, Taiwan, Vietnam and the European Union (\u201cEU\u201d), among others. In response, several countries have imposed, or threatened to impose, reciprocal tariffs on imports from the U.S. and other retaliatory measures. On January 14, 2026, initial results were published of the previously announced U.S. Department of Commerce investigation under Section 232 of the Trade Expansion Act of 1962, as amended, into imports of semiconductors, semiconductor manufacturing equipment, and their derivative products, including downstream products that contain semiconductors. The announcement of the initial results of the investigation did not impose any additional tariffs affecting the Company\u2019s products. Separately, on February 20, 2026, the U.S. Supreme Court issued a ruling striking down certain tariffs previously imposed under the International Emergency Economic Powers Act of 1977. The Company is applying for a refund of tariffs paid, following the processes established by U.S. Customs and Border Protection. Various modifications to U.S. tariffs have been announced, including the imposition of tariffs under Section 122 of the Trade Act of 1974, and further changes could be made in the future, which may include additional measures under the Section 232 semiconductor sector investigation, additional sector-based tariffs, actions under Section 301 of the Trade Act of 1974, or other measures. Tariffs and other measures that are applied to the Company\u2019s products or their components can have a material adverse impact on the Company\u2019s business, results of operations and financial condition, including impacting the Company\u2019s supply chain, the availability of rare earths and other raw materials and components, pricing and gross margin. The ultimate impact remains uncertain and will depend on several factors, including whether additional or incremental U.S. tariffs or other measures are announced or imposed, to what extent other countries implement tariffs or other retaliatory measures in response, and the overall magnitude and duration of these measures. Trade and other international disputes can have an adverse impact on the overall macroeconomic environment and result in shifts and reductions in consumer spending and negative consumer sentiment for the Company\u2019s products and services, all of which can further adversely affect the Company\u2019s business and results of operations. Segment Operating Performance The following table shows net sales by reportable segment for the three- and six-month periods ended March 28, 2026 and March\u00a029, 2025 (dollars in millions): Three Months Ended Six Months Ended March 28, 2026 March 29, 2025 Change March 28, 2026 March 29, 2025 Change Americas $ 45,093 $ 40,315 12 % $ 103,622 $ 92,963 11 % Europe 28,055 24,454 15 % 66,201 58,315 14 % Greater China 20,497 16,002 28 % 46,023 34,515 33 % Japan 8,401 7,298 15 % 17,814 16,285 9 % Rest of Asia Pacific 9,138 7,290 25 % 21,280 17,581 21 % Total net sales $ 111,184 $ 95,359 17 % $ 254,940 $ 219,659 16 % Americas Americas net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 due to higher net sales of iPhone and Services. The strength in foreign currencies relative to the U.S. dollar had a favorable year-over-year impact on Americas net sales during the second quarter of 2026. Europe Europe net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to higher net sales of iPhone and Services. The strength in foreign currencies relative to the U.S. dollar had a net favorable year-over-year impact on Europe net sales during the second quarter and first six months of 2026. Greater China Greater China net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 due to higher net sales of iPhone. The strength in the renminbi relative to the U.S. dollar had a favorable year-over-year impact on Greater China net sales during the second quarter of 2026. Apple Inc. | Q2 2026 Form 10-Q | 14 Japan Japan net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to higher net sales of iPhone. The weakness in the yen relative to the U.S. dollar had an unfavorable year-over-year impact on Japan net sales during the first six months of 2026. Rest of Asia Pacific Rest of Asia Pacific net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to higher net sales of iPhone and Services. The strength in foreign currencies relative to the U.S. dollar had a net favorable year-over-year impact on Rest of Asia Pacific net sales during the second quarter of 2026. Products and Services Performance The following table shows net sales by category for the three- and six-month periods ended March 28, 2026 and March\u00a029, 2025 (dollars in millions): Three Months Ended Six Months Ended March 28, 2026 March 29, 2025 Change March 28, 2026 March 29, 2025 Change iPhone $ 56,994 $ 46,841 22 % $ 142,263 $ 115,979 23 % Mac 8,399 7,949 6 % 16,785 16,936 (1) % iPad 6,914 6,402 8 % 15,509 14,490 7 % Wearables, Home and Accessories 7,901 7,522 5 % 19,394 19,269 1 % Services 30,976 26,645 16 % 60,989 52,985 15 % Total net sales $ 111,184 $ 95,359 17 % $ 254,940 $ 219,659 16 % iPhone iPhone net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 due to higher net sales of Pro models. Mac Mac net sales increased during the second quarter of 2026 compared to the second quarter of 2025 due to higher net sales of laptops. Year-over-year Mac net sales during the first six months of 2026 were relatively flat. iPad iPad net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to higher net sales of iPad, partially offset by lower net sales of iPad mini \u00ae . Wearables, Home and Accessories Wearables, Home and Accessories net sales increased during the second quarter of 2026 compared to the second quarter of 2025 primarily due to higher net sales of Accessories and Wearables. Year-over-year Wearables, Home and Accessories net sales during the first six months of 2026 were relatively flat. Services Services net sales increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to higher net sales from advertising, the App Store \u00ae and cloud services. Apple Inc. | Q2 2026 Form 10-Q | 15 Gross Margin Products and Services gross margin and gross margin percentage for the three- and six-month periods ended March 28, 2026 and March\u00a029, 2025, were as follows (dollars in millions): Three Months Ended Six Months Ended March 28, 2026 March 29, 2025 March 28, 2026 March 29, 2025 Gross margin: Products $ 31,029 $ 24,684 $ 77,294 $ 63,197 Services 23,752 20,183 46,718 39,945 Total gross margin $ 54,781 $ 44,867 $ 124,012 $ 103,142 Gross margin percentage: Products 38.7 % 35.9 % 39.9 % 37.9 % Services 76.7 % 75.7 % 76.6 % 75.4 % Total gross margin percentage 49.3 % 47.1 % 48.6 % 47.0 % Products Gross Margin Products gross margin and gross margin percentage increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to a different mix of products and strength in foreign currencies relative to the U.S. dollar, partially offset by higher costs. Services Gross Margin Services gross margin increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to higher Services net sales and a different mix of services. Services gross margin percentage increased during the second quarter and first six months of 2026 compared to the same periods in 2025 primarily due to a different mix of services and strength in foreign currencies relative to the U.S. dollar, partially offset by higher costs. The Company\u2019s future gross margins can be impacted by a variety of factors, as discussed in Part I, Item 1A of the 2025 Form 10-K and Part II, Item 1A of this Form 10-Q, in each case under the heading \u201cRisk Factors.\u201d As a result, the Company believes, in general, gross margins will be subject to volatility and downward pressure. Apple Inc. | Q2 2026 Form 10-Q | 16 Operating Expenses Operating expenses for the three- and six-month periods ended March 28, 2026 and March\u00a029, 2025, were as follows (dollars in millions): Three Months Ended Six Months Ended March 28, 2026 March 29, 2025 Change March 28, 2026 March 29, 2025 Change Research and development $ 11,419 $ 8,550 34 % $ 22,306 $ 16,818 33 % Percentage of total net sales 10 % 9 % 9 % 8 % Selling, general and administrative $ 7,477 $ 6,728 11 % $ 14,969 $ 13,903 8 % Percentage of total net sales 7 % 7 % 6 % 6 % ",
+      "note": null
+    },
+    "8-K": {
+      "filing_type": "8-K",
+      "filing_date": "2026-04-30",
+      "text": "aapl-20260430 UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 FORM 8-K CURRENT REPORT Pursuant to Section 13 OR 15(d) of The Securities Exchange Act of 1934 April\u00a030, 2026 Date of Report (Date of earliest event reported) Apple Inc. (Exact name of Registrant as specified in its charter) California 001-36743 94-2404110 (State or other jurisdiction of incorporation) (Commission File Number) (I.R.S. Employer Identification No.) One Apple Park Way Cupertino , California 95014  [...earnings press release exhibit follows...] EX-99.1 2 a8-kex991q2202603282026.htm EX-99.1 Document Exhibit 99.1 Apple reports second quarter results March quarter records for total company revenue, iPhone revenue, and EPS Services revenue reaches new all-time high CUPERTINO, CALIFORNIA \u2014 Apple \u00ae today announced financial results for its fiscal 2026 second quarter ended March 28, 2026. The Company posted quarterly revenue of $111.2 billion, up 17 percent year over year. Diluted earnings per share was $2.01, up 22 percent year over year. \u201cToday Apple is proud to report our best March quarter ever, with revenue of $111.2 billion and double-digit growth across every geographic segment,\u201d said Tim Cook, Apple\u2019s CEO. \u201ciPhone achieved a March quarter revenue record, fueled by such extraordinary demand for the iPhone 17 lineup. During the quarter, Services achieved yet another all-time record, and we were excited to introduce remarkable new products to our strongest lineup ever. That included the addition of the iPhone 17e and the M4-powered iPad Air, along with the launch of MacBook Neo, which is captivating customers all around the world.\u201d \u201cOur strong business performance during the March quarter generated over $28 billion in operating cash flow and drove new March quarter records for both operating cash flow and EPS,\u201d said Kevan Parekh, Apple\u2019s CFO. \u201cContinued strong customer demand for our products and services once again helped us achieve a new all-time high for our installed base of active devices across all major product categories and geographic segments.\u201d Apple\u2019s board of directors has declared a cash dividend of $0.27 per share of the Company\u2019s common stock, an increase of 4 percent. The dividend is payable on May 14, 2026, to shareholders of record as of the close of business on May 11, 2026. The board of directors has also authorized an additional program to repurchase up to $100 billion of the Company\u2019s common stock. Apple will provide live streaming of its Q2 2026 financial results conference call beginning at 2:00 p.m. PT on April 30, 2026, at apple.com/investor/earnings-call. The webcast will be available for replay for approximately two weeks thereafter. Apple periodically provides information for investors on its corporate website, apple.com, and its investor relations website, investor.apple.com. This includes press releases and other information about financial performance, reports filed or furnished with the SEC, information on corporate governance, and details related to its annual meeting of shareholders. This press release contains forward-looking statements, within the meaning of the Private Securities Litigation Reform Act of 1995. These forward-looking statements include without limitation those about the Company\u2019s plan for return of capital, payment of the Company\u2019s quarterly dividend and future business plans. These statements involve risks and uncertainties, and actual results may differ materially from any future results expressed or implied by the forward-looking statements. Risks and uncertainties include without limitation: effects of global and regional economic conditions, including as a result of government policies, trade and other international disputes, geopolitical tensions, conflict, terrorism, natural disasters, and public health issues; risks relating to the design, manufacture, introduction, and transition of products and services in highly competitive and rapidly changing markets, including from reliance on third parties for components, technology, manufacturing, applications, services, support, and content; risks relating to information technology system failures, network disruptions, and failure to protect, loss of, or unauthorized access to, or release of, data; and effects of unfavorable legal proceedings, government investigations, and complex and changing laws and regulations. More information on these risks and other potential factors that could affect the Company\u2019s business, reputation, results of operations, financial condition, and stock price is included in the Company\u2019s filings with the SEC, including in the \u201cRisk Factors\u201d and \u201cManagement\u2019s Discussion and Analysis of Financial Condition and Results of Operations\u201d sections of the Company\u2019s most recently filed periodic reports on Form 10-K and Form 10-Q and subsequent filings. The Company assumes no obligation to update any forward-looking statements, which speak only as of the date they are made. Apple revolutionized personal technology with the introduction of the Macintosh in 1984. Today, Apple leads the world in innovation with iPhone, iPad, Mac, AirPods, Apple Watch, and Apple Vision Pro. Apple\u2019s six software platforms \u2014 iOS, iPadOS, macOS, watchOS, visionOS, and tvOS \u2014 provide seamless experiences across all Apple devices and empower people with breakthrough services including the App Store, Apple Music, Apple Pay, iCloud, and Apple TV. Apple\u2019s more than 150,000 employees are dedicated to making the best products on earth and to leaving the world better than we found it. Press Contact: Josh Rosenstock Apple jrosenstock@apple.com (408) 862-1142 Investor Relations Contact: Suhasini Chandramouli Apple suhasini@apple.com (408) 974-3123 NOTE TO EDITORS: For additional information visit Apple Newsroom (www.apple.com/newsroom), or email Apple\u2019s Media Helpline at media.help@apple.com. \u00a9 2026 Apple Inc. All rights reserved. Apple and the Apple logo are trademarks of Apple. Other company and product names may be trademarks of their respective owners. Apple Inc. CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS (Unaudited) (In millions, except number of shares, which are reflected in thousands, and per-share amounts) Three Months Ended Six Months Ended March 28, 2026 March 29, 2025 March 28, 2026 March 29, 2025 Net sales: Products $ 80,208 $ 68,714 $ 193,951 $ 166,674 Services 30,976 26,645 60,989 52,985 Total net sales (1) 111,184 95,359 254,940 219,659 Cost of sales: Products 49,179 44,030 116,657 103,477 Services 7,224 6,462 14,271 13,040 Total cost of sales 56,403 50,492 130,928 116,517 Gross margin 54,781 44,867 124,012 103,142 Operating expenses: Research and development 11,419 8,550 22,306 16,818 Selling, general and administrative 7,477 6,728 14,969 13,903 Total operating expenses 18,896 15,278 37,275 30,721 Operating income 35,885 29,589 86,737 72,421 Other income/(expense), net (52) (279) 98 (527) Income before provision for income taxes 35,833 29,310 86,835 71,894 Provision for income taxes 6,255 4,530 15,160 10,784 Net income $ 29,578 $ 24,780 $ 71,675 $ 61,110 Earnings per share: Basic $ 2.02 $ 1.65 $ 4.87 $ 4.06 Diluted $ 2.01 $ 1.65 $ 4.85 $ 4.05 Shares used in computing earnings per share: Basic 14,673,278 14,994,082 14,710,718 15,037,903 Diluted 14,725,873 15,056,133 14,768,115 15,103,499 (1) Net sales by reportable segment: Americas $ 45,093 $ 40,315 $ 103,622 $ 92,963 Europe 28,055 24,454 66,201 58,315 Greater China 20,497 16,002 46,023 34,515 Japan 8,401 7,298 17,814 16,285 Rest of Asia Pacific 9,138 7,290 21,280 17,581 Total net sales $ 111,184 $ 95,359 $ 254,940 $ 219,659 (1) Net sales by category: iPhone $ 56,994 $ 46,841 $ 142,263 $ 115,979 Mac 8,399 7,949 16,785 16,936 iPad 6,914 6,402 15,509 14,490 Wearables, Home and Accessories 7,901 7,522 19,394 19,269 Services 30,976 26,645 60,989 52,985 Total net sales $ 111,184 $ 95,359 $ 254,940 $ 219,659 Apple Inc. CONDENSED CONSOLIDATED BALANCE SHEETS (Unaudited) (In millions, except number of shares, which are reflected in thousands, and par value) March 28, 2026 September 27, 2025 ASSETS: Current assets: Cash and cash equivalents $ 45,572 $ 35,934 Marketable securities 22,935 18,763 Accounts receivable, net 30,339 39,777 Vendor non-trade receivables 23,172 33,180 Inventories 6,747 5,718 Other current assets 15,349 14,585 Total current assets 144,114 147,957 Non-current assets: Marketable securities 78,088 77,723 Property, plant and equipment, net 50,116 49,834 Intangible assets, net 21,334 11,093 Other non-current assets 77,430 72,634 Total non-current assets 226,968 211,284 Total assets $ 371,082 $ 359,241 LIABILITIES AND SHAREHOLDERS\u2019 EQUITY: Current liabilities: Accounts payable $ 57,349 $ 69,860 Other current liabilities 57,654 66,387 Deferred revenue 9,331 9,055 Commercial paper 1,997 7,979 Term debt 8,310 12,350 Total current liabilities 134,641 165,631 Non-current liabilities: Term debt 74,404 78,328 Other non-current liabilities 55,546 41,549 Total non-current liabilities 129,950 119,877 Total liabilities 264,591 285,508 Commitments and contingencies Shareholders\u2019 equity: Common stock and additional paid-in capital, $0.00001 par value: 50,400,000 shares authorized; 14,667,688 and 14,773,260 shares issued and outstanding, respectively 99,507 93,568 Retained earnings/(Accumulated deficit) 12,359 (14,264) Accumulated other comprehensive loss (5,375) (5,571) Total shareholders\u2019 equity 106,491 73,733 Total liabilities and shareholders\u2019 equity $ 371,082 $ 359,241 Apple Inc. CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS (Unaudited) (In millions) Six Months Ended March 28, 2026 March 29, 2025 Cash, cash equivalents, and restricted cash and cash equivalents, beginning balances $ 35,934 $ 29,943 Operating activities: Net income 71,675 61,110 Adjustments to reconcile net income to cash generated by operating activities: Depreciation and amortization 6,653 5,741 Share-based compensation expense 7,122 6,512 Other (1,717) (2,217) Changes in operating assets and liabilities: Accounts receivable, net 9,295 7,266 Vendor non-trade receivables 10,008 9,171 Inventories (1,084) 858 Other current and non-current assets (14,329) (4,371) Accounts payable (12,297) (14,604) Other current and non-current liabilities 7,301 (15,579) Cash generated by operating activities 82,627 53,887 Investing activities: Purchases of marketable securities (32,432) (12,442) Proceeds from maturities of marketable securities 18,691 26,587 Proceeds from sales of marketable securities 8,615 5,210 Payments for acquisition of property, plant and equipment (4,344) (6,011) Other (1,584) (635) Cash generated by/(used in) investing activities (11,054) 12,709 Financing activities: Payments for taxes related to net share settlement of equity awards (3,252) (3,205) Payments for dividends and dividend equivalents (7,743) (7,614) Repurchases of common stock (36,989) (49,504) Repayments of term debt (7,914) (4,009) Repayments of commercial paper, net (5,911) (3,968) Other (126) (77) Cash used in financing activities (61,935) (68,377) Increase/(Decrease) in cash, cash equivalents, and restricted cash and cash equivalents 9,638 (1,781) Cash, cash equivalents, and restricted cash and cash equivalents, ending balances $ 45,572 $ 28,162 Supplemental cash flow disclosure: Cash paid for income taxes, net $ 20,397 $ 31,683",
+      "note": null
+    }
+  },
+  "form144_notices": {
+    "notices": [
+      {
+        "seller": "LEVINSON ARTHUR D",
+        "relationship": "Director",
+        "shares_proposed_to_sell": 50000.0,
+        "aggregate_market_value_usd": 15551085.0,
+        "approx_sale_date": "05/27/2026"
+      },
+      {
+        "seller": "LEVINSON ARTHUR D",
+        "relationship": "Director",
+        "shares_proposed_to_sell": 250000.0,
+        "aggregate_market_value_usd": 71190164.0,
+        "approx_sale_date": "05/06/2026"
+      },
+      {
+        "seller": "KATHERINE L ADAMS",
+        "relationship": "Former officer",
+        "shares_proposed_to_sell": 43000.0,
+        "aggregate_market_value_usd": 12039492.6,
+        "approx_sale_date": "05/05/2026"
+      },
+      {
+        "seller": "KEVAN PAREKH",
+        "relationship": "Officer",
+        "shares_proposed_to_sell": 1534.0,
+        "aggregate_market_value_usd": 419042.78,
+        "approx_sale_date": "04/23/2026"
+      },
+      {
+        "seller": "O'BRIEN DEIRDRE",
+        "relationship": "Officer",
+        "shares_proposed_to_sell": 30002.0,
+        "aggregate_market_value_usd": 7660977.7,
+        "approx_sale_date": "04/02/2026"
+      },
+      {
+        "seller": "COOK TIMOTHY D",
+        "relationship": "Officer, Director",
+        "shares_proposed_to_sell": 64949.0,
+        "aggregate_market_value_usd": 16512062.21,
+        "approx_sale_date": "04/02/2026"
+      },
+      {
+        "seller": "KEVAN PAREKH",
+        "relationship": "Officer",
+        "shares_proposed_to_sell": 4199.0,
+        "aggregate_market_value_usd": 1046978.66,
+        "approx_sale_date": "10/16/2025"
+      },
+      {
+        "seller": "KATHERINE L ADAMS",
+        "relationship": "Officer",
+        "shares_proposed_to_sell": 47125.0,
+        "aggregate_market_value_usd": 12038081.25,
+        "approx_sale_date": "10/02/2025"
+      }
+    ],
+    "note": null
+  },
+  "beneficial_ownership": {
+    "filings": [
+      {
+        "reporting_person": "Vanguard Capital Management",
+        "shares_owned": 1099168953.0,
+        "percent_of_class": 7.48,
+        "type_of_reporting_person": "IA",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": false,
+        "filing_date": "2026-04-29"
+      },
+      {
+        "reporting_person": "The Vanguard Group",
+        "shares_owned": 0.0,
+        "percent_of_class": 0.0,
+        "type_of_reporting_person": "IA",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": true,
+        "filing_date": "2026-03-26"
+      },
+      {
+        "reporting_person": "The Vanguard Group",
+        "shares_owned": 1415826462.0,
+        "percent_of_class": 9.47,
+        "type_of_reporting_person": "IA",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": true,
+        "filing_date": "2025-07-29"
+      }
+    ],
+    "note": null
+  },
+  "proxy_raw": {
+    "filing_date": "2026-01-08",
+    "text": "Apple Inc. - DEF 14A Table of Contents UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, DC 20549 SCHEDULE 14A PROXY STATEMENT PURSUANT TO SECTION 14(a) OF THE SECURITIES EXCHANGE ACT OF 1934 (Amendment No. ) Filed by the Registrant Filed by a Party other than the Registrant Check the appropriate box: Preliminary Proxy Statement Confidential, for Use of the Commission Only (as permitted by Rule 14a-6(e)(2)) Definitive Proxy Statement Definitive Additional Materials Soliciting Material under \u00a7240.14a-12 Apple Inc. (Name of Registrant as Specified in Its Charter) (Name of Person(s) Filing Proxy Statement, if other than the Registrant) Payment of Filing Fee (Check all boxes that apply): No fee required. Fee paid previously with preliminary materials. Fee computed on table in exhibit required by Item 25(b) per Exchange Act Rules 14a-6(i)(1) and 0-11. Table of Contents Table of Contents Attending the Annual Meeting We are pleased to welcome shareholders to the 2026 Annual Meeting,\nto be held virtually on February 24, 2026, at 8:00 A.M. Pacific Time. To attend, vote, and submit questions during the Annual Meeting,\nvisit www.virtualshareholdermeeting.com/AAPL2026 and enter the control number included in your\nNotice of Internet Availability of Proxy Materials, voting instruction form, or proxy card. Online access to the webcast will open\napproximately 15 minutes prior to the start of the Annual Meeting. Attendance at the Annual Meeting is subject to capacity limits\nset by  [...skipped ahead to Compensation Discussion and Analysis...] Compensation Discussion and Analysis (\u201cCD&A\u201d)\nexplains the guiding principles,\u00a0policies, and practices upon which our executive compensation program is based and the 2025\ncompensation paid to our named executive officers. Summary of Named Executive Officer Compensation 2025 was an extraordinary year with an all-time revenue record of\n$416.2 billion with growth in iPhone, Mac, iPad, and Services, and all-time records in the vast majority of markets we track. Guided\nby our exceptional leadership team, we strive to give the best to our users, and we\u2019re continuing to invest in innovation\nand user experiences that will transform our future. Motivating and retaining an exceptional leadership team is a key\nfactor in enabling Apple\u2019s long-term success. Our executive compensation program is designed to retain strong, values-driven\nleaders. We have clear guiding principles and sound compensation policies and practices that align the pay of our named executive\nofficers with the Company\u2019s financial performance and shareholder returns, taking into consideration the size, scope, and\nsuccess of Apple\u2019s business. Our 2025 named executive officers include Kevan Parekh and Sabih\nKhan for the first time. Mr. Parekh and Mr. Khan transitioned into the roles of Chief Financial Officer and Chief Operating Officer,\nrespectively, during 2025 as part of planned transitions for these roles. Mr. Parekh previously served as Apple\u2019s Vice President,\nFinancial Planning and Analysis and joined the executive team in January 2025. Mr. Khan previously served as Apple\u2019s\nSenior Vice President of Operations, and joined the executive team in 2019. Our 2025 Named Executive Officers Tim Cook Chief Executive Officer Kevan Parekh Senior Vice President, Chief Financial Officer Kate Adams Senior Vice President, General Counsel and Secretary Sabih Khan Senior Vice President, Chief Operating Officer Luca Maestri Former Senior Vice President, Chief Financial Officer Deirdre O\u2019Brien Senior Vice President, Retail\u00a0+\u00a0People The compensation paid to our named executive officers in 2025 reflects\ntheir contributions to Apple\u2019s success and continues to demonstrate alignment with Apple\u2019s strong financial results\nand the interests of our shareholders. The vast majority of our named executive officers\u2019 compensation is at-risk and delivered\nthrough short-term cash incentives and long-term equity awards. The performance-based RSU awards that vested in 2025 reflect Apple\u2019s\nstrong stock price performance for the period from the start of 2022 through the end of 2024. Apple\u2019s total shareholder return\nrelative to other companies in the S&P 500 (\u201cRelative TSR\u201d) was at the 81.20th percentile for this performance\nperiod. As a result, in 2025, our named executive officers with performance-based RSUs granted in 2022 vested in 187% of the target\nperformance-based RSUs. We also reported net sales of $416.2 billion and operating income results of $133.1 billion for 2025, resulting\nin a maximum payout for each of our named executive officers under the Apple Inc. Executive Cash Incentive Plan (the \u201cCash\nIncentive Plan\u201d). Say on Pay Advisory Vote Results At the 2025 Annual Meeting, 92% of votes cast on the Say on Pay advisory\nproposal were in favor of our executive compensation program, demonstrating significant shareholder support for the overall structure\nof our executive compensation program and the compensation paid to our named executive officers for 2024. The People and Compensation\nCommittee considered this strong shareholder support and did not make any changes to the overall structure of our executive compensation\nprogram and maintained Mr. Cook\u2019s total target compensation between the 80th to 90th percentile range of target CEO pay at\nour 2025 primary peer companies given our relative size, scope, and success. 38 2026\u00a0Proxy\u00a0Statement Table of Contents Summary Governance Directors Compensation Proposals Other\n    Information Executive Compensation Policies and Practices We are committed to sound executive compensation policies and practices,\nas highlighted in the following table. Prohibition on hedging,\npledging, and short sales We prohibit short sales, transactions in derivatives, hedging, and pledging of Apple securities by our named executive officers. Stock ownership guidelines We have robust stock ownership guidelines for our named executive officers, including a ten times annual base salary requirement for our CEO. Compensation recoupment policies We have a policy for the recovery of any erroneously awarded performance-based incentive compensation, as required under Section 10D-1 of the Exchange Act and Nasdaq listing standards.\u00a0In addition, we maintain a discretionary recoupment policy applicable to our named executive officers and our broader executive team that allows for recovery of annual cash incentives, time and performance-based equity awards, or other amounts that may be paid with respect to awards in certain events, including for certain acts of misconduct by our named executive officers. No repricing We do not allow repricing of stock options without shareholder approval. Limited perquisites We provide limited perquisites to our named executive officers. For example, for security and efficiency purposes, Mr. Cook is provided personal security protection and is required by the Board to use private aircraft for all business and personal travel. No tax gross-ups on perquisites We do not provide tax gross-ups for the limited perquisites provided to our named executive officers. No change of control payments We do not provide change of control payments or gross-ups of related excise taxes. Vesting requirements for dividend equivalents Dividend equivalents will not be paid unless and until the vesting and performance conditions for the underlying equity award are met. At-will employment Our named executive officers do not have employment contracts and are employed at will. No pension or other supplemental benefits We do not provide pension, supplemental executive health, or insurance benefits. Annual compensation risk assessment The People and Compensation Committee oversees an annual risk assessment of our compensation program. Independent compensation consultant The People and Compensation Committee directly retains an independent compensation consultant that performs no services for Apple other than services for the People and Compensation Committee. 2026\u00a0Proxy\u00a0Statement 39 Table of Contents Summary Governance Directors Compensation Proposals Other\n    Information Guiding Compensation Principles Our executive compensation program is designed to motivate and reward\noutstanding financial performance, retain talented, values-driven leaders, and promote teamwork in a straightforward and effective\nway. Our clear guiding principles and sound compensation policies and practices align the pay of our named executive officers with\nCompany performance, taking into consideration the size, scope, and success of Apple\u2019s business. Team-Based Approach We apply a unique team-based approach to the compensation of our\nnamed executive officers to emphasize their shared responsibility for Apple\u2019s overall success. This approach recognizes the\nexceptional experience, leadership, and value each of our named executive officers contributes to Apple\u2019s leadership team,\nwith CEO compensation awarded at a higher level to reflect the additional scope and complexity of that role. Performance Expectations The vast majority of our executive pay is tied to Apple\u2019s\u00a0financial\nperformance to ensure alignment with the long-term interests of shareholders. Each year, we establish clear, quantitative financial\ngoals for our named executive officers that are intended to drive Apple\u2019s overall success. Emphasis on Long-Term Equity Awards We emphasize long-term performance, retention, and alignment between\nthe interests of our named executive officers and those of our shareholders by allocating a significant portion of our named executive\nofficers\u2019 compensation to long-term equity awards. Performance-based RSUs reward long-term TSR out-performance relative to\nother companies. Time-based RSUs are also an important component of long-term equity awards because they promote stability and\nretention of our exceptional leadership team while vesting over a longer time frame of approximately 4.5 years. People and Compensation Committee Considerations When Setting\nExecutive Compensation \u25cf Managing Apple for the long term \u25cf Aligning pay with performance \u25cf Retaining exceptional, values-driven leaders \u25cf Considering shareholder interests and feedback \u25cf Maintaining Apple\u2019s unique team-based approach Executive Compensation Decision-Making Process Establishing appropriate compensation and incentive opportunities\nfor our named executive officers is a core responsibility of the People and Compensation Committee.\u00a0The People and Compensation\nCommittee consists entirely of independent directors who review and approve the compensation and incentives of Apple\u2019s named\nexecutive officers each year. It also administers Apple\u2019s employee stock plans. The People and Compensation Committee may\ndelegate its authority under its charter to Apple\u2019s officers or employees, or any of its individual members, except to the\nextent otherwise prohibited by SEC or Nasdaq rules, or other applicable laws. The People and Compensation Committee\u2019s authority\nto grant discretionary equity awards under our employee stock plans or to take any other action with respect to equity awards (other\nthan the performance of ministerial duties) may not be delegated to Apple\u2019s management or others. 40 2026\u00a0Proxy\u00a0Statement Table of Contents Summary Governance Directors Compensation Proposals Other\n    Information The Role of the Compensation Consultant The People and Compensation Committee selects and retains the services\nof its own independent compensation consultant and annually reviews the consultant\u2019s performance. As part of the review process,\nthe People and Compensation Committee considers the independence of the consultant in accordance with SEC and Nasdaq rules. During 2025, the People and Compensation Committee\u2019s independent\ncompensation consultant, Pay Governance, provided no services to Apple other than services for the People and Compensation Committee\nand worked with Apple\u2019s management, as directed by the People and Compensation Committee, only on matters for which the People\nand Compensation Committee is responsible. At the People and Compensation Committee\u2019s request, Pay Governance regularly attends\nthe People and Compensation Committee meetings. Pay Governance also communicates with the members of the People and Compensation\nCommittee outside committee meetings regarding matters related to the People and Compensation Committee\u2019s responsibilities. In 2025, the People and Compensation Committee generally sought input\nfrom Pay Governance on Apple\u2019s compensation programs, including: external market factors; shareholder engagement; overall\ncompensation program design; evolving compensation trends; appropriate market reference points; and market compensation data. Pay\nGovernance also consulted with the People and Compensation Committee regarding the amount and form of compensation for our CEO\nand other named executive officers. Role of Peer Groups The People and Compensation Committee reviews and approves the composition\nof a primary peer group each year to serve as the market reference point for compensation opportunity comparison purposes, to inform\nits decision-making process, and to set total target compensation levels that it believes are competitive and commensurate with\nApple\u2019s relative size, scope, and success. Apple remains significantly larger than most other companies with\n$416.2 billion in revenue for 2025 and market capitalization of $3.8 trillion, as of the last trading day of 2025. This was approximately\nseven times the market capitalization and five times the revenue of the median peer companies in our 2025 peer group, which were\n$512.7 billion for market capitalization and $77.2 billion for revenue, respectively. Market Capitalization Revenue Market capitalization for our primary peers is the amount reported by Bloomberg L.P. as of September 26, 2025, the last trading day of 2025. Revenue is based on the trailing 12\u00a0months\u2019 revenue for Apple and each of our primary peers ending closest to our 2025 fiscal year-end. Our primary peer group consists of large U.S.-based, stand-alone,\npublicly traded companies in the technology, media, and internet services industries that, in the People and Compensation Committee\u2019s\nview, compete with Apple for executive talent. Commensurate with Apple\u2019s size and scope, the People and Compensation Committee\nreviews Mr. Cook\u2019s total target compensation against the annualized total target CEO pay of our primary peer group, focusing\non the 80th to 90th percentiles of peer CEO pay when setting Mr. Cook\u2019s pay. Other than for Mr. Cook, the People and Compensation\nCommittee does not set compensation components for our named executive officers to meet specific benchmarks as compared to our\npeer companies. 2026\u00a0Proxy\u00a0Statement 41 Table of Contents Summary Governance Directors Compensation Proposals Other\n    Information The threshold revenue and market capitalization requirements for\na company to be considered for the primary peer group for 2025 were $20 billion and $100 billion, respectively. The chart below\nlists the companies in our 2025 primary peer group",
+    "note": null
+  },
+  "news_digest": null,
+  "filings_digest": null,
+  "data_notes": [
+    "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented.",
+    "Skipped (dry run).",
+    "Skipped (dry run)."
+  ]
+}
