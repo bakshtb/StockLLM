@@ -1,0 +1,678 @@
+{
+  "ticker": "GOOGL",
+  "fetched_at": "2026-07-29T20:50:36.414363Z",
+  "price": {
+    "current_price": 336.71,
+    "ma20": 349.62,
+    "ma50": 360.57,
+    "ma200": 324.93,
+    "52w_high": 402.38,
+    "52w_low": 188.59,
+    "volatility_20d": 0.0245,
+    "volume_trend": "decreasing",
+    "pct_change_20d": -6.78,
+    "pct_change_1y": 71.82,
+    "rsi_14": 39.68,
+    "macd": -8.321,
+    "macd_signal": -6.373,
+    "macd_histogram": -1.949
+  },
+  "fundamentals": {
+    "pe_ratio": 16.903112,
+    "forward_pe": 22.875689,
+    "market_cap": "4.12T",
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "next_earnings_date": "2026-10-28",
+    "analyst_recommendation": "strong_buy",
+    "target_mean_price": 427.586,
+    "short_interest": {
+      "shares_short": 78667609,
+      "shares_short_prior_month": 89840649,
+      "short_change_pct": -12.44,
+      "short_ratio_days_to_cover": 2.32,
+      "short_pct_of_float": 0.0134000005,
+      "as_of_date": "2026-07-15"
+    }
+  },
+  "balance_sheet_health": {
+    "total_debt": 120790999040,
+    "total_cash": 242473992192,
+    "debt_to_equity": 18.859,
+    "current_ratio": 2.724,
+    "free_cash_flow": 73266000000.0,
+    "operating_cash_flow": 164713000000.0,
+    "note": "Most recent annual figures available from Yahoo Finance; coverage varies by ticker/exchange."
+  },
+  "income_statement": {
+    "annual": {
+      "period_end": "2025-12-31",
+      "total_revenue": 402836000000.0,
+      "gross_profit": 240301000000.0,
+      "operating_income": 129039000000.0,
+      "net_income": 132170000000.0,
+      "diluted_eps": 10.81,
+      "gross_margin_pct": 59.65,
+      "operating_margin_pct": 32.03,
+      "net_margin_pct": 32.81,
+      "revenue_growth_yoy_pct": 15.09,
+      "net_income_growth_yoy_pct": 32.01,
+      "eps_growth_yoy_pct": 34.45
+    },
+    "quarterly": [
+      {
+        "period_end": "2026-06-30",
+        "total_revenue": 119796000000.0,
+        "gross_profit": 73853000000.0,
+        "operating_income": 40770000000.0,
+        "net_income": 112193000000.0,
+        "diluted_eps": 9.11,
+        "gross_margin_pct": 61.65,
+        "operating_margin_pct": 34.03,
+        "net_margin_pct": 93.65,
+        "revenue_growth_qoq_pct": 9.01,
+        "net_income_growth_qoq_pct": 79.29,
+        "revenue_growth_yoy_pct": 24.23,
+        "net_income_growth_yoy_pct": 297.9,
+        "eps_growth_yoy_pct": 294.37
+      },
+      {
+        "period_end": "2026-03-31",
+        "total_revenue": 109896000000.0,
+        "gross_profit": 68625000000.0,
+        "operating_income": 39696000000.0,
+        "net_income": 62578000000.0,
+        "diluted_eps": 5.11,
+        "gross_margin_pct": 62.45,
+        "operating_margin_pct": 36.12,
+        "net_margin_pct": 56.94,
+        "revenue_growth_qoq_pct": -3.46,
+        "net_income_growth_qoq_pct": 81.62,
+        "revenue_growth_yoy_pct": null,
+        "net_income_growth_yoy_pct": null,
+        "eps_growth_yoy_pct": null
+      },
+      {
+        "period_end": "2025-12-31",
+        "total_revenue": 113829000000.0,
+        "gross_profit": 68062000000.0,
+        "operating_income": 35934000000.0,
+        "net_income": 34455000000.0,
+        "diluted_eps": 2.82,
+        "gross_margin_pct": 59.79,
+        "operating_margin_pct": 31.57,
+        "net_margin_pct": 30.27,
+        "revenue_growth_qoq_pct": 11.22,
+        "net_income_growth_qoq_pct": -1.5,
+        "revenue_growth_yoy_pct": null,
+        "net_income_growth_yoy_pct": null,
+        "eps_growth_yoy_pct": null
+      },
+      {
+        "period_end": "2025-09-30",
+        "total_revenue": 102346000000.0,
+        "gross_profit": 60977000000.0,
+        "operating_income": 31228000000.0,
+        "net_income": 34979000000.0,
+        "diluted_eps": 2.87,
+        "gross_margin_pct": 59.58,
+        "operating_margin_pct": 30.51,
+        "net_margin_pct": 34.18,
+        "revenue_growth_qoq_pct": 6.14,
+        "net_income_growth_qoq_pct": 24.06
+      },
+      {
+        "period_end": "2025-06-30",
+        "total_revenue": 96428000000.0,
+        "gross_profit": 57389000000.0,
+        "operating_income": 31271000000.0,
+        "net_income": 28196000000.0,
+        "diluted_eps": 2.31,
+        "gross_margin_pct": 59.51,
+        "operating_margin_pct": 32.43,
+        "net_margin_pct": 29.24,
+        "revenue_growth_qoq_pct": null,
+        "net_income_growth_qoq_pct": null
+      },
+      {
+        "period_end": "2025-03-31",
+        "total_revenue": null,
+        "gross_profit": null,
+        "operating_income": null,
+        "net_income": null,
+        "diluted_eps": null,
+        "gross_margin_pct": null,
+        "operating_margin_pct": null,
+        "net_margin_pct": null,
+        "revenue_growth_qoq_pct": null,
+        "net_income_growth_qoq_pct": null
+      },
+      {
+        "period_end": "2024-12-31",
+        "total_revenue": null,
+        "gross_profit": null,
+        "operating_income": null,
+        "net_income": null,
+        "diluted_eps": null,
+        "gross_margin_pct": null,
+        "operating_margin_pct": null,
+        "net_margin_pct": null
+      }
+    ],
+    "note": null
+  },
+  "insider_transactions": {
+    "transactions": [
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 121.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 122.0,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 101.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 102.0,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 69.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 69.0,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 105.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 106.0,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 27.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 27.0,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 26.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 27.0,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-01",
+        "direction": "buy",
+        "shares": 1232.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 19.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 19.087,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-01",
+        "direction": "buy",
+        "shares": 784.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 19.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 20.0,
+        "price_per_share": 319.09
+      },
+      {
+        "owner": "Saraci Marsida",
+        "title": "VP, Chief Accounting Officer",
+        "date": "2026-07-25",
+        "direction": "buy",
+        "shares": 487.0,
+        "price_per_share": 0.0
+      },
+      {
+        "owner": "WALKER JOHN KENT",
+        "title": "President, Global Affairs, CLO",
+        "date": "2026-07-25",
+        "direction": "sell",
+        "shares": 1625.0,
+        "price_per_share": 0.0
+      }
+    ],
+    "note": null
+  },
+  "institutional_ownership": {
+    "top_institutional_holders": [
+      {
+        "holder": "Blackrock Inc.",
+        "shares": 446980992,
+        "pct_out": 0.0762,
+        "value": 150502965996
+      },
+      {
+        "holder": "Vanguard Capital Management LLC",
+        "shares": 378261579,
+        "pct_out": 0.0645,
+        "value": 127364453032
+      },
+      {
+        "holder": "FMR, LLC",
+        "shares": 236544675,
+        "pct_out": 0.0403,
+        "value": 79646955497
+      },
+      {
+        "holder": "State Street Corporation",
+        "shares": 226259132,
+        "pct_out": 0.038599998,
+        "value": 76183710402
+      },
+      {
+        "holder": "Geode Capital Management, LLC",
+        "shares": 151888094,
+        "pct_out": 0.025899999,
+        "value": 51142238832
+      }
+    ],
+    "pct_held_by_institutions": null,
+    "pct_held_by_insiders": null,
+    "note": "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented."
+  },
+  "news_headlines": [
+    {
+      "headline": "Apple to report Q3 earnings following price hikes on Macs, iPads",
+      "source": "Yahoo Finance",
+      "date": "2026-07-29",
+      "snippet": "Apple will report its third quarter earnings on Thursday.",
+      "url": "https://finance.yahoo.com/technology/article/apple-to-report-q3-earnings-following-price-hikes-on-macs-ipads-115246491.html"
+    },
+    {
+      "headline": "S&P 8,500 melt-up? Why money is leaving big tech",
+      "source": "Yahoo Finance Video",
+      "date": "2026-07-29",
+      "snippet": "Trader Talk host Kenny Polcari, Robinhood CIO Stephanie Guild, and Payne Capital Management President Ryan Payne break down the market's massive rotation out of big tech, the reality of AI infrastruct",
+      "url": "https://finance.yahoo.com/video/p-8-500-melt-why-100000793.html"
+    },
+    {
+      "headline": "Arm forecasts quarterly revenue above estimates on AI-driven chip demand",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "snippet": "Arm Holdings forecast second-quarter revenue above Wall Street estimates on Wednesday, signaling strong demand for \u200cits energy-efficient chip designs for AI data centers.  Demand for Arm's chip archit",
+      "url": "https://finance.yahoo.com/technology/ai/articles/arm-forecasts-quarterly-revenue-above-200538396.html"
+    },
+    {
+      "headline": "Meta's free cash flow wiped out as AI buildout grows",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "snippet": "Meta Platforms reported a precipitous 91% drop \u200cin free cash flow on Wednesday, underscoring \u200cthe financial strain of the social media giant's costly AI \u200bbuildout despite an uncertain payoff.  The com",
+      "url": "https://finance.yahoo.com/technology/ai/articles/meta-narrows-annual-capex-forecast-200515158.html"
+    },
+    {
+      "headline": "Berkshire Hathaway buyback binge fuels UBS price target hike ahead of earnings",
+      "source": "Proactive",
+      "date": "2026-07-29",
+      "snippet": "Berkshire Hathaway Inc (NYSE:BRK.A) shares are trading at an 8% discount to intrinsic value, UBS said, raising its price target on the conglomerate ahead of its second-quarter earnings release. UBS li",
+      "url": "https://www.proactiveinvestors.com/companies/news/1096233/berkshire-hathaway-buyback-binge-fuels-ubs-price-target-hike-ahead-of-earnings-1096233.html"
+    },
+    {
+      "headline": "Oracle Is Sending a Different Signal Than Big Tech",
+      "source": "GuruFocus.com",
+      "date": "2026-07-29",
+      "snippet": "Credit markets are pricing in more risk for the software company than for its hyperscaler peers.",
+      "url": "https://finance.yahoo.com/technology/articles/oracle-sending-different-signal-big-190427661.html"
+    },
+    {
+      "headline": "Alphabet Stock Stalls Despite Fresh $425 Per Share AI Upgrade",
+      "source": "GuruFocus.com",
+      "date": "2026-07-29",
+      "snippet": "Phillip Securities upgraded Alphabet after its earnings selloff but lowered forecasts to account for enormous AI spending.",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/alphabet-stock-stalls-despite-fresh-190330269.html"
+    },
+    {
+      "headline": "Vertiv Earnings Beat Estimates. Why the Stock Is Falling.",
+      "source": "Barrons.com",
+      "date": "2026-07-29",
+      "snippet": "Vertiv stock drops sharply after the data-center infrastructure company\u2019s second-quarter sales came in below Wall Street\u2019s expectations.",
+      "url": "https://www.barrons.com/articles/vertiv-earnings-stock-price-8631d669?siteid=yhoof2&yptr=yahoo"
+    },
+    {
+      "headline": "Microsoft tops Q4 expectations on strong Azure growth",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "snippet": "Microsoft reported its Q4 earnings on Wednesday.",
+      "url": "https://finance.yahoo.com/technology/article/microsoft-tops-q4-expectations-on-strong-azure-growth-120144134.html"
+    },
+    {
+      "headline": "Earnings live: Qualcomm stock slides, Arm Holdings little changed after results exceed expectations",
+      "source": "Yahoo Finance",
+      "date": "2026-07-27",
+      "snippet": "Earnings season kicks into high gear this week.",
+      "url": "https://finance.yahoo.com/markets/live/earnings-live-qualcomm-stock-slides-arm-holdings-little-changed-after-results-exceed-expectations-115207214.html"
+    }
+  ],
+  "news_articles_raw": [
+    {
+      "headline": "Apple to report Q3 earnings following price hikes on Macs, iPads",
+      "source": "Yahoo Finance",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong Apple's (AAPL) third quarter earnings are on deck Thursday, setting up a potential reprieve from the week's chip and AI stock sell-off. Shares of the iPhone maker have benefited from their general lack of exposure to the AI trade, with investors flocking to the stock as a safety play and briefly sending the company'smarket capitalization to around the $5 trillion mark on Tuesday. Apple stock is up some 24% year to date, easily outpacing the rest of the \"Magnificent Seven\" stocks. Goog (GOOG,GOOGL) is the second-best performer of the lot in the period, climbing roughly 7%. For the third quarter, Apple is expected to report earnings per share (EPS) of $1.89 on revenue of $108.8 billion. That would mark a jump from the EPS of $1.57 and $94 billion in revenue the company saw in the same period last year. Apple's iPhone revenue is projected to hit $53.5 billion, a 20% increase from the $44.5 billion the company brought in in Q3 2025. Services, Apple's second-largest business, is anticipated to see revenue of $31.3 billion, up 14%. Revenue out of China is expected to grow 27% to $19.5 billion. While Apple's stock has outperformed its Big Tech peers, the Cupertino, Calif.-based company is still facing its own AI-induced headache: rising memory and storage costs, thanks to the global AI build-out. That has driven the company toincrease the price of its Macs and iPads, though the iPhone has been spared at least for now. Apple is widely expected to boost the price of its next-generation iPhones when it unveils the products at its annual showcase in September. According to Jefferies analyst Edison Lee, the increases in memory prices could pressure Apple's iPhone margins going forward. \"We estimate the memory cost would rise further in [the second half of 2026], and assuming similar price hikes with iPad (except the 512GB version, where we assume a US$300 price hike vs 200 for iPad), the incremental [gross margins] would only be 21%. That could reduce the overall iPhone GM from 38% to 34.5%,\" Lee wrote in an investor note. But Brandon Nispel of KeyBank Capital Markets sees a potential iPhone price increase as a far larger issue for Apple than simply an impact on gross margins. \"With [Apple] providing a safe haven to the sell-off in semis, we think they are missing the bigger picture, which squarely fits our thesis: as [Apple] raises iPhone prices, unit growth will slow, and as unit growth slows, so will user growth, which we think ultimately will slow Services growth,\" Nispel wrote in a note to investors. But Apple's new Apple Upgrade service, which was announced Tuesday and allows customers to lease devices from iPhones to Macs, could help address those concerns. All of this will fall on incoming CEO John Ternus, who will take over the role from Tim Cook beginning Sept. 1. Thursday's earnings will be Cook's last in the position. Email Daniel Howley at dhowley@yahoofinance.com. Follow him on X at@DanielHowley. Click here for the latest technology news that will impact the stock market. Read the latest financial and business news from Yahoo Finance",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "S&P 8,500 melt-up? Why money is leaving big tech",
+      "source": "Yahoo Finance Video",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong Trader Talk host Kenny Polcari, Robinhood CIO Stephanie Guild, and Payne Capital Management President Ryan Payne break down the market's massive rotation out of big tech, the reality of AI infrastructure spending, and the bold case for an S&P 8,500 melt-up by year-end. Well, hello and welcome back. I am Kenny Pulcari and this is trader Talk at Yahoo Finance. Today, I'm joined by Stephanie Guild, who's the CIO at Robinhood, and many of you know Ryan Payne, who is the president of Payne Capital Management and also the host of Payne PaynePoints of Wealth. the tongue, Ken. Yeah, right, right off the tongue. Anyway.Thank you very much for joining me today. I really appreciate it. There is a lot going on, right? We're in the middle of this earnings season. This is, uh, a big week for not only earnings, but for the Fed, for markets, for the economy, uh, because we're gonna get hit, you know, broadside by a bunch of different things. So, let's talk first about kind of where you think we're at, and then, uh, where you think we're at. Great. I think we're in a time period where expectations have caught up to some of the numbers. Like if you look at the over the last quarter, earnings growth expectations increased by 50%, you know, across the board for the S&P 500. When estimates grow by that fast in a quarter, and I know it was coming out of a, you know, a conflict that was seemingly over but now seems to be coming back and forth, not over, that we're, you know, I think that's where you kind of get some like concerns like our expectations too high.And I think that's what you're kind of seeing from day to day in the market. Well, and I think we've seen that over the last couple of, last couple of weeks. Certainly expectations in the growth in the tech sector were obviously are clearly too high, or at least that's kind of the sense that we got from the market action. You know, I think what you're seeing is, it's not like money's coming out of the market, it's just rotating, right? And that's what's interesting because yeah, I run pretty broadly diversified portfolios, and I mean if you look at the last month, you've got obviously energy stocks are crushing it.Um, unless you've been, except for today, but yeah, but you know, this week, this week, you pick the day really. It's like it's up $10 down $10 in oil.Uh, you know, financials obviously have been crushing it. I mean they just blew it out at the beginning of earnings season, healthcare stocks, industrial stocks, um, so it's material stocks, there you go. So it's really been a great rotation, which, you know, I love. I mean, it's healthy to see that you're seeing money flow to other parts of the world. And Ithink that's a key point, right? Because when I talk to clients, people start to get nervous, you know, they're nervous about market reaction, they see tech under pressure. I go, listen, this is not liquidation.Liquidation would be if you saw them selling everything and throwing the kitchen sink out the window. That would be liquidation. That's not what's happening at all. In fact, to your point.Uh, we're seeing this, we're seeing money move from these kind of high growth sexy names that we're probably stretching overvalued into more conservative kind of long-term, might be boring. Consumer Staples is nothing exciting about Consumer Staples yet. Um, it's a place where, where investors want to put some money. But I think we're also, so we also manage, uh, diversified portfolio, single names, um, Robin Hood strategies and.Um, we, we also like, I think the one thing that we, we kind of underlying foundation is that there's a, there's a physical nature to what has been growing and that like you, you can't grow AI without more power, you can't grow AI without more construction, you can't go without materials, and so I think like sometimes the market forgets that and then it comes back to it, forgets that and comes backto it. Well, I think there's a, you know.It",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Arm forecasts quarterly revenue above estimates on AI-driven chip demand",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong By Juby Babu and Max A. Cherney July 29 (Reuters) - Arm Holdings forecast second-quarter revenue above Wall Street estimates on Wednesday, signaling strong demand for \u200cits energy-efficient chip designs for AI data centers. Demand for Arm's chip architecture has \u200csurged as companies like Alphabet and Amazon.com build custom AI chips, boosting the company's licensing revenue and \u200broyalties as more complex chips are shipped to data centers. Revenue from royalties, which Arm collects on each chip shipped using its technology, rose 22% to $715 million in the first quarter, while licensing revenue grew 23% to $574 million. Arm's chip designs are prized for their power efficiency, \u200ca critical advantage for data \u2060center operators looking to manage the soaring energy costs and heat generated by running massive AI models. Its AGI CPU, a new AI \u2060data center chip unveiled in March, is exceeding initial expectations, with demand now surpassing $2 billion across fiscal years 2027 and 2028, the company said. It has already delivered the product to \u200bmultiple \u200bcustomers. Cloud firm Oracle has agreed to buy the \u200bnew chip, Arm CEO Rene Haas \u200csaid in an interview with Reuters. Haas did not disclose the contract value. \"We have new customers in North America and China,\" Haas said, adding that the company can now secure supply for more than $1 billion worth of chips. \"I feel better about (supply) than I did 90 days ago,\" he said. Jefferies analysts see sales of the new chip \u200creaching $18 billion in fiscal 2031, surpassing the chip \u200bdesigner's own projection of $15 billion. Haas said the company is \u200bnot changing any forecasts on Wednesday. Arm \u200bprojected second-quarter revenue of $1.38 billion, above analysts' average estimate of $1.34 billion, \u200caccording to data compiled by LSEG. The \u200bUK chip designer expects \u200bsecond-quarter profit of 47 cents per share, adjusted for stock compensation, among other things, compared with analysts' expectations of 43 cents per share. The company reported revenue \u200bof $1.29 billion and adjusted per-share \u200cearnings of 45 cents for the first quarter. Analysts expected revenue of $1.26 \u200bbillion and adjusted profit of 40 cents a share. (Reporting by Juby Babu \u200bin Mexico City; Editing by Sahal Muhammed)",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Meta's free cash flow wiped out as AI buildout grows",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong By Katie Paul and Jaspreet Singh July 29 (Reuters) - Meta Platforms reported a precipitous 91% drop \u200cin free cash flow on Wednesday, underscoring \u200cthe financial strain of the social media giant's costly AI \u200bbuildout despite an uncertain payoff. The company reported free cash flow of $784 million in the second quarter, down from $8.55 billion reported a year earlier. Shares of the company \u200cfell about 5% \u2060in extended trading. Meta's cash flow wipe-out echoed Alphabet's, which last week said it was \u2060cash flow negative for the first time ever as it spent $5.9 billion in the second quarter. The \u200brate \u200bof spending stunned even \u200bthe most bullish of \u200cWall Street investors, driving Alphabet's stock down. Facebook parent Meta now expects 2026 capital expenditure to be between $130 billion and $145 billion, compared with its prior forecast of $125 billion to $145 billion. The company also raised the lower \u200cend of its expense outlook \u200bto incorporate the $2.4 billion charges \u200brelated to legal \u200bproceedings recognized in the second quarter. Meta \u200csaid it now expects full-year \u200b2026 total \u200bexpenses to be in the range of $165 billion to $169 billion, compared with its prior forecast of $162 \u200bbillion to $169 \u200cbillion. (Reporting by Katie Paul in New York \u200band Jaspreet Singh in Bengaluru; Editing by Shilpi \u200bMajumdar and Nia Williams)",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Berkshire Hathaway buyback binge fuels UBS price target hike ahead of earnings",
+      "source": "Proactive",
+      "date": "2026-07-29",
+      "text": "Angela Harmantas is an Editor at Proactive. She has over 15 years of experience covering the equity markets in North America, with a particular focus on junior resource stocks. Angela has reported from numerous countries around the world, including Canada, the US, Australia, Brazil, Ghana, and South Africa for leading trade publications. Previously, she worked in investor relations and led the foreign direct investment program in Canada for the Swedish government. She earned a Bachelor of...Read more Proactive financial news and online broadcast teams provide fast, accessible, informative and actionable business and finance news content to a global investment audience. All our content is produced independently by our experienced and qualified teams of news journalists. Proactive news team spans the world\u2019s key finance and investing hubs with bureaus and studios in London, New York, Toronto, Vancouver, Sydney and Perth. We are experts in medium and small-cap markets, we also keep our community up to date with blue-chip companies, commodities and broader investment stories. This is content that excites and engages motivated private investors. The team delivers news and unique insights across the market including but not confined to: biotech and pharma, mining and natural resources, battery metals, oil and gas, crypto and emerging digital and EV technologies. Proactive has always been a forward looking and enthusiastic technology adopter. Our human content creators are equipped with many decades of valuable expertise and experience. The team also has access to and use technologies to assist and enhance workflows. Proactive will on occasion use automation and software tools, including generative AI. Nevertheless, all content published by Proactive is edited and authored by humans, in line with best practice in regard to content production and search engine optimisation. Published:15:39 29 Jul 2026 EDT Berkshire Hathaway Inc (NYSE:BRK.A)shares are trading at an 8% discount to intrinsic value, UBS said, raising its price target on the conglomerate ahead of its second-quarter earnings release. UBS lifted its target to $877,848 for Class A shares from $854,596, and to $585 for Class B shares. The bank also raised its 2Q26 earnings estimates to $7,973 per A-share and $5.32 per B-share, both up 3%, citing heavier buybacks, stronger results at BNSF railroad and lower catastrophe losses in insurance. UBS estimates Berkshire repurchased about $8.5 billion of stock between April 15 and July 14, based on a 13D/A filing tied to Warren Buffett's charitable stock donation. The bank called the buyback pace bullish, noting shares traded at 1.45 times book value over the period. The quarter included the closing of Berkshire's Taylor Morrison acquisition and a $10 billion investment in Alphabet to fund AI development. For 2026 and 2027, UBS raised operating earnings estimates by 1.3% and 0.8%, respectively, to $21.05 and $21.32 per B-share, largely on higher assumed buybacks of $8.6 billion, up from $1.5 billion previously. UBS expects GEICO's underwriting margins to keep narrowing as the unit leans into growth through flat to declining rates and higher ad spend, forecasting an 88.3% combined ratio versus 83.5% a year earlier. Reinsurance premiums are expected to rise 5%, helped by a new quota-share deal with Tokio Marine, while competitive pricing pressures growth elsewhere. Among non-insurance units, BNSF faces a modest fuel-cost headwind before turning to a tailwind next quarter. Berkshire Hathaway Energy is expected to post revenue up 5% and pre-tax operating earnings up 31%, while the manufacturing, service and retailing segment is seen growing earnings 3.9%. Sign up to receive alerts and news direct to your inbox Fox Tungsten CEO Steve Gray joined Steve Darling from Proactive to provide an update on the company's fully funded 20,000-metre diamond drill program at the Fox Project in British Columbia, where drilling has intersected visible sche",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Oracle Is Sending a Different Signal Than Big Tech",
+      "source": "GuruFocus.com",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong This article first appeared onGuruFocus. Oracle (ORCL,Financials), the enterprisesoftware and cloud infrastructure company, led a record widening in credit default swap spreads among hyperscale technology companies. Warning! GuruFocus has detected 6 Warning Signs with ORCL. Is ORCL fairly valued? Test your thesis with our free DCF calculator. The move suggests bond investors are demanding more protection against the possibility of credit deterioration across the sector. Oracle's spread widened by a larger margin than those of Alphabet, Amazon, Microsoft and Meta. Credit default swaps act as insurance against a borrower failing to meet its debt obligations. Wider spreads generally indicate that investors see greater financial risk. The shift comes as major technology companies continue to commit large amounts of capital to artificial intelligence infrastructure, data centers and cloud capacity. Those investments can support future growth, but they may also increase borrowing needs and pressure cash flow. Oracle's sharper move could reflect greater concern about its balance sheet, capital spending requirements or the pace at which new infrastructure investments will generate returns. The widening does not indicate that a default is expected. However, it shows that credit investors are becoming more selective as spending across the technology sector rises. Investors will now watch Oracle's debt levels, cash flow and AI infrastructure returns for signs that credit concerns are easing.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Alphabet Stock Stalls Despite Fresh $425 Per Share AI Upgrade",
+      "source": "GuruFocus.com",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong This article first appeared onGuruFocus. Alphabet (NASDAQ:GOOGL), Google's parent and a major advertising and cloud-computing company,edgedless than 0.1% lower in Wednesday's regular-session trading despite a fresh upgrade from Phillip Securities. Analyst Serena Lim Yi Qi raised the rating to buy from accumulate following Alphabet's post-earnings decline. She simultaneously reduced the price target to $425 from $450. Warning! GuruFocus has detected 4 Warning Signs with E. Is GOOGL fairly valued? Test your thesis with our free DCF calculator. The analyst cited Alphabet's vertically integrated AI system, which combines proprietary Tensor Processing Units, data centers, Gemini models, Search and Google Cloud. Cloud revenue increased 82% from one year earlier, while advertising revenue rose 14%. However, Alphabet raised its 2026 capital-expenditure guidance to between $195 billion and $205 billion and reported negative quarterly free cash flow for the first time in its history. Phillip Securities consequently lowered its fiscal 2026 revenue forecast by approximately 2% and its net-income estimate by 4%. Other analysts remain divided. Barclays maintained an overweight rating and $425 target, while Citizens retained a market outperform rating with a $515 objective. Bernstein SocGen maintained market perform and reduced its target to $385, citing negative free cash flow and the spending increase. From Alphabet's Wednesday price of approximately $333.56, Phillip Securities' $425 target represents potential appreciation of roughly 27%. The $130 difference between the highest and lowest cited targets demonstrates the scale of disagreement surrounding AI returns. Investors may continue weighing accelerating cloud demand against the cash-flow pressure created by Alphabet's infrastructure program.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Vertiv Earnings Beat Estimates. Why the Stock Is Falling.",
+      "source": "Barrons.com",
+      "date": "2026-07-29",
+      "text": "Vertiv stock drops sharply after the data-center infrastructure company\u2019s second-quarter sales came in below Wall Street\u2019s expectations.",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Microsoft tops Q4 expectations on strong Azure growth",
+      "source": "Yahoo Finance",
+      "date": "2026-07-28",
+      "text": "Microsoft reported its Q4 earnings on Wednesday.",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Earnings live: Qualcomm stock slides, Arm Holdings little changed after results exceed expectations",
+      "source": "Yahoo Finance",
+      "date": "2026-07-27",
+      "text": "Earnings season kicks into high gear this week.",
+      "full_text_fetched": false
+    }
+  ],
+  "filings_raw": {
+    "10-K": {
+      "filing_type": "10-K",
+      "filing_date": "2026-02-05",
+      "text": "goog-20251231 UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 ___________________________________________ FORM 10-K ___________________________________________ (Mark One) \u2612 ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the fiscal year ended December\u00a031 , 2025 OR \u2610 TRANSITION REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the transition period from to . Commission file number: 001-37580 ___________________________________________ Alphabet Inc. (Exact name of registrant as specified in its charter) ___________________________________________ Delaware 61-1767919 (State or other jurisdiction of incorporation or organization) (I.R.S. Employer Identification No.) 1600 Amphitheatre Parkway Mountain View , CA 94043 (Address of principal executive offices, including zip code) ( 650 ) 253-0000 (Registrant's telephone number, including area code) Securities registered pursuant to Section\u00a012(b) of the Act: Title of each class Trading Symbol(s) Name of each exchange on which registered Class\u00a0A Common Stock, $0.001 par value GOOGL Nasdaq Stock Market LLC (Nasdaq Global Select Market) Class C Capital Stock, $0.001 par value GOOG Nasdaq Stock Market LLC (Nasdaq Global Select Market) 2.375% Senior Notes due 2028 \u2014 Nasdaq Stock Market LLC 2.500% Senior Notes due 2029 \u2014 Nasdaq Stock Market LLC 2.875% Senior Notes due 2031 \u2014 Nasdaq Stock Market LLC 3.000% Senior Notes due 2033 \u2014 Nasdaq Stock Mar [...skipped ahead to Management's Discussion and Analysis...] ITEM 7. MANAGEMENT\u2019S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERATIONS Please read the following discussion and analysis of our financial condition and results of operations together with \u201cNote about Forward-Looking Statements,\u201d Part I, Item 1 \"Business,\" Part I, Item 1A \"Risk Factors,\" and our consolidated financial statements and related notes included under Item 8 of this Annual Report on Form 10-K. The following section generally discusses 2025 results compared to 2024 results. Discussion of 2024 results compared to 2023 results to the extent not included in this report can be found in Item 7 of our 2024 Annual Report on Form 10-K. Understanding Alphabet\u2019s Financial Results Alphabet is a collection of businesses \u2014 the largest of which is Google. We report Google in two segments, Google Services and Google Cloud, and all non-Google businesses collectively as Other Bets. Supporting these businesses, we have centralized certain AI-related research and development focused on advanced research in AI and developing the frontier models that serve our businesses, which is reported in Alphabet-level activities. For further details on our segments, see Part I, Item 1 Business and Note 15 of the Notes to Consolidated Financial Statements included in Item 8 of this Annual Report on Form 10-K. Trends in Our Business and Financial Effect The following long-term trends have contributed to the results of our consolidated operations, and we anticipate that they will continue to affect our future results: \u2022 As we continue to grow our business and meet the evolving behaviors and needs of our users and customers, our revenue growth and mix along with our cost and margin profiles are being influenced by a number of factors, including: Expanded AI Offerings in our Products and Services: The continuing evolution of the online world has contributed to the growth of our business. We expect that this evolution, including user engagement with AI products and services, will continue to benefit our business and our revenues. As we continue to incorporate AI into our products and services, such as with AI Overviews and AI Mode in Search, and with enterprise AI solutions on our Google Cloud Platform, we may monetize differently than our historical consumer and enterprise offerings which could affect revenue growth rates and margin trends. When developing new products and services we generally focus first on user experience and then on monetization. At the same time, we face increasing competition, including from other developers and providers of AI products and services, which may affect our revenues. Increasing Revenues Beyond Advertising: Revenues from cloud, consumer subscriptions, platforms, and devices, which may have differing characteristics than our advertising revenues, have grown over time. Certain of these revenues have been growing at a rate higher than our advertising revenues, becoming a larger percentage of our consolidated revenues, and we expect this trend to continue. The margins on these revenues vary significantly and are generally lower than the margins on our advertising revenues. Increased Investment in Technical Infrastructure: We continue to invest in capital expenditures as we scale our technical infrastructure, in particular for AI, to meet the demand of our users and enterprise customers and to support research internally. We invested heavily in capital expenditures in 2025 and in 2026, we expect to significantly increase , relative to 2025, our i nvestment in our technical infrastructure, including servers and network equipment, and data centers. The costs associated with operating our technical infrastructure - depreciation, energy, equipment, and network capacity - are expected to significantly increase as developing and serving AI offerings require more compute power than our historical consumer and enterprise offerings. While our technical infrastructure costs increase, we expect to continue to drive efficiencies in our data centers, for example, through the design of our AI models and our TPU and GPU-based technical infrastructure. Continued Investment in Intellectual Property through R&D and Acquisitions: We continue to make significant research and development investments in areas of strategic focus as we seek to develop new, innovative offerings, and improve our existing offerings across our businesse s. A cquisitions and strategic investments remain important elements in our use of capital and contribute to the breadth and depth of our offerings, expand our expertise in engineering and other functional areas, and build strong partnerships around strategic initiatives. Traffic Acquisition Costs Growth and Rate Changes: We expect traffic acquisition costs (\"TAC\") paid to our distribution partners and Google Network partners to increase as our advertising revenues grow. Our overall TAC as a percentage of our advertising revenues (\"TAC rate\") has been decreasing primarily due to a revenue mix 28. Table of Contents Alphabet Inc. shift from Google Network properties to Google Search & other properties. Our TAC rate will continue to be affected by changes in device mix; geographic mix; partner agreement terms; partner mix; the percentage of queries channeled through paid access points; product mix; the relative revenue growth rates of advertising revenues from different channels; and revenue share terms. \u2022 We have raised capital through external financing in the form of debt and we may continue to seek debt or other forms of financing in the future to support our capital and operating needs. In 2025, we raised capital through the issuance of debt and we expect to continue to assess the use of debt and other forms of financing in the future. We expect to continue to enter into finance leases, primarily for data centers.  Additionally, in 2025, we provided credit support, such as through backstops and guarantees, to certain infrastructure related counterparties and may continue to provide additional credit support in the future. \u2022 We face an evolving regulatory environment, and we are subject to claims, lawsuits, investigations, and other forms of potential legal liability, which could affect our business practices and financial results. Changes in social, political, economic, tax, and regulatory conditions or in laws and policies governing a wide range of topics and related legal matters, including investigations, lawsuits, and regulatory actions, have resulted in fines and caused us to change our business practices. As the regulatory environment continues to evolve, we may continue to incur fines and we expect increased costs associated with compliance, modifications to our products and services, and limitations on our ability to pursue certain business practices. For additional information, see Part I, Item 1A Risk Factors and Legal Matters in Note 10 of the Notes to Consolidated Financial Statements included in Item 8 of this Annual Report on Form 10-K. Revenues and Monetization Metrics We generate revenues by delivering relevant, cost-effective online advertising; cloud-based solutions that provide enterprise customers of all sizes with infrastructure, platform services, and applications; and sales of other products and services, such as fees received for subscription-based products, apps and in-app purchases, and devices. For additional information on how we recognize revenue, see Note 1 of the Notes to Consolidated Financial Statements included in Item 8 of this Annual Report on Form 10-K. In addition to the long-term trends and their financial effect on our business discussed above, fluctuations in our revenues have been and may continue to be affected by a combination of factors, including: \u2022 changes in foreign currency exchange rates; \u2022 changes in pricing, such as those resulting from changes in fee structures, discounts, and customer incentives; \u2022 general economic conditions and various external dynamics, including geopolitical events, regulations, and other measures and their effect on advertiser, consumer, and enterprise spending; \u2022 new product, service, and market launches; and \u2022 seasonality. Additionally, fluctuations in our revenues generated from advertising (\"Google advertising\"), other sources (\"Google subscriptions, platforms, and devices\"), Google Cloud, and Other Bets have been, and may continue to be, affected by other factors unique to each set of revenues, as described below. Google Services Google Services revenues consist of Google advertising as well as Google subscriptions, platforms, and devices revenues. Google Advertising Google advertising revenues are comprised of the following: \u2022 Google Search & other, which includes revenues generated on Google search properties (including revenues from traffic generated by search distribution partners who use Google.com as their default search in browsers, toolbars, etc.), and other Google owned and operated properties like Gmail, Google Maps, and Google Play; \u2022 YouTube ads, which includes revenues generated on YouTube properties; and \u2022 Google Network, which includes revenues generated on Google Network properties participating in AdMob, AdSense, and Google Ad Manager. 29. Table of Contents Alphabet Inc. We use certain metrics to track how well traffic across various properties is monetized as it relates to our advertising revenues: paid clicks and cost-per-click pertain to traffic on Google Search & other properties, while impressions and cost-per-impression pertain to traffic on our Google Network properties. Paid clicks represent engagement by users and include clicks on advertisements by end-users on Google search properties and other Google owned and operated properties including Gmail, Google Maps, and Google Play. Cost-per-click is defined as click-driven revenues divided by our total number of paid clicks and represents the average amount we charge advertisers for each engagement by users. Impressions include impressions displayed to users on Google Network properties participating primarily in AdMob, AdSense, and Google Ad Manager. Cost-per-impression is defined as impression-based and click-based revenues divided by our total number of impressions, and represents the average amount we charge advertisers for each impression displayed to users. As our business evolves, we periodically review, refine, and update our methodologies for monitoring, gathering, and counting the number of paid clicks and the number of impressions, and for identifying the revenues generated by the corresponding click and impression activity. Fluctuations in our advertising revenues, as well as the change in paid clicks and cost-per-click on Google Search & other properties and the change in impressions and cost-per-impression on Google Network properties and the correlation between these items have been, and may continue to be, affected by factors in addition to the general factors described above, such as: \u2022 advertiser competition for keywords; \u2022 changes in advertising quality, formats, delivery, or policy; \u2022 changes in device mix; \u2022 seasonal fluctuations in internet usage, advertising expenditures, and underlying business trends, such as traditional retail seasonality; and \u2022 traffic growth in emerging markets compared to more mature markets and across various verticals and channels. Google Subscriptions, Platforms, and Devices Google subscriptions, platforms, and devices revenues are comprised of the following: \u2022 consumer subscriptions, which primarily include revenues from YouTube services, such as YouTube TV, YouTube Music and Premium, and NFL Sunday Ticket, as well as Google One, which offers access to our most capable Gemini models; \u2022 platforms, which primarily include revenues from Google Play sales of apps and in-app purchases; \u2022 devices, which primarily include sales of the Pixel family of devices; and \u2022 other products and services. Fluctuations in our Google subscriptions, platforms, and devices revenues have been, and may continue to be, affected by factors in addition to the general factors described above, such as changes in customer usage and demand, number of subscribers, and the timing of product launches. Google Cloud Google Cloud revenues are comprised of the following: \u2022 Google Cloud Platform primarily generates consumption-based fees and subscriptions for infrastructure, platform, and other services. These services provide access to solutions such as AI offerings including our enterprise AI infrastructure, Vertex AI platform, and Gemini Enterprise; cybersecurity offerings; and data and analytics solutions; \u2022 Google Workspace includes subscriptions for cloud-based communication and collaboration tools for enterprises, such as Gmail, Docs, Calendar, Drive, and Meet, with integrated features like Gemini for Google Workspace; and \u2022 other enterprise services. Fluctuations in our Google Cloud revenues have been, and may continue to be, affected by factors in addition to the general factors described above, such as changes in customer usage, demand, and supply availability. 30. Table of Contents Alphabet Inc. Other Bets Revenues from Other Bets are generated primarily from the sale of autonomous transportation services and internet services. Costs and Expenses Our cost structure has two components: cost of revenues and operating expenses. Our operating expenses include costs related to research and development, sales and marketing, and general and ad",
+      "note": null
+    },
+    "10-Q": {
+      "filing_type": "10-Q",
+      "filing_date": "2026-07-23",
+      "text": "goog-20260630 UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 ________________________________________________________________________________________ FORM 10-Q _______________________________________________________________________________________ (Mark One) \u2612 QUARTERLY REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the quarterly period ended June\u00a030, 2026 OR \u2610 TRANSITION REPORT PURSUANT TO SECTION\u00a013 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934 For the transition period from _______ to _______ Commission file number: 001-37580 ________________________________________________________________________________________ Alphabet Inc. (Exact name of registrant as specified in its charter) ________________________________________________________________________________________ Delaware 61-1767919 (State or other jurisdiction of incorporation or organization) (I.R.S. Employer Identification Number) 1600 Amphitheatre Parkway Mountain View , CA 94043 (Address of principal executive offices, including zip code) ( 650 ) 253-0000 (Registrant's telephone number, including area code) Securities registered pursuant to Section\u00a012(b) of the Act: Title of each class Trading Symbol(s) Name of each exchange on which registered Class\u00a0A Common Stock, $0.001 par value GOOGL Nasdaq Stock Market LLC (Nasdaq Global Select Market) Class C Capital Stock, $0.001 par value GOOG Nasdaq Stock Market LLC (Nasdaq Global Select Market) Depositary Sh [...skipped ahead to Management's Discussion and Analysis...] ITEM 2. MANAGEMENT\u2019S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERATIONS Please read the following discussion and analysis of our financial condition and results of operations together with \"Note about Forward-Looking Statements\" and our consolidated financial statements and related notes included under Item 1 of this Quarterly Report on Form 10-Q as well as our Annual Report on Form 10-K for the fiscal year ended December\u00a031, 2025, including Part I, Item 1A \"Risk Factors,\" as updated in our Quarterly Report on Form 10-Q for the quarter ended March 31, 2026, and in Part II, Item 1A of this Quarterly Report on Form 10-Q. Understanding Alphabet\u2019s Financial Results Alphabet is a collection of businesses \u2014 the largest of which is Google. We report Google in two segments, Google Services and Google Cloud, and all non-Google businesses collectively as Other Bets. Supporting these businesses, we have centralized certain AI-related research and development focused on advanced research in AI and developing the frontier models that serve our businesses, which is reported in Alphabet-level activities. For further details on our segments, see Note 15 of the Notes to Consolidated Financial Statements included in Item 1 of this Quarterly Report on Form 10-Q. Revenues and Monetization Metrics We generate revenues by delivering relevant, cost-effective online advertising; cloud-based solutions that provide enterprise customers of all sizes with infrastructure, platform services, and applications; and sales of products and services, such as fees received for subscription-based products, apps and in-app purchases, devices, and TPU systems. For additional information on how we recognize revenue, see Note 1 of the Notes to Consolidated Financial Statements included in Part II, Item 8 in our Annual Report on Form 10-K for the fiscal year ended December\u00a031, 2025. In addition to the long-term trends and their financial effect on our business discussed in \"Trends in Our Business and Financial Effect\" in Part II, Item 7 of our Annual Report on Form 10-K for the fiscal year ended December\u00a031, 2025, fluctuations in our revenues have been and may continue to be affected by a combination of factors, including: \u2022 changes in foreign currency exchange rates; \u2022 changes in pricing, such as those resulting from changes in fee structures, discounts, and customer incentives; \u2022 general economic conditions and various external dynamics, including geopolitical events, regulations, and other measures and their effect on advertiser, consumer, and enterprise spending; \u2022 new product, service, and market launches; and \u2022 seasonality. Additionally, fluctuations in our revenues generated from advertising (\"Google advertising\"), other sources (\"Google subscriptions, platforms, and devices\"), Google Cloud, and Other Bets have been, and may continue to be, affected by other factors unique to each set of revenues, as described below. Google Services Google Services revenues consist of Google advertising as well as Google subscriptions, platforms, and devices revenues. Google Advertising Google advertising revenues are comprised of the following: \u2022 Google Search & other, which includes revenues generated on Google search properties (including revenues from traffic generated by search distribution partners who use Google.com as their default search in browsers, toolbars, etc.), and other Google owned and operated properties like Gmail, Google Maps, and Google Play; \u2022 YouTube ads, which includes revenues generated on YouTube properties; and \u2022 Google Network, which includes revenues generated on Google Network properties participating in AdMob, AdSense, and Google Ad Manager. 42 We use certain metrics to track how well traffic across various properties is monetized as it relates to our advertising revenues: paid clicks and cost-per-click pertain to traffic on Google Search & other properties, while impressions and cost-per-impression pertain to traffic on our Google Network properties. Paid clicks represent engagement by users and include clicks on advertisements by end-users on Google search properties and other Google owned and operated properties including Gmail, Google Maps, and Google Play. Cost-per-click is defined as click-driven revenues divided by our total number of paid clicks and represents the average amount we charge advertisers for each engagement by users. Impressions include impressions displayed to users on Google Network properties participating primarily in AdMob, AdSense, and Google Ad Manager. Cost-per-impression is defined as impression-based and click-based revenues divided by our total number of impressions, and represents the average amount we charge advertisers for each impression displayed to users. As our business evolves, we periodically review, refine, and update our methodologies for monitoring, gathering, and counting the number of paid clicks and the number of impressions, and for identifying the revenues generated by the corresponding click and impression activity. Fluctuations in our advertising revenues, as well as the change in paid clicks and cost-per-click on Google Search & other properties and the change in impressions and cost-per-impression on Google Network properties and the correlation between these items have been, and may continue to be, affected by factors in addition to the general factors described above, such as: \u2022 advertiser competition for keywords; \u2022 changes in advertising quality, formats, delivery, or policy; \u2022 changes in device mix; \u2022 seasonal fluctuations in internet usage, advertising expenditures, and underlying business trends, such as traditional retail seasonality; and \u2022 traffic growth in emerging markets compared to more mature markets and across various verticals and channels. Google Subscriptions, Platforms, and Devices Google subscriptions, platforms, and devices revenues are comprised of the following: \u2022 consumer subscriptions, which primarily include revenues from YouTube services, such as YouTube TV, YouTube Music and Premium, and NFL Sunday Ticket, as well as Google One, which offers access to our most capable Gemini models; \u2022 platforms, which primarily include revenues from Google Play sales of apps and in-app purchases; \u2022 devices, which primarily include sales of the Pixel family of devices; and \u2022 other products and services. Fluctuations in our Google subscriptions, platforms, and devices revenues have been, and may continue to be, affected by factors in addition to the general factors described above, such as changes in customer usage and demand, number of subscribers, and the timing of product launches. Google Cloud Google Cloud revenues are comprised of the following: \u2022 Google Cloud Platform primarily generates consumption-based fees and subscriptions for infrastructure, platform, and other services. These services provide access to solutions such as AI offerings including our enterprise AI infrastructure, Vertex AI platform, and Gemini Enterprise; cybersecurity offerings; and data and analytics solutions. \u2022 Google Workspace includes subscriptions for cloud-based communication and collaboration tools for enterprises, such as Gmail, Docs, Calendar, Drive, and Meet, with integrated features like Gemini for Google Workspace. \u2022 Product sales, primarily the sale of TPU systems. \u2022 Other enterprise services. 43 Fluctuations in our Google Cloud revenues have been, and may continue to be, affected by factors in addition to the general factors described above, such as changes in customer usage, demand, and supply availability. We have signed a limited number of agreements to supply TPU systems to customers who require or provide on-premises infrastructure for specialized, high-scale workloads. In the second quarter of 2026, we began recognizing revenues from these agreements, with the significant majority to be recognized in 2027. Other Bets Revenues from Other Bets are generated primarily from the sale of autonomous transportation services and internet services. Costs and Expenses Our cost structure has two components: cost of revenues and operating expenses. Our operating expenses include costs related to research and development, sales and marketing, and general and administrative functions. Certain of our costs and expenses, including those associated with the operation of our technical infrastructure as well as components of our operating expenses, are generally less variable in nature and may not correlate to changes in revenue. Additionally, fluctuations in employee compensation expenses may not directly correlate with changes in headcount, due to factors such as annual SBC awards that vest over time. Cost of Revenues Cost of revenues is comprised of TAC and other costs of revenues. \u2022 TAC includes: \u25e6 amounts paid to our distribution partners who make available our search access points and other ad-supported services. Our distribution partners include browser providers, mobile carriers, original equipment manufacturers, and software developers; and \u25e6 amounts paid to Google Network partners primarily for ads displayed on their properties. \u2022 Other cost of revenues primarily includes: \u25e6 content acquisition costs, which are payments to content providers from whom we license video and other content for distribution, primarily related to YouTube (we pay fees to these content providers based on revenues generated, subscriber counts, or a flat fee); \u25e6 depreciation expense, primarily related to our technical infrastructure; \u25e6 employee compensation expenses related to our technical infrastructure and other operations such as content review and customer and product support; \u25e6 inventory and other costs related to the devices and TPU system hardware we sell; and \u25e6 other technical infrastructure operations costs, including energy, equipment, and network capacity costs. TAC as a percentage of revenues generated from ads placed on Google Network properties are significantly higher than TAC as a percentage of revenues generated from ads placed on Google Search & other properties, because most of the advertiser revenues from ads served on Google Network properties are paid as TAC to our Google Network partners. Operating Expenses Operating expenses are generally incurred during our normal course of business, which we categorize as either research and development, sales and marketing, or general and administrative. The main components of our research and development expenses are: \u2022 depreciation expense, primarily related to our technical infrastructure; \u2022 employee compensation expenses for engineering and technical employees responsible for research and development related to our existing and new products and services; \u2022 other technical infrastructure operations costs, including energy, equipment, and network capacity costs; and \u2022 third-party services fees primarily relating to consulting and outsourced services in support of our engineering and product development efforts. 44 The main components of our sales and marketing expenses are: \u2022 employee compensation expenses for employees engaged in sales and marketing, sales support, and certain customer service functions; and \u2022 spend relating to our advertising and promotional activities in support of our products and services. The main components of our general and administrative expenses are: \u2022 employee compensation expenses for employees in finance, human resources, information technology, legal, and other administrative support functions; \u2022 expenses relating to legal and other matters, including certain fines and settlements; and \u2022 third-party services fees, including audit, consulting, outside legal, and other outsourced administrative services. Other Income (Expense), Net OI&E, net primarily consists of interest income (expense), the effect of foreign currency exchange gains (losses), net gains (losses) and impairment on our marketable and non-marketable securities, and income (loss) and impairment from our equity method investments. For additional information, including how we account for our investments and factors that can drive fluctuations in the value of our investments, see Note 1 of the Notes to Consolidated Financial Statements included in Part II, Item 8 as well as Item 7A, \u201cQuantitative and Qualitative Disclosur es About Market Risk\u201d in our An nual Report on Form 10-K for the fiscal year ended December\u00a031, 2025 as well as Note 3 of the Notes to Consolidated Financial Statements included in Item 1 of this Quarterly Report on Form 10-Q. Provision for Income Taxes Provision for income taxes represents the estimated amount of federal, state, and foreign income taxes incurred in the US and the many jurisdictions in which we operate. The provision includes the effect of reserve provisions and changes to reserves that are considered appropriate as well as the related net interest and penalties. For additional information, see Note 1 of the Notes to Consolidated Financial Statements included in Part II, Item 8 in our An nual Report on Form 10-K for the fiscal year ended December\u00a031, 2025 as well as Note 14 of the Notes to Consolidated Financial Statements included in Item 1 of this Quarterly Report on Form 10-Q. Executive Overview The following table summarizes consolidated financial results (in millions, except for per share information and percentages): Three Months Ended June 30, 2025 2026 $ Change % Change Consolidated revenues $ 96,428 $ 119,796 $ 23,368 24 % ",
+      "note": null
+    },
+    "8-K": {
+      "filing_type": "8-K",
+      "filing_date": "2026-07-22",
+      "text": "goog-20260722 UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 _________________________________________________ FORM 8-K _____________________________________________________________ CURRENT REPORT Pursuant to Section\u00a013 or 15(d) of The Securities Exchange Act of 1934 Date of Report (Date of earliest event reported) July\u00a022, 2026 ____________________________________________________________ ALPHABET INC. (Exact name of registrant as specified in its charter) ______________ [...earnings press release exhibit follows...] EX-99.1 2 googexhibit991q22026.htm EX-99.1 Document Exhibit 99.1 Alphabet Announces Second Quarter 2026 Results MOUNTAIN VIEW, Calif. \u2013 July\u00a022, 2026 \u2013 Alphabet Inc. (NASDAQ: GOOG, GOOGL) today announced financial results for the quarter ended June\u00a030, 2026. \u2022 Consolidated Alphabet revenues increased 24%, or 23% in constant currency, to $119.8 billion, reflecting strong performance across the business and our 12th consecutive quarter of double-digit revenue growth. \u2022 Google Services revenues increased 15% to $94.5 billion, led by 17% growth in Google Search & other, 15% in Google subscriptions, platforms, and devices, and 13% in YouTube ads. \u2022 Google Cloud saw a meaningful acceleration in growth as revenues increased 82% to $24.8 billion, led by an increase in Google Cloud Platform (GCP) across enterprise AI Solutions and enterprise AI Infrastructure, as well as core GCP services. \u2022 Consolidated Alphabet operating income increased 30% and operating margin expanded by 2 percentage points to 34%. \u2022 Other income reflected a net gain of $98.0 billion, primarily the result of net unrealized gains on our equity securities. \u2022 Net income available to common stockholders increased 298% and EPS increased 294% to $9.11. Sundar Pichai, CEO of Google and Alphabet, said: \u201cOur AI investments are redefining what\u2019s possible across every part of our business. Q2 was an amazing quarter, with Alphabet revenues growing 24% year-over-year and Google Cloud revenues accelerating to 82% growth, driven by demand for AI infrastructure and AI solutions. It\u2019s great to see wide adoption of Gemini Enterprise, with nearly 90% of the Fortune 100 using it. We have exciting momentum across the board. Our popular AI features are driving Search query growth. Gemini models now process 22 billion API tokens per minute and the Gemini App has 950 million monthly active users. We are seeing strong demand for our security solutions, and our new Gemini 3.5 Flash Cyber delivers highly cost-efficient performance at the frontier. And month over month, people turn to YouTube for major world events, with over 1.7 billion unique viewers watching World Cup-related videos during the FIFA World Cup 2026 TM . These outstanding results show that our differentiated, full stack approach to AI is delivering real, measurable value for consumers, customers, and our partners globally.\u201d Q2 2026 Financial Highlights (unaudited) The following table summarizes our consolidated financial results for the quarters ended June\u00a030, 2025 and 2026 (in millions, except for per share information and percentages). Quarter Ended June 30, 2025 2026 Revenues $ 96,428 $ 119,796 Change in revenues year over year 14 % 24 % Change in constant currency revenues year over year (1) 13 % 23 % Operating income $ 31,271 $ 40,770 Operating margin 32 % 34 % Other income (expense), net $ 2,662 $ 97,983 Net income available to common stockholders $ 28,196 $ 112,107 Diluted net income per common share $ 2.31 $ 9.11 (1) Non-GAAP measure. See the section captioned \u201cReconciliation from GAAP Revenues to Non-GAAP Constant Currency Revenues and GAAP Percentage Change in Revenues to Non-GAAP Percentage Change in Constant Currency Revenues\u201d for more details. Q2 2026 Supplemental Information (in millions, except for number of employees; unaudited) Revenues, Traffic Acquisition Costs (TAC), and Number of Employees Quarter Ended June 30, 2025 2026 Google Search & other $ 54,190 $ 63,271 YouTube ads 9,796 11,055 Google Network 7,354 7,303 Google advertising 71,340 81,629 Google subscriptions, platforms, and devices 11,203 12,911 Google Services total 82,543 94,540 Google Cloud 13,624 24,768 Other Bets 373 382 Hedging gains (losses) (112) 106 Total revenues $ 96,428 $ 119,796 Total TAC $ 14,705 $ 16,179 Number of employees 187,103 198,933 Segment Operating Results Quarter Ended June 30, 2025 2026 Operating income (loss): Google Services $ 33,063 $ 39,544 Google Cloud 2,826 8,814 Other Bets (1,246) (1,799) Alphabet-level activities (1) (3,372) (5,789) Total income from operations $ 31,271 $ 40,770 (1) Alphabet-level activities primarily reflect expenses related to our shared AI research and development. Additional Information Relating to the Quarter Ended June\u00a030, 2026 (unaudited) Equity Capital Raise In June 2026, we issued a combination of Class A stock and Class C stock and mandatory convertible preferred stock for aggregate net proceeds of $49.6 billion, to be used for general corporate purposes, including capital expenditures to scale AI infrastructure and global compute. Additionally, we entered into an equity distribution agreement with certain sales agents to sell up to $40.0 billion of our Class A stock and Class C stock from time to time through an At-the-Market Program (ATM Program). The proceeds of the ATM Program are primarily intended to be used to meet tax obligations associated with employee equity grants. As of June 30, 2026, we have not sold any shares under the ATM Program. Issuance of Senior Unsecured Notes In the second quarter of 2026, we issued senior unsecured notes for net proceeds of $20.3\u00a0billion, to be used for general corporate purposes. 2 Preferred and Common Dividend Programs In July 2026, the company's Board of Directors declared a quarterly cash dividend of $12.15 per share on each of our Series A and Series B mandatory convertible preferred stock (equivalent to approximately $0.60 per each of our Series A and Series B Depositary Shares) and a quarterly cash dividend of $0.22 per share on our Class A, Class B, and Class C stock. The mandatory convertible preferred stock dividend is payable on August 15, 2026 to stockholders of record for each of the company's Series A and Series B shares as of August 1, 2026, and the common stock dividend is payable on September 14, 2026 to stockholders of record for each of the company's Class A, Class B, and Class C shares as of September 7, 2026. Webcast and Conference Call Information A live audio webcast of our second quarter 2026 earnings release call will be available on YouTube at https://www.youtube.com/watch?v=LzExSq9DU9w. The call begins today at 1:30 PM (PT) / 4:30 PM (ET). This press release,\u00a0including the reconciliations of certain non-GAAP measures to their nearest comparable GAAP measures, is also available at http://abc.xyz/investor. We also provide announcements regarding our financial performance, including SEC filings, investor events, press and earnings releases, and blogs, on our investor relations website (http://abc.xyz/investor). We also share Google news and product updates on Google's Keyword blog at https://www.blog.google/ and News From Google page on X at x.com/NewsFromGoogle, and our executive officers may also use certain social media channels, such as X and LinkedIn, to communicate information about earnings results and company updates, which may be of interest or material to our investors. Forward-Looki ng Statements This press release may contain forward-looking statements that involve risks and uncertainties. Actual results may differ materially from the results predicted, and reported results should not be considered as an indication of future performance. The potential risks and uncertainties that could cause actual results to differ from the results predicted include, among others, those risks and uncertainties included under the captions \u201cRisk Factors\u201d and \u201cManagement\u2019s Discussion and Analysis of Financial Condition and Results of Operations\u201d in our Annual Report on Form 10-K for the year ended December 31, 2025 and our most recent Quarterly Report on Form 10-Q for the quarter ended March 31, 2026 , which are on file with the SEC and are available on our investor relations website at http://abc.xyz/investor and on the SEC website at www.sec.gov. Additional information will also be set forth in our Quarterly Report on Form 10-Q for the quarter ended June\u00a030, 2026, and may be set forth in other reports and filings we make with the SEC. All information provided in this release and in the attachments is as of July\u00a022, 2026 . Undue reliance should not be placed on the forward-looking statements in this press release, which are based on information available to us on the date hereof. We undertake no duty to update this information unless required by law. About Non-GAAP Financial Measures To supplement our consolidated financial statements, which are prepared and presented in accordance with GAAP, we use the following non-GAAP financial measures: free cash flow; constant currency revenues; and percentage change in constant currency revenues. The presentation of this financial information is not intended to be considered in isolation or as a substitute for, or superior to, the financial information prepared and presented in accordance with GAAP. We use these non-GAAP financial measures for financial and operational decision-making and as a means to evaluate period-to-period comparisons. We believe that these non-GAAP financial measures provide meaningful supplemental information regarding our performance and liquidity by excluding certain items that may not be indicative of our recurring core business operating results, such as our revenues excluding the effect of foreign exchange rate movements and hedging activities, which are recognized at the consolidated level. We believe that both management and investors benefit from referring to these non-GAAP financial measures in assessing our performance and when planning, forecasting, and analyzing future periods. These non-GAAP financial measures also facilitate management\u2019s internal comparisons to our historical performance and liquidity as well as comparisons to our competitors\u2019 operating results. We believe these non-GAAP financial measures are useful to investors both because (1) they allow for greater transparency with respect to key metrics used by management in its financial and operational decision-making and (2) they are used by our institutional investors and the analyst community to help them analyze the health of our business. There are a number of limitations related to the use of non-GAAP financial measures. We compensate for these limitations by providing specific information regarding the GAAP amounts excluded from these non-GAAP financial measures and evaluating these non-GAAP financial measures together with their relevant financial measures in accordance with GAAP. 3 For more information on these non-GAAP financial measures, please see the sections captioned \u201cReconciliation from GAAP Net Cash Provided by Operating Activities to Non-GAAP Free Cash Flow\u201d and \u201cReconciliation from GAAP Revenues to Non-GAAP Constant Currency Revenues and GAAP Percentage Change in Revenues to Non-GAAP Percentage Change in Constant Currency Revenues\u201d included at the end of this release. Contact Investor relations Media investor-relations@abc.xyz press@abc.xyz 4 Alphabet Inc. CONSOLIDATED BALANCE SHEETS (In millions, except per share amounts) As of December 31, 2025 As of June 30, 2026 (unaudited) Assets Current assets: Cash and cash equivalents $ 30,708 $ 55,911 Marketable securities 96,135 186,563 Total cash, cash equivalents, and marketable securities 126,843 242,474 Accounts receivable, net 62,886 69,175 Inventory 2,439 9,991 Other current assets 13,870 21,884 Total current assets 206,038 343,524 Non-marketable securities 68,687 131,461 Deferred income taxes 9,113 1,448 Property and equipment, net 246,597 321,212 Operating lease assets 15,221 17,694 Goodwill 33,380 57,828 Intangible assets, net 1,283 9,105 Other non-current assets 14,962 39,711 Total assets $ 595,281 $ 921,983 Liabilities and Stockholders\u2019 Equity Current liabilities: Accounts payable $ 12,200 $ 20,258 Accrued compensation and benefits 17,546 15,086 Accrued expenses and other current liabilities 55,557 73,014 Accrued revenue share 10,864 10,599 Deferred revenue 6,578 7,154 Total current liabilities 102,745 126,111 Long-term debt 46,547 98,165 Income taxes payable, non-current 9,531 11,306 Deferred income taxes 919 22,819 Operating lease liabilities 12,744 14,591 Other long-term liabilities 7,530 8,511 Total liabilities 180,016 281,503 Commitments and contingencies Stockholders\u2019 equity: Series A and Series B preferred stock and additional paid-in capital, $0.001 par value per share, 100 shares authorized; 6.25% mandatory convertible preferred stock, 0 and 19 shares issued and outstanding allocated equally between each series with a liquidation preference of $1,000 per share 0 18,023 Class\u00a0A, Class B, and Class C stock and additional paid-in capital, $0.001 par value per share: 300,000 shares authorized (Class A 180,000, Class B 60,000, Class C 60,000); 12,088 (Class\u00a0A 5,822, Class B 837, Class C 5,429) and 12,230 (Class\u00a0A 5,868, Class B 835, Class C 5,527) shares issued and outstanding 93,126 131,371 Accumulated other comprehensive income (loss) (1,916) (2,285) Retained earnings 324,055 493,371 Total stockholders\u2019 equity 415,265 640,480 Total liabilities and stockholders\u2019 equity $ 595,281 $ 921,983 5 Alphabet Inc. CONSOLIDATED STATEMENTS OF INCOME (In millions, except per share amounts, unaudited) Quarter Ended June 30, Year To Date June 30, 2025 2026 2025 2026 Revenues $ 96,428 $ 119,796 $ 186,662 $ 229,692 Costs and expenses: Cost of revenues 39,039 45,943 75,400 87,214 Research and development 13,808 18,219 27,364 35,251 Sales and marketing 7,101 8,403 13,273 16,009 General and administrative 5,209 6,461 8,748 10,752 Total costs and expenses 65,157 79,026 124,785 149,226 Income from operations 31,271 40,770 61,877 80,466 Other income (expense), net 2,662 97,983 13,845 135,699 Income before income taxes 33,933 138,753 75,722 216,165 Provision for income taxes 5,737 26,560 12,986 41,394 Net income 28,196 112,193 62,736 174,771 Preferred stock dividends 0 86 0 86 Net income available to common stockholders $ 28,196 $ 112,107 $ 62,736 $ 174,685 Basic net income per common share $ 2.33 $ 9.23 $ 5.16 $ 14.41 Diluted net income per common share $ 2.31 $ 9.11 $ 5.12 $ 14.24 Number of shares used in basic net income per common share calculation 12,122 12,151 12,153 12,125 Number of shares used in diluted net income per common share calculation 12,198 12,309 12,245 12,274 6 Alphabet Inc. CONSOLIDATED STATEMENTS OF CASH FLOWS (In millions, unaudited) Quarter Ended June 30, Year To Date June 30, 2025 2026 2025 2026 Operating activities Net income $ 28,196 $ 112,193 $ 62,736 $ 174,77",
+      "note": null
+    }
+  },
+  "form144_notices": {
+    "notices": [
+      {
+        "seller": "MARSIDA SARACI",
+        "relationship": "Officer",
+        "shares_proposed_to_sell": 449.0,
+        "aggregate_market_value_usd": 149337.4,
+        "approx_sale_date": "07/29/2026"
+      },
+      {
+        "seller": "The Lawrence Page Trust II",
+        "relationship": "Affiliate",
+        "shares_proposed_to_sell": 9680.0,
+        "aggregate_market_value_usd": 3503385.6,
+        "approx_sale_date": "07/09/2026"
+      },
+      {
+        "seller": "The Lawrence Page Trust III",
+        "relationship": "Affiliate",
+        "shares_proposed_to_sell": 16880.0,
+        "aggregate_market_value_usd": 6109209.6,
+        "approx_sale_date": "07/09/2026"
+      },
+      {
+        "seller": "The Lawrence Page Trust",
+        "relationship": "Affiliate",
+        "shares_proposed_to_sell": 225360.0,
+        "aggregate_market_value_usd": 81562291.2,
+        "approx_sale_date": "07/09/2026"
+      },
+      {
+        "seller": "ARNOLD FRANCES",
+        "relationship": "Director",
+        "shares_proposed_to_sell": 112.0,
+        "aggregate_market_value_usd": 39343.0,
+        "approx_sale_date": "06/30/2026"
+      },
+      {
+        "seller": "JOHN KENT WALKER JR, TTEE OF THE ARETE TRUST, UAD 8/22/2001",
+        "relationship": "Officer",
+        "shares_proposed_to_sell": 8998.0,
+        "aggregate_market_value_usd": 3011540.62,
+        "approx_sale_date": "06/29/2026"
+      },
+      {
+        "seller": "MARSIDA SARACI",
+        "relationship": "Officer",
+        "shares_proposed_to_sell": 449.0,
+        "aggregate_market_value_usd": 153643.31,
+        "approx_sale_date": "06/26/2026"
+      },
+      {
+        "seller": "Hennessy John L.",
+        "relationship": "Director",
+        "shares_proposed_to_sell": 1050.0,
+        "aggregate_market_value_usd": 384289.5,
+        "approx_sale_date": "06/15/2026"
+      }
+    ],
+    "note": null
+  },
+  "beneficial_ownership": {
+    "filings": [
+      {
+        "reporting_person": "Vanguard Capital Management",
+        "shares_owned": 436027408.0,
+        "percent_of_class": 7.48,
+        "type_of_reporting_person": "IA",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": false,
+        "filing_date": "2026-04-29"
+      },
+      {
+        "reporting_person": "Vanguard Capital Management",
+        "shares_owned": 348894310.0,
+        "percent_of_class": 6.41,
+        "type_of_reporting_person": "IA",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": false,
+        "filing_date": "2026-04-29"
+      },
+      {
+        "reporting_person": "The Vanguard Group",
+        "shares_owned": 0.0,
+        "percent_of_class": 0.0,
+        "type_of_reporting_person": "IA",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": true,
+        "filing_date": "2026-03-26"
+      },
+      {
+        "reporting_person": "The Vanguard Group",
+        "shares_owned": 0.0,
+        "percent_of_class": 0.0,
+        "type_of_reporting_person": "IA",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": true,
+        "filing_date": "2026-03-26"
+      },
+      {
+        "reporting_person": "Sergey Brin ",
+        "shares_owned": 359414947.0,
+        "percent_of_class": 5.81,
+        "type_of_reporting_person": "IN",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": true,
+        "filing_date": "2026-02-17"
+      },
+      {
+        "reporting_person": "Eric E. Schmidt",
+        "shares_owned": 48808584.0,
+        "percent_of_class": 0.83,
+        "type_of_reporting_person": "IN",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": true,
+        "filing_date": "2025-08-14"
+      },
+      {
+        "reporting_person": "Eric E. Schmidt",
+        "shares_owned": 56921959.0,
+        "percent_of_class": 0.97,
+        "type_of_reporting_person": "IN",
+        "purpose": null,
+        "form": "13G",
+        "is_amendment": true,
+        "filing_date": "2025-02-18"
+      }
+    ],
+    "note": null
+  },
+  "proxy_raw": {
+    "filing_date": "2026-04-24",
+    "text": "goog-20260424 UNITED STATES SECURITIES AND EXCHANGE COMMISSION Washington, D.C. 20549 SCHEDULE 14A Proxy Statement Pursuant to Section 14(a) of the Securities Exchange Act of 1934 (Amendment No.\u00a0\u00a0) \u2611 Filed by the Registrant \u2610 Filed by a party other than the Registrant CHECK THE APPROPRIATE BOX: \u2610 Preliminary Proxy Statement \u2610 Confidential, for Use of the Commission Only (as permitted by Rule 14a-6(e)(2)) \u2611 Definitive Proxy Statement \u2610 Definitive Additional Materials \u2610 Soliciting Material under \u00a7240.14a-12 Alphabet Inc. (Name of Registrant as Specified In Its Charter) (Name of Person(s) Filing Proxy Statement, if other than the Registrant) PAYMENT OF FILING FEE (CHECK ALL BOXES THAT APPLY): \u2611 No fee required \u2610 Fee paid previously with preliminary materials \u2610 Fee computed on table in exhibit required by Item 25(b) per Exchange Act Rules 14a-6(i)(1) and 0-11 Dear Shareholders We are pleased to invite you to participate in our 2026 Annual Meeting of Shareholders (Annual Meeting) to be held on Friday, June 5, 2026, at 9:00 a.m., Pacific Time. We have adopted a virtual format for our Annual Meeting to provide a consistent experience to all shareholders regardless of location. Alphabet shareholders of Class A or Class B common stock (or their proxy holders) as of the close of business on the record date, April 6, 2026 (Record Date), can participate in and vote at our Annual Meeting by visiting www.virtualshareholdermeeting.com/GOOGL26 and entering the 16-digit control number include [...skipped ahead to Compensation Discussion and Analysis...] Compensation Discussion and Analysis (CD&A) includes a detailed discussion of compensation for five named executive officers during the fiscal year ended December 31, 2025: Sundar Pichai Chief Executive Officer, Alphabet and Google, and Director, Alphabet Anat Ashkenazi Senior Vice President, Chief Financial Officer, Alphabet and Google Ruth M. Porat President and Chief Investment Officer, Alphabet and Google Philipp Schindler Senior Vice President, Chief Business Officer, Google Kent Walker President, Global Affairs, Chief Legal Officer and Secretary, Alphabet and Google Section 1\u2014Executive Summary Compensation Philosophy We designed our employee and executive compensation programs to support three goals: \u2022 Attract and retain the world\u2019s best talent \u2022 Support our culture of innovation and performance \u2022 Align employee and shareholder interests We pay employees competitively compared to other opportunities they might have in the market. We also offer competitive benefits to promote the health and wellbeing of our employees, provide certain perks that make life and work more convenient, design compelling job opportunities aligned with our mission, and create a fun and energizing work\u00a0environment. We believe in pay for performance, which is reflected in our compensation design. The proportion of overall pay tied to performance is higher for employees at more senior levels in the organization, reflecting their opportunity to have more impact on company performance. We use equity awards that vest over time to align employee and shareholder interests and provide incentive for continued service. We believe that retaining and developing the best talent over the long-term is a key factor in our business success and ability to continue creating value for our shareholders. We require our named executive officers and other senior executives to maintain certain levels of holdings of Alphabet shares. See Section 5 of this CD&A for a description of our minimum share ownership requirements. 42 Alphabet 2026 Proxy Statement Proxy Statement Summary & Highlights Corporate Governance Director and Executive Compensation Audit Matters Proposals Q&A Appendix Section 2\u2014Determining Competitive Levels of Pay Our executive compensation decisions are informed by competitive market data in addition to the reviews of individual roles and performance. We use peer group data to obtain compensation benchmarks for our named executive officers. Each year, we review our peer group and our evaluation criteria. In October 2024, we determined our peer group for 2025 compensation by evaluating potential comparator companies against the following criteria: \u2022 High-technology or media company \u2022 Key talent competitor \u2022 High-growth, with a minimum of 50% of Alphabet\u2019s revenue growth over the previous two-year period \u2022 Headcount of at least 40% of Alphabet\u2019s total headcount \u2022 $50 billion or more in annual revenue \u2022 $150 billion or more in market capitalization Considering these criteria, in October 2024, the Compensation Committee selected the following peer companies for\u00a02025: Amazon.com, Inc. Meta Platforms, Inc. Oracle Corporation Apple Inc. Microsoft Corporation Salesforce, Inc. Cisco Systems, Inc. Netflix, Inc. The Walt Disney Company International Business Machines Corporation Nvidia When appropriate, we supplement publicly available peer group data with compensation data for comparable opportunities at other S&P 500 companies and startup organizations. Process for Determining Compensation We regularly review our compensation levels against our peer group and comparable opportunities. We also assess executives based on their individual performance and overall company performance. Management uses this information to develop compensation recommendations for our named executive officers. The Compensation Committee, comprised entirely of independent directors, then reviews these recommendations, considers any relevant guidance from their independent compensation consultants, and makes the final decision on compensation for our named executive officers. From time to time, the Compensation Committee may delegate specific responsibilities to a subcommittee (consisting solely of Compensation Committee members) to handle specialized tasks. The subcommittees report back to the full Compensation Committee or our Board, as appropriate. Compensation Consultants The Compensation Committee directly engaged both Compensia Inc. and Semler Brossy as independent compensation consultants in 2025. The consulting firms provide input, analysis, and guidance on Alphabet and Google\u2019s executive compensation, peer groups, compensation design, equity usage and allocation, risk assessment, and human capital management. Both firms report directly to the Compensation Committee rather than to management, and the firms provided no services to Alphabet other than those in support of the Compensation Committee. The Compensation Committee has evaluated the independence of both consultants and concluded that their work does not raise any conflicts of interest. Say-on-Pay and Say-When-on-Pay We hold our advisory vote on named executive officer compensation (commonly known as a \u201csay-on-pay\u201d vote) every three years, and hold our advisory vote on the frequency of future say-on-pay votes (commonly known as \u201csay-when-on-pay\u201d vote) every six years. We are holding our advisory say-on-pay vote at the Annual Meeting (see Proposal Number 4 in this proxy statement). We will hold our advisory say-when-on-pay vote at the 2029 annual meeting of shareholders. The Compensation Committee annually reevaluates our compensation practices to determine how they might be improved and considers prior say-on-pay vote results, among other considerations, in such reevaluation. Alphabet 2026 Proxy Statement 43 Proxy Statement Summary & Highlights Corporate Governance Director and Executive Compensation Audit Matters Proposals Q&A Appendix Section 3\u2014Elements of Pay and Fiscal Year 2025 Pay Decisions Base Salary We use salaries to provide employees, including our named executive officers, a steady income in line with their contributions to our business, skills, experiences, and the job opportunities available to them outside of Alphabet, as\u00a0appropriate. In 2025, the Compensation Committee maintained the annual salaries of Anat, Ruth, Philipp, and Kent at $1.0 million. Sundar\u2019s annual salary remained at $2.0 million. Equity Awards We grant equity awards to our named executive officers to reinforce management\u2019s focus on long-term shareholder value and commitment to the company. The Compensation Committee regularly evaluates the structure of these equity awards to ensure the right balance of time- and performance-based equity that supports the objectives of our compensation philosophy, aligns with our business priorities, and considers the perspectives of our shareholders. The Compensation Committee utilizes a combination of GSUs and Performance Stock Units (PSUs) to reward our named executive officers. To determine individual grant values and the proportion of GSUs and PSUs, the Compensation Committee considers the following elements: \u2022 Market compensation values and practices for performance-based equity awards, including peers and S&P 100\u00a0companies. \u2022 Alphabet\u2019s overall business performance, and the scope of role, impact, and performance of each recipient. \u2022 Each recipient\u2019s outstanding and unvested equity awards, and the vesting schedules of those awards. \u2022 The resulting compensation at target and maximum performance values for each recipient. Based on the above criteria, in 2025, the Compensation Committee determined to grant the following equity awards for each of our named executive officers. See the sections below and the \u201cGrants of Plan-Based Awards in 2025\u201d table on page 52 for further details on the awards\u2019 performance criteria and vesting. 2025 Equity Awards In 2025, the Compensation Committee discontinued the SVP bonus program and granted a combination of GSUs and PSUs to Anat, Ruth, Philipp, and Kent. The previous $2.0 million SVP bonus target value for Anat, Ruth, Philipp, and Kent was shifted into the target value of 2025 PSU awards, and 2025 GSU awards included transitional amounts to maintain target total compensation. These awards as well as the annualized target total compensation are below: Named Executive Number of GSUs Granted (1) Target GSU Award Value ($) Number of PSUs Granted (1) Target PSU Award Value ($) (2) Aggregate Target Award Value ($) Grant Cadence Annualized Total Target Compensation ($) (3) Anat Ashkenazi 121,779 19,000,000 42,981 8,000,000 27,000,000 Annual 28,000,000 Ruth M. Porat 116,407 19,000,000 37,609 7,000,000 26,000,000 Annual 27,000,000 Philipp Schindler 143,270 24,000,000 75,217 14,000,000 38,000,000 Annual 39,000,000 Kent Walker 116,407 19,000,000 37,609 7,000,000 26,000,000 Annual 27,000,000 (1) The exact number of GSUs and PSUs comprising the equity awards was calculated by dividing the target dollar value of the award by the average closing price of Alphabet\u2019s Class C capital stock during the month of February 2025 ($186.13), rounded up to the nearest whole share. On February 28, 2025, the Compensation Committee discontinued the SVP Bonus program. The 2025 GSUs include a transitional amount, on top of the annual target value, to maintain total target compensation during the shift from the discontinued SVP Bonus program to a new go-forward compensation structure of salary, GSU awards, and PSU awards. The transitional amounts were granted on March 5, 2025, as an addition to the 2025 GSU awards. Each individual\u2019s transitional amount is as follows: $3,666,667 for Anat and $2,666,667 for Ruth, Philipp, and Kent. The total number of GSUs granted includes the shares from these supplemental awards. The target value used to determine the number of shares subject to each award differs from the grant date fair value of the awards reported in the Summary Compensation Table, which is calculated in accordance with applicable accounting standards and reflects additional valuation assumptions. 44 Alphabet 2026 Proxy Statement Proxy Statement Summary & Highlights Corporate Governance Director and Executive Compensation Audit Matters Proposals Q&A Appendix (2) This value reflects the shift of the $2.0 million individual SVP bonus target value to the target value of annual PSU awards. (3) Annualized Target Total Compensation was calculated by adding the annualized Target GSU Award Value, the annualized Target PSU Award Value, and the Annualized Total Cash Compensation, which for Anat, Ruth, Philipp, and Kent in 2025 included $1.0 million in\u00a0salary. The total GSU award is composed of the (i) target GSU award, which vests quarterly over three years from 2025 through 2027, and (ii) a supplemental (transitional) award, which vested quarterly during 2025. The PSU payout depends on Alphabet\u2019s relative total shareholder return relative to S&P 100 companies (TSR). The PSU awards will vest, if at all, on December 31, 2027, based on Alphabet\u2019s TSR over a 2025-2027 performance period, subject to continued employment on the vesting date. The payout structure and time period of these PSUs mirror the structure of prior PSUs granted to Anat, Ruth, Philipp, and Kent. The number of PSUs vesting will be determined after the end of the performance period based on the payout curve illustrated below. Depending upon performance, the number of PSUs that vest will range from 0%-200% of target. Upon vesting, each PSU and GSU entitles the recipient to receive one share of Alphabet\u2019s Class C capital stock. (1) The number of PSUs vesting will be determined by linear interpolation for relative TSR ranks between the 25th and 50th percentiles and between the 50th and 75th percentiles. Alphabet 2026 Proxy Statement 45 Proxy Statement Summary & Highlights Corporate Governance Director and Executive Compensation Audit Matters Proposals Q&A Appendix Section 4\u20142026 Compensation Decisions 2026 CEO Award The Compensation Committee currently follows a triennial grant cadence for CEO equity awards. Sundar\u2019s last equity award was granted in December 2022, and fully vested at the end of December 2025. In March 2026, the Compensation Committee granted a new equity award to Sundar to recognize his strong performance as CEO. The 2026 award continues to use a mix of both performance-based and time-based equity; however, a larger percent of the total equity award, as compared to the 2022 award, is now tied to performance. The on-target value of the Alphabet GSUs and PSUs was unchanged from the 2022 award with target values of $84,000,000 and two tranches of $63,000,000 each, respectively. The PSU payout depends on Alphabet\u2019s TSR. (1) The number of PSUs vesting will be determined by linear interpolation for relative TSR ranks between the 25th and 55th percentile and between the 55th and 75th percentile. The performance-based portion of the award also includes a grant of Waymo and Wing Bet Performance Units (BPUs) with a target value of approximately $130,000,000 and $45,000,000, respectively. The Waymo and Wing BPUs will vest, if at all, based on Waymo LLC's and Wing Aviation LLC\u2019s increase in per unit value over a target three-year period, as established by the Compensation Committee. This change to include an element of Bet performance in Sundar\u2019s compensation supports Alphabet\u2019s long-standing goal of investing in new technologies and reflects Sundar\u2019s critical ",
+    "note": null
+  },
+  "news_digest": null,
+  "filings_digest": null,
+  "data_notes": [
+    "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented.",
+    "Skipped (dry run).",
+    "Skipped (dry run)."
+  ]
+}
