@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Blocks a commit if add-on-relevant files are staged without a version
+# bump in config.yaml. Home Assistant's Supervisor only notices an add-on
+# update when config.yaml's `version:` field changes -- it doesn't diff
+# code -- so forgetting this bump means a real fix silently never reaches
+# anyone who already installed the add-on.
+#
+# This is the local, immediate-feedback half of the check; .github/
+# workflows/version-check.yml is the authoritative one that still catches
+# it even if this hook isn't installed in a given checkout (hooks aren't
+# copied by a plain `git clone` -- see the one-time setup note below).
+#
+# One-time setup per checkout: git config core.hooksPath .githooks
+
+set -e
+
+STAGED=$(git diff --cached --name-only)
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+# Files/paths that never require an add-on version bump on their own.
+RELEVANT=$(echo "$STAGED" \
+  | grep -vE '^(README\.md|HANDOFF\.md|CHANGELOG\.md|DOCS\.md|\.gitignore|\.dockerignore)$' \
+  | grep -vE '^(output|\.github|\.githooks)/' \
+  || true)
+
+if [ -z "$RELEVANT" ]; then
+  exit 0
+fi
+
+if ! echo "$STAGED" | grep -qx 'config\.yaml'; then
+  echo ""
+  echo "BLOCKED: add-on-relevant files are staged but config.yaml wasn't touched:"
+  echo "$RELEVANT" | sed 's/^/    /'
+  echo ""
+  echo "Home Assistant's Auto update only notices a change when config.yaml's"
+  echo "version: field changes. Bump it (and add a CHANGELOG.md entry), then"
+  echo "re-stage and commit."
+  echo ""
+  echo "(If this really shouldn't require a version bump, commit with --no-verify.)"
+  exit 1
+fi
+
+OLD_VERSION=$(git show HEAD:config.yaml 2>/dev/null | grep '^version:' || echo "")
+NEW_VERSION=$(grep '^version:' config.yaml || echo "")
+
+if [ -n "$OLD_VERSION" ] && [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
+  echo ""
+  echo "BLOCKED: config.yaml changed but its version: field didn't ($NEW_VERSION),"
+  echo "and other add-on-relevant files are also staged:"
+  echo "$RELEVANT" | sed 's/^/    /'
+  echo ""
+  echo "Bump the version so Home Assistant's Auto update actually notices this."
+  echo ""
+  echo "(If this really shouldn't require a version bump, commit with --no-verify.)"
+  exit 1
+fi
+
+exit 0

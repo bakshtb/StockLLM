@@ -1,0 +1,78 @@
+name: Add-on version check
+
+# Home Assistant's Supervisor only notices an add-on update when
+# config.yaml's `version:` field changes -- it doesn't diff code. This
+# workflow is the authoritative, un-skippable enforcement of that: it fails
+# the check (visible on GitHub, on every push/PR to main) if any add-on-
+# relevant file changed without a version bump. See .githooks/pre-commit
+# for the same check running locally before you even push; this workflow
+# is what actually guarantees it, independent of whether that hook is
+# installed in any given local checkout.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check config.yaml version bumped if add-on code changed
+        run: |
+          set -e
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo "No previous commit to compare against (first push/new branch) -- skipping."
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE_SHA" HEAD)
+          echo "Changed files since $BASE_SHA:"
+          echo "$CHANGED"
+          echo ""
+
+          # Files/paths that never require an add-on version bump on their own:
+          # exact doc/config filenames, plus anything under output/ (generated
+          # example data), .github/ (this workflow itself), .githooks/.
+          RELEVANT=$(echo "$CHANGED" \
+            | grep -vE '^(README\.md|HANDOFF\.md|CHANGELOG\.md|DOCS\.md|\.gitignore|\.dockerignore)$' \
+            | grep -vE '^(output|\.github|\.githooks)/' \
+            || true)
+
+          if [ -z "$RELEVANT" ]; then
+            echo "Only docs/output/CI-config files changed -- no version bump required."
+            exit 0
+          fi
+
+          echo "Add-on-relevant files changed:"
+          echo "$RELEVANT"
+          echo ""
+
+          if ! echo "$CHANGED" | grep -qx 'config\.yaml'; then
+            echo "::error::config.yaml was not touched at all in this push, but the files above were."
+            echo "::error::Bump the 'version:' field in config.yaml so Home Assistant's Auto update notices this change."
+            exit 1
+          fi
+
+          OLD_VERSION=$(git show "$BASE_SHA:config.yaml" | grep '^version:' || echo "")
+          NEW_VERSION=$(grep '^version:' config.yaml)
+
+          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
+            echo "::error::config.yaml changed but its version: field is unchanged ($NEW_VERSION)."
+            echo "::error::Bump the version so Home Assistant's Auto update actually notices this change."
+            exit 1
+          fi
+
+          echo "Version bumped: $OLD_VERSION -> $NEW_VERSION. OK."
