@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AAPL — StockLLM Research Dashboard</title>
+<script>
+(function () {
+  try {
+    var saved = localStorage.getItem('stockllm-theme');
+    if (saved) { document.documentElement.setAttribute('data-theme', saved); }
+  } catch (e) {}
+})();
+</script>
+<style>
+:root, .viz-root {
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --page-plane:     #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --gridline:       #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --success-text:   #006300;
+
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #eda100; /* yellow */
+  --series-5: #e87ba4; /* magenta */
+  --series-6: #008300; /* green */
+  --series-7: #4a3aa7; /* violet */
+  --series-8: #e34948; /* red */
+
+  --diverge-pos: #2a78d6;
+  --diverge-neg: #e34948;
+  --diverge-mid: #f0efec;
+
+  --status-good:     #0ca30c;
+  --status-warning:  #fab219;
+  --status-serious:  #ec835a;
+  --status-critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:     #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --success-text:   #0ca30c;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+
+    --diverge-pos: #3987e5;
+    --diverge-neg: #e66767;
+    --diverge-mid: #383835;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --page-plane:     #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --gridline:       #2c2c2a;
+  --baseline:       #383835;
+  --border:         rgba(255,255,255,0.10);
+  --success-text:   #0ca30c;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+
+  --diverge-pos: #3987e5;
+  --diverge-neg: #e66767;
+  --diverge-mid: #383835;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--page-plane);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+body { padding: 0 0 64px 0; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 16px 24px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 { font-size: 20px; margin: 0; font-weight: 600; }
+.topbar .meta { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+button.chip {
+  font: inherit; font-size: 13px; cursor: pointer;
+  background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 12px;
+}
+button.chip:hover { background: var(--gridline); }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 24px; }
+
+.kpi-row {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 20px;
+}
+.stat-tile {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+}
+.stat-tile .label { font-size: 12px; color: var(--text-secondary); }
+.stat-tile .value { font-size: 24px; font-weight: 600; margin-top: 4px; line-height: 1.15; }
+.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.delta { font-weight: 600; }
+.delta.good { color: var(--success-text); }
+.delta.critical { color: var(--status-critical); }
+.delta.neutral { color: var(--text-secondary); }
+
+.grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+  align-items: start;
+}
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px;
+}
+.card.full { grid-column: 1 / -1; }
+.card h2 { font-size: 15px; margin: 0 0 4px 0; font-weight: 600; }
+.card .card-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+
+.viz-card { margin-top: 6px; }
+.viz-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.viz-card-head .viz-title { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+.viz-toggle {
+  font-size: 11px; color: var(--text-secondary); background: none;
+  border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer;
+}
+.viz-toggle:hover { background: var(--gridline); }
+.viz-card.is-table-view .viz-chart { display: none; }
+.viz-card:not(.is-table-view) .viz-table { display: none; }
+.viz-svg { width: 100%; height: auto; display: block; }
+.viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
+.viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+
+.mark { cursor: pointer; }
+.mark:hover, .mark.is-hover { filter: brightness(1.12); }
+.mark:focus { outline: 2px solid var(--text-secondary); outline-offset: 2px; }
+
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data-table th, table.data-table td {
+  text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline);
+  font-variant-numeric: tabular-nums;
+}
+table.data-table th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+table.data-table tr:last-child td { border-bottom: none; }
+.table-scroll { overflow-x: auto; }
+
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 999px; white-space: nowrap;
+}
+.badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
+.badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
+.badge.serious { background: rgba(236,131,90,0.18); color: #8a3311; }
+.badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
+.badge.neutral { background: var(--gridline); color: var(--text-secondary); }
+.badge.info { background: rgba(42,120,214,0.14); color: var(--series-1); }
+:root[data-theme="dark"] .badge.warning,
+@media (prefers-color-scheme: dark) { .badge.warning { color: #fab219; } .badge.serious { color: #ec835a; } }
+
+.news-item { padding: 10px 0; border-bottom: 1px solid var(--gridline); }
+.news-item:last-child { border-bottom: none; }
+.news-item .headline { font-weight: 600; font-size: 13.5px; }
+.news-item .meta { font-size: 12px; color: var(--text-muted); margin: 2px 0 4px 0; }
+.news-item .snippet { font-size: 13px; color: var(--text-secondary); }
+.news-item a { color: var(--series-1); text-decoration: none; }
+.news-item a:hover { text-decoration: underline; }
+
+.filing-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); }
+.filing-row:last-child { border-bottom: none; }
+.filing-row .name { width: 130px; font-weight: 600; font-size: 13px; }
+.filing-row .info { font-size: 12.5px; color: var(--text-secondary); }
+
+.notes-list { margin: 0; padding: 0; list-style: none; }
+.notes-list li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); font-size: 13px; color: var(--text-secondary); }
+.notes-list li:last-child { border-bottom: none; }
+
+.empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
+
+.viz-tooltip {
+  position: fixed; display: none; z-index: 999; pointer-events: none;
+  background: var(--text-primary); color: var(--surface-1);
+  font-size: 12px; padding: 6px 10px; border-radius: 6px; max-width: 260px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+footer.disclaimer {
+  max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
+  font-size: 12px; color: var(--text-muted); line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>AAPL — Research Dashboard</h1>
+    <div class="meta">Bundle fetched 2026-07-30T12:53:57.927852Z · StockLLM (research/decision-support only, not financial advice)</div>
+  </div>
+  <div class="topbar-actions">
+    <button type="button" class="chip" id="theme-toggle">Dark mode</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="kpi-row"><div class="stat-tile"><div class="label">Current price</div><div class="value">$338.19</div><div class="sub"><span class="delta good">+14.9% (20d)</span></div></div><div class="stat-tile"><div class="label">1-year return</div><div class="value">+62.4%</div><div class="sub"><span class="delta good">vs S&amp;P500 +46.2%</span></div></div><div class="stat-tile"><div class="label">P/E ratio</div><div class="value">41.0</div><div class="sub">Forward 35.0</div></div><div class="stat-tile"><div class="label">Market cap</div><div class="value">4.97T</div><div class="sub">Technology</div></div><div class="stat-tile"><div class="label">RSI (14d)</div><div class="value">68.7</div><div class="sub">Overbought &gt; 70, oversold &lt; 30</div></div><div class="stat-tile"><div class="label">VIX</div><div class="value">19.1</div><div class="sub"><span class="delta critical">3.0 (20d)</span></div></div><div class="stat-tile"><div class="label">10Y Treasury yield</div><div class="value">4.7%</div><div class="sub"><span class="delta critical">+0.2% (20d)</span></div></div></div>
+  <div class="grid">
+    
+<div class="card">
+  <h2>Price & Technicals</h2>
+  <div class="card-sub">20d volatility 0.02% · volume trend: decreasing</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Price vs. moving averages</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 224" class="viz-svg" role="img" aria-label="bar chart"><text x="142" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">52w Low</text><g class="mark " tabindex="0" data-tip="52w Low: $201.58"><title>52w Low: $201.58</title><path d="M 150 16 H 371.2422959303694 Q 375.2422959303694 16 375.2422959303694 20 V 34 Q 375.2422959303694 38 371.2422959303694 38 H 150 Z" fill="var(--series-1)"/></g><text x="383.2422959303694" y="31.0" font-size="12" fill="var(--text-primary)">$201.58</text><text x="142" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">MA200</text><g class="mark " tabindex="0" data-tip="MA200: $276.91"><title>MA200: $276.91</title><path d="M 150 50 H 455.41484356621976 Q 459.41484356621976 50 459.41484356621976 54 V 68 Q 459.41484356621976 72 455.41484356621976 72 H 150 Z" fill="var(--series-1)"/></g><text x="467.41484356621976" y="65.0" font-size="12" fill="var(--text-primary)">$276.91</text><text x="142" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">MA50</text><g class="mark " tabindex="0" data-tip="MA50: $308.59"><title>MA50: $308.59</title><path d="M 150 84 H 490.813573276876 Q 494.813573276876 84 494.813573276876 88 V 102 Q 494.813573276876 106 490.813573276876 106 H 150 Z" fill="var(--series-1)"/></g><text x="502.813573276876" y="99.0" font-size="12" fill="var(--text-primary)">$308.59</text><text x="142" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">MA20</text><g class="mark " tabindex="0" data-tip="MA20: $322.40"><title>MA20: $322.40</title><path d="M 150 118 H 506.24464831804283 Q 510.24464831804283 118 510.24464831804283 122 V 136 Q 510.24464831804283 140 506.24464831804283 140 H 150 Z" fill="var(--series-1)"/></g><text x="518.2446483180429" y="133.0" font-size="12" fill="var(--text-primary)">$322.40</text><text x="142" y="167.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Current</text><g class="mark " tabindex="0" data-tip="Current: $338.19"><title>Current: $338.19</title><path d="M 150 152 H 523.8881439661257 Q 527.8881439661257 152 527.8881439661257 156 V 170 Q 527.8881439661257 174 523.8881439661257 174 H 150 Z" fill="var(--series-1)"/></g><text x="535.8881439661257" y="167.0" font-size="12" fill="var(--text-primary)">$338.19</text><text x="142" y="201.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">52w High</text><g class="mark " tabindex="0" data-tip="52w High: $340.08"><title>52w High: $340.08</title><path d="M 150 186 H 526.0 Q 530.0 186 530.0 190 V 204 Q 530.0 208 526.0 208 H 150 Z" fill="var(--series-1)"/></g><text x="538.0" y="201.0" font-size="12" fill="var(--text-primary)">$340.08</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>52w Low</td><td>$201.58</td></tr><tr><td>MA200</td><td>$276.91</td></tr><tr><td>MA50</td><td>$308.59</td></tr><tr><td>MA20</td><td>$322.40</td></tr><tr><td>Current</td><td>$338.19</td></tr><tr><td>52w High</td><td>$340.08</td></tr></tbody></table></div></div>
+  
+</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">RSI (14-day)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 70" class="viz-svg" role="img" aria-label="RSI (14d) gauge"><rect x="20.0" y="24" width="174.0" height="12" fill="var(--gridline)" opacity="0.85"/><rect x="194.0" y="24" width="232.0" height="12" fill="var(--baseline)" opacity="0.85"/><rect x="426.0" y="24" width="174.0" height="12" fill="var(--gridline)" opacity="0.85"/><g class="mark" tabindex="0" data-tip="RSI (14d): 68.7"><title>RSI (14d): 68.7</title><circle cx="418.1700000000001" cy="30" r="7" fill="var(--text-primary)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="418.1700000000001" y="16" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text-primary)">68.7</text><text x="20" y="58" font-size="11" fill="var(--text-muted)">0</text><text x="600" y="58" text-anchor="end" font-size="11" fill="var(--text-muted)">100</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>RSI (14d)</td><td>68.7</td></tr></tbody></table></div></div>
+  <div class="viz-note">Below 30 is conventionally read as oversold, above 70 as overbought.</div>
+</div>
+  
+<div class="kpi-row" style="margin-top:6px;grid-template-columns:repeat(3,1fr);">
+  <div class="stat-tile"><div class="label">MACD</div><div class="value">9.612</div></div>
+  <div class="stat-tile"><div class="label">Signal</div><div class="value">8.442</div></div>
+  <div class="stat-tile"><div class="label">Histogram</div><div class="value">1.170</div><div class="sub"><span class="delta good">Bullish momentum</span></div></div>
+</div>
+</div>
+<div class="card full">
+  <h2>Analyst Ratings & Estimates</h2>
+  <div class="card-sub">Recommendation: buy · last 60 days of rating actions</div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div>
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Analyst target price range (43 analysts)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 90" class="viz-svg" role="img" aria-label="analyst target price range"><text x="60" y="20" font-size="12" fill="var(--text-secondary)">Low $215.00</text><text x="560" y="20" text-anchor="end" font-size="12" fill="var(--text-secondary)">High $400.00</text><path d="M 60 41 H 555 Q 560 41 560 46 V 46 Q 560 51 555 51 H 60 Z" fill="var(--gridline)"/><g class="mark" tabindex="0" data-tip="Mean: $319.72"><title>Mean: $319.72</title><circle cx="343.0195135135135" cy="46" r="6" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="343.0195135135135" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Mean</text><g class="mark" tabindex="0" data-tip="Median: $329.00"><title>Median: $329.00</title><circle cx="368.1081081081081" cy="46" r="6" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="368.1081081081081" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Median</text><g class="mark" tabindex="0" data-tip="Current: $338.19"><title>Current: $338.19</title><path d="M 386.94594594594594 30 L 398.94594594594594 30 L 392.94594594594594 40 Z" fill="var(--text-primary)"/></g><text x="392.94594594594594" y="26" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-primary)">Current</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Point</th><th>Price</th></tr></thead><tbody><tr><td>Low</td><td>$215.00</td></tr><tr><td>Mean</td><td>$319.72</td></tr><tr><td>Median</td><td>$329.00</td></tr><tr><td>High</td><td>$400.00</td></tr><tr><td>Current price</td><td>$338.19</td></tr></tbody></table></div></div>
+  
+</div>
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">EPS surprise history (actual vs. estimate)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 156" class="viz-svg" role="img" aria-label="values relative to baseline"><line x1="355.0" y1="10" x2="355.0" y2="146" stroke="var(--baseline)" stroke-width="1"/><text x="102" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-06-30</text><g class="mark " tabindex="0" data-tip="2025-06-30: +10.1%"><title>2025-06-30: +10.1%</title><path d="M 355.0 16 H 586.0 Q 590.0 16 590.0 20 V 34 Q 590.0 38 586.0 38 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="596.0" y="31.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+10.1%</text><text x="102" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-09-30: +4.5%"><title>2025-09-30: +4.5%</title><path d="M 355.0 50 H 455.9604743083004 Q 459.9604743083004 50 459.9604743083004 54 V 68 Q 459.9604743083004 72 455.9604743083004 72 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="465.9604743083004" y="65.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+4.5%</text><text x="102" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2025-12-31: +6.3%"><title>2025-12-31: +6.3%</title><path d="M 355.0 84 H 498.22332015810275 Q 502.22332015810275 84 502.22332015810275 88 V 102 Q 502.22332015810275 106 498.22332015810275 106 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="508.22332015810275" y="99.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+6.3%</text><text x="102" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2026-03-31</text><g class="mark " tabindex="0" data-tip="2026-03-31: +3.5%"><title>2026-03-31: +3.5%</title><path d="M 355.0 118 H 431.34584980237156 Q 435.34584980237156 118 435.34584980237156 122 V 136 Q 435.34584980237156 140 431.34584980237156 140 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="441.34584980237156" y="133.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+3.5%</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--diverge-pos)"></span>Beat / above baseline</span><span class="key"><span class="swatch" style="background:var(--diverge-neg)"></span>Miss / below baseline</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>Value</th></tr></thead><tbody><tr><td>2025-06-30</td><td>+10.1%</td></tr><tr><td>2025-09-30</td><td>+4.5%</td></tr><tr><td>2025-12-31</td><td>+6.3%</td></tr><tr><td>2026-03-31</td><td>+3.5%</td></tr></tbody></table></div></div>
+  
+</div></div>
+    <div>
+      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Recent rating actions</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Firm</th><th>Action</th><th>Grade change</th><th>Price target</th></tr></thead><tbody><tr><td>2026-07-23</td><td>Morgan Stanley</td><td><span class="badge neutral">maintained</span></td><td>Overweight → Overweight</td><td>$364.00 (was $360.00)</td></tr><tr><td>2026-07-17</td><td>HSBC</td><td><span class="badge good">upgrade</span></td><td>Hold → Buy</td><td>$366.00 (was $260.00)</td></tr><tr><td>2026-07-14</td><td>Keybanc</td><td><span class="badge critical">downgrade</span></td><td>Sector Weight → Underweight</td><td>$250.00</td></tr><tr><td>2026-07-13</td><td>Citigroup</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$365.00 (was $315.00)</td></tr><tr><td>2026-06-25</td><td>Evercore ISI Group</td><td><span class="badge neutral">reiterated</span></td><td>Outperform → Outperform</td><td>$365.00 (was $365.00)</td></tr><tr><td>2026-06-22</td><td>KGI Securities</td><td><span class="badge critical">downgrade</span></td><td>Outperform → Hold</td><td>$315.00</td></tr><tr><td>2026-06-18</td><td>B of A Securities</td><td><span class="badge neutral">reiterated</span></td><td>Buy → Buy</td><td>$380.00 (was $380.00)</td></tr><tr><td>2026-06-09</td><td>TD Cowen</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$350.00 (was $335.00)</td></tr><tr><td>2026-06-09</td><td>Maxim Group</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$350.00 (was $310.00)</td></tr><tr><td>2026-06-09</td><td>Rosenblatt</td><td><span class="badge neutral">maintained</span></td><td>Neutral → Neutral</td><td>$276.00 (was $276.00)</td></tr><tr><td>2026-06-09</td><td>Morgan Stanley</td><td><span class="badge neutral">maintained</span></td><td>Overweight → Overweight</td><td>$360.00 (was $330.00)</td></tr><tr><td>2026-06-09</td><td>Needham</td><td><span class="badge neutral">reiterated</span></td><td>Hold → Hold</td><td>—</td></tr></tbody></table></div></div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">EPS estimate trend (Street consensus)</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>90d ago</th><th>30d ago</th><th>7d ago</th><th>Current est.</th></tr></thead><tbody><tr><td>Current quarter</td><td>1.74</td><td>1.89</td><td>1.89</td><td>1.89</td></tr><tr><td>Next quarter</td><td>1.97</td><td>2.01</td><td>2.02</td><td>2.01</td></tr><tr><td>Current year</td><td>8.51</td><td>8.76</td><td>8.77</td><td>8.76</td></tr><tr><td>Next year</td><td>9.40</td><td>9.68</td><td>9.71</td><td>9.72</td></tr></tbody></table></div></div>
+    </div>
+  </div>
+</div>
+<div class="card full">
+  <h2>Relative Performance & Valuation</h2>
+  <div class="card-sub">Returns and P/E vs. SPY and sector ETF XLK — two different questions, shown separately.</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Return vs. benchmark &amp; sector</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 224" class="viz-svg" role="img" aria-label="bar chart"><text x="142" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Stock — 20-day return</text><g class="mark " tabindex="0" data-tip="Stock — 20-day return: +14.9%"><title>Stock — 20-day return: +14.9%</title><path d="M 150 16 H 236.5863505286767 Q 240.5863505286767 16 240.5863505286767 20 V 34 Q 240.5863505286767 38 236.5863505286767 38 H 150 Z" fill="var(--series-1)"/></g><text x="248.5863505286767" y="31.0" font-size="12" fill="var(--text-primary)">+14.9%</text><text x="142" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">S&amp;P 500 — 20-day return</text><g class="mark " tabindex="0" data-tip="S&amp;P 500 — 20-day return: -2.2%"><title>S&amp;P 500 — 20-day return: -2.2%</title><path d="M 150 50 H 159.33226529958347 Q 163.33226529958347 50 163.33226529958347 54 V 68 Q 163.33226529958347 72 159.33226529958347 72 H 150 Z" fill="var(--series-1)"/></g><text x="171.33226529958347" y="65.0" font-size="12" fill="var(--text-primary)">-2.2%</text><text x="142" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Sector (XLK) — 20-day return</text><g class="mark " tabindex="0" data-tip="Sector (XLK) — 20-day return: -10.3%"><title>Sector (XLK) — 20-day return: -10.3%</title><path d="M 150 84 H 208.46074975969242 Q 212.46074975969242 84 212.46074975969242 88 V 102 Q 212.46074975969242 106 208.46074975969242 106 H 150 Z" fill="var(--series-1)"/></g><text x="220.46074975969242" y="99.0" font-size="12" fill="var(--text-primary)">-10.3%</text><text x="142" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Stock — 1-year return</text><g class="mark " tabindex="0" data-tip="Stock — 1-year return: +62.4%"><title>Stock — 1-year return: +62.4%</title><path d="M 150 118 H 526.0 Q 530.0 118 530.0 122 V 136 Q 530.0 140 526.0 140 H 150 Z" fill="var(--series-1)"/></g><text x="538.0" y="133.0" font-size="12" fill="var(--text-primary)">+62.4%</text><text x="142" y="167.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">S&amp;P 500 — 1-year return</text><g class="mark " tabindex="0" data-tip="S&amp;P 500 — 1-year return: +16.2%"><title>S&amp;P 500 — 1-year return: +16.2%</title><path d="M 150 152 H 244.92662608138417 Q 248.92662608138417 152 248.92662608138417 156 V 170 Q 248.92662608138417 174 244.92662608138417 174 H 150 Z" fill="var(--series-1)"/></g><text x="256.92662608138414" y="167.0" font-size="12" fill="var(--text-primary)">+16.2%</text><text x="142" y="201.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Sector (XLK) — 1-year return</text><g class="mark " tabindex="0" data-tip="Sector (XLK) — 1-year return: +26.5%"><title>Sector (XLK) — 1-year return: +26.5%</title><path d="M 150 186 H 307.50913168856135 Q 311.50913168856135 186 311.50913168856135 190 V 204 Q 311.50913168856135 208 307.50913168856135 208 H 150 Z" fill="var(--series-1)"/></g><text x="319.50913168856135" y="201.0" font-size="12" fill="var(--text-primary)">+26.5%</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--series-1)"></span>Stock</span><span class="key"><span class="swatch" style="background:var(--series-2)"></span>S&amp;P 500</span><span class="key"><span class="swatch" style="background:var(--series-3)"></span>Sector (XLK)</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>Stock — 20-day return</td><td>+14.9%</td></tr><tr><td>S&amp;P 500 — 20-day return</td><td>-2.2%</td></tr><tr><td>Sector (XLK) — 20-day return</td><td>-10.3%</td></tr><tr><td>Stock — 1-year return</td><td>+62.4%</td></tr><tr><td>S&amp;P 500 — 1-year return</td><td>+16.2%</td></tr><tr><td>Sector (XLK) — 1-year return</td><td>+26.5%</td></tr></tbody></table></div></div>
+  
+</div>
+  
+<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:12px;">
+  <div class="stat-tile"><div class="label">Stock P/E</div><div class="value">41.0</div></div>
+  <div class="stat-tile"><div class="label">P/E vs S&amp;P 500</div><div class="value">+56.2%</div><div class="sub">S&amp;P 500 P/E 26.2</div></div>
+  <div class="stat-tile"><div class="label">P/E vs sector</div><div class="value">+31.6%</div><div class="sub">Sector P/E 31.2</div></div>
+</div>
+</div>
+<div class="card full">
+  <h2>Financials</h2>
+  
+<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+  <div class="stat-tile"><div class="label">Total debt</div><div class="value">$84.71B</div></div>
+  <div class="stat-tile"><div class="label">Total cash</div><div class="value">$68.51B</div></div>
+  <div class="stat-tile"><div class="label">Debt / equity</div><div class="value">79.5</div></div>
+  <div class="stat-tile"><div class="label">Current ratio</div><div class="value">1.07</div></div>
+  <div class="stat-tile"><div class="label">Free cash flow</div><div class="value">$98.77B</div></div>
+  <div class="stat-tile"><div class="label">Operating cash flow</div><div class="value">$111.48B</div></div>
+  <div class="stat-tile"><div class="label">Annual revenue</div><div class="value">$416.16B</div><div class="sub">Period end 2025-09-30</div></div>
+  <div class="stat-tile"><div class="label">Annual net income</div><div class="value">$112.01B</div><div class="sub">Net margin 26.9%</div></div>
+</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Quarterly revenue &amp; net income</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 260" class="viz-svg" role="img" aria-label="grouped column chart"><line x1="46" y1="230.0" x2="604" y2="230.0" stroke="var(--gridline)" stroke-width="1"/><text x="40" y="233.0" text-anchor="end" font-size="10" fill="var(--text-muted)">0</text><line x1="46" y1="122.0" x2="604" y2="122.0" stroke="var(--gridline)" stroke-width="1"/><text x="40" y="125.0" text-anchor="end" font-size="10" fill="var(--text-muted)">71.9B</text><line x1="46" y1="14.0" x2="604" y2="14.0" stroke="var(--gridline)" stroke-width="1"/><text x="40" y="17.0" text-anchor="end" font-size="10" fill="var(--text-muted)">143.8B</text><g class="mark " tabindex="0" data-tip="2025-03-31 — Revenue: $95.36B"><title>2025-03-31 — Revenue: $95.36B</title><path d="M 76.8 230.0 V 90.7187178274298 Q 76.8 86.7187178274298 80.8 86.7187178274298 H 96.8 Q 100.8 86.7187178274298 100.8 90.7187178274298 V 230.0 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2025-03-31 — Net income: $24.78B"><title>2025-03-31 — Net income: $24.78B</title><path d="M 102.8 230.0 V 196.76691059851416 Q 102.8 192.76691059851416 106.8 192.76691059851416 H 122.8 Q 126.8 192.76691059851416 126.8 196.76691059851416 V 230.0 Z" fill="var(--series-2)"/></g><text x="101.8" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2025-03-31</text><g class="mark " tabindex="0" data-tip="2025-06-30 — Revenue: $94.04B"><title>2025-06-30 — Revenue: $94.04B</title><path d="M 188.39999999999998 230.0 V 92.70658615988202 Q 188.39999999999998 88.70658615988202 192.39999999999998 88.70658615988202 H 208.39999999999998 Q 212.39999999999998 88.70658615988202 212.39999999999998 92.70658615988202 V 230.0 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2025-06-30 — Net income: $23.43B"><title>2025-06-30 — Net income: $23.43B</title><path d="M 214.39999999999998 230.0 V 198.78933748852222 Q 214.39999999999998 194.78933748852222 218.39999999999998 194.78933748852222 H 234.39999999999998 Q 238.39999999999998 194.78933748852222 238.39999999999998 198.78933748852222 V 230.0 Z" fill="var(--series-2)"/></g><text x="213.39999999999998" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2025-06-30</text><g class="mark " tabindex="0" data-tip="2025-09-30 — Revenue: $102.47B"><title>2025-09-30 — Revenue: $102.47B</title><path d="M 300.0 230.0 V 80.0401235426695 Q 300.0 76.0401235426695 304.0 76.0401235426695 H 320.0 Q 324.0 76.0401235426695 324.0 80.0401235426695 V 230.0 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2025-09-30 — Net income: $27.47B"><title>2025-09-30 — Net income: $27.47B</title><path d="M 326.0 230.0 V 192.73107209438214 Q 326.0 188.73107209438214 330.0 188.73107209438214 H 346.0 Q 350.0 188.73107209438214 350.0 192.73107209438214 V 230.0 Z" fill="var(--series-2)"/></g><text x="325.0" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-12-31 — Revenue: $143.76B"><title>2025-12-31 — Revenue: $143.76B</title><path d="M 411.59999999999997 230.0 V 18.0 Q 411.59999999999997 14.0 415.59999999999997 14.0 H 431.59999999999997 Q 435.59999999999997 14.0 435.59999999999997 18.0 V 230.0 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2025-12-31 — Net income: $42.10B"><title>2025-12-31 — Net income: $42.10B</title><path d="M 437.59999999999997 230.0 V 170.74732185091403 Q 437.59999999999997 166.74732185091403 441.59999999999997 166.74732185091403 H 457.59999999999997 Q 461.59999999999997 166.74732185091403 461.59999999999997 170.74732185091403 V 230.0 Z" fill="var(--series-2)"/></g><text x="436.59999999999997" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2026-03-31 — Revenue: $111.18B"><title>2026-03-31 — Revenue: $111.18B</title><path d="M 523.1999999999999 230.0 V 66.94092768301846 Q 523.1999999999999 62.94092768301846 527.1999999999999 62.94092768301846 H 543.1999999999999 Q 547.1999999999999 62.94092768301846 547.1999999999999 66.94092768301846 V 230.0 Z" fill="var(--series-1)"/></g><text x="535.1999999999999" y="56.94092768301846" text-anchor="middle" font-size="10" fill="var(--text-primary)">$111.2B</text><g class="mark " tabindex="0" data-tip="2026-03-31 — Net income: $29.58B"><title>2026-03-31 — Net income: $29.58B</title><path d="M 549.1999999999999 230.0 V 189.55769498316593 Q 549.1999999999999 185.55769498316593 553.1999999999999 185.55769498316593 H 569.1999999999999 Q 573.1999999999999 185.55769498316593 573.1999999999999 189.55769498316593 V 230.0 Z" fill="var(--series-2)"/></g><text x="561.1999999999999" y="179.55769498316593" text-anchor="middle" font-size="10" fill="var(--text-primary)">$29.6B</text><text x="548.1999999999999" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2026-03-31</text><line x1="46" y1="230.0" x2="604" y2="230.0" stroke="var(--baseline)" stroke-width="1"/></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--series-1)"></span>Revenue</span><span class="key"><span class="swatch" style="background:var(--series-2)"></span>Net income</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Quarter</th><th>Revenue</th><th>Net income</th></tr></thead><tbody><tr><td>2025-03-31</td><td>$95.36B</td><td>$24.78B</td></tr><tr><td>2025-06-30</td><td>$94.04B</td><td>$23.43B</td></tr><tr><td>2025-09-30</td><td>$102.47B</td><td>$27.47B</td></tr><tr><td>2025-12-31</td><td>$143.76B</td><td>$42.10B</td></tr><tr><td>2026-03-31</td><td>$111.18B</td><td>$29.58B</td></tr></tbody></table></div></div>
+  
+</div>
+</div>
+<div class="card full">
+  <h2>Ownership</h2>
+  <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div>
+      
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Institutional vs. insider ownership</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 60" class="viz-svg" role="img" aria-label="ownership breakdown"><g class="mark " tabindex="0" data-tip="Institutions: 65.7%"><title>Institutions: 65.7%</title><path d="M 12 20 H 402.9789999999999 L 402.9789999999999 20 V 44 L 402.9789999999999 44 H 12 Q 8 44 8 40 V 24 Q 8 20 12 20 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="Insiders: 1.6%"><title>Insiders: 1.6%</title><path d="M 404.9789999999999 20 H 412.8664799999999 L 412.8664799999999 20 V 44 L 412.8664799999999 44 H 404.9789999999999 L 404.9789999999999 44 V 20 L 404.9789999999999 20 Z" fill="var(--series-2)"/></g><g class="mark " tabindex="0" data-tip="Other / retail: 32.6%"><title>Other / retail: 32.6%</title><path d="M 414.8664799999999 20 H 608.0 Q 612.0 20 612.0 24 V 40 Q 612.0 44 608.0 44 H 414.8664799999999 L 414.8664799999999 44 V 20 L 414.8664799999999 20 Z" fill="var(--gridline)"/></g></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--series-1)"></span>Institutions</span><span class="key"><span class="swatch" style="background:var(--series-2)"></span>Insiders</span><span class="key"><span class="swatch" style="background:var(--gridline)"></span>Other / retail</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Holder type</th><th>% of shares</th></tr></thead><tbody><tr><td>Institutions</td><td>65.7%</td></tr><tr><td>Insiders</td><td>1.6%</td></tr><tr><td>Other / retail</td><td>32.6%</td></tr></tbody></table></div></div>
+  
+</div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Top institutional holders</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Holder</th><th>Shares</th><th>% out</th><th>Value</th></tr></thead><tbody><tr><td>Blackrock Inc.</td><td>1,144,695,425</td><td>0.08%</td><td>$387.12B</td></tr><tr><td>Vanguard Capital Management LLC</td><td>953,847,648</td><td>0.06%</td><td>$322.58B</td></tr><tr><td>State Street Corporation</td><td>602,341,409</td><td>0.04%</td><td>$203.71B</td></tr><tr><td>Geode Capital Management, LLC</td><td>368,616,954</td><td>0.03%</td><td>$124.66B</td></tr><tr><td>Vanguard Portfolio Management LLC</td><td>331,437,055</td><td>0.02%</td><td>$112.09B</td></tr></tbody></table></div></div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Schedule 13D/13G (&gt;5% stakes)</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Filed</th><th>Reporting person</th><th>Schedule</th><th>% of class</th><th>Type</th></tr></thead><tbody><tr><td>2026-04-29</td><td>Vanguard Capital Management</td><td><span class="badge neutral">13G</span></td><td>7.48%</td><td>IA</td></tr><tr><td>2026-03-26</td><td>The Vanguard Group</td><td><span class="badge neutral">13G /A</span></td><td>0.00%</td><td>IA</td></tr><tr><td>2025-07-29</td><td>The Vanguard Group</td><td><span class="badge neutral">13G /A</span></td><td>9.47%</td><td>IA</td></tr></tbody></table></div></div>
+    </div>
+    <div>
+      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4)</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Owner</th><th>Title</th><th>Direction</th><th>Shares</th><th>Price</th></tr></thead><tbody><tr><td>2026-06-15</td><td>Newstead Jennifer</td><td>SVP, GC and Secretary</td><td><span class="badge good">buy</span></td><td>30,104</td><td>—</td></tr><tr><td>2026-06-15</td><td>Newstead Jennifer</td><td>SVP, GC and Secretary</td><td><span class="badge neutral">sell</span></td><td>16,238</td><td>$296.42</td></tr><tr><td>2026-06-15</td><td>Borders Ben</td><td>Principal Accounting Officer</td><td><span class="badge good">buy</span></td><td>240</td><td>—</td></tr><tr><td>2026-06-15</td><td>Borders Ben</td><td>Principal Accounting Officer</td><td><span class="badge neutral">sell</span></td><td>124</td><td>$296.42</td></tr><tr><td>2026-06-16</td><td>Borders Ben</td><td>Principal Accounting Officer</td><td><span class="badge neutral">sell</span></td><td>116</td><td>$295.14</td></tr><tr><td>2026-05-27</td><td>LEVINSON ARTHUR D</td><td>Director</td><td><span class="badge neutral">sell</span></td><td>50,000</td><td>$311.02</td></tr><tr><td>2026-05-27</td><td>LEVINSON ARTHUR D</td><td>Director</td><td><span class="badge neutral">sell</span></td><td>65,000</td><td>—</td></tr><tr><td>2026-05-08</td><td>Borders Ben</td><td>Principal Accounting Officer</td><td><span class="badge neutral">sell</span></td><td>1,274</td><td>$290.00</td></tr><tr><td>2026-05-06</td><td>LEVINSON ARTHUR D</td><td>Director</td><td><span class="badge neutral">sell</span></td><td>149,527</td><td>$284.57</td></tr><tr><td>2026-05-06</td><td>LEVINSON ARTHUR D</td><td>Director</td><td><span class="badge neutral">sell</span></td><td>100,473</td><td>$285.04</td></tr><tr><td>2026-05-06</td><td>LEVINSON ARTHUR D</td><td>Director</td><td><span class="badge neutral">sell</span></td><td>5,000</td><td>—</td></tr><tr><td>2026-04-23</td><td>Parekh Kevan</td><td>Senior Vice President, CFO</td><td><span class="badge neutral">sell</span></td><td>1,534</td><td>$275.00</td></tr></tbody></table></div></div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Approx. date</th><th>Seller</th><th>Relationship</th><th>Shares proposed</th><th>Value</th></tr></thead><tbody><tr><td>05/27/2026</td><td>LEVINSON ARTHUR D</td><td>Director</td><td>50,000</td><td>$15.55M</td></tr><tr><td>05/06/2026</td><td>LEVINSON ARTHUR D</td><td>Director</td><td>250,000</td><td>$71.19M</td></tr><tr><td>05/05/2026</td><td>KATHERINE L ADAMS</td><td>Former officer</td><td>43,000</td><td>$12.04M</td></tr><tr><td>04/23/2026</td><td>KEVAN PAREKH</td><td>Officer</td><td>1,534</td><td>$419.0K</td></tr><tr><td>04/02/2026</td><td>O&#x27;BRIEN DEIRDRE</td><td>Officer</td><td>30,002</td><td>$7.66M</td></tr><tr><td>04/02/2026</td><td>COOK TIMOTHY D</td><td>Officer, Director</td><td>64,949</td><td>$16.51M</td></tr><tr><td>10/16/2025</td><td>KEVAN PAREKH</td><td>Officer</td><td>4,199</td><td>$1.05M</td></tr><tr><td>10/02/2025</td><td>KATHERINE L ADAMS</td><td>Officer</td><td>47,125</td><td>$12.04M</td></tr></tbody></table></div></div>
+    </div>
+  </div>
+</div>
+<div class="card full">
+  <h2>Dividends, Buybacks, Options & Sentiment</h2>
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div>
+      
+<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+  <div class="stat-tile"><div class="label">Dividend yield</div><div class="value">0.3%</div></div>
+  <div class="stat-tile"><div class="label">Payout ratio</div><div class="value">12.6%</div></div>
+  <div class="stat-tile"><div class="label">5y avg yield</div><div class="value">0.5%</div></div>
+</div>
+      
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Quarterly buyback spend</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 156" class="viz-svg" role="img" aria-label="bar chart"><text x="142" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2026-03-31</text><g class="mark " tabindex="0" data-tip="2026-03-31: $12.29B"><title>2026-03-31: $12.29B</title><path d="M 150 16 H 335.0385004655682 Q 339.0385004655682 16 339.0385004655682 20 V 34 Q 339.0385004655682 38 335.0385004655682 38 H 150 Z" fill="var(--series-1)"/></g><text x="347.0385004655682" y="31.0" font-size="12" fill="var(--text-primary)">$12.29B</text><text x="142" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2025-12-31: $24.70B"><title>2025-12-31: $24.70B</title><path d="M 150 50 H 526.0 Q 530.0 50 530.0 54 V 68 Q 530.0 72 526.0 72 H 150 Z" fill="var(--series-1)"/></g><text x="538.0" y="65.0" font-size="12" fill="var(--text-primary)">$24.70B</text><text x="142" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-09-30: $20.13B"><title>2025-09-30: $20.13B</title><path d="M 150 84 H 455.71053803489735 Q 459.71053803489735 84 459.71053803489735 88 V 102 Q 459.71053803489735 106 455.71053803489735 106 H 150 Z" fill="var(--series-1)"/></g><text x="467.71053803489735" y="99.0" font-size="12" fill="var(--text-primary)">$20.13B</text><text x="142" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-06-30</text><g class="mark " tabindex="0" data-tip="2025-06-30: $21.07B"><title>2025-06-30: $21.07B</title><path d="M 150 118 H 470.21764301040446 Q 474.21764301040446 118 474.21764301040446 122 V 136 Q 474.21764301040446 140 470.21764301040446 140 H 150 Z" fill="var(--series-1)"/></g><text x="482.21764301040446" y="133.0" font-size="12" fill="var(--text-primary)">$21.07B</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>2026-03-31</td><td>$12.29B</td></tr><tr><td>2025-12-31</td><td>$24.70B</td></tr><tr><td>2025-09-30</td><td>$20.13B</td></tr><tr><td>2025-06-30</td><td>$21.07B</td></tr></tbody></table></div></div>
+  
+</div>
+      
+<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+  <div class="stat-tile"><div class="label">VIX level</div><div class="value">19.1</div><div class="sub"><span class="delta critical">3.0 (20d)</span></div></div>
+  <div class="stat-tile"><div class="label">10Y Treasury yield</div><div class="value">4.7%</div><div class="sub"><span class="delta critical">+0.2% (20d)</span></div></div>
+</div>
+<div class="viz-note">Not ticker-specific — same for every ticker checked the same day.</div>
+    </div>
+    <div>
+      
+<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+  <div class="stat-tile"><div class="label">Put/call volume ratio</div><div class="value">1.924</div></div>
+  <div class="stat-tile"><div class="label">Put/call open interest ratio</div><div class="value">0.616</div></div>
+</div>
+<div style="margin-top:10px;"><span class="badge warning">IV/skew fields unreliable — see note</span></div>
+<div class="viz-note" style="margin-top:8px;">Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge.</div>
+      <div style="margin-top:16px;">
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Social sentiment — StockTwits (30 recent posts)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 70" class="viz-svg" role="img" aria-label="social sentiment split"><line x1="310.0" y1="18" x2="310.0" y2="56" stroke="var(--baseline)" stroke-width="1"/><g class="mark " tabindex="0" data-tip="Untagged: 19 messages"><title>Untagged: 19 messages</title><path d="M 126.33333333333334 24 H 493.66666666666663 Q 493.66666666666663 24 493.66666666666663 24 V 50 Q 493.66666666666663 50 493.66666666666663 50 H 126.33333333333334 Z" fill="var(--gridline)"/></g><g class="mark " tabindex="0" data-tip="Bearish: 9 messages"><title>Bearish: 9 messages</title><path d="M 124.33333333333334 24 H -45.66666666666666 Q -49.66666666666666 24 -49.66666666666666 28 V 46 Q -49.66666666666666 50 -45.66666666666666 50 H 124.33333333333334 Z" fill="var(--diverge-neg)"/></g><g class="mark " tabindex="0" data-tip="Bullish: 2 messages"><title>Bullish: 2 messages</title><path d="M 495.66666666666663 24 H 530.3333333333333 Q 534.3333333333333 24 534.3333333333333 28 V 46 Q 534.3333333333333 50 530.3333333333333 50 H 495.66666666666663 Z" fill="var(--diverge-pos)"/></g><text x="-55.66666666666666" y="41.0" text-anchor="end" font-size="12" fill="var(--text-primary)">9</text><text x="542.3333333333333" y="41.0" font-size="12" fill="var(--text-primary)">2</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--diverge-neg)"></span>Bearish</span><span class="key"><span class="swatch" style="background:var(--gridline)"></span>Untagged</span><span class="key"><span class="swatch" style="background:var(--diverge-pos)"></span>Bullish</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Sentiment</th><th>Messages</th></tr></thead><tbody><tr><td>Bearish</td><td>9</td></tr><tr><td>Untagged</td><td>19</td></tr><tr><td>Bullish</td><td>2</td></tr></tbody></table></div></div>
+  <div class="viz-note">Unmoderated public chatter — a crowd-mood gauge, not verified fact.</div>
+</div></div>
+      <div class="viz-card" style="margin-top:16px;">
+        <div class="viz-card-head"><span class="viz-title">Sample posts (unverified)</span></div>
+        <div class="news-item"><div class="meta">2026-07-30T12:53:15Z · untagged</div><div class="snippet">$AAPL i gotta get outta this shitter😂</div></div><div class="news-item"><div class="meta">2026-07-30T12:52:23Z · untagged</div><div class="snippet">$AAPL $QQQ $SPY Zero innovation… refuses to spend on CapEx… Weak hardware and software updates…
+
+Market assigns Apple Avenger title “Anti-CapEx” and injects 1T MCAP in a month 
+
+We will see the truth post ER… I personally don’t see Apple holding onto its massive hyper growth valuation… 
+
+Typed this with: iPhone 17 Pro 😂</div></div><div class="news-item"><div class="meta">2026-07-30T12:51:03Z · untagged</div><div class="snippet">$AAPL LRCX</div></div><div class="news-item"><div class="meta">2026-07-30T12:50:37Z · untagged</div><div class="snippet">$AAPL 
+
+Nice work thus far  🍎 🐻 
+
+ER tonight    Buckle up</div></div><div class="news-item"><div class="meta">2026-07-30T12:47:36Z · untagged</div><div class="snippet">$AAPL great short</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card full">
+  <h2>News</h2>
+  
+<div class="news-item">
+  <div class="headline"><a href="https://www.investors.com/market-trend/stock-market-today/dow-jones-sp500-nasdaq-inflation-data-meta-stock-meta-q2-earnings/?src=A00220&amp;yptr=yahoo" target="_blank" rel="noopener">Stock Market Today: Dow Rises After Key Inflation Data; Meta Plunges On Earnings (Live Coverage)</a></div>
+  <div class="meta">Investor&#x27;s Business Daily · 2026-07-30</div>
+  <div class="snippet">Stock Market Today: The Dow Jones index rises Thursday after key inflation data. Meta stock plunges on earnings.</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/qualcomm-huge-news-apple-123650717.html" target="_blank" rel="noopener">Qualcomm Has Huge News for Apple</a></div>
+  <div class="meta">GuruFocus.com · 2026-07-30</div>
+  <div class="snippet">Apple&#x27;s In-House Modem Push Deals Fresh Blow to Qualcomm</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://247wallst.com/investing/2026/07/30/jim-cramer-sounds-cautious-on-this-market-heres-what-id-buy-in-response/" target="_blank" rel="noopener">Jim Cramer Sounds Cautious On This Market. Here’s What I’d Buy in Response</a></div>
+  <div class="meta">24/7 Wall St. · 2026-07-30</div>
+  <div class="snippet">Jim Cramer is struggling to find reasons to buy, and the Nasdaq 100 sliding into correction territory is not helping. Before you dismiss his caution, consider which corners of the market could actuall</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/us-equity-futures-rise-pre-121051854.html" target="_blank" rel="noopener">US Equity Futures Rise Pre-Bell Amid Latest Big Tech Earnings, Fed Rate Decision</a></div>
+  <div class="meta">MT Newswires · 2026-07-30</div>
+  <div class="snippet">US equity futures were higher pre-bell Thursday as traders took note of the Federal Reserve&#x27;s decisi</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/apple-aapl-faces-uk-app-120909837.html" target="_blank" rel="noopener">Apple (AAPL) Faces UK App Store Pushback And Crypto Scam Lawsuit</a></div>
+  <div class="meta">Simply Wall St. · 2026-07-30</div>
+  <div class="snippet">UK regulators are challenging Apple over how it plans to implement changes to App Store payment rules. Apple is also facing a lawsuit that claims the company was negligent after a crypto scam app on i</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/stock-futures-rise-investors-await-114844580.html" target="_blank" rel="noopener">Stock Futures Rise as Investors Await Key Inflation Report Following Fed Hold</a></div>
+  <div class="meta">MT Newswires · 2026-07-30</div>
+  <div class="snippet">US stock futures pointed to a higher open on Thursday as investors awaited a key inflation report fo</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/microsoft-earnings-lift-wall-street-111015695.html" target="_blank" rel="noopener">Microsoft Earnings Lift Wall Street Pre-Bell; Asia Mixed, Europe Up</a></div>
+  <div class="meta">MT Newswires · 2026-07-30</div>
+  <div class="snippet">Wall Street futures pointed higher pre-bell Thursday after tech colossus Microsoft (MSFT) reported s</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/video/big-tech-earnings-meet-ipo-220000114.html" target="_blank" rel="noopener">Big Tech earnings meet IPO buzz: What to watch Thursday</a></div>
+  <div class="meta">Yahoo Finance Video · 2026-07-29</div>
+  <div class="snippet">Asking for a Trend Host Josh Lipton previews the biggest market catalysts for Thursday, July 30, including highly anticipated earnings from Apple (AAPL) and Amazon (AMZN) as well as the expected IPO d</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/video/apple-options-trades-whats-covered-201000242.html" target="_blank" rel="noopener">Apple options trades: What&#x27;s a covered call and how does it work?</a></div>
+  <div class="meta">Yahoo Finance Video · 2026-07-29</div>
+  <div class="snippet">Yahoo Finance Markets and Data Editor Jared Blikre tracks options trading activity around Apple (AAPL) shares, specifically explaining how a covered call works. Apple will be reporting its fiscal thir</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/video/can-qualcomm-secure-a-tiny-slice-of-the-data-center-pie-163320789.html" target="_blank" rel="noopener">Can Qualcomm secure a &#x27;tiny slice&#x27; of the data center pie?</a></div>
+  <div class="meta">Yahoo Finance Video · 2026-07-29</div>
+  <div class="snippet">Bernstein managing director &amp; senior analyst Stacy Rasgon and Lopez Research founder Maribel Lopez comment on Qualcomm&#x27;s (QCOM) position in the AI data center landscape.</div>
+</div>
+  
+</div>
+<div class="card full">
+  <h2>Filings & Proxy</h2>
+  <div class="filing-row"><span class="name">10-K</span><span class="badge good">Fetched</span><span class="info">Filed 2025-10-31 · 15063 chars</span></div><div class="filing-row"><span class="name">10-Q</span><span class="badge good">Fetched</span><span class="info">Filed 2026-05-01 · 15063 chars</span></div><div class="filing-row"><span class="name">8-K</span><span class="badge good">Fetched</span><span class="info">Filed 2026-04-30 · 11335 chars</span></div><div class="filing-row"><span class="name">DEF 14A</span><span class="badge good">Fetched</span><span class="info">Filed 2026-01-08 · 15063 chars</span></div>
+  <div class="viz-note" style="margin-top:10px;">Filings digest not generated (dry run or no API key).</div>
+</div>
+<div class="card full">
+  <h2>Data Quality Notes</h2>
+  <ul class="notes-list"><li><span class="badge neutral">note</span> <span>Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented.</span></li><li><span class="badge neutral">note</span> <span>Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge.</span></li><li><span class="badge neutral">note</span> <span>Skipped (dry run).</span></li><li><span class="badge neutral">note</span> <span>Skipped (dry run).</span></li></ul>
+</div>
+  </div>
+</div>
+<footer class="disclaimer">
+  StockLLM is a research/decision-support tool. It is NOT financial advice and never places trades.
+  This dashboard renders exactly what is in the underlying JSON research bundle — nothing here is
+  re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
+</footer>
+<script>
+(function () {
+  var tip = document.createElement('div');
+  tip.className = 'viz-tooltip';
+  document.body.appendChild(tip);
+
+  function showTip(x, y, text) {
+    tip.textContent = text;
+    tip.style.display = 'block';
+    tip.style.left = (x + 14) + 'px';
+    tip.style.top = (y + 14) + 'px';
+  }
+  function hideTip() { tip.style.display = 'none'; }
+
+  document.addEventListener('mousemove', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t && t.dataset.tip) {
+      showTip(e.clientX, e.clientY, t.dataset.tip);
+    } else {
+      hideTip();
+    }
+  });
+  document.addEventListener('mouseout', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t) hideTip();
+  });
+  document.addEventListener('focusin', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t && t.dataset.tip) {
+      var r = t.getBoundingClientRect();
+      showTip(r.left + r.width / 2, r.top, t.dataset.tip);
+    }
+  });
+  document.addEventListener('focusout', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t) hideTip();
+  });
+
+  document.querySelectorAll('.viz-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.viz-card');
+      var nowTable = card.classList.toggle('is-table-view');
+      btn.textContent = nowTable ? 'View chart' : 'View as table';
+      btn.setAttribute('aria-pressed', String(nowTable));
+    });
+  });
+
+  var themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function () {
+      var root = document.documentElement;
+      var current = root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      themeBtn.textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
+      try { localStorage.setItem('stockllm-theme', next); } catch (e) {}
+    });
+  }
+})();
+</script>
+</body>
+</html>
