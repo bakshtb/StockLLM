@@ -1,5 +1,7 @@
 """
-Combines price/technicals, fundamentals (incl. short interest), balance sheet
+Combines price/technicals, fundamentals (incl. short interest), analyst
+rating actions, earnings surprise/estimate revisions, relative performance
+vs. benchmark/sector, dividends/buybacks, options sentiment, balance sheet
 health, income statement, insider transactions (Form 4), Form 144 sale
 notices, beneficial ownership (13D/13G), institutional ownership, raw filing
 text (incl. 8-K earnings exhibits), raw proxy text, raw news article text,
@@ -24,6 +26,10 @@ from data.fetch_prices import fetch_price_summary
 from data.fetch_news import fetch_news_summary, fetch_news_articles_raw, summarize_news
 from data.fetch_fundamentals import fetch_fundamentals
 from data.fetch_analyst_ratings import fetch_analyst_ratings
+from data.fetch_earnings_estimates import fetch_earnings_estimates
+from data.fetch_relative_performance import fetch_relative_performance
+from data.fetch_dividends_buybacks import fetch_dividends_buybacks
+from data.fetch_options_sentiment import fetch_options_sentiment
 from data.fetch_balance_sheet import fetch_balance_sheet_health
 from data.fetch_income_statement import fetch_income_statement
 from data.fetch_insider import fetch_insider_transactions
@@ -47,6 +53,12 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
     price = fetch_price_summary(ticker)  # raises ValueError if ticker invalid -- do this first, fail fast
     fundamentals = fetch_fundamentals(ticker)
     analyst_ratings = fetch_analyst_ratings(ticker)
+    earnings_estimates = fetch_earnings_estimates(ticker)
+    relative_performance = fetch_relative_performance(
+        ticker, fundamentals.get("sector"), price.get("pct_change_20d"), price.get("pct_change_1y")
+    )
+    dividends_buybacks = fetch_dividends_buybacks(ticker)
+    options_sentiment = fetch_options_sentiment(ticker, price.get("current_price"))
     balance_sheet = fetch_balance_sheet_health(ticker)
     income_statement = fetch_income_statement(ticker)
     insider = fetch_insider_transactions(ticker)
@@ -84,6 +96,10 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "price": price,
         "fundamentals": fundamentals,
         "analyst_ratings": analyst_ratings,  # individual firm actions (last ~60 days), no LLM
+        "earnings_estimates": earnings_estimates,  # surprise history + EPS/revenue estimate trends, no LLM
+        "relative_performance": relative_performance,  # stock return vs. SPY + sector ETF, no LLM
+        "dividends_buybacks": dividends_buybacks,  # dividend yield/history + quarterly buyback spend, no LLM
+        "options_sentiment": options_sentiment,  # put/call ratio + IV skew, no LLM
         "balance_sheet_health": balance_sheet,
         "income_statement": income_statement,
         "insider_transactions": insider,
@@ -99,6 +115,8 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "data_notes": [
             n for n in [
                 insider.get("note"), institutional.get("note"), analyst_ratings.get("note"),
+                earnings_estimates.get("note"), relative_performance.get("note"),
+                dividends_buybacks.get("note"), options_sentiment.get("note"),
                 income_statement.get("note"),
                 *[f.get("note") for f in filings_raw.values()],
                 form144.get("note"), beneficial_ownership.get("note"), proxy_raw.get("note"),

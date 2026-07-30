@@ -39,6 +39,11 @@ StockLLM/
 │   ├── fetch_fundamentals.py      # P/E, market cap, analyst targets, short interest (free, yfinance)
 │   ├── fetch_analyst_ratings.py   # individual analyst-firm actions: upgrade/downgrade/reiterate,
 │   │                               #   from/to grade, price target changes, last ~60 days (free, yfinance)
+│   ├── fetch_earnings_estimates.py # earnings surprise history (4 qtrs) + EPS/revenue estimate
+│   │                               #   trend + revisions, 7/30/60/90-day windows (free, yfinance)
+│   ├── fetch_relative_performance.py # stock's 20d/1y return vs. SPY and sector SPDR ETF (free, yfinance)
+│   ├── fetch_dividends_buybacks.py # dividend yield/payout/history + quarterly buyback spend (free, yfinance)
+│   ├── fetch_options_sentiment.py # put/call volume+OI ratio, ATM/OTM implied vol skew (free, yfinance)
 │   ├── fetch_balance_sheet.py     # debt, cash, free cash flow (free, yfinance)
 │   ├── fetch_income_statement.py  # revenue/margins/EPS: latest annual + ALL recent quarters (free, yfinance)
 │   ├── fetch_insider.py           # SEC Form 4 insider transactions (free, SEC EDGAR)
@@ -205,6 +210,41 @@ StockLLM/
     — the person asked for this specifically so the bull/bear/skeptic/judge
     pipeline has more perspective to reason from, not to check past calls
     against outcomes (backtesting itself is still deferred, see below).
+
+15. **Four more free data angles added the same session, same "more agent
+    context, not backtesting" intent as #14:**
+    - `fetch_earnings_estimates.py`: earnings surprise history (actual vs.
+      estimate EPS, last 4 quarters) plus EPS/revenue estimate trend and
+      revision counts over 7/30/60/90-day windows. Deliberately distinct
+      from `analyst_ratings` — estimates can drift for weeks before any
+      firm changes its official rating action.
+    - `fetch_relative_performance.py`: the stock's existing 20d/1y return
+      (from `fetch_prices.py`) minus SPY's and its sector SPDR ETF's return
+      over the same windows. Fixes a real blind spot — `pct_change_1y` in
+      isolation can't tell the agents whether a move was exceptional or
+      just the whole market/sector moving together. Sector→ETF mapping
+      (`SECTOR_ETF_MAP`) is the 11 standard SPDR sector ETFs, matched
+      against yfinance's own `sector` string — confirmed live against 10
+      tickers spanning all 11 sectors.
+    - `fetch_dividends_buybacks.py`: dividend yield/payout/history plus
+      quarterly buyback spend (from `Repurchase Of Capital Stock` in
+      `quarterly_cashflow`). Note the yfinance unit inconsistency handled
+      here: `dividendYield`/`fiveYearAvgDividendYield` come back already as
+      plain percent numbers (0.32 means 0.32%), while `payoutRatio` comes
+      back as a fraction needing `*100` — verified against AAPL's actual
+      ~0.3% yield. Don't "fix" the dividend yield fields by multiplying
+      them again.
+    - `fetch_options_sentiment.py`: put/call volume & open-interest ratios,
+      plus ATM/OTM implied volatility and the resulting skew, from the
+      nearest options expiration ≥25 days out. **The put/call ratios are
+      real and vary meaningfully by ticker; the IV fields are not
+      trustworthy** — live-tested against AAPL/MSFT/TSLA and all three
+      returned near-zero ATM IV plus an identical flat OTM value (0.0625)
+      regardless of the ticker's actual volatility profile, which is a
+      known yfinance data-quality issue (Yahoo's IV field is frequently
+      stale/uncalculated), not a bug in this module. The module's own
+      output note says this explicitly — don't remove that caveat, and
+      weight `iv_skew_put_minus_call` accordingly in any future prompt work.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

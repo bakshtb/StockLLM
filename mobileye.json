@@ -1,6 +1,6 @@
 {
   "ticker": "MBLY",
-  "fetched_at": "2026-07-30T10:13:13.862981Z",
+  "fetched_at": "2026-07-30T11:14:28.807295Z",
   "price": {
     "current_price": 8.01,
     "ma20": 9.06,
@@ -150,6 +150,169 @@
     ],
     "lookback_days": 60,
     "note": null
+  },
+  "earnings_estimates": {
+    "earnings_surprise_history": [
+      {
+        "quarter_end": "2025-09-30",
+        "eps_actual": 0.09,
+        "eps_estimate": 0.08687,
+        "surprise_pct": 3.6
+      },
+      {
+        "quarter_end": "2025-12-31",
+        "eps_actual": 0.06,
+        "eps_estimate": 0.0581,
+        "surprise_pct": 3.27
+      },
+      {
+        "quarter_end": "2026-03-31",
+        "eps_actual": 0.12,
+        "eps_estimate": 0.08589,
+        "surprise_pct": 39.71
+      },
+      {
+        "quarter_end": "2026-06-30",
+        "eps_actual": 0.19,
+        "eps_estimate": 0.05754,
+        "surprise_pct": 230.21
+      }
+    ],
+    "eps_estimate_trend": {
+      "current_quarter": {
+        "current": 0.10043,
+        "7daysAgo": 0.05105,
+        "30daysAgo": 0.05036,
+        "60daysAgo": 0.05034,
+        "90daysAgo": 0.05081
+      },
+      "next_quarter": {
+        "current": 0.09138,
+        "7daysAgo": 0.05224,
+        "30daysAgo": 0.05216,
+        "60daysAgo": 0.05207,
+        "90daysAgo": 0.05398
+      },
+      "current_year": {
+        "current": 0.50007,
+        "7daysAgo": 0.27907,
+        "30daysAgo": 0.27787,
+        "60daysAgo": 0.27796,
+        "90daysAgo": 0.27408
+      },
+      "next_year": {
+        "current": 0.46238,
+        "7daysAgo": 0.34734,
+        "30daysAgo": 0.35577,
+        "60daysAgo": 0.35978,
+        "90daysAgo": 0.35945
+      }
+    },
+    "eps_estimate_revisions": {
+      "current_quarter": {
+        "upLast7days": 0,
+        "upLast30days": 0,
+        "downLast30days": 14,
+        "downLast7Days": 1
+      },
+      "next_quarter": {
+        "upLast7days": 2,
+        "upLast30days": 3,
+        "downLast30days": 7,
+        "downLast7Days": 7
+      },
+      "current_year": {
+        "upLast7days": 2,
+        "upLast30days": 21,
+        "downLast30days": 1,
+        "downLast7Days": 0
+      },
+      "next_year": {
+        "upLast7days": 0,
+        "upLast30days": 1,
+        "downLast30days": 2,
+        "downLast7Days": 1
+      }
+    },
+    "revenue_estimate": {
+      "current_quarter": {
+        "avg": 473903550,
+        "low": 453700000,
+        "high": 484000000,
+        "num_analysts": 17,
+        "year_ago_revenue": 504000000,
+        "growth_pct": -5.97
+      },
+      "next_quarter": {
+        "avg": 462166380,
+        "low": 449000000,
+        "high": 501000000,
+        "num_analysts": 16,
+        "year_ago_revenue": 446000000,
+        "growth_pct": 3.62
+      },
+      "current_year": {
+        "avg": 1999704170,
+        "low": 1984000000,
+        "high": 2023000000,
+        "num_analysts": 21,
+        "year_ago_revenue": 1894000000,
+        "growth_pct": 5.58
+      },
+      "next_year": {
+        "avg": 2206837950,
+        "low": 2068245420,
+        "high": 2383700000,
+        "num_analysts": 27,
+        "year_ago_revenue": 1999704170,
+        "growth_pct": 10.36
+      }
+    },
+    "note": null
+  },
+  "relative_performance": {
+    "benchmark": "SPY",
+    "sector_etf": "XLY",
+    "stock_pct_change_20d": -17.17,
+    "stock_pct_change_1y": -42.58,
+    "benchmark_pct_change_20d": -2.19,
+    "benchmark_pct_change_1y": 16.25,
+    "relative_vs_benchmark_20d_pct": -14.98,
+    "relative_vs_benchmark_1y_pct": -58.83,
+    "sector_pct_change_20d": -5.49,
+    "sector_pct_change_1y": 0.79,
+    "relative_vs_sector_20d_pct": -11.68,
+    "relative_vs_sector_1y_pct": -43.37,
+    "note": null
+  },
+  "dividends_buybacks": {
+    "dividend_yield_pct": null,
+    "payout_ratio_pct": 0.0,
+    "five_year_avg_dividend_yield_pct": null,
+    "recent_dividend_history": [],
+    "buybacks_recent_quarters": [
+      {
+        "quarter_end": "2025-12-31",
+        "buyback_usd": 0.0
+      },
+      {
+        "quarter_end": "2025-09-30",
+        "buyback_usd": 100000000.0
+      }
+    ],
+    "note": null
+  },
+  "options_sentiment": {
+    "expiration_used": "2026-08-28",
+    "days_to_expiry": 29,
+    "put_call_volume_ratio": 0.366,
+    "put_call_open_interest_ratio": 0.451,
+    "atm_call_iv": 0.0,
+    "atm_put_iv": 0.0039,
+    "otm_put_iv": 0.125,
+    "otm_call_iv": 0.125,
+    "iv_skew_put_minus_call": 0.0,
+    "note": "Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge."
   },
   "balance_sheet_health": {
     "total_debt": null,
@@ -653,6 +816,7 @@
   "filings_digest": null,
   "data_notes": [
     "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented.",
+    "Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge.",
     "Skipped (dry run).",
     "Skipped (dry run)."
   ]

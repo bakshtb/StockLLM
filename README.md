@@ -45,6 +45,11 @@ python main.py check AAPL --dry-run       # raw data fetch only, no LLM calls, f
 - Fundamentals (P/E, market cap, analyst targets) — free
 - Analyst rating actions (individual firm upgrades/downgrades/reiterations,
   last ~60 days) — free
+- Earnings surprise history (actual vs. estimated EPS, last 4 quarters) and
+  forward EPS/revenue estimate trends + revisions — free
+- Relative performance vs. the S&P 500 and the ticker's sector ETF — free
+- Dividend yield/history and recent quarterly buyback spend — free
+- Options-market sentiment (put/call ratio, implied volatility skew) — free
 - Balance sheet health (debt, cash, free cash flow) — free
 - Insider transactions (SEC Form 4 filings) — free
 - Institutional ownership snapshot (top holders) — free
