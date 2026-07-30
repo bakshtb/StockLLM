@@ -88,9 +88,18 @@ just open it in a browser. It renders every section of the research bundle as
 charts/tables: price & technicals, analyst ratings + estimates, relative
 performance & valuation, financials, ownership, dividends/buybacks/options/
 macro/sentiment, news, filings, and a data-quality-notes panel. Supports light/dark
-mode (persisted across opens) and a "view as table" toggle on every chart. See
-`dashboard/generate_dashboard.py` — it's a pure rendering layer over the bundle
-JSON, no network calls of its own.
+mode (persisted across opens) and a "view as table" toggle on every chart.
+
+Built for readers with no finance background: an "At a Glance" panel at the top
+translates the numbers into plain-language sentences ("AAPL is up 62.4% over the
+past year — beating the S&P 500 by 46.2%"), every metric has a small "i" you can
+click for a jargon-free explanation, and directional values (returns, earnings
+beats/misses, profit/loss, sentiment) are colored green/red. Genuinely ambiguous
+numbers (P/E premium, insider selling) stay neutral with an explanation rather
+than a forced good/bad color. See `dashboard/generate_dashboard.py` — it's a
+pure rendering layer over the bundle JSON, no network calls of its own; the one
+exception is the At a Glance panel, which is templated from fixed thresholds on
+real fields, never an LLM call or inferred claim.
 
 ## Cost control
 

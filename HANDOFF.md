@@ -419,6 +419,50 @@ StockLLM/
       79.8%/13G stake and the goodwill-impairment quarter (net_margin_pct
       -684%) both still match the values documented in #12/#10 above.
 
+25. **Dashboard accessibility pass** (`dashboard/generate_dashboard.py`),
+    driven by explicit feedback that a non-finance reader looked at the
+    original P/E-premium card and had no way to know why it showed dashes.
+    Three additions:
+    - **`GLOSSARY` + `info_icon(key)`**: a plain-language, jargon-free
+      explanation (2-3 sentences) for every metric/section, shown via a
+      small clickable "i" next to the label. Wired through `stat_tile()`
+      and `viz_card()`'s new `info=` parameter. If you add a new metric to
+      the dashboard, add its glossary entry in the same commit — an
+      unexplained number is exactly the gap this pass was meant to close.
+    - **Green/red color reused everywhere a value has a clear "good news/
+      bad news" reading for a lay reader** — per explicit request
+      ("green and red is good"), overriding the earlier, more conservative
+      stance in #23. Concretely: `--diverge-pos`/`--diverge-neg` (used by
+      the earnings-surprise and sentiment diverging charts) were changed
+      from the dataviz skill's default blue/red to reuse the exact
+      `--status-good`/`--status-critical` hexes; RSI's gauge zones and the
+      1-year-return/net-income/free-cash-flow/current-ratio stat tile
+      *values* (not just their deltas, via `stat_tile()`'s new `value_cls=`
+      param) now color directly. **Still deliberately NOT colored**: P/E
+      premium/discount (can mean "expensive" or "growing faster," not
+      inherently bad), insider *selling* (routine/tax-related far more
+      often than not), and 13D vs. 13G identity — these get a neutral color
+      and an info-icon explanation instead of a forced good/bad read that
+      the data doesn't actually support. If a future request pushes to
+      color these too, at least keep the honest caveat in the tooltip.
+    - **`section_at_a_glance()`**: a new top-of-page panel that turns the
+      numbers into 5-8 plain sentences (e.g. "AAPL is up 62.4% over the
+      past year. That's beating the S&P 500 by 46.2%"). This is the one
+      place this dashboard synthesizes rather than just formats — kept
+      honest by generating every sentence from a **fixed, documented
+      threshold** on a real field already in the bundle (e.g. "P/E premium
+      > 15% → 'trading at a premium'"), never an LLM call or inferred
+      claim, and the footer disclaimer says so explicitly. If you add a
+      glance rule, keep it mechanical and threshold-based for the same
+      reason — this is not the place to start editorializing.
+    - Also fixed two small pre-existing formatting bugs found while testing
+      this pass: the "Dividend yield" tile for non-payers literally rendered
+      the string `"None"` instead of "No dividend"; `fmt_usd()` on a
+      negative number rendered `$-392.00M` instead of `-$392.00M` (sign
+      landed after the currency symbol). Both caught by an automated
+      `>None<` / leaked-value grep across the generated HTML, not by eye —
+      re-run that grep after any formatting-helper change.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

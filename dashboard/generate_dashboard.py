@@ -48,8 +48,13 @@ CSS_STYLE = """
   --series-7: #4a3aa7; /* violet */
   --series-8: #e34948; /* red */
 
-  --diverge-pos: #2a78d6;
-  --diverge-neg: #e34948;
+  /* Diverging pairs here mean "good news vs. bad news" (beat/miss, bullish/
+     bearish), not neutral polarity/identity -- so they intentionally reuse
+     the status colors (green/red) rather than the dataviz skill's default
+     blue/red diverging pair, per explicit request for a green/red = good/bad
+     convention throughout this dashboard. */
+  --diverge-pos: #0ca30c;
+  --diverge-neg: #d03b3b;
   --diverge-mid: #f0efec;
 
   --status-good:     #0ca30c;
@@ -79,7 +84,7 @@ CSS_STYLE = """
     --series-7: #9085e9;
     --series-8: #e66767;
 
-    --diverge-pos: #3987e5;
+    --diverge-pos: #0ca30c;
     --diverge-neg: #e66767;
     --diverge-mid: #383835;
   }
@@ -105,7 +110,7 @@ CSS_STYLE = """
   --series-7: #9085e9;
   --series-8: #e66767;
 
-  --diverge-pos: #3987e5;
+  --diverge-pos: #0ca30c;
   --diverge-neg: #e66767;
   --diverge-mid: #383835;
 }
@@ -148,13 +153,52 @@ button.chip:hover { background: var(--gridline); }
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px;
 }
-.stat-tile .label { font-size: 12px; color: var(--text-secondary); }
+.stat-tile .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
 .stat-tile .value { font-size: 24px; font-weight: 600; margin-top: 4px; line-height: 1.15; }
+.stat-tile .value.good { color: var(--status-good); }
+.stat-tile .value.critical { color: var(--status-critical); }
 .stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 .delta { font-weight: 600; }
 .delta.good { color: var(--success-text); }
 .delta.critical { color: var(--status-critical); }
 .delta.neutral { color: var(--text-secondary); }
+
+/* Info icon + popover: a plain-language explainer on every metric */
+.info-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--gridline); color: var(--text-secondary);
+  font-size: 10px; font-weight: 700; font-style: normal;
+  border: none; cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
+  position: relative;
+}
+.info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
+.info-pop {
+  display: none; position: absolute; z-index: 100; left: 0; top: 22px;
+  width: 240px; background: var(--text-primary); color: var(--surface-1);
+  font-size: 12px; font-weight: 400; line-height: 1.5; padding: 10px 12px;
+  border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); text-align: left;
+  white-space: normal;
+}
+.info-ic.is-open .info-pop { display: block; }
+h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
+
+/* At-a-glance plain-language summary */
+.glance-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0 0; padding: 0; list-style: none; }
+.glance-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; border-radius: 10px; background: var(--page-plane);
+  border: 1px solid var(--border); font-size: 13.5px; line-height: 1.5;
+}
+.glance-icon {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.glance-icon.good { background: rgba(12,163,12,0.16); color: var(--status-good); }
+.glance-icon.critical { background: rgba(208,59,59,0.16); color: var(--status-critical); }
+.glance-icon.neutral { background: var(--gridline); color: var(--text-secondary); }
+.glance-item b { font-weight: 700; }
 
 .grid {
   display: grid; gap: 16px;
@@ -305,6 +349,26 @@ JS_SCRIPT = """
       try { localStorage.setItem('stockllm-theme', next); } catch (e) {}
     });
   }
+
+  // Info-icon popovers: click/Enter to toggle, click outside or Escape to close,
+  // only one open at a time so they never stack up on a long page.
+  function closeAllInfo(except) {
+    document.querySelectorAll('.info-ic.is-open').forEach(function (el) {
+      if (el !== except) el.classList.remove('is-open');
+    });
+  }
+  document.querySelectorAll('.info-ic').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var wasOpen = btn.classList.contains('is-open');
+      closeAllInfo(btn);
+      btn.classList.toggle('is-open', !wasOpen);
+    });
+  });
+  document.addEventListener('click', function () { closeAllInfo(null); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAllInfo(null);
+  });
 })();
 """
 
@@ -322,6 +386,67 @@ SERIES_ROLE = {
     4: "var(--series-4)", 5: "var(--series-5)", 6: "var(--series-6)",
     7: "var(--series-7)", 8: "var(--series-8)",
 }
+
+# ============================================================================
+# Plain-language explanations, one per metric/section, written for someone
+# with no finance background. Attached via info_icon() -- click the small
+# "i" next to any label to read it. Keep these jargon-free and short (2-3
+# sentences); anything genuinely ambiguous should say so honestly rather
+# than pretend there's a simple good/bad answer.
+# ============================================================================
+
+GLOSSARY = {
+    "current_price": "The price of one share right now, the last time the market updated.",
+    "1y_return": "How much the share price has gone up or down over the past year, if you'd bought it then. Green means it's worth more now, red means less.",
+    "pe_ratio": "Price-to-Earnings ratio: how many dollars investors are paying for every $1 of the company's yearly profit. Higher usually means investors expect faster growth ahead; it can also mean the stock is expensive relative to what it currently earns. Shows — if the company lost money, since the math doesn't work with a loss.",
+    "market_cap": "The total value of every share of the company added up — shares outstanding × share price. This is what it would cost to buy the whole company at today's price.",
+    "rsi": "Relative Strength Index: a 0-100 score for whether a stock has been bought or sold a lot recently, based only on price movement (not the company's actual business). Above 70 is traditionally called \"overbought,\" below 30 \"oversold.\" This is a short-term trading signal, not a verdict on whether the company is good — a strong stock can stay \"overbought\" for a long time.",
+    "vix": "The market's \"fear gauge\" — how much price swings investors expect across the whole stock market in the next 30 days, not just this company. Higher means more nervousness/volatility expected market-wide; lower means calmer conditions. This number is the same for every stock, since it's about the whole market, not this company.",
+    "treasury_10y": "The interest rate the U.S. government pays to borrow money for 10 years. It matters here because when this rate rises, investors often demand more from stocks too, which tends to hurt expensive/high-growth stocks the most. Same for every stock — it's not about this company.",
+    "macd_histogram": "A momentum signal: positive means the stock's short-term trend is strengthening upward, negative means it's weakening or turning down. It reacts to recent price moves, not to news about the business.",
+    "price_vs_ma": "Compares today's price to its own average price over the last 20, 50, and 200 trading days (\"moving averages\"), plus the highest/lowest price in the past year. If today's price is above its longer averages, the stock has been in an uptrend recently.",
+    "rsi_gauge": "Same RSI number as above, shown on its 0-100 scale so you can see how close it is to the traditional \"oversold\" (below 30) and \"overbought\" (above 70) lines.",
+    "analyst_target_range": "Wall Street analysts each publish a 12-month price target for the stock. This shows the lowest, average, and highest of those targets, plus where today's price sits inside that range. A wide range means analysts disagree a lot about where this is headed.",
+    "analyst_actions": "Recent individual decisions by analyst firms: upgrading or downgrading their rating, or raising/lowering their price target. This is more detailed than a single \"buy/hold/sell\" consensus — it shows who moved, and when.",
+    "eps_surprise": "Each quarter, Wall Street predicts what the company's profit-per-share will be before it's reported. This compares the actual number to that prediction. Green/above the line means the company beat expectations; red/below means it missed.",
+    "eps_trend": "How Wall Street's profit predictions for this quarter/year have changed over the last few months. If the \"current\" estimate is higher than it was 90 days ago, analysts have been getting more optimistic — and vice versa.",
+    "relative_performance": "The stock's own price return compared to two benchmarks: the S&P 500 (the broad U.S. stock market) and an ETF representing this company's industry sector. This answers \"did this stock actually do better than just owning the market, or did everything go up together?\"",
+    "pe_premium": "Compares this company's P/E ratio (see above) to the S&P 500's and to its own sector's. A positive number means investors are paying more per dollar of profit than they would for the average stock in that group — which isn't automatically good or bad, it can mean \"expensive\" or \"expected to grow faster,\" depending on why.",
+    "ownership_breakdown": "Who owns the company's shares: big institutions (mutual funds, pension funds, etc.), company insiders (executives/directors), or everyone else (individual retail investors). This is a snapshot today, not a trend.",
+    "top_holders": "The five largest institutional shareholders (mutual funds, index funds, etc.) and how many shares each owns.",
+    "insider_transactions": "Recent stock buys/sells by the company's own executives and directors, reported to regulators. An executive buying with their own money is often read as a vote of confidence; selling is common and often routine (e.g. diversifying, paying taxes on stock awards), so it's less automatically meaningful.",
+    "form144": "Formal notices that a company insider *plans* to sell shares soon (filed before the sale happens). It's an early heads-up, not a confirmation the sale actually went through.",
+    "beneficial_ownership": "Filings required when any single investor or firm owns more than 5% of the company. A \"13D\" filer says they may try to influence the company (e.g. an activist investor); a \"13G\" filer is just a passive, along-for-the-ride investor.",
+    "balance_sheet": "The company's financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.",
+    "quarterly_financials": "Revenue (total sales) and net income (actual profit after all costs) for each of the last several quarters, so you can see the trend rather than just one snapshot.",
+    "dividend_yield": "If the company pays a dividend, this is the yearly payout per share as a percentage of the share price — like a savings-account interest rate, but not guaranteed and can be cut. Shows \"None\" if this company doesn't currently pay one (common for younger/growth-focused companies that reinvest profits instead).",
+    "payout_ratio": "What percentage of the company's profit is paid out as dividends rather than kept/reinvested. A very high number can mean the dividend is at risk if profits dip.",
+    "buybacks": "Money the company spent buying back its own shares from the stock market. This shrinks the number of shares outstanding, which can boost per-share profit numbers even if total profit doesn't grow.",
+    "put_call_ratio": "In the options market, \"puts\" are bets a stock will fall and \"calls\" are bets it will rise. This ratio compares how much of each is being traded — a lot more puts than calls can indicate traders are hedging against or betting on a drop, though it's an imperfect read on sentiment.",
+    "iv_skew": "Meant to show whether option traders are paying more for downside protection than upside bets. Flagged unreliable for this data source — see the note below the chart before drawing any conclusion from it.",
+    "social_sentiment": "A quick read of recent public posts about this stock on StockTwits (a trading-focused social site), split into self-tagged \"bullish\" (expect it to rise) vs. \"bearish\" (expect it to fall). This is unmoderated public chatter, not analysis — useful as a mood gauge, not as fact.",
+    "vix_macro": "See the VIX explanation above — the market-wide fear gauge, shown again here alongside the interest-rate context.",
+    "section_price": "Where the price has been and simple technical signals derived purely from price/volume history (not the business itself).",
+    "section_analyst": "What professional Wall Street analysts think this stock is worth, and whether their profit estimates have been rising or falling.",
+    "section_relative": "How this stock's price and valuation compare to the broader market and its own industry — context that a single number can't give you.",
+    "section_financials": "The actual business results: how much money is coming in, how much is profit, and how healthy the balance sheet is.",
+    "section_ownership": "Who holds the stock and what company insiders have been doing with their own shares.",
+    "section_extras": "A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.",
+}
+
+
+def info_icon(key: str) -> str:
+    """A small clickable "i" that shows a plain-language explanation of the
+    metric next to it. Falls back to nothing (not a broken icon) if the key
+    isn't in the glossary, so a typo'd key fails quietly rather than showing
+    an empty popover."""
+    text = GLOSSARY.get(key)
+    if not text:
+        return ""
+    return (
+        f'<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">'
+        f'i<span class="info-pop" role="tooltip">{esc(text)}</span></button>'
+    )
 
 
 # ============================================================================
@@ -358,7 +483,8 @@ def fmt_compact(v, decimals=2):
 def fmt_usd(v, decimals=2):
     if v is None:
         return "—"
-    return f"${fmt_compact(v, decimals)}"
+    compact = fmt_compact(v, decimals)
+    return f"-${compact[1:]}" if compact.startswith("-") else f"${compact}"
 
 
 def fmt_price(v):
@@ -392,6 +518,21 @@ def delta_class(v, invert=False):
     if x < 0:
         return "critical"
     return "neutral"
+
+
+def rsi_class(v):
+    """Conventional RSI reading, colored for a quick glance: below 30
+    ("oversold") green, above 70 ("overbought") red, the 30-70 middle
+    neutral. Simplified on purpose for readers who just want a quick
+    green/red signal -- the info tooltip on this metric spells out that
+    it's a short-term momentum reading, not a verdict on the company."""
+    if v is None:
+        return None
+    if v < 30:
+        return "good"
+    if v > 70:
+        return "critical"
+    return None
 
 
 # ============================================================================
@@ -462,9 +603,11 @@ def _mark(path_d, color, tip, extra_class=""):
 # Components
 # ============================================================================
 
-def stat_tile(label, value, sub=None, delta_text=None, delta_cls="neutral"):
-    parts = [f'<div class="stat-tile"><div class="label">{esc(label)}</div>']
-    parts.append(f'<div class="value">{esc(value)}</div>')
+def stat_tile(label, value, sub=None, delta_text=None, delta_cls="neutral", info=None, value_cls=None):
+    icon = info_icon(info) if info else ""
+    parts = [f'<div class="stat-tile"><div class="label">{esc(label)}{icon}</div>']
+    value_class = f" {value_cls}" if value_cls else ""
+    parts.append(f'<div class="value{value_class}">{esc(value)}</div>')
     if delta_text:
         parts.append(f'<div class="sub"><span class="delta {delta_cls}">{esc(delta_text)}</span></div>')
     elif sub:
@@ -495,11 +638,12 @@ def data_table(headers, rows):
     )
 
 
-def viz_card(title, chart_svg, table_html, legend_html="", note=""):
+def viz_card(title, chart_svg, table_html, legend_html="", note="", info=None):
+    icon = info_icon(info) if info else ""
     return f"""
 <div class="viz-card">
   <div class="viz-card-head">
-    <span class="viz-title">{esc(title)}</span>
+    <span class="viz-title">{esc(title)}{icon}</span>
     <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
   </div>
   <div class="viz-chart">{chart_svg}{legend_html}</div>
@@ -814,6 +958,132 @@ def section_header(bundle):
 </div>"""
 
 
+def _glance_item(icon_cls, icon_char, html_text):
+    return f'<li class="glance-item"><span class="glance-icon {icon_cls}">{icon_char}</span><span>{html_text}</span></li>'
+
+
+def section_at_a_glance(bundle):
+    """
+    Plain-English translation of the numbers below, for a reader with no
+    finance background. Every sentence here is mechanically derived from a
+    field already in the bundle plus a fixed, documented threshold (e.g.
+    "P/E premium > 15% counts as 'trading at a premium'") -- nothing is
+    invented or inferred beyond simple arithmetic/thresholds on real data,
+    matching this project's "stay grounded in the data" principle applied to
+    prose instead of numbers.
+    """
+    ticker = esc(bundle.get("ticker", "This stock"))
+    price = bundle.get("price", {}) or {}
+    fundamentals = bundle.get("fundamentals", {}) or {}
+    rp = bundle.get("relative_performance", {}) or {}
+    analyst_ratings = bundle.get("analyst_ratings", {}) or {}
+    inc = bundle.get("income_statement", {}) or {}
+    annual = inc.get("annual") or {}
+    insider = bundle.get("insider_transactions", {}) or {}
+    soc = bundle.get("social_sentiment", {}) or {}
+    macro = bundle.get("macro_context", {}) or {}
+
+    items = []
+
+    # 1. Price performance vs. the market
+    pct_1y = price.get("pct_change_1y")
+    rel_1y = rp.get("relative_vs_benchmark_1y_pct")
+    if pct_1y is not None:
+        direction = "up" if pct_1y >= 0 else "down"
+        cls = "good" if pct_1y >= 0 else "critical"
+        sentence = f"<b>{ticker} is {direction} {fmt_pct(abs(pct_1y), signed=False)} over the past year.</b>"
+        if rel_1y is not None:
+            if rel_1y > 5:
+                sentence += f" That's beating the S&P 500 by {fmt_pct(abs(rel_1y), signed=False)} — it outperformed the broader market, not just \"stocks went up in general.\""
+            elif rel_1y < -5:
+                sentence += f" That's trailing the S&P 500 by {fmt_pct(abs(rel_1y), signed=False)} — the broader market did better over the same period."
+                cls = "critical"
+            else:
+                sentence += " That's roughly in line with the S&P 500 over the same period."
+                cls = "neutral"
+        items.append(_glance_item(cls, "↑" if cls == "good" else ("↓" if cls == "critical" else "•"), sentence))
+
+    # 2. Valuation
+    stock_pe = rp.get("stock_pe_ratio")
+    pe_prem_bench = rp.get("pe_premium_vs_benchmark_pct")
+    if stock_pe is not None and pe_prem_bench is not None:
+        if pe_prem_bench > 15:
+            sentence = f"<b>Trading at a premium valuation</b> — its P/E ratio ({fmt_num(stock_pe,1)}) is {fmt_pct(pe_prem_bench, signed=False)} higher than the S&P 500's, meaning investors are paying more per dollar of profit than for an average stock."
+            items.append(_glance_item("neutral", "$", sentence))
+        elif pe_prem_bench < -15:
+            sentence = f"<b>Trading at a discount valuation</b> — its P/E ratio ({fmt_num(stock_pe,1)}) is {fmt_pct(abs(pe_prem_bench), signed=False)} lower than the S&P 500's, meaning investors are paying less per dollar of profit than for an average stock."
+            items.append(_glance_item("neutral", "$", sentence))
+    elif stock_pe is None and annual.get("net_income") is not None and annual.get("net_income") < 0:
+        items.append(_glance_item("critical", "!", "<b>No P/E ratio to show</b> — the company lost money over the past year, so this common valuation measure doesn't apply."))
+
+    # 3. Analyst view
+    n_analysts = fundamentals.get("number_of_analyst_opinions")
+    mean_target = fundamentals.get("target_mean_price")
+    current_price = price.get("current_price")
+    if n_analysts and mean_target and current_price:
+        upside = (mean_target / current_price - 1) * 100
+        rec = fundamentals.get("analyst_recommendation") or "no consensus"
+        cls = "good" if upside > 5 else ("critical" if upside < -5 else "neutral")
+        sentence = (
+            f"<b>{n_analysts} Wall Street analysts</b> have an average 12-month price target of {fmt_price(mean_target)}, "
+            f"{fmt_pct(abs(upside), signed=False)} {'above' if upside >= 0 else 'below'} today's price "
+            f"— their overall rating is <b>\"{esc(rec)}\"</b>."
+        )
+        items.append(_glance_item(cls, "↑" if cls == "good" else ("↓" if cls == "critical" else "•"), sentence))
+
+    # 4. Momentum (RSI)
+    rsi = price.get("rsi_14")
+    if rsi is not None:
+        if rsi > 70:
+            items.append(_glance_item("critical", "!", f"<b>Short-term momentum looks stretched</b> — its RSI of {fmt_num(rsi,1)} is above 70, conventionally read as \"overbought\" (a lot of recent buying pressure)."))
+        elif rsi < 30:
+            items.append(_glance_item("good", "•", f"<b>Short-term momentum looks beaten-down</b> — its RSI of {fmt_num(rsi,1)} is below 30, conventionally read as \"oversold\" (a lot of recent selling pressure)."))
+
+    # 5. Financial health
+    net_income = annual.get("net_income")
+    if net_income is not None:
+        if net_income > 0:
+            items.append(_glance_item("good", "$", f"<b>Profitable</b> — net income of {fmt_usd(net_income)} over the last full year."))
+        else:
+            items.append(_glance_item("critical", "!", f"<b>Lost money</b> — net loss of {fmt_usd(abs(net_income))} over the last full year."))
+
+    # 6. Insider activity (net direction over what's shown)
+    txns = insider.get("transactions", []) or []
+    if txns:
+        buys = sum(1 for t in txns if t.get("direction") == "buy")
+        sells = sum(1 for t in txns if t.get("direction") == "sell")
+        if buys and not sells:
+            items.append(_glance_item("good", "•", f"<b>Company insiders have been buying</b> — {buys} recent purchase(s) with their own money and no sales in this list, often read as a vote of confidence."))
+        elif buys and sells:
+            items.append(_glance_item("neutral", "•", f"<b>Mixed insider activity</b> — {buys} recent buy(s) and {sells} sale(s) by company insiders; sales are common and often routine, not necessarily a bad sign."))
+
+    # 7. Social sentiment (only worth a mention with enough tagged posts to mean something)
+    bull, bear = soc.get("bullish_count", 0), soc.get("bearish_count", 0)
+    if bull + bear >= 5:
+        pct_bull = soc.get("bullish_pct_of_tagged")
+        if pct_bull is not None and pct_bull > 65:
+            items.append(_glance_item("good", "•", f"<b>Retail chatter leans bullish</b> — {fmt_pct(pct_bull, signed=False)} of tagged posts on StockTwits are bullish. This is unmoderated public opinion, not analysis."))
+        elif pct_bull is not None and pct_bull < 35:
+            items.append(_glance_item("critical", "•", f"<b>Retail chatter leans bearish</b> — only {fmt_pct(pct_bull, signed=False)} of tagged posts on StockTwits are bullish. This is unmoderated public opinion, not analysis."))
+
+    # 8. Market backdrop
+    vix = macro.get("vix_level")
+    if vix is not None:
+        if vix > 25:
+            items.append(_glance_item("critical", "!", f"<b>The broader market is jittery right now</b> — VIX is at {fmt_num(vix,1)}, an elevated level, meaning investors expect bigger price swings across stocks in general (not specific to {ticker})."))
+        elif vix < 15:
+            items.append(_glance_item("good", "•", f"<b>The broader market is calm right now</b> — VIX is at {fmt_num(vix,1)}, a low level, meaning investors expect fairly steady conditions across stocks in general (not specific to {ticker})."))
+
+    if not items:
+        items.append(_glance_item("neutral", "•", "Not enough data was available to generate a plain-language summary for this ticker."))
+
+    return f"""
+<div class="card full">
+  <h2>At a Glance <span style="font-weight:400;color:var(--text-secondary);font-size:12px;">— plain-language summary, auto-generated from the data below</span></h2>
+  <ul class="glance-list">{''.join(items)}</ul>
+</div>"""
+
+
 def section_kpis(bundle):
     price = bundle.get("price", {}) or {}
     fundamentals = bundle.get("fundamentals", {}) or {}
@@ -823,22 +1093,25 @@ def section_kpis(bundle):
     tiles = []
     tiles.append(stat_tile("Current price", fmt_price(price.get("current_price")),
                             delta_text=f"{fmt_pct(price.get('pct_change_20d'))} (20d)",
-                            delta_cls=delta_class(price.get("pct_change_20d"))))
+                            delta_cls=delta_class(price.get("pct_change_20d")),
+                            info="current_price"))
     tiles.append(stat_tile("1-year return", fmt_pct(price.get("pct_change_1y")),
                             delta_text=f"vs S&P500 {fmt_pct(rp.get('relative_vs_benchmark_1y_pct'))}",
-                            delta_cls=delta_class(rp.get("relative_vs_benchmark_1y_pct"))))
+                            delta_cls=delta_class(rp.get("relative_vs_benchmark_1y_pct")),
+                            value_cls=delta_class(price.get("pct_change_1y")), info="1y_return"))
     tiles.append(stat_tile("P/E ratio", fmt_num(fundamentals.get("pe_ratio"), 1),
-                            sub=f"Forward {fmt_num(fundamentals.get('forward_pe'), 1)}"))
+                            sub=f"Forward {fmt_num(fundamentals.get('forward_pe'), 1)}", info="pe_ratio"))
     tiles.append(stat_tile("Market cap", esc(fundamentals.get("market_cap") or "—"),
-                            sub=esc(fundamentals.get("sector") or "")))
+                            sub=esc(fundamentals.get("sector") or ""), info="market_cap"))
     tiles.append(stat_tile("RSI (14d)", fmt_num(price.get("rsi_14"), 1),
-                            sub="Overbought > 70, oversold < 30"))
+                            sub="Overbought > 70, oversold < 30",
+                            value_cls=rsi_class(price.get("rsi_14")), info="rsi"))
     tiles.append(stat_tile("VIX", fmt_num(macro.get("vix_level"), 1),
                             delta_text=f"{fmt_num(macro.get('vix_change_20d'),1, )} (20d)" if macro.get("vix_change_20d") is not None else None,
-                            delta_cls=delta_class(macro.get("vix_change_20d"), invert=True)))
+                            delta_cls=delta_class(macro.get("vix_change_20d"), invert=True), info="vix"))
     tiles.append(stat_tile("10Y Treasury yield", fmt_pct(macro.get("treasury_10y_yield_pct"), signed=False),
                             delta_text=f"{fmt_pct(macro.get('treasury_10y_yield_change_20d_pct'))} (20d)" if macro.get("treasury_10y_yield_change_20d_pct") is not None else None,
-                            delta_cls=delta_class(macro.get("treasury_10y_yield_change_20d_pct"), invert=True)))
+                            delta_cls=delta_class(macro.get("treasury_10y_yield_change_20d_pct"), invert=True), info="treasury_10y"))
     return f'<div class="kpi-row">{"".join(tiles)}</div>'
 
 
@@ -853,15 +1126,15 @@ def section_price_technicals(bundle):
         ("52w High", price.get("52w_high")),
     ]
     svg, table = bar_chart_horizontal(items, value_fmt=fmt_price)
-    price_card = viz_card("Price vs. moving averages", svg, table)
+    price_card = viz_card("Price vs. moving averages", svg, table, info="price_vs_ma")
 
     rsi_svg, rsi_table = gauge_meter(
         price.get("rsi_14"), 0, 100,
-        zones=[(30, "var(--gridline)", "below 30"), (70, "var(--baseline)", "30-70"), (100, "var(--gridline)", "above 70")],
+        zones=[(30, "var(--status-good)", "below 30 (oversold)"), (70, "var(--gridline)", "30-70 (neutral)"), (100, "var(--status-critical)", "above 70 (overbought)")],
         label="RSI (14d)",
     )
-    rsi_card = viz_card("RSI (14-day)", rsi_svg, rsi_table,
-                         note="Below 30 is conventionally read as oversold, above 70 as overbought.")
+    rsi_card = viz_card("RSI (14-day)", rsi_svg, rsi_table, info="rsi_gauge",
+                         note="Green zone (below 30) is conventionally read as oversold, red zone (above 70) as overbought -- a short-term momentum signal, not a verdict on the company. Click the \"i\" above for more.")
 
     macd = price.get("macd")
     macd_signal = price.get("macd_signal")
@@ -871,12 +1144,12 @@ def section_price_technicals(bundle):
 <div class="kpi-row" style="margin-top:6px;grid-template-columns:repeat(3,1fr);">
   {stat_tile("MACD", fmt_num(macd,3))}
   {stat_tile("Signal", fmt_num(macd_signal,3))}
-  {stat_tile("Histogram", fmt_num(macd_hist,3), delta_text=("Bullish momentum" if macd_status=="good" else "Bearish momentum" if macd_status=="critical" else "Flat"), delta_cls=macd_status)}
+  {stat_tile("Histogram", fmt_num(macd_hist,3), delta_text=("Bullish momentum" if macd_status=="good" else "Bearish momentum" if macd_status=="critical" else "Flat"), delta_cls=macd_status, value_cls=macd_status if macd_status != "neutral" else None, info="macd_histogram")}
 </div>"""
 
     return f"""
 <div class="card">
-  <h2>Price & Technicals</h2>
+  <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
   {price_card}
   {rsi_card}
@@ -902,7 +1175,7 @@ def section_analyst(bundle):
     )
     range_card = viz_card(
         f"Analyst target price range ({fundamentals.get('number_of_analyst_opinions') or 0} analysts)",
-        range_svg, range_table,
+        range_svg, range_table, info="analyst_target_range",
     )
 
     actions = analyst_ratings.get("actions", []) or []
@@ -922,9 +1195,9 @@ def section_analyst(bundle):
     surprise_items = [(s.get("quarter_end"), s.get("surprise_pct")) for s in surprises]
     if surprise_items:
         s_svg, s_table, s_legend = diverging_bar_horizontal(surprise_items, value_fmt=lambda v: fmt_pct(v))
-        surprise_card = viz_card("EPS surprise history (actual vs. estimate)", s_svg, s_table, s_legend)
+        surprise_card = viz_card("EPS surprise history (actual vs. estimate)", s_svg, s_table, s_legend, info="eps_surprise")
     else:
-        surprise_card = viz_card("EPS surprise history", "<svg></svg>", empty_state())
+        surprise_card = viz_card("EPS surprise history", "<svg></svg>", empty_state(), info="eps_surprise")
 
     trend = earnings_est.get("eps_estimate_trend", {}) or {}
     trend_rows = []
@@ -941,13 +1214,13 @@ def section_analyst(bundle):
 
     return f"""
 <div class="card full">
-  <h2>Analyst Ratings & Estimates</h2>
+  <h2>Analyst Ratings & Estimates {info_icon('section_analyst')}</h2>
   <div class="card-sub">Recommendation: {esc(fundamentals.get('analyst_recommendation') or '—')} · last {analyst_ratings.get('lookback_days', 60)} days of rating actions</div>
   <div class="grid" style="grid-template-columns:1fr 1fr;">
     <div>{range_card}{surprise_card}</div>
     <div>
-      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Recent rating actions</span></div>{actions_table}</div>
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">EPS estimate trend (Street consensus)</span></div>{trend_table}</div>
+      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Recent rating actions {info_icon('analyst_actions')}</span></div>{actions_table}</div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">EPS estimate trend (Street consensus) {info_icon('eps_trend')}</span></div>{trend_table}</div>
     </div>
   </div>
 </div>"""
@@ -955,6 +1228,7 @@ def section_analyst(bundle):
 
 def section_relative_performance(bundle):
     rp = bundle.get("relative_performance", {}) or {}
+    fundamentals = bundle.get("fundamentals", {}) or {}
     cats = ["20-day return", "1-year return"]
     series = [
         ("Stock", "var(--series-1)", [rp.get("stock_pct_change_20d"), rp.get("stock_pct_change_1y")]),
@@ -970,18 +1244,28 @@ def section_relative_performance(bundle):
             items.append((f"{name} — {cat}", vals[i]))
     svg, table = bar_chart_horizontal(items, value_fmt=lambda v: fmt_pct(v))
     leg = legend([(name, color) for name, color, _ in series])
-    perf_card = viz_card("Return vs. benchmark & sector", svg, table, leg)
+    perf_card = viz_card("Return vs. benchmark & sector", svg, table, leg, info="relative_performance")
 
+    if rp.get("stock_pe_ratio") is not None:
+        stock_pe_display = fmt_num(rp.get("stock_pe_ratio"), 1)
+        stock_pe_sub = None
+    else:
+        forward_pe = fundamentals.get("forward_pe")
+        stock_pe_display = "N/A"
+        stock_pe_sub = (
+            f"No trailing P/E (company had a loss) — forward P/E (based on next year's estimate): {fmt_num(forward_pe, 1)}"
+            if forward_pe is not None else "No trailing P/E — company had a loss over the past year"
+        )
     pe_tiles = f"""
 <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:12px;">
-  {stat_tile("Stock P/E", fmt_num(rp.get('stock_pe_ratio'),1))}
-  {stat_tile("P/E vs S&P 500", fmt_pct(rp.get('pe_premium_vs_benchmark_pct')), sub=f"S&P 500 P/E {fmt_num(rp.get('benchmark_pe_ratio'),1)}")}
-  {stat_tile("P/E vs sector", fmt_pct(rp.get('pe_premium_vs_sector_pct')), sub=f"Sector P/E {fmt_num(rp.get('sector_pe_ratio'),1)}")}
+  {stat_tile("Stock P/E", stock_pe_display, sub=stock_pe_sub, info="pe_ratio")}
+  {stat_tile("P/E vs S&P 500", fmt_pct(rp.get('pe_premium_vs_benchmark_pct')), sub=f"S&P 500 P/E {fmt_num(rp.get('benchmark_pe_ratio'),1)}", info="pe_premium")}
+  {stat_tile("P/E vs sector", fmt_pct(rp.get('pe_premium_vs_sector_pct')), sub=f"Sector P/E {fmt_num(rp.get('sector_pe_ratio'),1)}", info="pe_premium")}
 </div>"""
 
     return f"""
 <div class="card full">
-  <h2>Relative Performance & Valuation</h2>
+  <h2>Relative Performance & Valuation {info_icon('section_relative')}</h2>
   <div class="card-sub">Returns and P/E vs. {esc(rp.get('benchmark','SPY'))} and sector ETF {esc(rp.get('sector_etf') or '—')} — two different questions, shown separately.</div>
   {perf_card}
   {pe_tiles}
@@ -998,7 +1282,7 @@ def section_ownership(bundle):
         ("Insiders", pct_insider, "var(--series-2)"),
         ("Other / retail", pct_other, "var(--gridline)"),
     ])
-    stack_card = viz_card("Institutional vs. insider ownership", stack_svg, stack_table, stack_legend)
+    stack_card = viz_card("Institutional vs. insider ownership", stack_svg, stack_table, stack_legend, info="ownership_breakdown")
 
     holders = inst.get("top_institutional_holders", []) or []
     holders_rows = [[h.get("holder"), fmt_num(h.get("shares")), fmt_pct(h.get("pct_out"), signed=False, decimals=2), fmt_usd(h.get("value"))] for h in holders]
@@ -1028,17 +1312,17 @@ def section_ownership(bundle):
 
     return f"""
 <div class="card full">
-  <h2>Ownership</h2>
+  <h2>Ownership {info_icon('section_ownership')}</h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
   <div class="grid" style="grid-template-columns:1fr 1fr;">
     <div>
       {stack_card}
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Top institutional holders</span></div>{holders_table}</div>
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Schedule 13D/13G (&gt;5% stakes)</span></div>{ben_table if ben_rows else empty_state()}</div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Top institutional holders {info_icon('top_holders')}</span></div>{holders_table}</div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Schedule 13D/13G (&gt;5% stakes) {info_icon('beneficial_ownership')}</span></div>{ben_table if ben_rows else empty_state()}</div>
     </div>
     <div>
-      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4)</span></div>{insider_table if insider_rows else empty_state()}</div>
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales</span></div>{f144_table if f144_rows else empty_state()}</div>
+      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4) {info_icon('insider_transactions')}</span></div>{insider_table if insider_rows else empty_state()}</div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales {info_icon('form144')}</span></div>{f144_table if f144_rows else empty_state()}</div>
     </div>
   </div>
 </div>"""
@@ -1050,16 +1334,24 @@ def section_financials(bundle):
     annual = inc.get("annual") or {}
     quarterly = list(reversed(inc.get("quarterly") or []))  # oldest -> newest for chart
 
+    current_ratio = bs.get("current_ratio")
+    current_ratio_cls = "critical" if current_ratio is not None and current_ratio < 1 else ("good" if current_ratio is not None and current_ratio >= 1.5 else None)
+    net_income = annual.get("net_income")
+    fcf = bs.get("free_cash_flow")
+
     bs_tiles = f"""
 <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
-  {stat_tile("Total debt", fmt_usd(bs.get('total_debt')))}
-  {stat_tile("Total cash", fmt_usd(bs.get('total_cash')))}
-  {stat_tile("Debt / equity", fmt_num(bs.get('debt_to_equity'),1))}
-  {stat_tile("Current ratio", fmt_num(bs.get('current_ratio'),2))}
-  {stat_tile("Free cash flow", fmt_usd(bs.get('free_cash_flow')))}
-  {stat_tile("Operating cash flow", fmt_usd(bs.get('operating_cash_flow')))}
-  {stat_tile("Annual revenue", fmt_usd(annual.get('total_revenue')), sub=f"Period end {annual.get('period_end','—')}")}
-  {stat_tile("Annual net income", fmt_usd(annual.get('net_income')), sub=f"Net margin {fmt_pct(annual.get('net_margin_pct'), signed=False)}")}
+  {stat_tile("Total debt", fmt_usd(bs.get('total_debt')), info="balance_sheet")}
+  {stat_tile("Total cash", fmt_usd(bs.get('total_cash')), info="balance_sheet")}
+  {stat_tile("Debt / equity", fmt_num(bs.get('debt_to_equity'),1), info="balance_sheet",
+             sub="Lower generally means less financial risk")}
+  {stat_tile("Current ratio", fmt_num(current_ratio,2), value_cls=current_ratio_cls, info="balance_sheet",
+             sub="Below 1 can mean trouble paying short-term bills; above 1.5 is comfortable")}
+  {stat_tile("Free cash flow", fmt_usd(fcf), value_cls=delta_class(fcf), info="balance_sheet")}
+  {stat_tile("Operating cash flow", fmt_usd(bs.get('operating_cash_flow')), info="balance_sheet")}
+  {stat_tile("Annual revenue", fmt_usd(annual.get('total_revenue')), sub=f"Period end {annual.get('period_end','—')}", info="quarterly_financials")}
+  {stat_tile("Annual net income", fmt_usd(net_income), value_cls=delta_class(net_income),
+             sub=f"Net margin {fmt_pct(annual.get('net_margin_pct'), signed=False)}", info="quarterly_financials")}
 </div>"""
 
     cats = [q.get("period_end", "—") for q in quarterly]
@@ -1069,13 +1361,13 @@ def section_financials(bundle):
     ]
     if cats:
         q_svg, q_table, q_legend = grouped_column_chart(cats, series)
-        q_card = viz_card("Quarterly revenue & net income", q_svg, q_table, q_legend)
+        q_card = viz_card("Quarterly revenue & net income", q_svg, q_table, q_legend, info="quarterly_financials")
     else:
-        q_card = viz_card("Quarterly revenue & net income", "<svg></svg>", empty_state())
+        q_card = viz_card("Quarterly revenue & net income", "<svg></svg>", empty_state(), info="quarterly_financials")
 
     return f"""
 <div class="card full">
-  <h2>Financials</h2>
+  <h2>Financials {info_icon('section_financials')}</h2>
   {bs_tiles}
   {q_card}
 </div>"""
@@ -1089,31 +1381,31 @@ def section_dividends_options_macro_social(bundle):
 
     div_tiles = f"""
 <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
-  {stat_tile("Dividend yield", fmt_pct(div.get('dividend_yield_pct'), signed=False) if div.get('dividend_yield_pct') is not None else "None")}
-  {stat_tile("Payout ratio", fmt_pct(div.get('payout_ratio_pct'), signed=False))}
-  {stat_tile("5y avg yield", fmt_pct(div.get('five_year_avg_dividend_yield_pct'), signed=False) if div.get('five_year_avg_dividend_yield_pct') is not None else "—")}
+  {stat_tile("Dividend yield", fmt_pct(div.get('dividend_yield_pct'), signed=False) if div.get('dividend_yield_pct') is not None else "No dividend", info="dividend_yield")}
+  {stat_tile("Payout ratio", fmt_pct(div.get('payout_ratio_pct'), signed=False), info="payout_ratio")}
+  {stat_tile("5y avg yield", fmt_pct(div.get('five_year_avg_dividend_yield_pct'), signed=False) if div.get('five_year_avg_dividend_yield_pct') is not None else "—", info="dividend_yield")}
 </div>"""
     buybacks = div.get("buybacks_recent_quarters", []) or []
     bb_items = [(b.get("quarter_end"), b.get("buyback_usd")) for b in buybacks]
     if bb_items:
         bb_svg, bb_table = bar_chart_horizontal(bb_items, value_fmt=fmt_usd)
-        bb_card = viz_card("Quarterly buyback spend", bb_svg, bb_table)
+        bb_card = viz_card("Quarterly buyback spend", bb_svg, bb_table, info="buybacks")
     else:
-        bb_card = viz_card("Quarterly buyback spend", "<svg></svg>", empty_state("No buyback activity found."))
+        bb_card = viz_card("Quarterly buyback spend", "<svg></svg>", empty_state("No buyback activity found."), info="buybacks")
 
     opt_reliable = opt.get("put_call_volume_ratio") is not None
     opt_html = f"""
 <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
-  {stat_tile("Put/call volume ratio", fmt_num(opt.get('put_call_volume_ratio'),3) if opt_reliable else "—")}
-  {stat_tile("Put/call open interest ratio", fmt_num(opt.get('put_call_open_interest_ratio'),3) if opt_reliable else "—")}
+  {stat_tile("Put/call volume ratio", fmt_num(opt.get('put_call_volume_ratio'),3) if opt_reliable else "—", info="put_call_ratio")}
+  {stat_tile("Put/call open interest ratio", fmt_num(opt.get('put_call_open_interest_ratio'),3) if opt_reliable else "—", info="put_call_ratio")}
 </div>
-<div style="margin-top:10px;">{badge("IV/skew fields unreliable — see note", "warning")}</div>
+<div style="margin-top:10px;">{badge("IV/skew fields unreliable — see note", "warning")} {info_icon('iv_skew')}</div>
 <div class="viz-note" style="margin-top:8px;">{esc(opt.get('note') or '')}</div>"""
 
     macro_tiles = f"""
 <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
-  {stat_tile("VIX level", fmt_num(macro.get('vix_level'),1), delta_text=fmt_num(macro.get('vix_change_20d'),1)+" (20d)" if macro.get('vix_change_20d') is not None else None, delta_cls=delta_class(macro.get('vix_change_20d'), invert=True))}
-  {stat_tile("10Y Treasury yield", fmt_pct(macro.get('treasury_10y_yield_pct'), signed=False), delta_text=fmt_pct(macro.get('treasury_10y_yield_change_20d_pct'))+" (20d)" if macro.get('treasury_10y_yield_change_20d_pct') is not None else None, delta_cls=delta_class(macro.get('treasury_10y_yield_change_20d_pct'), invert=True))}
+  {stat_tile("VIX level", fmt_num(macro.get('vix_level'),1), delta_text=fmt_num(macro.get('vix_change_20d'),1)+" (20d)" if macro.get('vix_change_20d') is not None else None, delta_cls=delta_class(macro.get('vix_change_20d'), invert=True), info="vix_macro")}
+  {stat_tile("10Y Treasury yield", fmt_pct(macro.get('treasury_10y_yield_pct'), signed=False), delta_text=fmt_pct(macro.get('treasury_10y_yield_change_20d_pct'))+" (20d)" if macro.get('treasury_10y_yield_change_20d_pct') is not None else None, delta_cls=delta_class(macro.get('treasury_10y_yield_change_20d_pct'), invert=True), info="treasury_10y")}
 </div>
 <div class="viz-note">Not ticker-specific — same for every ticker checked the same day.</div>"""
 
@@ -1121,7 +1413,7 @@ def section_dividends_options_macro_social(bundle):
         soc.get("bearish_count", 0), soc.get("untagged_count", 0), soc.get("bullish_count", 0)
     )
     sent_card = viz_card(f"Social sentiment — StockTwits ({soc.get('message_count', 0)} recent posts)",
-                          sent_svg, sent_table, sent_legend,
+                          sent_svg, sent_table, sent_legend, info="social_sentiment",
                           note="Unmoderated public chatter — a crowd-mood gauge, not verified fact.")
     samples = soc.get("sample_messages_unverified", []) or []
     sample_html = "".join(
@@ -1132,7 +1424,7 @@ def section_dividends_options_macro_social(bundle):
 
     return f"""
 <div class="card full">
-  <h2>Dividends, Buybacks, Options & Sentiment</h2>
+  <h2>Dividends, Buybacks, Options & Sentiment {info_icon('section_extras')}</h2>
   <div class="grid" style="grid-template-columns:1fr 1fr;">
     <div>
       {div_tiles}
@@ -1243,6 +1535,7 @@ def build_dashboard(bundle: dict) -> str:
 <body>
 {section_header(bundle)}
 <div class="wrap">
+  {section_at_a_glance(bundle)}
   {section_kpis(bundle)}
   <div class="grid">
     {''.join(sections)}
@@ -1250,7 +1543,10 @@ def build_dashboard(bundle: dict) -> str:
 </div>
 <footer class="disclaimer">
   StockLLM is a research/decision-support tool. It is NOT financial advice and never places trades.
-  This dashboard renders exactly what is in the underlying JSON research bundle — nothing here is
+  This dashboard renders what is in the underlying JSON research bundle. The "At a Glance" panel is
+  the one exception that turns numbers into sentences — every sentence there comes from a fixed,
+  mechanical rule applied to a real field below (e.g. "P/E premium over 15% = trading at a premium"),
+  not from any judgment call or outside opinion. Everything else is unmodified data, not
   re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
 </footer>
 <script>{JS_SCRIPT}</script>
