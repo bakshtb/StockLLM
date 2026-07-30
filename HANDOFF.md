@@ -486,6 +486,32 @@ StockLLM/
     spend) — both are genuinely single-series, all-comparable-sign
     magnitude comparisons, which is exactly what it's for.
 
+27. **Fixed a second real bug, again spotted by the user from a screenshot**:
+    on the just-fixed relative-performance chart, MBLY's "Stock — 1-year
+    return: -42.6%" label rendered directly on top of that row's own
+    "Stock" name label. Root cause: both `diverging_bar_horizontal` and
+    `grouped_bar_horizontal` place a bar's value label just *outside* its
+    tip, at a fixed 6px offset — safe normally, but when a bar's magnitude
+    is close to the chart's max (here, -42.58 WAS the max across both
+    groups, so its bar filled nearly the entire available half-width), the
+    "just outside the tip" position lands almost exactly where the
+    row-label column sits, and the two overlap. Neither function had any
+    check for this because the layout math only reserves space on the
+    *far* side from the row-label column (`tail_w` in `bar_chart_horizontal`)
+    — the near side (where negative/center-based bars grow) had no
+    equivalent reservation. Fixed with `_diverging_value_label()`: bars
+    below `MIN_BAR_WIDTH_FOR_INSIDE_LABEL` (46px) keep the old outside
+    placement (harmless — short bars never reach near the row-label
+    column regardless); bars at or above that width place the label
+    *inside* the bar instead (white text, semibold, anchored so it sits
+    within the painted fill), which by construction can never collide with
+    the row-label column since the bar itself stops well short of it in
+    every case except this one, which is now handled correctly. Shared by
+    both diverging-style chart functions since they have the identical
+    center-baseline layout; if a third chart function grows this same
+    center/diverging pattern, reuse `_diverging_value_label()` rather than
+    re-copying the plain "outside" placement.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

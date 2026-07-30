@@ -695,6 +695,27 @@ def bar_chart_horizontal(items, unit="", value_fmt=None):
     return "".join(parts), table
 
 
+MIN_BAR_WIDTH_FOR_INSIDE_LABEL = 46
+
+
+def _diverging_value_label(center, w, is_positive, y, row_h, text, mark_color):
+    """Places a bar's value label just outside its tip -- UNLESS the bar is
+    long enough to approach the row-label column on its own side, in which
+    case the label goes inside the bar (light text on the fill) instead.
+    Fixes a real overlap: outside-only placement put a long negative bar's
+    label right on top of that row's own name label (observed live: MBLY's
+    -42.6% 1-year return)."""
+    long_enough = w >= MIN_BAR_WIDTH_FOR_INSIDE_LABEL
+    if is_positive:
+        x = (center + w - 6) if long_enough else (center + w + 6)
+        anchor = "end" if long_enough else "start"
+    else:
+        x = (center - w + 6) if long_enough else (center - w - 6)
+        anchor = "start" if long_enough else "end"
+    fill = "#fff" if long_enough else "var(--text-primary)"
+    return f'<text x="{x}" y="{y+row_h/2+4}" text-anchor="{anchor}" font-size="12" font-weight="{"600" if long_enough else "400"}" fill="{fill}">{esc(text)}</text>'
+
+
 def diverging_bar_horizontal(items, value_fmt=None):
     """items: list of (label, value) where value can be +/-. Baseline at center."""
     items = [it for it in items if it[1] is not None]
@@ -720,9 +741,7 @@ def diverging_bar_horizontal(items, value_fmt=None):
         tip = f"{label}: {value_fmt(v)}"
         parts.append(f'<text x="{label_w-8}" y="{y+row_h/2+4}" text-anchor="end" font-size="12" fill="var(--text-secondary)">{esc(label)}</text>')
         parts.append(_mark(d, color, tip))
-        label_x = center + w + 6 if v >= 0 else center - w - 6
-        anchor = "start" if v >= 0 else "end"
-        parts.append(f'<text x="{label_x}" y="{y+row_h/2+4}" text-anchor="{anchor}" font-size="12" fill="var(--text-primary)">{esc(value_fmt(v))}</text>')
+        parts.append(_diverging_value_label(center, w, v >= 0, y, row_h, value_fmt(v), color))
         y += row_h + gap
     parts.append("</svg>")
 
@@ -776,9 +795,7 @@ def grouped_bar_horizontal(groups, value_fmt=None):
             tip = f"{name} — {group_title}: {value_fmt(v)}"
             parts.append(f'<text x="{label_w-8}" y="{y+row_h/2+4}" text-anchor="end" font-size="12" fill="var(--text-secondary)">{esc(name)}</text>')
             parts.append(_mark(d, color, tip))
-            label_x = center + w + 6 if v >= 0 else center - w - 6
-            anchor = "start" if v >= 0 else "end"
-            parts.append(f'<text x="{label_x}" y="{y+row_h/2+4}" text-anchor="{anchor}" font-size="12" fill="var(--text-primary)">{esc(value_fmt(v))}</text>')
+            parts.append(_diverging_value_label(center, w, v >= 0, y, row_h, value_fmt(v), color))
             y += row_h + gap
         y += group_gap - gap
     parts.append("</svg>")
