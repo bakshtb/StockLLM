@@ -77,8 +77,14 @@ def fetch_income_statement(ticker: str) -> dict:
         result["annual"] = latest_annual
 
     if quarterly is not None and not quarterly.empty and len(quarterly.columns) >= 1:
-        # quarterly.columns are sorted most-recent-first
-        quarters = [_period_stats(quarterly, col) for col in quarterly.columns]
+        # quarterly.columns are sorted most-recent-first. yfinance sometimes
+        # includes one extra oldest column that's entirely empty (observed
+        # live: MBLY's 6th column had every field None) -- drop any quarter
+        # with no real data at all rather than pass through a useless entry.
+        quarters = [
+            q for q in (_period_stats(quarterly, col) for col in quarterly.columns)
+            if any(q[k] is not None for k in ("total_revenue", "gross_profit", "operating_income", "net_income", "diluted_eps"))
+        ]
 
         for i, q in enumerate(quarters):
             prior_q = quarters[i + 1] if i + 1 < len(quarters) else None

@@ -10,9 +10,21 @@ from data.edgar_utils import get_cik_for_ticker, get_submissions, fetch_document
 from data.edgar_text import strip_html, select_prose_window
 from config import MAX_FILING_CHARS
 
-# Specific enough to hit exactly the real section opening once, not the many
-# "Executive Compensation" breadcrumb/TOC mentions scattered through a proxy.
-CDA_HEADING = r"Compensation Discussion and Analysis\s*.{0,10}CD&A"
+# Two patterns for the same thing, because filers phrase the real heading
+# differently and neither alone is universal (found live: AAPL defines the
+# "(CD&A)" abbreviation right at the heading; MBLY never defines it at all,
+# and its real heading only self-identifies via "...this Compensation
+# Discussion and Analysis section describes/explains..."). Critically,
+# proxies -- unlike 10-K/10-Q Item headings -- routinely reference the CD&A
+# section BY NAME again afterward (a pay-vs-performance table, a say-on-pay
+# proposal), so "last occurrence wins" alone is not safe here the way it is
+# for edgar_text.select_prose_window's Item-number headings; both patterns
+# below specifically require self-referential language ("(CD&A)" or
+# "section describes/explains") that a mere backward citation ("as discussed
+# in the Compensation Discussion and Analysis section of...") doesn't use,
+# and the last MATCHING occurrence of that narrower pattern is the real
+# heading in both filers tested live.
+CDA_HEADING = r"Compensation Discussion and Analysis\s*.{0,10}CD&A|Compensation Discussion and Analysis[^.]{0,100}?(?:explains|describes)"
 
 
 def fetch_proxy_raw(ticker: str) -> dict:

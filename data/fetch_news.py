@@ -117,6 +117,23 @@ def fetch_news_summary(ticker: str, max_items: int = MAX_NEWS_ITEMS) -> list[dic
     return deduped[:max_items]
 
 
+
+# Generic client-side error banners some sites render server-side as a <p>
+# alongside (or instead of) the real article body -- e.g. a React error
+# boundary's fallback text. Strip these rather than let them masquerade as
+# real content, or count toward the "did we get full text" length check.
+_ERROR_BOILERPLATE_PREFIXES = [
+    "oops, something went wrong",
+]
+
+# Below this length, what we scraped is indistinguishable from a truncated
+# teaser (observed live: several MT Newswires pages return ~100-130 chars
+# that cut off mid-sentence, e.g. "...took note of the Federal Reserve's
+# decisi" -- previously accepted as "full text fetched" at a 100-char
+# threshold, which was too low to catch this).
+_MIN_REAL_ARTICLE_CHARS = 300
+
+
 def _fetch_article_text(url: str, max_chars: int = 4000) -> str | None:
     if not url:
         return None
@@ -128,7 +145,12 @@ def _fetch_article_text(url: str, max_chars: int = 4000) -> str | None:
             tag.decompose()
         paragraphs = soup.find_all("p")
         text = " ".join(p.get_text(strip=True) for p in paragraphs)
-        return text[:max_chars] if len(text) > 100 else None
+
+        for prefix in _ERROR_BOILERPLATE_PREFIXES:
+            if text.lower().startswith(prefix):
+                text = text[len(prefix):].strip()
+
+        return text[:max_chars] if len(text) > _MIN_REAL_ARTICLE_CHARS else None
     except Exception:
         return None
 

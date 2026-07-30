@@ -361,6 +361,64 @@ StockLLM/
       the generated markup. Actually open the HTML in a real browser before
       trusting the visual layout completely.
 
+24. **Full line-by-line audit of AAPL.json and mobileye.json** (every field,
+    cross-checked arithmetic, read every raw text block start to end) found
+    and fixed three real, pre-existing bugs — none introduced this session,
+    all just never noticed until someone actually read the full output:
+    - **`fetch_news.py`**: some sites (GuruFocus, Simply Wall St., MT
+      Newswires, Yahoo Finance Video) render a generic client-side error
+      banner ("Oops, something went wrong") into the page's initial HTML
+      alongside whatever real content did load. The old 100-char threshold
+      accepted this blindly — three MT Newswires articles were marked
+      `full_text_fetched: true` at ~100-130 chars, cut off mid-word
+      ("...took note of the Federal Reserve's decisi"), literally no more
+      complete than the snippet already had. Fixed: strip the known
+      boilerplate prefix, and raise the minimum length to 300 chars (all
+      genuinely-fetched articles observed live were 700+ chars; all broken
+      ones were under 200). Verified live against AAPL: articles that had
+      real substantial content past the error banner (Qualcomm/GuruFocus,
+      Simply Wall St., Yahoo Finance Video) now keep it with the banner
+      stripped; the three genuinely-truncated MT Newswires ones now
+      correctly report `full_text_fetched: false` and fall back to the
+      original headline snippet.
+    - **`fetch_income_statement.py`**: yfinance's `quarterly_income_stmt`
+      sometimes returns one extra oldest column that's entirely empty
+      (observed live: MBLY's 6th quarter column had every field `None`) —
+      this was passed through as a visible-but-useless quarter entry
+      instead of being dropped. Fixed by filtering out any quarter where
+      every numeric field is `None` before returning the list.
+    - **`fetch_proxy.py`**: the CD&A section-heading regex
+      (`CDA_HEADING`) was overfit to AAPL's specific phrasing — it required
+      the literal abbreviation `"(CD&A)"` to appear within 10 characters of
+      the heading. MBLY's proxy never defines that abbreviation at all, so
+      the heading was never found, `select_prose_window` silently fell back
+      to a flat cap from the cover page, and the proxy text never reached
+      the actual Compensation Discussion and Analysis section — despite it
+      genuinely existing ~54% through the document (found by fetching and
+      grepping the raw MBLY proxy directly). Worse: unlike 10-K/10-Q Item
+      headings, proxies routinely cite the CD&A section BY NAME again later
+      (pay-vs-performance tables, say-on-pay proposals) — verified this
+      live in BOTH AAPL's and MBLY's proxies — so `select_prose_window`'s
+      "last occurrence wins" heuristic (correct and validated for 10-K/10-Q,
+      see #9) is NOT safe to rely on alone for the DEF 14A CD&A heading.
+      Fixed with a regex requiring self-referential language immediately
+      after the heading (`"(CD&A)"` OR `"...explains/describes"` within 100
+      chars, no period in between) — a mere backward citation
+      ("as discussed in the Compensation Discussion and Analysis section
+      of...") doesn't use that phrasing, so it's excluded, and the LAST
+      occurrence of this narrower pattern (existing `select_prose_window`
+      behavior, unchanged) lands on the real heading in both filers tested.
+      If a third filer's proxy still falls back to the cover page (check:
+      `"skipped ahead" not in proxy_raw.text`), the CD&A section in that
+      filing likely uses yet another phrasing — extend the alternation
+      rather than replace it, so previously-working filers don't regress.
+    - Also confirmed (not bugs, just worth remembering): the Manulife
+      Financial Corporation 13G entries in MBLY's `beneficial_ownership`
+      showing `shares_owned: 0.0` three times are genuine — the XML field
+      was present and explicitly zero, not a missing-field default; Intel's
+      79.8%/13G stake and the goodwill-impairment quarter (net_margin_pct
+      -684%) both still match the values documented in #12/#10 above.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
