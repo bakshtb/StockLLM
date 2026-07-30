@@ -1,10 +1,12 @@
-# StockLLM (v1 — CLI only)
+# StockLLM
 
 <!-- push test: verifying cross-machine git push works -->
 
 A multi-agent LLM research tool: give it a stock ticker, it deterministically
 gathers price/news/fundamentals data, then runs a Bull / Bear / Skeptic / Judge
 agent pipeline and prints a structured recommendation to the terminal.
+Available as both a CLI and a private Home Assistant add-on with a web UI
+(see "Home Assistant add-on" below) — the CLI keeps working unchanged either way.
 
 **This is a research/decision-support tool. It is NOT financial advice, and it
 never places trades. Nothing here is a substitute for your own judgment or a
@@ -39,8 +41,12 @@ licensed financial advisor.**
 python main.py check AAPL                # full run: data + digests + 4-agent pipeline
 python main.py check AAPL --dry-run       # raw data fetch only, no LLM calls, free
 python main.py dashboard AAPL             # fetch fresh (dry-run) + write an HTML dashboard
-python main.py dashboard mobileye.json    # or build one from an existing bundle JSON file
+python main.py dashboard output/mobileye.json  # or build one from an existing bundle JSON file
 ```
+
+Generated JSON bundles and HTML dashboards land in `output/` by default
+(`--output`/`-o` overrides; a bare filename still resolves inside `output/`,
+an explicit path elsewhere is respected as given).
 
 **Full run** fetches:
 - Price history + technical indicators (RSI, MACD, moving averages) — free
@@ -101,6 +107,27 @@ pure rendering layer over the bundle JSON, no network calls of its own; the one
 exception is the At a Glance panel, which is templated from fixed thresholds on
 real fields, never an LLM call or inferred claim.
 
+When a full (non-dry-run) check has been run, the dashboard also shows an
+**AI Recommendation** panel — the 4-agent pipeline's actual verdict
+(recommendation, confidence, reasoning, key risks, bull/bear theses, the
+skeptic's flagged concerns), clearly marked as the one section that's an AI
+opinion rather than raw data. `build_dashboard(bundle, pipeline_result)`
+takes an optional second argument for this; omit it (as `--dry-run` does)
+and that panel just doesn't render.
+
+## Home Assistant add-on
+
+StockLLM can also run as a private Home Assistant add-on: install it from
+your own (private) GitHub repo, configure your API key once in the add-on's
+Configuration tab, and get a web page in the HA sidebar to pick a ticker,
+toggle dry-run, and view the dashboard — no terminal needed. See `DOCS.md`
+for the full install walkthrough (including the private-repo access-token
+setup) and `HANDOFF.md` for the packaging decisions behind it. The add-on
+is just a second entrypoint (`webapp/app.py`, a small Flask app) into the
+exact same `data/`, `agents/`, and `dashboard/` code the CLI uses — nothing
+is duplicated, and the CLI keeps working exactly as before regardless of
+whether the add-on is installed.
+
 ## Cost control
 
 `config.py` / `.env` has `MONTHLY_SPEND_LIMIT_USD` (default $50). The CLI checks
@@ -129,7 +156,16 @@ is printed after each run and stored in the database.
 - `agents/` — the 4 reasoning agents (bull, bear, skeptic, judge), their prompts,
   and the shared Anthropic API client (handles prompt caching + JSON parsing + retries).
 - `storage/` — SQLite schema and helper functions.
+- `dashboard/` — the HTML dashboard generator (used by both the CLI and the add-on).
+- `webapp/` — the Flask web UI the Home Assistant add-on runs; a second
+  entrypoint into the same `data`/`agents`/`dashboard` code, not a separate
+  implementation.
+- `output/` — generated JSON bundles and HTML dashboards land here by
+  default (both CLI and add-on; the add-on redirects this to its own
+  persistent `/data` volume instead, see `run.sh`).
 - `main.py` — the CLI entrypoint.
+- `repository.yaml`, `config.yaml`, `Dockerfile`, `run.sh` — Home Assistant
+  add-on packaging (see "Home Assistant add-on" above and `DOCS.md`).
 - `backtest/` — placeholder for later; not built in v1.
 
 ## What's deliberately NOT built yet

@@ -1,26 +1,26 @@
 {
   "ticker": "AAPL",
-  "fetched_at": "2026-07-30T13:09:14.452914Z",
+  "fetched_at": "2026-07-30T19:58:00.164882Z",
   "price": {
-    "current_price": 338.19,
-    "ma20": 322.4,
-    "ma50": 308.59,
-    "ma200": 276.91,
+    "current_price": 333.97,
+    "ma20": 324.38,
+    "ma50": 309.31,
+    "ma200": 277.35,
     "52w_high": 340.08,
     "52w_low": 201.58,
-    "volatility_20d": 0.0177,
+    "volatility_20d": 0.0181,
     "volume_trend": "decreasing",
-    "pct_change_20d": 14.88,
-    "pct_change_1y": 62.42,
-    "rsi_14": 68.65,
-    "macd": 9.612,
-    "macd_signal": 8.442,
-    "macd_histogram": 1.17
+    "pct_change_20d": 8.21,
+    "pct_change_1y": 60.39,
+    "rsi_14": 64.98,
+    "macd": 9.287,
+    "macd_signal": 8.611,
+    "macd_histogram": 0.676
   },
   "fundamentals": {
-    "pe_ratio": 40.99273,
-    "forward_pe": 35.02048,
-    "market_cap": "4.97T",
+    "pe_ratio": 40.482426,
+    "forward_pe": 34.584526,
+    "market_cap": "4.91T",
     "sector": "Technology",
     "industry": "Consumer Electronics",
     "next_earnings_date": "2026-07-30",
@@ -297,21 +297,21 @@
   "relative_performance": {
     "benchmark": "SPY",
     "sector_etf": "XLK",
-    "stock_pct_change_20d": 14.88,
-    "stock_pct_change_1y": 62.42,
-    "benchmark_pct_change_20d": -2.19,
-    "benchmark_pct_change_1y": 16.25,
-    "relative_vs_benchmark_20d_pct": 17.07,
-    "relative_vs_benchmark_1y_pct": 46.17,
-    "sector_pct_change_20d": -10.26,
-    "sector_pct_change_1y": 26.53,
-    "relative_vs_sector_20d_pct": 25.14,
-    "relative_vs_sector_1y_pct": 35.89,
-    "stock_pe_ratio": 40.99273,
-    "benchmark_pe_ratio": 26.238798,
-    "sector_pe_ratio": 31.156506,
-    "pe_premium_vs_benchmark_pct": 56.23,
-    "pe_premium_vs_sector_pct": 31.57,
+    "stock_pct_change_20d": 8.21,
+    "stock_pct_change_1y": 60.39,
+    "benchmark_pct_change_20d": -0.43,
+    "benchmark_pct_change_1y": 18.17,
+    "relative_vs_benchmark_20d_pct": 8.64,
+    "relative_vs_benchmark_1y_pct": 42.22,
+    "sector_pct_change_20d": -2.73,
+    "sector_pct_change_1y": 33.43,
+    "relative_vs_sector_20d_pct": 10.94,
+    "relative_vs_sector_1y_pct": 26.96,
+    "stock_pe_ratio": 40.482426,
+    "benchmark_pe_ratio": 26.674755,
+    "sector_pe_ratio": 32.856766,
+    "pe_premium_vs_benchmark_pct": 51.76,
+    "pe_premium_vs_sector_pct": 23.21,
     "note": null
   },
   "dividends_buybacks": {
@@ -359,53 +359,53 @@
   "options_sentiment": {
     "expiration_used": "2026-08-28",
     "days_to_expiry": 29,
-    "put_call_volume_ratio": 1.924,
+    "put_call_volume_ratio": 1.107,
     "put_call_open_interest_ratio": 0.616,
-    "atm_call_iv": 0.0039,
-    "atm_put_iv": 0.0,
-    "otm_put_iv": 0.0625,
-    "otm_call_iv": 0.0625,
-    "iv_skew_put_minus_call": 0.0,
+    "atm_call_iv": 0.2981,
+    "atm_put_iv": 0.2885,
+    "otm_put_iv": 0.333,
+    "otm_call_iv": 0.2824,
+    "iv_skew_put_minus_call": 0.0506,
     "note": "Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge."
   },
   "macro_context": {
-    "vix_level": 19.1,
-    "vix_change_20d": 2.95,
-    "treasury_10y_yield_pct": 4.68,
-    "treasury_10y_yield_change_20d_pct": 0.2,
+    "vix_level": 17.44,
+    "vix_change_20d": 1.29,
+    "treasury_10y_yield_pct": 4.66,
+    "treasury_10y_yield_change_20d_pct": 0.18,
     "note": null
   },
   "social_sentiment": {
     "message_count": 30,
-    "bullish_count": 3,
-    "bearish_count": 7,
-    "untagged_count": 20,
-    "bullish_pct_of_tagged": 30.0,
+    "bullish_count": 4,
+    "bearish_count": 5,
+    "untagged_count": 21,
+    "bullish_pct_of_tagged": 44.4,
     "sample_messages_unverified": [
       {
-        "created_at": "2026-07-30T13:06:56Z",
-        "body": "We Post Every day, it&#39;s free, we do not sell anything, we do it to better our skillset. Keep us accountable. \n \n$AAPL Sellers in control here on the 5 min, watch any failures of 331.78 throughout intraday trading, conversely, would like to see this push over 337 for any bull entries. \n \n$MSFT Needs to hold over 428.02 for any bull positions, watch for a potential downturn if we lose this 425.61. \n \n$NVDA Best setup today, we need to remain over 193.75. Easy bull scalp if we do, in my opinion. \n \n$SPCX Nice move in pre-market, this is now a heavy resistance zone, watch 116.73",
-        "sentiment": null
-      },
-      {
-        "created_at": "2026-07-30T13:06:53Z",
-        "body": "$AAPL Smells like META...hahahaha! Pump pump pre earning then dump dump near and after earnings. Kept my PUTs even at 344",
-        "sentiment": null
-      },
-      {
-        "created_at": "2026-07-30T13:06:06Z",
-        "body": "$AAPL strong guidance would send this to $355\ud83c\udf89\ud83c\udf89\ud83c\udf89",
+        "created_at": "2026-07-30T19:56:42Z",
+        "body": "$MU One little short right before $AAPL earnings can\u2019t hurt, right?",
         "sentiment": "Bullish"
       },
       {
-        "created_at": "2026-07-30T13:05:38Z",
-        "body": "I told you over and over and over and over \n \nBUT YOU HAD TO LISTEN \n \nshort squeeze of the AGES and we really explode again tonight on $AAPL and $AMZN earnings  \n \nthis is just the start  \n \n$SPY $QQQ",
-        "sentiment": "Bullish"
+        "created_at": "2026-07-30T19:54:02Z",
+        "body": "$AAPL  Could $NKE  now replace Apple for Board Member Tim Cook&#39;s pursuits with all his China experience now being applied there?  Hmmmm $AMZN",
+        "sentiment": null
       },
       {
-        "created_at": "2026-07-30T12:59:46Z",
-        "body": "$AAPL exit run already smh",
-        "sentiment": "Bearish"
+        "created_at": "2026-07-30T19:53:59Z",
+        "body": "$AAPL still holding the intermediate uptrend. Price remains above the Ichimoku cloud, and the cloud is still leaning bullish with support trending higher. Tenkan has rolled over after the latest rejection, while Kijun is still acting as the slower trend guide.",
+        "sentiment": null
+      },
+      {
+        "created_at": "2026-07-30T19:53:41Z",
+        "body": "$AAPL can this pop 10%?",
+        "sentiment": null
+      },
+      {
+        "created_at": "2026-07-30T19:52:59Z",
+        "body": "$AAPL Typically when I see red into ER it pops big if its green into ER it drops then pops if good. We shall see",
+        "sentiment": "Bullish"
       }
     ],
     "note": null
@@ -643,31 +643,31 @@
         "holder": "Blackrock Inc.",
         "shares": 1144695425,
         "pct_out": 0.0779,
-        "value": 387124548575
+        "value": 382116506091
       },
       {
         "holder": "Vanguard Capital Management LLC",
         "shares": 953847648,
         "pct_out": 0.064899996,
-        "value": 322581738405
+        "value": 318408654945
       },
       {
         "holder": "State Street Corporation",
         "shares": 602341409,
         "pct_out": 0.040999997,
-        "value": 203705842580
+        "value": 201070598915
       },
       {
         "holder": "Geode Capital Management, LLC",
         "shares": 368616954,
         "pct_out": 0.0251,
-        "value": 124662568573
+        "value": 123049869399
       },
       {
         "holder": "Vanguard Portfolio Management LLC",
         "shares": 331437055,
         "pct_out": 0.0226,
-        "value": 112088698439
+        "value": 110638661323
       }
     ],
     "pct_held_by_institutions": 0.65725,
@@ -676,60 +676,67 @@
   },
   "news_headlines": [
     {
-      "headline": "Stock Market Today: Dow Rises After Inflation Data; Meta Plunges On Earnings (Live Coverage)",
+      "headline": "Apple stock is at a record \u2014 how to cushion gains ahead of earnings: AlphaSpace Options Playbook",
+      "source": "Yahoo Finance",
+      "date": "2026-07-30",
+      "snippet": "Apple stockholders can use options to help manage their position through earnings.",
+      "url": "https://finance.yahoo.com/markets/article/apple-stock-is-at-a-record--how-to-cushion-gains-ahead-of-earnings-alphaspace-options-playbook-150631136.html"
+    },
+    {
+      "headline": "Apple Stock Falls Nearly 2% Before Earnings as Upgrade Program Launches",
+      "source": "GuruFocus.com",
+      "date": "2026-07-30",
+      "snippet": "Investors are weighing expected double-digit revenue growth against margins, component costs and Apple's new device-leasing strategy.",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-stock-falls-nearly-2-195302646.html"
+    },
+    {
+      "headline": "Update: US Equity Indexes Surge as Microsoft's Quarterly Results Spark Rebound in Chipmakers Ahead of Amazon's Earnings",
+      "source": "MT Newswires",
+      "date": "2026-07-30",
+      "snippet": "(Updates with index/price moves, macroeconomic data, and company/geopolitical news from the first pa",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-surge-microsoft-193220991.html"
+    },
+    {
+      "headline": "Qualcomm Stock Falls on Weak Q4 Outlook Despite Revenue Beat",
+      "source": "GuruFocus.com",
+      "date": "2026-07-30",
+      "snippet": "Qualcomm Stock Hit by Weak Guidance, Apple Modem Business Slows",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/qualcomm-stock-falls-weak-q4-192830200.html"
+    },
+    {
+      "headline": "Intel's Rare AI Advantage Faces a New Threat",
+      "source": "GuruFocus.com",
+      "date": "2026-07-30",
+      "snippet": "One manufacturing bottleneck is becoming a crucial battleground",
+      "url": "https://finance.yahoo.com/technology/ai/articles/intels-rare-ai-advantage-faces-192242776.html"
+    },
+    {
+      "headline": "Stock Market Today: Nasdaq Rebounds As Chips Leap; Gaming Stock Triggers Sell Rule (Live Coverage)",
       "source": "Investor's Business Daily",
       "date": "2026-07-30",
-      "snippet": "Stock Market Today: The Dow Jones index rises Thursday after key inflation data. Meta stock plunges on earnings.",
+      "snippet": "Stock Market Today: The Dow Jones index rallies with the Nasdaq composite following a Fed Day tumble. Meta stock plunges on earnings.",
       "url": "https://www.investors.com/market-trend/stock-market-today/dow-jones-sp500-nasdaq-inflation-data-meta-stock-meta-q2-earnings/?src=A00220&yptr=yahoo"
     },
     {
-      "headline": "4 Dow Jones Industrial Giants Make Up 50% of Warren Buffett\u2019s Berkshire Hathaway Portfolio",
+      "headline": "A Farewell to Tim Cook",
+      "source": "Barrons.com",
+      "date": "2026-07-30",
+      "snippet": "Don't be surprised to hear a goodbye message from Cook on Apple's earnings call Thursday.  Investors may also hear from Cook's successor, Ternus, currently Apple\u2019s senior vice president of hardware en",
+      "url": "https://www.barrons.com/livecoverage/apple-earnings-stock-price-ai-iphones-tim-cook/card/a-farewell-to-apple-ceo-tim-cook-3CfHo2uBjtLI7blHNREZ?siteid=yhoof2&yptr=yahoo"
+    },
+    {
+      "headline": "Forget SCHD: This Fidelity Fund Has Beaten It by 5 Points a Year for Five Years",
       "source": "24/7 Wall St.",
       "date": "2026-07-30",
-      "snippet": "Warren Buffett built one of history's greatest investing empires, and even as a new CEO takes the helm at Berkshire Hathaway, a surprisingly small handful of Dow Jones giants still anchor the entire p",
-      "url": "https://247wallst.com/investing/2026/07/30/4-dow-jones-industrial-giants-make-up-50-of-warren-buffetts-berkshire-hathaway-portfolio/"
+      "snippet": "SCHD built its reputation on strict dividend screening, but that same rulebook quietly locked out the stocks that dominated the last five years. One Fidelity fund found a way around that constraint, a",
+      "url": "https://247wallst.com/investing/2026/07/30/forget-schd-this-fidelity-fund-has-beaten-it-by-5-points-a-year-for-five-years/"
     },
     {
-      "headline": "This Memory Chip Stock Just Surged 531%. It\u2019s Not SK Hynix or Micron",
-      "source": "24/7 Wall St.",
+      "headline": "Meet the Super Semiconductor Stock Crushing Nvidia With a 12-Month Return of 129%",
+      "source": "Motley Fool",
       "date": "2026-07-30",
-      "snippet": "A little-known Chinese memory chip maker just pulled off one of the most explosive stock debuts in recent memory, and its reported ties to Apple are already rattling the semiconductor industry's most ",
-      "url": "https://247wallst.com/investing/2026/07/30/this-memory-chip-stock-just-surged-531-its-not-sk-hynix-or-micron/"
-    },
-    {
-      "headline": "Qualcomm Has Huge News for Apple",
-      "source": "GuruFocus.com",
-      "date": "2026-07-30",
-      "snippet": "Apple's In-House Modem Push Deals Fresh Blow to Qualcomm",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/qualcomm-huge-news-apple-123650717.html"
-    },
-    {
-      "headline": "Jim Cramer Sounds Cautious On This Market. Here\u2019s What I\u2019d Buy in Response",
-      "source": "24/7 Wall St.",
-      "date": "2026-07-30",
-      "snippet": "Jim Cramer is struggling to find reasons to buy, and the Nasdaq 100 sliding into correction territory is not helping. Before you dismiss his caution, consider which corners of the market could actuall",
-      "url": "https://247wallst.com/investing/2026/07/30/jim-cramer-sounds-cautious-on-this-market-heres-what-id-buy-in-response/"
-    },
-    {
-      "headline": "US Equity Futures Rise Pre-Bell Amid Latest Big Tech Earnings, Fed Rate Decision",
-      "source": "MT Newswires",
-      "date": "2026-07-30",
-      "snippet": "US equity futures were higher pre-bell Thursday as traders took note of the Federal Reserve's decisi",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/us-equity-futures-rise-pre-121051854.html"
-    },
-    {
-      "headline": "Apple (AAPL) Faces UK App Store Pushback And Crypto Scam Lawsuit",
-      "source": "Simply Wall St.",
-      "date": "2026-07-30",
-      "snippet": "UK regulators are challenging Apple over how it plans to implement changes to App Store payment rules. Apple is also facing a lawsuit that claims the company was negligent after a crypto scam app on i",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-aapl-faces-uk-app-120909837.html"
-    },
-    {
-      "headline": "Big Tech earnings meet IPO buzz: What to watch Thursday",
-      "source": "Yahoo Finance Video",
-      "date": "2026-07-29",
-      "snippet": "Asking for a Trend Host Josh Lipton previews the biggest market catalysts for Thursday, July 30, including highly anticipated earnings from Apple (AAPL) and Amazon (AMZN) as well as the expected IPO d",
-      "url": "https://finance.yahoo.com/video/big-tech-earnings-meet-ipo-220000114.html"
+      "snippet": "This 175-year-old company is playing a central role in the artificial intelligence boom.",
+      "url": "https://www.fool.com/investing/2026/07/30/meet-semiconductor-stock-crushing-nvidia-return-12/"
     },
     {
       "headline": "Apple options trades: What's a covered call and how does it work?",
@@ -737,84 +744,77 @@
       "date": "2026-07-29",
       "snippet": "Yahoo Finance Markets and Data Editor Jared Blikre tracks options trading activity around Apple (AAPL) shares, specifically explaining how a covered call works. Apple will be reporting its fiscal thir",
       "url": "https://finance.yahoo.com/video/apple-options-trades-whats-covered-201000242.html"
-    },
-    {
-      "headline": "Can Qualcomm secure a 'tiny slice' of the data center pie?",
-      "source": "Yahoo Finance Video",
-      "date": "2026-07-29",
-      "snippet": "Bernstein managing director & senior analyst Stacy Rasgon and Lopez Research founder Maribel Lopez comment on Qualcomm's (QCOM) position in the AI data center landscape.",
-      "url": "https://finance.yahoo.com/video/can-qualcomm-secure-a-tiny-slice-of-the-data-center-pie-163320789.html"
     }
   ],
   "news_articles_raw": [
     {
-      "headline": "Stock Market Today: Dow Rises After Inflation Data; Meta Plunges On Earnings (Live Coverage)",
-      "source": "Investor's Business Daily",
+      "headline": "Apple stock is at a record \u2014 how to cushion gains ahead of earnings: AlphaSpace Options Playbook",
+      "source": "Yahoo Finance",
       "date": "2026-07-30",
-      "text": "BREAKING:Futures Rise On Microsoft Despite Meta Sell-Off  Futures for the Dow Jones Industrial Average and the other major stock indexes rebounded Thursday after key inflation data. Meanwhile, Meta Platforms (META) and Microsoft (MSFT) were big earnings movers on the stock market today, with Amazon (AMZN) and Apple (AAPL) due to report after the close. Ahead of Thursday's open, Dow futures rose 0.4%, while S&P 500 futures gained\u2026 Copyright \u00a92026 Investor's Business Daily, LLC. All rights reserved. 87990cbe856818d5eddac44c7b1cdeb8 7/29/2026AI and chip plays are bouncing. Don't bounce for joy just yet. 7/29/2026AI and chip plays are bouncing. Don't bounce for joy... Get instant access to exclusive stock lists, expert market analysis and powerful tools with 2 months of IBD Digital for only $20! Get market updates, educational videos, webinars, and stock analysis. Learn how you can make more money with IBD's investing tools, top-performing stock lists, and educational content.",
+      "text": "Apple (AAPL) has raced to the top of the \"Magnificent Seven\" leaderboard this year, notching three straight record closes. That leaves shareholders weighing how much upside remains against the risk that earnings knock the stock off its highs. Investors who own Apple and expect a quieter move from here can consider acovered call, which generates income up front in exchange for giving up some gains if the rally keeps running. A covered call combines 100 shares with the sale of onecall option. Because a standard option contract covers 100 shares, the investor needs at least that many shares for the call to be covered. The investor collects apremiumbut may have to sell the shares at the option's strike price. Here's an example: An investor owns 100 Apple shares near $340 and then sells one Aug. 21 call with a $355strike price. That options contract would have recently paid about $4.35 per share, or $435 total. That $435 immediately belongs to the investor. The catch arrives if Apple keeps climbing. The AlphaSpace chart above shows the call option by itself. The solid line estimates how the option may perform before expiration, while the dashed line shows the final payoff on Aug. 21. If Apple finishes below $355, the call would generally expire worthless and the seller keeps the $435 premium. Above $355, losses on the short call begin to grow. Viewed alone, that option leg can look dangerous, as losses keep growing once Apple rises above $355. But the investor also owns 100 Apple shares, which gain value as the stock rises. The combined-position chart below puts both pieces together. The horizontal axis shows Apple's stock price at expiration. The vertical axis shows the profit or loss on the 100-share position. The purple line tracks the shares alone. Every $1 move in Apple changes the position's value by about $100. The green line adds the short call and the $435 premium. That cash gives the covered call a head start and lowers the breakeven price to $335.65, compared with $340 for the shares alone. Below that break-even level, the position loses money. The premium softens the decline, but only by $435. This is not crash protection. Between $335.65 and $355, the trade is profitable and continues rising with Apple. At $355, the covered call reaches its maximum profit of about $1,935. Above that level, the green line goes flat, because further gains in the shares are offset by losses on the short call. If Apple finishes above $355, the shares would likely be calledaway, meaning they are sold for $355 each. The investor keeps the premium, and the stock gains up to the strike but gives up anything beyond it. That caps the potential profit, which is the biggest risk to the trade. If Apple knocks earnings out of the park and surges, $435 could look small beside the upside surrendered. The covered call works best when Apple rises modestly, trades sideways, or slips a little. It works poorly when the stock takes off. The strategy pays shareholders today for placing a ceiling on tomorrow. Earnings will decide whether that income was worth the trade. Jared Blikre is the global markets and data editor for Yahoo Finance. Follow him on X at@SPYJaredor email him at jaredblikre@yahooinc.com. Click here for in-depth analysis of the latest stock market news and events moving stock prices Read the latest financial and business news from Yahoo Finance",
       "full_text_fetched": true
     },
     {
-      "headline": "4 Dow Jones Industrial Giants Make Up 50% of Warren Buffett\u2019s Berkshire Hathaway Portfolio",
-      "source": "24/7 Wall St.",
-      "date": "2026-07-30",
-      "text": "Investing Greg Abel became Berkshire CEO January 1, 2026, preserving Buffett's buy-forever strategy that concentrates 50% of holdings in just four Dow stocks. Apple ($AAPL) anchors Berkshire's portfolio at 21% despite recent share trimming, while Coca-Cola ($KO) delivers a 2.51% dividend across 200 countries. Act now:the analyst who called NVIDIA in 2010 just named his top 10 AI stocks \u2014 and Apple didn't make the cut.Grab the names FREE today. Sending You to Google News in3 If any investorhas stood the test of time, it\u2019s Warren Buffett, and with good reason. For 60 years, the \u201cOracle of Omaha\u201d has had a rock-star-like presence in the investing world, and his annual Berkshire Hathaway shareholders meeting has drawn thousands of loyal investors. They were stunned at last year\u2019s meeting when Buffett announced he would step down as CEO of the investment giant at year\u2019s end. While he remains board chair and vows to come to the office every day, he will also continue to have a voice in the day-to-day operations. His pre-announced successor and long-time lieutenant,Greg Abel, assumed the CEO position on January 1, 2026, and will likely direct or have a say in most, if not all, new investments, public or private. Some of these new investments have already been put into place. Long-time investorsand Buffett mavens are familiar with this quote: \u201cHis favorite holding for an S&P 500 stock is forever.\u201d So it\u2019s not surprising to report that for all the success and stature Berkshire Hathaway has in the investment world, just four top Dow Jones Industrial companies make up 50% of the fund\u2019s total holdings. While much more concentrated than most portfolio managers would ever consider, the strategy has worked for Berkshire Hathaway investors for years and will likely continue to do so.  Few investorshave the results and reputation that Buffett has garnered over the past 60 years. Though he has stepped away from the CEO chair, his impact and investment guidelines are likely to remain in place long after he is gone. While investing has evolved since Buffett took control of Berkshire Hathaway in 1965, buying good companies with products and services recognized worldwide and paying dividends will always remain a timeless approach. Here arethe four Dow Jones Industrials that reside in the Berkshire Hathaway portfolio. All are Buy-rated at the top Wall Street firms we cover. American Express(NYSE:AXP|AXP Price Prediction) is an American bank holding company and multinational financial services corporation specializing in payment cards. The stock performed strongly for most of this year but has backed off some and offers a solid entry point with a dividend yield of 0.98%. American Express is a globally integrated payments company that deals with card-issuing, merchant-acquiring, and card network businesses. The companyoffers products and services to customers worldwide, including consumers, small businesses, mid-sized companies, and large corporations. Its segments include: Berkshire Hathawayowns 151,610,700 shares, 22.2% of American Express\u2019s float, and 14.8% of the portfolio. J.P. Morganhas an Overweight rating with a $400 target price.  Apple(NASDAQ:AAPL) designs, develops, and sells consumer electronics, computer software, and online services, offering a small dividend of 0.31%. It is remarkable that the legacy technology giant, even after a recent fourth-quarter sale of 10 million shares and a surge in sales over the past two years, still holds a 227,917,808-share position that accounts for a stunning 21% of the Berkshire Hathaway portfolio, which holds 1.6% of Apple\u2019s stock. The companyoffers: Apple alsooffers AppleCare support and cloud services, and operates various platforms, including the App Store, which enables customers to discover and download applications and digital content, such as books, music, videos, games, and podcasts. In addition,the company offers various services, such as: Morgan Stanleyhas an Overweight rating\u00a0with a $364 tar",
-      "full_text_fetched": true
-    },
-    {
-      "headline": "This Memory Chip Stock Just Surged 531%. It\u2019s Not SK Hynix or Micron",
-      "source": "24/7 Wall St.",
-      "date": "2026-07-30",
-      "text": "Investing Chinese memory chip maker CXMT surged 531% on its IPO debut, instantly becoming mainland China's largest firm amid a global memory supply crunch. Apple is eyeing CXMT as a strategic supplier, but Micron and SK Hynix remain the most accessible memory boom plays for U.S. investors. Act now:the analyst who called NVIDIA in 2010 just named his top 10 AI stocks \u2014 and Apple didn't make the cut.Grab the names FREE today. Sending You to Google News in3 \u00a9 Sushitsky Sergey / Shutterstock.com There\u2019s a new red-hot memory chip stock in town, ChangXin Memory Technologies (CXMT), a lesser-known Chinese company that most investors probably never heard of before its blockbuster IPO and 531% single-day surge, as well as reports swirling around business withApple(NASDAQ:AAPL|AAPL Price Prediction) as it looks to diversify beyond the Big Three memory makers amid the global supply crunch. Undoubtedly, as soon as CMXT went live in the Chinese market, it became the largest firm in mainland China. With memory stocks and the broader semiconductor industry facing intense choppiness, though, the big question is whether the underrated semi play is the answer to the global memory shortage or if the stunning debut is coming a bit late to the party, with growing concerns that the red-hot memory plays might have reached peak hype. Of course, the fundamentals and tailwinds couldn\u2019t be stronger, but, at the end of the day, that\u2019s not saying a lot if the valuations are already up there and investors are already expecting (and demanding) a lot. In any case, for most American investors, the name won\u2019t be investable as it\u2019s not yet listed on the Nasdaq or NYSE and, as of this writing, there are no plans to. So, unless you\u2019ve got access to the Shanghai stock market, the name is probably out of reach for the time being anyway. Also, there\u2019s added risk in investing in Chinese stocks, especially since it\u2019s unclear whether there will be regulatory pushback with any dealings with Apple. In the meantime, CXMT is definitely a name to keep tabs on. It\u2019s a giant that\u2019s giving the world an alternative to the profoundly powerful memory chip trio that is Samsung,SK Hynix(NASDAQ:SKHY), which only recently debuted on the U.S. markets by way of IPO, and, of course, America\u2019s ownMicron(NASDAQ:MU). While the AI revolution has created a seemingly insatiable demand for high-bandwidth memory (HBM), CXMT does seem to be playing a major role in supplying ample DRAM to the consumer market. As Apple looks to use CXMT as a strategic way to regain more leverage in memory chip negotiations, I think this won\u2019t be the last time we\u2019ll hear about the hottest new Chinese company, especially if Apple looks to win a thumbs-up from the U.S. as it looks to perhaps see how far it can go with a new supplier that might offer a cure to the pains of the global memory chip shortage. Any way you look at it, CXMT is a serious piece of China\u2019s AI puzzle. It\u2019s one key ingredient to helping China become self-sufficient in this AI revolution. For now, CXMT is perhaps best-known as one of the \u201cblacklisted\u201d Chinese companies, but perhaps Apple\u2019s involvement could change this, especially since there are so few alternatives to getting around this \u201c100-year flood\u201d going on in the memory chip market. In the meantime, I think Micron and SK Hynix remain the go-to ways to play the memory boom, which might not be over yet, even as their share prices begin to come in. As for CXMT, it\u2019s a name worth knowing about as it looks to balance things out in a corner of the market that\u2019s incredibly constrained. Contact[email\u00a0protected]for any questions or corrections. Joey is a 24/7 Wall St. contributor and seasoned investment writer whose work can also be found in publications such as The Motley Fool and TipRanks. Holding a B.A.Sc in Computer Engineering from the University of British Columbia (UBC), Joey has leveraged his technical background to provide insightful stock analyses to readers. Joey's investment philosophy ",
-      "full_text_fetched": true
-    },
-    {
-      "headline": "Qualcomm Has Huge News for Apple",
+      "headline": "Apple Stock Falls Nearly 2% Before Earnings as Upgrade Program Launches",
       "source": "GuruFocus.com",
       "date": "2026-07-30",
-      "text": "This article first appeared onGuruFocus. Qualcomm (NASDAQ:QCOM) said revenue from its Apple (AAPL) modem business will decline faster than previously expected as the iPhone maker accelerates adoption of its in-house modem technology. Thecompanysaid the decline will begin in its fiscal fourth quarter after Qualcomm's modem share in Apple's next iPhone lineup fell materially below its earlier estimate. Apple has already expanded its internally developed modem across several recent iPhone models as part of its strategy to reduce reliance on third-party suppliers. Warning! GuruFocus has detected 3 Warning Signs with QCOM. Is QCOM fairly valued? Test your thesis with our free DCF calculator. Qualcomm said it expects growth in non-handset businesses, including artificial intelligence data centers and automotive chips, to offset the reduction in Apple-related revenue over time. The company reiterated its goal of generating $5 billion in AI data center revenue by fiscal 2027 and $15 billion by fiscal 2029, while forecasting most chip sales will come from markets outside smartphones by fiscal 2027. The company also said it plans to increase prices beginning Sept. 1 to offset higher supply chain costs across semiconductor manufacturing and components. Qualcomm reported fiscal third-quarter handset revenue of $5.09 billion, down 20% from a year earlier, while forecasting fourth-quarter adjusted earnings below Wall Street expectations",
+      "text": "This article first appeared onGuruFocus. Apple (NASDAQ:AAPL), a consumer-technology company producing iPhones, computers and connected devices,fellnearly 2% in Thursday's regular-session trading before its scheduled earnings report. Analysts expect June-quarter revenue to increase 15.5% to approximately $108.65 billion, potentially representing Apple's strongest growth for that quarter in five years. Estimated iPhone sales growth of 20.8% could provide the largest contribution to the anticipated increase. Warning! GuruFocus has detected 6 Warning Signs with INTC. Is AAPL fairly valued? Test your thesis with our free DCF calculator. Profit is expected to rise 18.1%, although analysts forecast Apple's gross margin will decline to approximately 47.9%. The company has maintained iPhone prices despite higher component expenses, making pricing and margin guidance important parts of the report. Investors may also focus on demand in China and whether the current iPhone cycle can sustain growth after the anticipated June-quarter acceleration. Apple separately introduced Apple Upgrade, a U.S. leasing program administered by Klarna, a financial-technology company providing payment services. The program offers one- or two-year leases for iPhones and Apple Watches and longer terms for Macs and iPads, with eligible customers able to exchange devices for newer models. Monthly payments start at $17.99 for an iPhone and $11.99 for an Apple Watch. The initiative could encourage more frequent upgrades and increase purchases through Apple's direct channels, although its eventual financial contribution has not been quantified. Investors may now assess whether earnings guidance and the leasing program can offset concerns about component inflation and pressure on hardware margins.",
       "full_text_fetched": true
     },
     {
-      "headline": "Jim Cramer Sounds Cautious On This Market. Here\u2019s What I\u2019d Buy in Response",
-      "source": "24/7 Wall St.",
-      "date": "2026-07-30",
-      "text": "Investing Cramer warns he's 'struggling to find reasons to buy,' The Nasdaq 100 and SOXX are down 10% and 30% from their highs, while the S&P 500 has slipped just 3%, concentrating pain in tech. Banks and Apple may be AI CapEx-light beneficiaries on my radar, though Apple's 41x trailing P/E is the highest it has been in recent memory. Act now:the analyst who called NVIDIA in 2010 just named his top 10 AI stocks \u2014 and Apple didn't make the cut.Grab the names FREE today. Sending You to Google News in3 \u00a9Jimcramerphoto(CC BY 2.0) byTulane Public Relations I don\u2019t know about you, but Mad Money host Jim Cramer sounded very cautious about the state of the market in recent weeks. Undoubtedly, the technical picture does not look all that good. And while it\u2019s okay to be bullish about the AI revolution as the technology continues to break new ground, there are other concerns, including the impact of heavy CapEx spending on margins (and maybe even credit ratings), the re-escalating situation going on in the Middle East, the latest words from Fed chair Kevin Warsh, or just heightened valuations and the added volatility in the tech-heavy Nasdaq 100, which has since fallen into a correction, by the way. In any case, I think Cramer is wise to consider stocks beyond those that have hogged the headlines in recent months. While the man isn\u2019t saying \u201csell, sell, sell,\u201d his \u201cstruggling to have reasons to buy,\u201d I think, is enough reason to convince investors to re-evaluate their risk profiles and maybe take a step back to some of the more defensive stocks that may have been neglected amid the past-year ascent in the AI frontrunners. Indeed, when momentum turns and reversions to the mean hit, things could have the potential to get really nasty. Personally, I think the concentration of pain in the tech-heavy Nasdaq 100 and especially theiShares Semiconductor ETF(NASDAQ:SOXX), which are currently off around 10% and 30%, respectively, from their all-time highs, while the S&P 500 is off just north of 3% goes to show that not everything needs to implode as some of the hottest, overleveraged corners of tech (most notably the AI chip stocks) look to give some of the meteoric gains back. Of course, if stocks continue to tumble, an opportunity to buy could open up for those willing to brave the rough waters. For now, I think staying diversified and not getting too aggressive with dip-buying in names that have more than doubled up year-to-date is the way to go. Indeed, the faster they climb, the more room they have to fall. With a name likeSandisk(NASDAQ:SNDK|SNDK Price Prediction) crashing more than 35% in the past week, those who got the timing wrong are surely feeling it. Either way, investors don\u2019t need to play in these intensely volatile areas, especially as early signs of an AI correction (or maybe something a bit worse) look to play out in this second half. While I wouldn\u2019t treat Jim Cramer\u2019s words as gospel, I do think he raises some very good points. A bit of caution and preparedness for a rainy day is never a bad thing, especially in the midst of a roaring bull market, one that might be a bit too quick to shrug off the growing lists of risks (the war in Iran, inflation, and the risk of rate hikes) that might just be fuel for a painful correction. Whether it\u2019s Jim Cramer\u2019s cautious tone or Jamie Dimon\u2019s more worrisome remarks on the state of the market, I do think that the best thing to do at a time like this is to hang on for the ride and trim away at the at-risk areas (most notably the semi stocks) while one is still in the green. Does that mean that the AI trade is done and the semi cyclical upswing is over? Probably not. But if there\u2019s an industry overdue for a dive, it\u2019s the semis. And I think the entire market doesn\u2019t need to be dragged down, especially the AI CapEx-light companies that still stand to benefit from the technology in a massive way. The first thing that comes to mind are the banks andApple(NASDAQ:AAPL). Of course, you\u2019ll pay up fo",
-      "full_text_fetched": true
-    },
-    {
-      "headline": "US Equity Futures Rise Pre-Bell Amid Latest Big Tech Earnings, Fed Rate Decision",
+      "headline": "Update: US Equity Indexes Surge as Microsoft's Quarterly Results Spark Rebound in Chipmakers Ahead of Amazon's Earnings",
       "source": "MT Newswires",
       "date": "2026-07-30",
-      "text": "US equity futures were higher pre-bell Thursday as traders took note of the Federal Reserve's decisi",
+      "text": "(Updates with index/price moves, macroeconomic data, and company/geopolitical news from the first pa",
       "full_text_fetched": false
     },
     {
-      "headline": "Apple (AAPL) Faces UK App Store Pushback And Crypto Scam Lawsuit",
-      "source": "Simply Wall St.",
+      "headline": "Qualcomm Stock Falls on Weak Q4 Outlook Despite Revenue Beat",
+      "source": "GuruFocus.com",
       "date": "2026-07-30",
-      "text": "Find your next quality investmentwith Simply Wall St's easy and powerful screener, trusted by over 7 million individual investors worldwide. UK regulators are challenging Apple over how it plans to implement changes to App Store payment rules. Apple is also facing a lawsuit that claims the company was negligent after a crypto scam app on its App Store allegedly defrauded users. These developments raise questions about Apple's App Store controls, user protection approach, and potential regulatory pressure in a key international market. Apple, listed as NasdaqGS:AAPL, is confronting legal and regulatory issues around its App Store that come after a strong recent run in the stock. The share price is currently $338.19, with the stock up 3.8% over the past week and 20.0% over the past month. Over longer periods, Apple has delivered returns of 24.8% year to date and 62.4% over the past year. For investors, the focus now turns to how Apple responds to UK regulatory pushback and the lawsuit tied to the alleged crypto scam app. These issues could influence perceptions of the App Store business, user safety measures, and potential scrutiny from regulators, which many investors watch closely when assessing risk. Stay updated on the most important news stories forAppleby adding it to yourwatchlistorportfolio. Alternatively, explore ourCommunityto discover new perspectives on Apple. Is Apple's balance sheet strong enough for future acquisitions? Dive into our detailed financial health analysis. For Apple, this UK regulatory pushback and the crypto scam lawsuit both focus on the economics and controls of the App Store, which is an important part of its higher margin Services business. The UK Competition and Markets Authority is questioning how far Apple can shape in app payment flows and fees. Any move that allows developers to steer users to external payment options on different terms could influence Apple's take rate and the value of its control over the App Store. The separate lawsuit that alleges negligence over a fraudulent crypto wallet app targets Apple's claims around App Store security. If courts or regulators conclude that existing review processes are not sufficient, Apple could face higher compliance costs, tighter approval workflows and potentially more direct liability exposure. The UK process directly links to the narrative theme that regulatory pressures may affect Apple's high margin Services business and the way the App Store supports long term earnings quality. The crypto scam lawsuit challenges the idea that App Store controls are a clear strength for Apple and could put more focus on whether user protection costs eat into margins over time. The narrative highlights regulatory risk in general, but this specific combination of UK payment rules and security related litigation around a crypto app is a concrete example that may not be fully reflected in that broader framing. Knowing what a company is worth starts with understanding its story.Check out one of the top narratives in the Simply Wall St Community for Appleto help decide what it's worth to you. \u26a0\ufe0f If UK regulators push through steering rules that materially weaken Apple's control over in app payments, the effective fee structure in the App Store could come under pressure in that market and potentially set a reference point for other regulators. \u26a0\ufe0f The crypto scam lawsuit raises the risk of higher legal costs, potential damages and changes to App Store review standards, which could increase operating expenses for Apple's Services segment. \ud83c\udf81 A clear outcome from the UK process, even if it tightens some rules, could give Apple more certainty on how to structure App Store payments and support longer term planning for developers and the broader ecosystem. \ud83c\udf81 If Apple responds by strengthening user protection tools and transparency for high risk categories such as crypto apps, it could reinforce trust in the App Store versus competitors like Google Play and third party A",
+      "text": "This article first appeared onGuruFocus. Qualcomm (NASDAQ:QCOM) shares fell nearly 2% on Thursday after the chipmaker issued weaker-than-expected fourth-quarter earnings guidance and projected a faster decline in Apple modem revenue, overshadowing quarterly revenue that exceeded Wall Street estimates, according to a Wednesday earnings release. Qualcomm reported adjusted fiscal third-quarter earnings of $2.21 per share, narrowly missing analysts' estimate of $2.22. Revenue rose to $9.94 billion from the quarter, topping the consensus forecast of $9.67 billion and reaching the high end of the company's guidance. Warning! GuruFocus has detected 3 Warning Signs with QCOM. Is QCOM fairly valued? Test your thesis with our free DCF calculator. For the fiscal fourth quarter, Qualcomm expects adjusted earnings of $2.05 to $2.25 per share, below analysts' expectation of $2.38. Revenue is projected between $9.7 billion and $10.5 billion, compared with the consensus estimate of about $10.08 billion. The company said higher memory prices and broader semiconductor input costs are weighing on its outlook, although pricing actions are expected to support margins over time. Qualcomm also said revenue from Apple (AAPL) modem chips is expected to decline faster than previously anticipated as its share in the next iPhone launch will be materially below earlier forecasts. The company maintained its long-term target of growing non-handset revenue to $40 billion by fiscal 2029 and expects growth in that business to accelerate over the next two years.",
       "full_text_fetched": true
     },
     {
-      "headline": "Big Tech earnings meet IPO buzz: What to watch Thursday",
-      "source": "Yahoo Finance Video",
-      "date": "2026-07-29",
-      "text": "Asking for a Trend Host Josh Lipton previews the biggest market catalysts for Thursday, July 30, including highly anticipated earnings from Apple (AAPL) and Amazon (AMZN) as well as the expected IPO debuts of Jersey Mike's and Reformation. Time now for to watch Thursday, July 30th. It is another huge day for markets with earnings from two more magnificent seven companies after the market's closed plus a couple of high profile debuts hitting Wall Street. Starting off on Apple, investors will be listening carefully to CEO Tim Cook's final earnings call before he steps down on September 1st. And it's expecting iPhone demand to remain strong in Q3, which could help lift global sales. Alongside Apple, Amazon, also reporting quarterly results with the big focus on Amazon Web Services. Investors are waiting to see whether AWS growth is reaccelerating as demand for AI computing continues to surge. Capital spending also in focus as Amazon continues pouring billions into data centers and AI infrastructure. A couple of companies starting their stock journey, sandwich chain Jersey Mikes is set to make its public debut on the New York Stock Exchange under the ticker JMKE. This is coming after almost two years of rapid expansion under private equity owner Blackstone. Also expected to begin trading is fashion brand Reformation, that IPO drawing some more attention as investors look for signs the market for new listings is continuing to reopen.",
+      "headline": "Intel's Rare AI Advantage Faces a New Threat",
+      "source": "GuruFocus.com",
+      "date": "2026-07-30",
+      "text": "This article first appeared onGuruFocus. Taiwan Semiconductor Manufacturing (NYSE:TSM)is reportedly developing an advancedchip-packaging process resembling Intel's (NASDAQ:INTC) EMIB technology, escalating competition over one of AI infrastructure's most important bottlenecks. The move could help TSMC retain customers seeking cheaper or more flexible alternatives to its dominant CoWoS platform while threatening a rare opening for Intel Foundry. Warning! GuruFocus has detected 3 Warning Signs with QCOM. Is TSM fairly valued? Test your thesis with our free DCF calculator. TSMC manufactures processors designed by Nvidia, AMD (NASDAQ:AMD), Apple (NASDAQ:AAPL) and other technology companies. Beyond producing the silicon, it packages compute dies and high-bandwidth memory into larger systems capable of handling demanding AI workloads. TSMC currently leads advanced AI packaging through CoWoS, which connects processors and memory using a silicon interposer. Intel's EMIB instead embeds smaller silicon bridges only where chiplets must communicate, potentially reducing complexity, cost and material usage. TSMC is now working with Taiwanese substrate supplier Kinsus Interconnect Technology on an EMIB-like process, according to The Information. Nvidia (NASDAQ:NVDA) is reportedly evaluating Intel's technology for a future processor combining four GPU dies, highlighting why TSMC may need another option beyond CoWoS. Intel describes EMIB as a system that links specialized chips through tiny embedded bridges, allowing them to operate as one unit. It's a data shortcut that slashes costs and turns this 'silicon mosaic' of chiplets into an AI powerhouse. The report arrived days after Intel announced a partnership with Lens Technology focused on glass-substrate packaging for AI and data-center chips. Intel is also preparing EMIB-T for high-volume customer production. TSMC shares rose about 7.5% Thursday, while Intel gained roughly 13%. Investors should watch whether TSMC identifies customers, production timing and expected yields for the new process. A successful bridge-based option could relieve CoWoS constraints and reduce the incentive for Nvidia and hyperscalers to shift packaging orders toward Intel. TSMC continues expanding CoWoS, with a 14-reticle package capable of integrating about 10 compute dies and 20 HBM stacks planned for 2028. For Intel, customer commitments matter more than technical interest. A confirmed Nvidia order would validate EMIB as an external foundry product. Delays or a competitive TSMC alternative could narrow Intel's window to turn packaging leadership into meaningful revenue.",
       "full_text_fetched": true
+    },
+    {
+      "headline": "Stock Market Today: Nasdaq Rebounds As Chips Leap; Gaming Stock Triggers Sell Rule (Live Coverage)",
+      "source": "Investor's Business Daily",
+      "date": "2026-07-30",
+      "text": "RETIREMENT NIGHTMARE:401(k) Savers Are Afraid To Spend Their Savings  The Nasdaq composite paced a strong rebound Thursday, with the stock market recovering from a slide in the previous session when the Federal Reserve stood pat on its key interest rate. Chip equipment maker Lam Research (LRCX) charged higher on the stock market today on its outlook, while a gaming name was slammed lower. The Dow Jones Industrial Average climbed\u2026 Copyright \u00a92026 Investor's Business Daily, LLC. All rights reserved. 87990cbe856818d5eddac44c7b1cdeb8 7:38 AM ETMicrosoft quarterly results also likely gave Oracle stock a much-needed boost. 7:38 AM ETMicrosoft quarterly results also likely gave Oracle stock a much-needed... Get instant access to exclusive stock lists, expert market analysis and powerful tools with 2 months of IBD Digital for only $20! Get market updates, educational videos, webinars, and stock analysis. Learn how you can make more money with IBD's investing tools, top-performing stock lists, and educational content.",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "A Farewell to Tim Cook",
+      "source": "Barrons.com",
+      "date": "2026-07-30",
+      "text": "Don't be surprised to hear a goodbye message from Cook on Apple's earnings call Thursday.  Investors may also hear from Cook's successor, Ternus, currently Apple\u2019s senior vice president of hardware en",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Forget SCHD: This Fidelity Fund Has Beaten It by 5 Points a Year for Five Years",
+      "source": "24/7 Wall St.",
+      "date": "2026-07-30",
+      "text": "Investing FDVV beat SCHD by ~5 annualized percentage points over 5 years by including mega-cap tech names like NVIDIA and Apple that SCHD's rules-based screen excludes. In 2026, SCHD's 23% gain more than doubled FDVV's 12% as value and defensive dividend payers surged while mega-cap tech cooled. Taxable account holders should direct new contributions to FDVV rather than sell SCHD, or blend 60/40 SCHD/FDVV to balance income needs with tech-driven growth. Don't wait:the analyst who called NVIDIA in 2010 just revealed his top 10 AI stocks.See the full list FREE now. Sending You to Google News in3 \u00a9 Chip Somodevilla / Getty Images News via Getty Images If you ownSchwab U.S. Dividend Equity ETF(NYSEARCA:SCHD), you own it for a reason that still makes sense: a rules-based screen of quality U.S. dividend payers, a rock-bottom 0.06% expense ratio, and a yield near 3.2% that comfortably beats the S&P 500. SCHD has grown into a $94.9 billion juggernaut because its Dow Jones U.S. Dividend 100 methodology screens hard for payout durability. There is a competitor built on a different screen that has left SCHD roughly 5 percentage points behind per year over the last half-decade, and it deserves a look before your next contribution. The index behind this one rewards a decade of dividend payments, high cash-flow-to-debt, and return on equity. The result is a portfolio heavy in energy, consumer staples, and legacy pharma: top positions include QUALCOMM at 6.74%, Texas Instruments at 5.90%, UnitedHealth at 5.09%, Chevron at 3.83%, and Coca-Cola at 3.96%. That composition throws off reliable income (trailing 12-month distributions of $1.048 per share) but structurally excludes themega-cap technology namesthat have driven index returns since 2020. NVIDIA, Microsoft, and Apple do not clear SCHD\u2019s screen, and that omission is the entire story of the last five years. Over the trailing five years, SCHD returned 57.53% on a total-return basis, or roughly 9.5% annualized.Fidelity High Dividend ETF(NYSEARCA:FDVV) returned 94.19% over the same span, or roughly 14.2% annualized. The ~5-point annualized gap is not a rounding artifact from picking a lucky start date; it reflects a methodology difference that let FDVV hold names SCHD was rules-bound to skip. The screen for this one weights yield plus payout quality but keeps mega-cap technology in the eligible universe. As of April, its top holdings included NVIDIA at 6.84%, Apple at 5.69%, Microsoft at 4.49%, and Broadcom at 3.49%. Those four names alone make up 20.51% of the fund. That is the engine behind FDVV\u2019s 5-point edge: the same dividend-quality wrapper, minus the rule that fenced off the market\u2019s biggest compounders. The current income is still higher on SCHD. Its yield near 3.2% beats FDVV\u2019s roughly 2.8%, and the trailing 12-month distribution of $1.729 per share for FDVV confirms it. If you are drawing income today and total return is secondary, that 40-basis-point yield advantage is real money on a large position. The FDVV case is a total-return case: you accept a slightly lower yield and let capital appreciation from tech exposure do more of the work. The fee difference is the easy part. FDVV charges 0.15% versus SCHD\u2019s 0.06%, so you\u2019re paying about two and a half times as much. On a $100,000 position, that\u2019s roughly $90 more per year, which is pretty easy to swallow if the return edge holds up at all. The harder part is what\u2019s happened this year. SCHD is up 23.36% year to date; FDVV is up 11.92%. Value stocks and defensive dividend payers have led the way in 2026 as mega-cap tech cooled off, and that kind of reversal is exactly what you\u2019d expect from SCHD in any year when tech takes a breather. The long-run edge FDVV offers comes with drawdown seasons that SCHD simply doesn\u2019t experience. In atax-advantaged account, moving part of a SCHD position to FDVV is mechanically clean and captures the exposure difference without triggering gains. In a taxable account, an outright swap after five strong",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Meet the Super Semiconductor Stock Crushing Nvidia With a 12-Month Return of 129%",
+      "source": "Motley Fool",
+      "date": "2026-07-30",
+      "text": "This 175-year-old company is playing a central role in the artificial intelligence boom.",
+      "full_text_fetched": false
     },
     {
       "headline": "Apple options trades: What's a covered call and how does it work?",
       "source": "Yahoo Finance Video",
       "date": "2026-07-29",
       "text": "Yahoo Finance Markets and Data Editor Jared Blikre tracks options trading activity around Apple (AAPL) shares, specifically explaining how a covered call works. Apple will be reporting its fiscal thir",
-      "full_text_fetched": false
-    },
-    {
-      "headline": "Can Qualcomm secure a 'tiny slice' of the data center pie?",
-      "source": "Yahoo Finance Video",
-      "date": "2026-07-29",
-      "text": "Bernstein managing director & senior analyst Stacy Rasgon and Lopez Research founder Maribel Lopez comment on Qualcomm's (QCOM) position in the AI data center landscape.",
       "full_text_fetched": false
     }
   ],

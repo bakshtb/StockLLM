@@ -512,6 +512,92 @@ StockLLM/
     center/diverging pattern, reuse `_diverging_value_label()` rather than
     re-copying the plain "outside" placement.
 
+28. **Added a second real entrypoint: `webapp/app.py` (Flask), packaged as a
+    private Home Assistant add-on.** User wants to run StockLLM from inside
+    HA — pick a ticker in a web page, toggle dry-run, see the dashboard —
+    without giving up the CLI. Key decisions, in case any of this needs
+    revisiting:
+    - **Add-on files live at the repo ROOT** (`repository.yaml`,
+      `config.yaml`, `Dockerfile`, `run.sh`), not in a subfolder, even
+      though the multi-add-on convention puts them in one. Reason: Docker's
+      build context for an add-on is whatever folder its `Dockerfile`
+      lives in — if that were a subfolder, the `Dockerfile` couldn't `COPY`
+      `data/`/`agents/`/`dashboard/`/`webapp/` living one level up without
+      duplicating them. Root-level keeps the build context = the whole
+      repo. This is the standard "single add-on repository" layout, valid
+      specifically because this repo will only ever contain one add-on.
+    - **Genuinely private repo + PAT-in-URL** (user's explicit choice over
+      "public but unlisted"): HA Supervisor clones add-on repos with a
+      plain unauthenticated `git clone`, so a real private repo needs
+      `https://<fine-grained-PAT>@github.com/bakshtb/StockLLM` pasted into
+      HA's Repositories dialog — spelled out step-by-step in `DOCS.md`.
+      Token should be fine-grained, Contents: Read-only, scoped to just
+      this repo.
+    - **Local build, not a pre-built registry image**: no `image:` key in
+      `config.yaml`, so Supervisor builds the `Dockerfile` directly on the
+      user's HA host on install/update. Slower than pulling a pre-built
+      image but needs no CI/registry — matches "private" and keeps the
+      whole thing self-contained in the repo.
+    - **Ingress (`ingress: true` + `ingress_port: 8099`), not an exposed
+      host port** — the add-on's page appears directly in the HA sidebar,
+      already behind HA's own login, no separate auth/port to manage.
+    - **`webapp/app.py` reuses `data.bundle.build_research_bundle` and
+      `agents.pipeline.run_pipeline` directly — no pipeline logic is
+      duplicated.** It's a second entrypoint into the exact same functions
+      `main.py`'s `check` command already calls, just triggered by a POST
+      instead of argv.
+    - **HA's per-add-on config (the Configuration tab) reaches the
+      container as `/data/options.json`, not a `.env` file** (`.env`
+      doesn't exist inside the container). `webapp/app.py`'s
+      `_load_ha_options()` reads that file (if present) and populates
+      `os.environ` **before** anything imports `config.py` — Python only
+      executes a module's top-level code once, so this ordering is load-
+      bearing; if you ever refactor imports at the top of `webapp/app.py`,
+      keep `_load_ha_options()` as the very first thing that runs.
+    - **`OUTPUT_DIR` (new in `config.py`, alongside the now-also-env-
+      overridable `DB_PATH`) is what makes the `output/` restructure and
+      the add-on's persistent storage the same mechanism**: CLI defaults to
+      a plain `output/` folder next to the repo; `run.sh` overrides it to
+      `/data/output` (HA's persistent per-add-on volume, survives restarts/
+      updates) so add-on-generated files never touch the git checkout
+      Supervisor used to build the image.
+    - **New dashboard section, `section_ai_recommendation()`**: until this
+      change, the dashboard only ever rendered the raw data bundle — there
+      was no way to see the actual judge/bull/bear/skeptic output anywhere.
+      Necessary once the add-on lets someone choose a full (non-dry-run)
+      check, since otherwise spending money on a full run would render the
+      identical page as a free dry run. `build_dashboard(bundle,
+      pipeline_result=None)` — omit the second argument (as `--dry-run`
+      does) and it doesn't render. **This is also, incidentally, the first
+      time this whole project's live 4-agent pipeline will actually run
+      against the real Anthropic API** (see "What has been tested" above —
+      no API key has been used in any session before this one) — watch the
+      first real full run closely for JSON schema drift from what
+      `agents/prompts/*.md` specify.
+    - **Ticker input is validated against `^[A-Z0-9.\-]{1,10}$` before
+      anything else in `webapp/app.py`'s `/run` handler** — this isn't just
+      input validation, it's the security boundary: the ticker becomes
+      part of an output filename (`f"{ticker}.json"`), so rejecting
+      anything with a path separator or `..` up front avoids ever needing
+      to reason about path traversal in the filename construction. Don't
+      relax this regex without re-checking that reasoning.
+    - **`app.run(..., debug=False)` is deliberate**, not an oversight —
+      Flask's debug mode ships an interactive in-browser debugger that can
+      execute arbitrary code, not appropriate even behind HA's ingress
+      proxy.
+    - **Remember to bump `version:` in `config.yaml` on every future
+      change that should ship** — that's the only thing that makes HA's
+      "Auto update" toggle actually notice something changed. A code
+      change without a version bump will sit invisible to installed add-on
+      instances until someone happens to reinstall it.
+    - Verification note: no Docker and no real HA instance were available
+      in the environment this was built in. Verified as much as possible
+      without them — `docker build` itself was NOT run; the Dockerfile/
+      run.sh were reviewed by hand and `run.sh`'s shell syntax was checked
+      with `bash -n`, but an actual local `docker build` + `docker run` (or
+      a real HA install) is still worth doing before fully trusting this
+      packaging works end-to-end.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

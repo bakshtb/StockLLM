@@ -42,7 +42,13 @@ SEC_EDGAR_USER_AGENT = os.getenv("SEC_EDGAR_USER_AGENT", "StockLLM research-tool
 MAX_FILING_CHARS = 15000       # raw filing text truncated to this before summarizing
 MAX_NEWS_ARTICLES_TO_FETCH = 8  # how many full articles we attempt to fetch for the news digest
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "storage", "stockllm.db")
+DB_PATH = os.getenv("DB_PATH", os.path.join(os.path.dirname(__file__), "storage", "stockllm.db"))
+
+# Where generated JSON bundles and HTML dashboards get written by default
+# (both the CLI and the webapp/ Flask app use this). The Home Assistant
+# add-on points this at /data/output (its persistent volume) via run.sh;
+# local/CLI use defaults to a plain output/ folder next to this file.
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", os.path.join(os.path.dirname(__file__), "output"))
 
 
 def estimate_cost_usd(model: str, input_tokens: int, output_tokens: int, cache_read_tokens: int = 0) -> float:

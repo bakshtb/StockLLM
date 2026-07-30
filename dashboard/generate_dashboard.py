@@ -200,6 +200,30 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .glance-icon.neutral { background: var(--gridline); color: var(--text-secondary); }
 .glance-item b { font-weight: 700; }
 
+.rec-card {
+  background: var(--surface-1); border: 2px solid var(--border);
+  border-radius: 14px; padding: 20px 22px; margin-bottom: 20px;
+}
+.rec-card.rec-good { border-color: var(--status-good); }
+.rec-card.rec-critical { border-color: var(--status-critical); }
+.rec-card.rec-warning { border-color: var(--status-warning); }
+.rec-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.rec-badge-big { font-size: 28px; font-weight: 700; letter-spacing: 0.3px; }
+.rec-badge-big.good { color: var(--status-good); }
+.rec-badge-big.critical { color: var(--status-critical); }
+.rec-badge-big.warning { color: #7a5200; }
+.rec-badge-big.neutral { color: var(--text-secondary); }
+.rec-meta { font-size: 12px; color: var(--text-muted); }
+.rec-body { margin-top: 14px; font-size: 14px; line-height: 1.6; }
+.rec-risks { margin: 10px 0 0 0; padding-left: 20px; }
+.rec-risks li { margin-bottom: 4px; }
+.rec-thesis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.rec-thesis { background: var(--page-plane); border-radius: 10px; padding: 12px 14px; font-size: 13px; }
+.rec-thesis .who { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+.rec-thesis.bull .who { color: var(--status-good); }
+.rec-thesis.bear .who { color: var(--status-critical); }
+.rec-skeptic { margin-top: 14px; font-size: 13px; }
+
 .grid {
   display: grid; gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
@@ -432,6 +456,7 @@ GLOSSARY = {
     "section_financials": "The actual business results: how much money is coming in, how much is profit, and how healthy the balance sheet is.",
     "section_ownership": "Who holds the stock and what company insiders have been doing with their own shares.",
     "section_extras": "A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.",
+    "ai_recommendation": "The output of StockLLM's own 4-agent pipeline: a Bull agent argues the case to buy, a Bear agent argues the case against, a Skeptic critiques both for unsupported claims, and a Judge weighs everything (including all the data below) into one final call. This is the one section that's an AI-generated opinion, not raw data — read the reasoning and key risks, not just the verdict, and remember this is a research aid, not financial advice.",
 }
 
 
@@ -1040,6 +1065,65 @@ def _glance_item(icon_cls, icon_char, html_text):
     return f'<li class="glance-item"><span class="glance-icon {icon_cls}">{icon_char}</span><span>{html_text}</span></li>'
 
 
+_REC_STYLE = {
+    "buy": ("good", "BUY"),
+    "sell": ("critical", "SELL"),
+    "hold": ("neutral", "HOLD"),
+    "insufficient_data": ("warning", "INSUFFICIENT DATA"),
+}
+
+
+def section_ai_recommendation(bundle, pipeline_result):
+    """
+    Renders the 4-agent pipeline's actual output (only present for a full,
+    non-dry-run check) -- the one section of this dashboard that's an AI
+    opinion rather than raw data. See GLOSSARY['ai_recommendation'] for the
+    user-facing framing; this function just lays it out.
+    """
+    judge = pipeline_result.get("judge", {}) or {}
+    bull = pipeline_result.get("bull", {}) or {}
+    bear = pipeline_result.get("bear", {}) or {}
+    skeptic = pipeline_result.get("skeptic", {}) or {}
+
+    rec_key = (judge.get("recommendation") or "hold").lower()
+    rec_cls, rec_label = _REC_STYLE.get(rec_key, ("neutral", rec_key.upper()))
+    confidence = judge.get("confidence")
+
+    risks_html = "".join(f"<li>{esc(r)}</li>" for r in judge.get("key_risks", []) or []) or "<li>None flagged.</li>"
+
+    skeptic_html = ""
+    unsupported = skeptic.get("unsupported_claims") or []
+    gaps = skeptic.get("data_gaps") or []
+    if unsupported or gaps:
+        parts = ['<div class="rec-skeptic">', f'<b>Skeptic review</b> (data quality: {esc(skeptic.get("overall_data_quality") or "unknown")}):']
+        if unsupported:
+            parts.append("<div>Unsupported claims flagged: " + "; ".join(esc(c) for c in unsupported) + "</div>")
+        if gaps:
+            parts.append("<div>Data gaps noted: " + "; ".join(esc(g) for g in gaps) + "</div>")
+        parts.append("</div>")
+        skeptic_html = "".join(parts)
+
+    return f"""
+<div class="card full rec-card rec-{rec_cls}">
+  <div class="rec-top">
+    <div>
+      <span class="rec-badge-big {rec_cls}">{esc(rec_label)}</span>
+      {info_icon('ai_recommendation')}
+    </div>
+    <div class="rec-meta">Confidence {esc(confidence)}/100 · run #{esc(pipeline_result.get('run_id'))} · cost ${pipeline_result.get('total_cost_usd', 0):.4f}</div>
+  </div>
+  <div class="rec-body">{esc(judge.get('reasoning_summary') or 'No reasoning provided.')}</div>
+  <div style="margin-top:12px;font-size:13px;"><b>Key risks:</b></div>
+  <ul class="rec-risks">{risks_html}</ul>
+  <div class="viz-note" style="margin-top:10px;">{esc(judge.get('data_quality_caveat') or '')}</div>
+  <div class="rec-thesis-grid">
+    <div class="rec-thesis bull"><div class="who">Bull case ({esc(bull.get('confidence', '—'))}/100)</div>{esc(bull.get('thesis') or '—')}</div>
+    <div class="rec-thesis bear"><div class="who">Bear case ({esc(bear.get('confidence', '—'))}/100)</div>{esc(bear.get('thesis') or '—')}</div>
+  </div>
+  {skeptic_html}
+</div>"""
+
+
 def section_at_a_glance(bundle):
     """
     Plain-English translation of the numbers below, for a reader with no
@@ -1588,7 +1672,7 @@ def section_data_notes(bundle):
 # Assembly
 # ============================================================================
 
-def build_dashboard(bundle: dict) -> str:
+def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     ticker = esc(bundle.get("ticker", "Ticker"))
     sections = [
         section_price_technicals(bundle),
@@ -1601,6 +1685,7 @@ def build_dashboard(bundle: dict) -> str:
         section_filings(bundle),
         section_data_notes(bundle),
     ]
+    ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1613,6 +1698,7 @@ def build_dashboard(bundle: dict) -> str:
 <body>
 {section_header(bundle)}
 <div class="wrap">
+  {ai_section}
   {section_at_a_glance(bundle)}
   {section_kpis(bundle)}
   <div class="grid">
@@ -1621,11 +1707,13 @@ def build_dashboard(bundle: dict) -> str:
 </div>
 <footer class="disclaimer">
   StockLLM is a research/decision-support tool. It is NOT financial advice and never places trades.
-  This dashboard renders what is in the underlying JSON research bundle. The "At a Glance" panel is
-  the one exception that turns numbers into sentences — every sentence there comes from a fixed,
-  mechanical rule applied to a real field below (e.g. "P/E premium over 15% = trading at a premium"),
-  not from any judgment call or outside opinion. Everything else is unmodified data, not
-  re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
+  This dashboard renders what is in the underlying JSON research bundle. The "At a Glance" panel
+  turns numbers into sentences — every sentence there comes from a fixed, mechanical rule applied
+  to a real field below (e.g. "P/E premium over 15% = trading at a premium"), not from any judgment
+  call or outside opinion. The "AI Recommendation" panel, when present, is different: it is the
+  actual output of StockLLM's own 4-agent LLM pipeline (Bull/Bear/Skeptic/Judge) — read it as one
+  automated opinion informed by the data below, not as fact. Everything else on this page is
+  unmodified data, not re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
 </footer>
 <script>{JS_SCRIPT}</script>
 </body>

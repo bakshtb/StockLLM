@@ -14,27 +14,37 @@ This is a research/decision-support tool. It is NOT financial advice, and it
 does not place trades. Backtested or live performance is not guaranteed.
 """
 
+import os
 import sys
 import json
 import argparse
 
-from config import ANTHROPIC_API_KEY, MONTHLY_SPEND_LIMIT_USD
+from config import ANTHROPIC_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
 from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
 from storage.db import get_monthly_spend
 
 
-def print_dry_run(ticker: str, bundle: dict, output_path: str | None = None):
+def _resolve_output_path(explicit_path: str | None, default_filename: str) -> str:
+    """A bare filename (no directory component) lands in OUTPUT_DIR; an
+    explicit path with a directory in it (relative or absolute) is honored
+    exactly as given. No explicit path at all -> OUTPUT_DIR/default_filename."""
+    if explicit_path:
+        path = explicit_path if os.path.dirname(explicit_path) else os.path.join(OUTPUT_DIR, explicit_path)
+    else:
+        path = os.path.join(OUTPUT_DIR, default_filename)
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    return path
+
+
+def print_dry_run(ticker: str, bundle: dict, output_path: str):
     print("\n" + "=" * 60)
     print(f"  {ticker} -- DRY RUN (raw data fetch only, no LLM calls made)")
     print("=" * 60)
-    if output_path:
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(bundle, f, indent=2)
-        print(f"  Bundle written to: {output_path}")
-    else:
-        print(json.dumps(bundle, indent=2))
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(bundle, f, indent=2)
+    print(f"  Bundle written to: {output_path}")
     print("=" * 60)
 
     price = bundle.get("price", {})
@@ -136,8 +146,8 @@ def main():
     )
     check_parser.add_argument(
         "--output", "-o", type=str, default=None, metavar="PATH",
-        help="With --dry-run, write the raw data bundle as JSON to this file path instead of "
-             "printing it to the terminal (the summary lines still print).",
+        help="With --dry-run, write the raw data bundle as JSON to this file path "
+             "(default: output/<TICKER>.json; a bare filename also lands in output/).",
     )
 
     dashboard_parser = subparsers.add_parser(
@@ -165,7 +175,8 @@ def main():
             except ValueError as e:
                 print(f"ERROR: {e}")
                 sys.exit(1)
-            print_dry_run(ticker, bundle, output_path=args.output)
+            output_path = _resolve_output_path(args.output, f"{ticker}.json")
+            print_dry_run(ticker, bundle, output_path=output_path)
             return
 
         if not ANTHROPIC_API_KEY:
@@ -217,7 +228,16 @@ def main():
         if source.lower().endswith(".json"):
             with open(source, "r", encoding="utf-8") as f:
                 bundle = json.load(f)
-            base = source.rsplit(".", 1)[0]
+            # Default output lands alongside the source file (wherever the
+            # user pointed us), not forced into OUTPUT_DIR -- least surprising
+            # when someone passes an existing file living somewhere specific.
+            default_path = f"{source.rsplit('.', 1)[0]}_dashboard.html"
+            if args.output and os.path.dirname(args.output):
+                output_path = args.output
+            elif args.output:
+                output_path = os.path.join(OUTPUT_DIR, args.output)
+            else:
+                output_path = default_path
         else:
             ticker = source.upper().strip()
             print(f"Fetching data for {ticker} (dry run, no LLM calls)...")
@@ -226,9 +246,9 @@ def main():
             except ValueError as e:
                 print(f"ERROR: {e}")
                 sys.exit(1)
-            base = ticker
+            output_path = _resolve_output_path(args.output, f"{ticker}_dashboard.html")
 
-        output_path = args.output or f"{base}_dashboard.html"
+        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(build_dashboard(bundle))
         print(f"Dashboard written to: {output_path}")
