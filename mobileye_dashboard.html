@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MBLY — StockLLM Research Dashboard</title>
+<script>
+(function () {
+  try {
+    var saved = localStorage.getItem('stockllm-theme');
+    if (saved) { document.documentElement.setAttribute('data-theme', saved); }
+  } catch (e) {}
+})();
+</script>
+<style>
+:root, .viz-root {
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --page-plane:     #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --gridline:       #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --success-text:   #006300;
+
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #eda100; /* yellow */
+  --series-5: #e87ba4; /* magenta */
+  --series-6: #008300; /* green */
+  --series-7: #4a3aa7; /* violet */
+  --series-8: #e34948; /* red */
+
+  --diverge-pos: #2a78d6;
+  --diverge-neg: #e34948;
+  --diverge-mid: #f0efec;
+
+  --status-good:     #0ca30c;
+  --status-warning:  #fab219;
+  --status-serious:  #ec835a;
+  --status-critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:     #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --success-text:   #0ca30c;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+
+    --diverge-pos: #3987e5;
+    --diverge-neg: #e66767;
+    --diverge-mid: #383835;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --page-plane:     #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --gridline:       #2c2c2a;
+  --baseline:       #383835;
+  --border:         rgba(255,255,255,0.10);
+  --success-text:   #0ca30c;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+
+  --diverge-pos: #3987e5;
+  --diverge-neg: #e66767;
+  --diverge-mid: #383835;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--page-plane);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+body { padding: 0 0 64px 0; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 16px 24px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 { font-size: 20px; margin: 0; font-weight: 600; }
+.topbar .meta { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+button.chip {
+  font: inherit; font-size: 13px; cursor: pointer;
+  background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 12px;
+}
+button.chip:hover { background: var(--gridline); }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 24px; }
+
+.kpi-row {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 20px;
+}
+.stat-tile {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+}
+.stat-tile .label { font-size: 12px; color: var(--text-secondary); }
+.stat-tile .value { font-size: 24px; font-weight: 600; margin-top: 4px; line-height: 1.15; }
+.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.delta { font-weight: 600; }
+.delta.good { color: var(--success-text); }
+.delta.critical { color: var(--status-critical); }
+.delta.neutral { color: var(--text-secondary); }
+
+.grid {
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+  align-items: start;
+}
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px;
+}
+.card.full { grid-column: 1 / -1; }
+.card h2 { font-size: 15px; margin: 0 0 4px 0; font-weight: 600; }
+.card .card-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+
+.viz-card { margin-top: 6px; }
+.viz-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.viz-card-head .viz-title { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+.viz-toggle {
+  font-size: 11px; color: var(--text-secondary); background: none;
+  border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer;
+}
+.viz-toggle:hover { background: var(--gridline); }
+.viz-card.is-table-view .viz-chart { display: none; }
+.viz-card:not(.is-table-view) .viz-table { display: none; }
+.viz-svg { width: 100%; height: auto; display: block; }
+.viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
+.viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+
+.mark { cursor: pointer; }
+.mark:hover, .mark.is-hover { filter: brightness(1.12); }
+.mark:focus { outline: 2px solid var(--text-secondary); outline-offset: 2px; }
+
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data-table th, table.data-table td {
+  text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline);
+  font-variant-numeric: tabular-nums;
+}
+table.data-table th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+table.data-table tr:last-child td { border-bottom: none; }
+.table-scroll { overflow-x: auto; }
+
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 999px; white-space: nowrap;
+}
+.badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
+.badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
+.badge.serious { background: rgba(236,131,90,0.18); color: #8a3311; }
+.badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
+.badge.neutral { background: var(--gridline); color: var(--text-secondary); }
+.badge.info { background: rgba(42,120,214,0.14); color: var(--series-1); }
+:root[data-theme="dark"] .badge.warning,
+@media (prefers-color-scheme: dark) { .badge.warning { color: #fab219; } .badge.serious { color: #ec835a; } }
+
+.news-item { padding: 10px 0; border-bottom: 1px solid var(--gridline); }
+.news-item:last-child { border-bottom: none; }
+.news-item .headline { font-weight: 600; font-size: 13.5px; }
+.news-item .meta { font-size: 12px; color: var(--text-muted); margin: 2px 0 4px 0; }
+.news-item .snippet { font-size: 13px; color: var(--text-secondary); }
+.news-item a { color: var(--series-1); text-decoration: none; }
+.news-item a:hover { text-decoration: underline; }
+
+.filing-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); }
+.filing-row:last-child { border-bottom: none; }
+.filing-row .name { width: 130px; font-weight: 600; font-size: 13px; }
+.filing-row .info { font-size: 12.5px; color: var(--text-secondary); }
+
+.notes-list { margin: 0; padding: 0; list-style: none; }
+.notes-list li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); font-size: 13px; color: var(--text-secondary); }
+.notes-list li:last-child { border-bottom: none; }
+
+.empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
+
+.viz-tooltip {
+  position: fixed; display: none; z-index: 999; pointer-events: none;
+  background: var(--text-primary); color: var(--surface-1);
+  font-size: 12px; padding: 6px 10px; border-radius: 6px; max-width: 260px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+footer.disclaimer {
+  max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
+  font-size: 12px; color: var(--text-muted); line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>MBLY — Research Dashboard</h1>
+    <div class="meta">Bundle fetched 2026-07-30T12:18:21.282626Z · StockLLM (research/decision-support only, not financial advice)</div>
+  </div>
+  <div class="topbar-actions">
+    <button type="button" class="chip" id="theme-toggle">Dark mode</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="kpi-row"><div class="stat-tile"><div class="label">Current price</div><div class="value">$8.01</div><div class="sub"><span class="delta critical">-17.2% (20d)</span></div></div><div class="stat-tile"><div class="label">1-year return</div><div class="value">-42.6%</div><div class="sub"><span class="delta critical">vs S&amp;P500 -58.8%</span></div></div><div class="stat-tile"><div class="label">P/E ratio</div><div class="value">—</div><div class="sub">Forward 17.3</div></div><div class="stat-tile"><div class="label">Market cap</div><div class="value">2.02B</div><div class="sub">Consumer Cyclical</div></div><div class="stat-tile"><div class="label">RSI (14d)</div><div class="value">35.4</div><div class="sub">Overbought &gt; 70, oversold &lt; 30</div></div><div class="stat-tile"><div class="label">VIX</div><div class="value">19.1</div><div class="sub"><span class="delta critical">3.0 (20d)</span></div></div><div class="stat-tile"><div class="label">10Y Treasury yield</div><div class="value">4.6%</div><div class="sub"><span class="delta critical">+0.1% (20d)</span></div></div></div>
+  <div class="grid">
+    
+<div class="card">
+  <h2>Price & Technicals</h2>
+  <div class="card-sub">20d volatility 0.05% · volume trend: increasing</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Price vs. moving averages</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 224" class="viz-svg" role="img" aria-label="bar chart"><text x="142" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">52w Low</text><g class="mark " tabindex="0" data-tip="52w Low: $6.56"><title>52w Low: $6.56</title><path d="M 150 16 H 306.4118404118404 Q 310.4118404118404 16 310.4118404118404 20 V 34 Q 310.4118404118404 38 306.4118404118404 38 H 150 Z" fill="var(--series-1)"/></g><text x="318.4118404118404" y="31.0" font-size="12" fill="var(--text-primary)">$6.56</text><text x="142" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">MA200</text><g class="mark " tabindex="0" data-tip="MA200: $9.91"><title>MA200: $9.91</title><path d="M 150 50 H 388.3294723294723 Q 392.3294723294723 50 392.3294723294723 54 V 68 Q 392.3294723294723 72 388.3294723294723 72 H 150 Z" fill="var(--series-1)"/></g><text x="400.3294723294723" y="65.0" font-size="12" fill="var(--text-primary)">$9.91</text><text x="142" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">MA50</text><g class="mark " tabindex="0" data-tip="MA50: $9.28"><title>MA50: $9.28</title><path d="M 150 84 H 372.9240669240669 Q 376.9240669240669 84 376.9240669240669 88 V 102 Q 376.9240669240669 106 372.9240669240669 106 H 150 Z" fill="var(--series-1)"/></g><text x="384.9240669240669" y="99.0" font-size="12" fill="var(--text-primary)">$9.28</text><text x="142" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">MA20</text><g class="mark " tabindex="0" data-tip="MA20: $9.06"><title>MA20: $9.06</title><path d="M 150 118 H 367.5444015444016 Q 371.5444015444016 118 371.5444015444016 122 V 136 Q 371.5444015444016 140 367.5444015444016 140 H 150 Z" fill="var(--series-1)"/></g><text x="379.5444015444016" y="133.0" font-size="12" fill="var(--text-primary)">$9.06</text><text x="142" y="167.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Current</text><g class="mark " tabindex="0" data-tip="Current: $8.01"><title>Current: $8.01</title><path d="M 150 152 H 341.86872586872585 Q 345.86872586872585 152 345.86872586872585 156 V 170 Q 345.86872586872585 174 341.86872586872585 174 H 150 Z" fill="var(--series-1)"/></g><text x="353.86872586872585" y="167.0" font-size="12" fill="var(--text-primary)">$8.01</text><text x="142" y="201.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">52w High</text><g class="mark " tabindex="0" data-tip="52w High: $15.54"><title>52w High: $15.54</title><path d="M 150 186 H 526.0 Q 530.0 186 530.0 190 V 204 Q 530.0 208 526.0 208 H 150 Z" fill="var(--series-1)"/></g><text x="538.0" y="201.0" font-size="12" fill="var(--text-primary)">$15.54</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>52w Low</td><td>$6.56</td></tr><tr><td>MA200</td><td>$9.91</td></tr><tr><td>MA50</td><td>$9.28</td></tr><tr><td>MA20</td><td>$9.06</td></tr><tr><td>Current</td><td>$8.01</td></tr><tr><td>52w High</td><td>$15.54</td></tr></tbody></table></div></div>
+  
+</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">RSI (14-day)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 70" class="viz-svg" role="img" aria-label="RSI (14d) gauge"><rect x="20.0" y="24" width="174.0" height="12" fill="var(--gridline)" opacity="0.85"/><rect x="194.0" y="24" width="232.0" height="12" fill="var(--baseline)" opacity="0.85"/><rect x="426.0" y="24" width="174.0" height="12" fill="var(--gridline)" opacity="0.85"/><g class="mark" tabindex="0" data-tip="RSI (14d): 35.4"><title>RSI (14d): 35.4</title><circle cx="225.552" cy="30" r="7" fill="var(--text-primary)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="225.552" y="16" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text-primary)">35.4</text><text x="20" y="58" font-size="11" fill="var(--text-muted)">0</text><text x="600" y="58" text-anchor="end" font-size="11" fill="var(--text-muted)">100</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>RSI (14d)</td><td>35.4</td></tr></tbody></table></div></div>
+  <div class="viz-note">Below 30 is conventionally read as oversold, above 70 as overbought.</div>
+</div>
+  
+<div class="kpi-row" style="margin-top:6px;grid-template-columns:repeat(3,1fr);">
+  <div class="stat-tile"><div class="label">MACD</div><div class="value">-0.303</div></div>
+  <div class="stat-tile"><div class="label">Signal</div><div class="value">-0.174</div></div>
+  <div class="stat-tile"><div class="label">Histogram</div><div class="value">-0.129</div><div class="sub"><span class="delta critical">Bearish momentum</span></div></div>
+</div>
+</div>
+<div class="card full">
+  <h2>Analyst Ratings & Estimates</h2>
+  <div class="card-sub">Recommendation: buy · last 60 days of rating actions</div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div>
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Analyst target price range (27 analysts)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 90" class="viz-svg" role="img" aria-label="analyst target price range"><text x="60" y="20" font-size="12" fill="var(--text-secondary)">Low $6.95</text><text x="560" y="20" text-anchor="end" font-size="12" fill="var(--text-secondary)">High $27.00</text><path d="M 60 41 H 555 Q 560 41 560 46 V 46 Q 560 51 555 51 H 60 Z" fill="var(--gridline)"/><g class="mark" tabindex="0" data-tip="Mean: $12.36"><title>Mean: $12.36</title><circle cx="194.94039900249373" cy="46" r="6" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="194.94039900249373" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Mean</text><g class="mark" tabindex="0" data-tip="Median: $11.00"><title>Median: $11.00</title><circle cx="160.99750623441395" cy="46" r="6" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="160.99750623441395" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Median</text><g class="mark" tabindex="0" data-tip="Current: $8.01"><title>Current: $8.01</title><path d="M 80.43391521197006 30 L 92.43391521197006 30 L 86.43391521197006 40 Z" fill="var(--text-primary)"/></g><text x="86.43391521197006" y="26" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-primary)">Current</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Point</th><th>Price</th></tr></thead><tbody><tr><td>Low</td><td>$6.95</td></tr><tr><td>Mean</td><td>$12.36</td></tr><tr><td>Median</td><td>$11.00</td></tr><tr><td>High</td><td>$27.00</td></tr><tr><td>Current price</td><td>$8.01</td></tr></tbody></table></div></div>
+  
+</div>
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">EPS surprise history (actual vs. estimate)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 156" class="viz-svg" role="img" aria-label="values relative to baseline"><line x1="355.0" y1="10" x2="355.0" y2="146" stroke="var(--baseline)" stroke-width="1"/><text x="102" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-09-30: +3.6%"><title>2025-09-30: +3.6%</title><path d="M 355.0 16 H 355.0 Q 358.674905521046 16 358.674905521046 19.674905521046 V 34.325094478954 Q 358.674905521046 38 355.0 38 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="364.674905521046" y="31.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+3.6%</text><text x="102" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2025-12-31: +3.3%"><title>2025-12-31: +3.3%</title><path d="M 355.0 50 H 355.0 Q 358.3380391816168 50 358.3380391816168 53.338039181616786 V 68.66196081838322 Q 358.3380391816168 72 355.0 72 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="364.3380391816168" y="65.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+3.3%</text><text x="102" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2026-03-31</text><g class="mark " tabindex="0" data-tip="2026-03-31: +39.7%"><title>2026-03-31: +39.7%</title><path d="M 355.0 84 H 391.53624951131576 Q 395.53624951131576 84 395.53624951131576 88 V 102 Q 395.53624951131576 106 391.53624951131576 106 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="401.53624951131576" y="99.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+39.7%</text><text x="102" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2026-06-30</text><g class="mark " tabindex="0" data-tip="2026-06-30: +230.2%"><title>2026-06-30: +230.2%</title><path d="M 355.0 118 H 586.0 Q 590.0 118 590.0 122 V 136 Q 590.0 140 586.0 140 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="596.0" y="133.0" text-anchor="start" font-size="12" fill="var(--text-primary)">+230.2%</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--diverge-pos)"></span>Beat / above baseline</span><span class="key"><span class="swatch" style="background:var(--diverge-neg)"></span>Miss / below baseline</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>Value</th></tr></thead><tbody><tr><td>2025-09-30</td><td>+3.6%</td></tr><tr><td>2025-12-31</td><td>+3.3%</td></tr><tr><td>2026-03-31</td><td>+39.7%</td></tr><tr><td>2026-06-30</td><td>+230.2%</td></tr></tbody></table></div></div>
+  
+</div></div>
+    <div>
+      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Recent rating actions</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Firm</th><th>Action</th><th>Grade change</th><th>Price target</th></tr></thead><tbody><tr><td>2026-07-27</td><td>Evercore ISI Group</td><td><span class="badge neutral">maintained</span></td><td>Outperform → Outperform</td><td>$16.00 (was $20.00)</td></tr><tr><td>2026-07-27</td><td>Piper Sandler</td><td><span class="badge good">upgrade</span></td><td>Neutral → Overweight</td><td>$12.00 (was $10.00)</td></tr><tr><td>2026-07-25</td><td>UBS</td><td><span class="badge neutral">maintained</span></td><td>Neutral → Neutral</td><td>$9.00 (was $10.00)</td></tr><tr><td>2026-07-25</td><td>Canaccord Genuity</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$12.00 (was $17.00)</td></tr><tr><td>2026-07-24</td><td>Mizuho</td><td><span class="badge neutral">maintained</span></td><td>Neutral → Neutral</td><td>$8.00 (was $9.00)</td></tr><tr><td>2026-07-24</td><td>JP Morgan</td><td><span class="badge neutral">maintained</span></td><td>Neutral → Neutral</td><td>$9.00 (was $10.00)</td></tr><tr><td>2026-07-24</td><td>TD Cowen</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$9.00 (was $11.50)</td></tr><tr><td>2026-07-24</td><td>RBC Capital</td><td><span class="badge neutral">maintained</span></td><td>Sector Perform → Sector Perform</td><td>$7.00 (was $10.00)</td></tr><tr><td>2026-07-24</td><td>Needham</td><td><span class="badge neutral">reiterated</span></td><td>Buy → Buy</td><td>$13.00 (was $13.00)</td></tr><tr><td>2026-07-13</td><td>TD Cowen</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$11.50 (was $10.00)</td></tr><tr><td>2026-07-13</td><td>RBC Capital</td><td><span class="badge neutral">maintained</span></td><td>Sector Perform → Sector Perform</td><td>$10.00 (was $9.00)</td></tr></tbody></table></div></div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">EPS estimate trend (Street consensus)</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>90d ago</th><th>30d ago</th><th>7d ago</th><th>Current est.</th></tr></thead><tbody><tr><td>Current quarter</td><td>0.05</td><td>0.05</td><td>0.05</td><td>0.10</td></tr><tr><td>Next quarter</td><td>0.05</td><td>0.05</td><td>0.05</td><td>0.09</td></tr><tr><td>Current year</td><td>0.27</td><td>0.28</td><td>0.28</td><td>0.50</td></tr><tr><td>Next year</td><td>0.36</td><td>0.36</td><td>0.35</td><td>0.46</td></tr></tbody></table></div></div>
+    </div>
+  </div>
+</div>
+<div class="card full">
+  <h2>Relative Performance & Valuation</h2>
+  <div class="card-sub">Returns and P/E vs. SPY and sector ETF XLY — two different questions, shown separately.</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Return vs. benchmark &amp; sector</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 224" class="viz-svg" role="img" aria-label="bar chart"><text x="142" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Stock — 20-day return</text><g class="mark " tabindex="0" data-tip="Stock — 20-day return: -17.2%"><title>Stock — 20-day return: -17.2%</title><path d="M 150 16 H 299.23156411460786 Q 303.23156411460786 16 303.23156411460786 20 V 34 Q 303.23156411460786 38 299.23156411460786 38 H 150 Z" fill="var(--series-1)"/></g><text x="311.23156411460786" y="31.0" font-size="12" fill="var(--text-primary)">-17.2%</text><text x="142" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">S&amp;P 500 — 20-day return</text><g class="mark " tabindex="0" data-tip="S&amp;P 500 — 20-day return: -2.2%"><title>S&amp;P 500 — 20-day return: -2.2%</title><path d="M 150 50 H 165.54438703616722 Q 169.54438703616722 50 169.54438703616722 54 V 68 Q 169.54438703616722 72 165.54438703616722 72 H 150 Z" fill="var(--series-1)"/></g><text x="177.54438703616722" y="65.0" font-size="12" fill="var(--text-primary)">-2.2%</text><text x="142" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Sector (XLY) — 20-day return</text><g class="mark " tabindex="0" data-tip="Sector (XLY) — 20-day return: -5.5%"><title>Sector (XLY) — 20-day return: -5.5%</title><path d="M 150 84 H 194.99483325504931 Q 198.99483325504931 84 198.99483325504931 88 V 102 Q 198.99483325504931 106 194.99483325504931 106 H 150 Z" fill="var(--series-1)"/></g><text x="206.99483325504931" y="99.0" font-size="12" fill="var(--text-primary)">-5.5%</text><text x="142" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Stock — 1-year return</text><g class="mark " tabindex="0" data-tip="Stock — 1-year return: -42.6%"><title>Stock — 1-year return: -42.6%</title><path d="M 150 118 H 526.0 Q 530.0 118 530.0 122 V 136 Q 530.0 140 526.0 140 H 150 Z" fill="var(--series-1)"/></g><text x="538.0" y="133.0" font-size="12" fill="var(--text-primary)">-42.6%</text><text x="142" y="167.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">S&amp;P 500 — 1-year return</text><g class="mark " tabindex="0" data-tip="S&amp;P 500 — 1-year return: +16.2%"><title>S&amp;P 500 — 1-year return: +16.2%</title><path d="M 150 152 H 291.02113668388915 Q 295.02113668388915 152 295.02113668388915 156 V 170 Q 295.02113668388915 174 291.02113668388915 174 H 150 Z" fill="var(--series-1)"/></g><text x="303.02113668388915" y="167.0" font-size="12" fill="var(--text-primary)">+16.2%</text><text x="142" y="201.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">Sector (XLY) — 1-year return</text><g class="mark " tabindex="0" data-tip="Sector (XLY) — 1-year return: +0.8%"><title>Sector (XLY) — 1-year return: +0.8%</title><path d="M 150 186 H 153.05025833724753 Q 157.05025833724753 186 157.05025833724753 190 V 204 Q 157.05025833724753 208 153.05025833724753 208 H 150 Z" fill="var(--series-1)"/></g><text x="165.05025833724753" y="201.0" font-size="12" fill="var(--text-primary)">+0.8%</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--series-1)"></span>Stock</span><span class="key"><span class="swatch" style="background:var(--series-2)"></span>S&amp;P 500</span><span class="key"><span class="swatch" style="background:var(--series-3)"></span>Sector (XLY)</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>Stock — 20-day return</td><td>-17.2%</td></tr><tr><td>S&amp;P 500 — 20-day return</td><td>-2.2%</td></tr><tr><td>Sector (XLY) — 20-day return</td><td>-5.5%</td></tr><tr><td>Stock — 1-year return</td><td>-42.6%</td></tr><tr><td>S&amp;P 500 — 1-year return</td><td>+16.2%</td></tr><tr><td>Sector (XLY) — 1-year return</td><td>+0.8%</td></tr></tbody></table></div></div>
+  
+</div>
+  
+<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:12px;">
+  <div class="stat-tile"><div class="label">Stock P/E</div><div class="value">—</div></div>
+  <div class="stat-tile"><div class="label">P/E vs S&amp;P 500</div><div class="value">—</div><div class="sub">S&amp;P 500 P/E 26.2</div></div>
+  <div class="stat-tile"><div class="label">P/E vs sector</div><div class="value">—</div><div class="sub">Sector P/E 28.5</div></div>
+</div>
+</div>
+<div class="card full">
+  <h2>Financials</h2>
+  
+<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+  <div class="stat-tile"><div class="label">Total debt</div><div class="value">—</div></div>
+  <div class="stat-tile"><div class="label">Total cash</div><div class="value">$1.44B</div></div>
+  <div class="stat-tile"><div class="label">Debt / equity</div><div class="value">—</div></div>
+  <div class="stat-tile"><div class="label">Current ratio</div><div class="value">4.60</div></div>
+  <div class="stat-tile"><div class="label">Free cash flow</div><div class="value">$523.00M</div></div>
+  <div class="stat-tile"><div class="label">Operating cash flow</div><div class="value">$602.00M</div></div>
+  <div class="stat-tile"><div class="label">Annual revenue</div><div class="value">$1.89B</div><div class="sub">Period end 2025-12-31</div></div>
+  <div class="stat-tile"><div class="label">Annual net income</div><div class="value">$-392.00M</div><div class="sub">Net margin -20.7%</div></div>
+</div>
+  
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Quarterly revenue &amp; net income</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 260" class="viz-svg" role="img" aria-label="grouped column chart"><line x1="46" y1="230.0" x2="604" y2="230.0" stroke="var(--gridline)" stroke-width="1"/><text x="40" y="233.0" text-anchor="end" font-size="10" fill="var(--text-muted)">-3.8B</text><line x1="46" y1="122.0" x2="604" y2="122.0" stroke="var(--gridline)" stroke-width="1"/><text x="40" y="125.0" text-anchor="end" font-size="10" fill="var(--text-muted)">-1.6B</text><line x1="46" y1="14.0" x2="604" y2="14.0" stroke="var(--gridline)" stroke-width="1"/><text x="40" y="17.0" text-anchor="end" font-size="10" fill="var(--text-muted)">558.0M</text><text x="92.5" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2024-12-31</text><g class="mark " tabindex="0" data-tip="2025-06-30 — Revenue: $506.00M"><title>2025-06-30 — Revenue: $506.00M</title><path d="M 160.5 41.54296160877513 V 20.566727605118842 Q 160.5 16.566727605118842 164.5 16.566727605118842 H 180.5 Q 184.5 16.566727605118842 184.5 20.566727605118842 V 41.54296160877513 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2025-06-30 — Net income: $-67.00M"><title>2025-06-30 — Net income: $-67.00M</title><path d="M 186.5 44.85009140767826 V 44.85009140767826 Q 186.5 41.54296160877513 189.80712979890313 41.54296160877513 H 207.19287020109687 Q 210.5 41.54296160877513 210.5 44.85009140767826 V 44.85009140767826 Z" fill="var(--series-2)"/></g><text x="185.5" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2025-06-30</text><g class="mark " tabindex="0" data-tip="2025-09-30 — Revenue: $504.00M"><title>2025-09-30 — Revenue: $504.00M</title><path d="M 253.5 41.54296160877513 V 20.66544789762338 Q 253.5 16.66544789762338 257.5 16.66544789762338 H 273.5 Q 277.5 16.66544789762338 277.5 20.66544789762338 V 41.54296160877513 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2025-09-30 — Net income: $-96.00M"><title>2025-09-30 — Net income: $-96.00M</title><path d="M 279.5 46.28153564899449 V 45.54296160877513 Q 279.5 41.54296160877513 283.5 41.54296160877513 H 299.5 Q 303.5 41.54296160877513 303.5 45.54296160877513 V 46.28153564899449 Z" fill="var(--series-2)"/></g><text x="278.5" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-12-31 — Revenue: $446.00M"><title>2025-12-31 — Revenue: $446.00M</title><path d="M 346.5 41.54296160877513 V 23.52833638025595 Q 346.5 19.52833638025595 350.5 19.52833638025595 H 366.5 Q 370.5 19.52833638025595 370.5 23.52833638025595 V 41.54296160877513 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2025-12-31 — Net income: $-127.00M"><title>2025-12-31 — Net income: $-127.00M</title><path d="M 372.5 47.81170018281537 V 45.54296160877513 Q 372.5 41.54296160877513 376.5 41.54296160877513 H 392.5 Q 396.5 41.54296160877513 396.5 45.54296160877513 V 47.81170018281537 Z" fill="var(--series-2)"/></g><text x="371.5" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2026-03-31 — Revenue: $558.00M"><title>2026-03-31 — Revenue: $558.00M</title><path d="M 439.5 41.54296160877513 V 18.0 Q 439.5 14.0 443.5 14.0 H 459.5 Q 463.5 14.0 463.5 18.0 V 41.54296160877513 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="2026-03-31 — Net income: $-3.82B"><title>2026-03-31 — Net income: $-3.82B</title><path d="M 465.5 230.0 V 45.54296160877513 Q 465.5 41.54296160877513 469.5 41.54296160877513 H 485.5 Q 489.5 41.54296160877513 489.5 45.54296160877513 V 230.0 Z" fill="var(--series-2)"/></g><text x="464.5" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2026-03-31</text><g class="mark " tabindex="0" data-tip="2026-06-30 — Revenue: $508.00M"><title>2026-06-30 — Revenue: $508.00M</title><path d="M 532.5 41.54296160877513 V 20.468007312614247 Q 532.5 16.468007312614247 536.5 16.468007312614247 H 552.5 Q 556.5 16.468007312614247 556.5 20.468007312614247 V 41.54296160877513 Z" fill="var(--series-1)"/></g><text x="544.5" y="10.468007312614247" text-anchor="middle" font-size="10" fill="var(--text-primary)">$508.0M</text><g class="mark " tabindex="0" data-tip="2026-06-30 — Net income: $-21.00M"><title>2026-06-30 — Net income: $-21.00M</title><path d="M 558.5 42.57952468007312 V 42.57952468007312 Q 558.5 41.54296160877513 559.536563071298 41.54296160877513 H 581.463436928702 Q 582.5 41.54296160877513 582.5 42.57952468007312 V 42.57952468007312 Z" fill="var(--series-2)"/></g><text x="570.5" y="35.54296160877513" text-anchor="middle" font-size="10" fill="var(--text-primary)">$-21.0M</text><text x="557.5" y="252" text-anchor="middle" font-size="11" fill="var(--text-secondary)">2026-06-30</text><line x1="46" y1="41.54296160877513" x2="604" y2="41.54296160877513" stroke="var(--baseline)" stroke-width="1"/></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--series-1)"></span>Revenue</span><span class="key"><span class="swatch" style="background:var(--series-2)"></span>Net income</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Quarter</th><th>Revenue</th><th>Net income</th></tr></thead><tbody><tr><td>2024-12-31</td><td>—</td><td>—</td></tr><tr><td>2025-06-30</td><td>$506.00M</td><td>$-67.00M</td></tr><tr><td>2025-09-30</td><td>$504.00M</td><td>$-96.00M</td></tr><tr><td>2025-12-31</td><td>$446.00M</td><td>$-127.00M</td></tr><tr><td>2026-03-31</td><td>$558.00M</td><td>$-3.82B</td></tr><tr><td>2026-06-30</td><td>$508.00M</td><td>$-21.00M</td></tr></tbody></table></div></div>
+  
+</div>
+</div>
+<div class="card full">
+  <h2>Ownership</h2>
+  <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div>
+      
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Institutional vs. insider ownership</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 60" class="viz-svg" role="img" aria-label="ownership breakdown"><g class="mark " tabindex="0" data-tip="Institutions: 59.0%"><title>Institutions: 59.0%</title><path d="M 12 20 H 362.35396000000003 L 362.35396000000003 20 V 44 L 362.35396000000003 44 H 12 Q 8 44 8 40 V 24 Q 8 20 12 20 Z" fill="var(--series-1)"/></g><g class="mark " tabindex="0" data-tip="Insiders: 31.9%"><title>Insiders: 31.9%</title><path d="M 364.35396000000003 20 H 555.27156 L 555.27156 20 V 44 L 555.27156 44 H 364.35396000000003 L 364.35396000000003 44 V 20 L 364.35396000000003 20 Z" fill="var(--series-2)"/></g><g class="mark " tabindex="0" data-tip="Other / retail: 9.1%"><title>Other / retail: 9.1%</title><path d="M 557.27156 20 H 608.0 Q 612.0 20 612.0 24 V 40 Q 612.0 44 608.0 44 H 557.27156 L 557.27156 44 V 20 L 557.27156 20 Z" fill="var(--gridline)"/></g></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--series-1)"></span>Institutions</span><span class="key"><span class="swatch" style="background:var(--series-2)"></span>Insiders</span><span class="key"><span class="swatch" style="background:var(--gridline)"></span>Other / retail</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Holder type</th><th>% of shares</th></tr></thead><tbody><tr><td>Institutions</td><td>59.0%</td></tr><tr><td>Insiders</td><td>31.9%</td></tr><tr><td>Other / retail</td><td>9.1%</td></tr></tbody></table></div></div>
+  
+</div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Top institutional holders</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Holder</th><th>Shares</th><th>% out</th><th>Value</th></tr></thead><tbody><tr><td>INTEL CORP</td><td>50,000,000</td><td>0.20%</td><td>$400.50M</td></tr><tr><td>Manufacturers Life Insurance Co.</td><td>10,305,431</td><td>0.04%</td><td>$82.55M</td></tr><tr><td>Two Sigma Investments, LP</td><td>9,890,390</td><td>0.04%</td><td>$79.22M</td></tr><tr><td>Goldman Sachs Group Inc</td><td>9,259,643</td><td>0.04%</td><td>$74.17M</td></tr><tr><td>Blackrock Inc.</td><td>5,917,179</td><td>0.02%</td><td>$47.40M</td></tr></tbody></table></div></div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Schedule 13D/13G (&gt;5% stakes)</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Filed</th><th>Reporting person</th><th>Schedule</th><th>% of class</th><th>Type</th></tr></thead><tbody><tr><td>2026-05-15</td><td>Manulife Financial Corporation</td><td><span class="badge neutral">13G /A</span></td><td>0.00%</td><td>HC</td></tr><tr><td>2026-02-13</td><td>Manulife Financial Corporation</td><td><span class="badge neutral">13G /A</span></td><td>0.00%</td><td>HC</td></tr><tr><td>2026-02-10</td><td>Amnon Shashua</td><td><span class="badge info">13D</span></td><td>7.30%</td><td>IN</td></tr><tr><td>2026-02-09</td><td>BAILLIE GIFFORD &amp; CO</td><td><span class="badge neutral">13G /A</span></td><td>3.40%</td><td>IA</td></tr><tr><td>2025-11-14</td><td>Point72 Asset Management, L.P.</td><td><span class="badge neutral">13G /A</span></td><td>2.80%</td><td>PN</td></tr><tr><td>2025-11-14</td><td>Manulife Financial Corporation</td><td><span class="badge neutral">13G /A</span></td><td>0.00%</td><td>HC</td></tr><tr><td>2025-11-12</td><td>BAILLIE GIFFORD &amp; CO</td><td><span class="badge neutral">13G /A</span></td><td>5.00%</td><td>IA</td></tr><tr><td>2025-11-06</td><td>INTEL CORP</td><td><span class="badge neutral">13G /A</span></td><td>79.80%</td><td>HC</td></tr></tbody></table></div></div>
+    </div>
+    <div>
+      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4)</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Owner</th><th>Title</th><th>Direction</th><th>Shares</th><th>Price</th></tr></thead><tbody><tr><td>2026-07-10</td><td>Nehushtan Nimrod</td><td>EVP Business Dev. &amp; Strategy</td><td><span class="badge good">buy</span></td><td>199,680</td><td>—</td></tr><tr><td>2026-07-10</td><td>Shalev-Shwartz Shai</td><td>Chief Technology Officer</td><td><span class="badge good">buy</span></td><td>1,064,962</td><td>—</td></tr><tr><td>2026-07-10</td><td>Shemesh Rojansky Moran</td><td>Chief Financial Officer</td><td><span class="badge good">buy</span></td><td>212,992</td><td>—</td></tr><tr><td>2026-07-10</td><td>Ouriel Boaz</td><td>EVP of EPG Software</td><td><span class="badge good">buy</span></td><td>266,240</td><td>—</td></tr><tr><td>2026-07-10</td><td>Shashua Amnon</td><td>CEO and President</td><td><span class="badge good">buy</span></td><td>1,618,743</td><td>—</td></tr><tr><td>2026-02-03</td><td>Shashua Amnon</td><td>CEO and President</td><td><span class="badge good">buy</span></td><td>1,554,310</td><td>—</td></tr><tr><td>2026-02-03</td><td>Shashua Amnon</td><td>CEO and President</td><td><span class="badge good">buy</span></td><td>13,988,788</td><td>—</td></tr><tr><td>2026-02-03</td><td>Shalev-Shwartz Shai</td><td>Chief Technology Officer</td><td><span class="badge good">buy</span></td><td>536,835</td><td>—</td></tr><tr><td>2026-02-03</td><td>Shalev-Shwartz Shai</td><td>Chief Technology Officer</td><td><span class="badge good">buy</span></td><td>4,831,528</td><td>—</td></tr><tr><td>2025-12-05</td><td>Desheh Eyal</td><td>Director</td><td><span class="badge good">buy</span></td><td>20,300</td><td>—</td></tr></tbody></table></div></div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Approx. date</th><th>Seller</th><th>Relationship</th><th>Shares proposed</th><th>Value</th></tr></thead><tbody><tr><td>05/15/2025</td><td>Ouriel Boaz</td><td>Officer</td><td>67,493</td><td>$1.11M</td></tr></tbody></table></div></div>
+    </div>
+  </div>
+</div>
+<div class="card full">
+  <h2>Dividends, Buybacks, Options & Sentiment</h2>
+  <div class="grid" style="grid-template-columns:1fr 1fr;">
+    <div>
+      
+<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+  <div class="stat-tile"><div class="label">Dividend yield</div><div class="value">None</div></div>
+  <div class="stat-tile"><div class="label">Payout ratio</div><div class="value">0.0%</div></div>
+  <div class="stat-tile"><div class="label">5y avg yield</div><div class="value">—</div></div>
+</div>
+      
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Quarterly buyback spend</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 88" class="viz-svg" role="img" aria-label="bar chart"><text x="142" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2025-12-31: $0"><title>2025-12-31: $0</title><path d="" fill="var(--series-1)"/></g><text x="158.0" y="31.0" font-size="12" fill="var(--text-primary)">$0</text><text x="142" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-09-30: $100.00M"><title>2025-09-30: $100.00M</title><path d="M 150 50 H 526.0 Q 530.0 50 530.0 54 V 68 Q 530.0 72 526.0 72 H 150 Z" fill="var(--series-1)"/></g><text x="538.0" y="65.0" font-size="12" fill="var(--text-primary)">$100.00M</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>2025-12-31</td><td>$0</td></tr><tr><td>2025-09-30</td><td>$100.00M</td></tr></tbody></table></div></div>
+  
+</div>
+      
+<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+  <div class="stat-tile"><div class="label">VIX level</div><div class="value">19.1</div><div class="sub"><span class="delta critical">3.0 (20d)</span></div></div>
+  <div class="stat-tile"><div class="label">10Y Treasury yield</div><div class="value">4.6%</div><div class="sub"><span class="delta critical">+0.1% (20d)</span></div></div>
+</div>
+<div class="viz-note">Not ticker-specific — same for every ticker checked the same day.</div>
+    </div>
+    <div>
+      
+<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+  <div class="stat-tile"><div class="label">Put/call volume ratio</div><div class="value">0.366</div></div>
+  <div class="stat-tile"><div class="label">Put/call open interest ratio</div><div class="value">0.451</div></div>
+</div>
+<div style="margin-top:10px;"><span class="badge warning">IV/skew fields unreliable — see note</span></div>
+<div class="viz-note" style="margin-top:8px;">Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge.</div>
+      <div style="margin-top:16px;">
+<div class="viz-card">
+  <div class="viz-card-head">
+    <span class="viz-title">Social sentiment — StockTwits (30 recent posts)</span>
+    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+  </div>
+  <div class="viz-chart"><svg viewBox="0 0 620 70" class="viz-svg" role="img" aria-label="social sentiment split"><line x1="310.0" y1="18" x2="310.0" y2="56" stroke="var(--baseline)" stroke-width="1"/><g class="mark " tabindex="0" data-tip="Untagged: 11 messages"><title>Untagged: 11 messages</title><path d="M 203.66666666666669 24 H 416.33333333333337 Q 416.33333333333337 24 416.33333333333337 24 V 50 Q 416.33333333333337 50 416.33333333333337 50 H 203.66666666666669 Z" fill="var(--gridline)"/></g><g class="mark " tabindex="0" data-tip="Bearish: 1 messages"><title>Bearish: 1 messages</title><path d="M 201.66666666666669 24 H 186.33333333333334 Q 182.33333333333334 24 182.33333333333334 28 V 46 Q 182.33333333333334 50 186.33333333333334 50 H 201.66666666666669 Z" fill="var(--diverge-neg)"/></g><g class="mark " tabindex="0" data-tip="Bullish: 18 messages"><title>Bullish: 18 messages</title><path d="M 418.33333333333337 24 H 762.3333333333334 Q 766.3333333333334 24 766.3333333333334 28 V 46 Q 766.3333333333334 50 762.3333333333334 50 H 418.33333333333337 Z" fill="var(--diverge-pos)"/></g><text x="176.33333333333334" y="41.0" text-anchor="end" font-size="12" fill="var(--text-primary)">1</text><text x="774.3333333333334" y="41.0" font-size="12" fill="var(--text-primary)">18</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--diverge-neg)"></span>Bearish</span><span class="key"><span class="swatch" style="background:var(--gridline)"></span>Untagged</span><span class="key"><span class="swatch" style="background:var(--diverge-pos)"></span>Bullish</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Sentiment</th><th>Messages</th></tr></thead><tbody><tr><td>Bearish</td><td>1</td></tr><tr><td>Untagged</td><td>11</td></tr><tr><td>Bullish</td><td>18</td></tr></tbody></table></div></div>
+  <div class="viz-note">Unmoderated public chatter — a crowd-mood gauge, not verified fact.</div>
+</div></div>
+      <div class="viz-card" style="margin-top:16px;">
+        <div class="viz-card-head"><span class="viz-title">Sample posts (unverified)</span></div>
+        <div class="news-item"><div class="meta">2026-07-30T01:50:50Z · untagged</div><div class="snippet">$MBLY WTF</div></div><div class="news-item"><div class="meta">2026-07-29T22:48:49Z · untagged</div><div class="snippet">$MBLY 
+
+FYI
+
+https://www.reuters.com/business/qualcomm-wins-bmw-chip-supply-deal-future-vehicle-platforms-2026-07-29/</div></div><div class="news-item"><div class="meta">2026-07-29T20:56:09Z · untagged</div><div class="snippet">$MBLY uncertainty priced in due to CEO change and questions marks over their 26-27 catalyst launches. With a long term view, I like the strong cash position, their relatively stable Moat, their forward outlook, the product development being best at what they do, and foresight to develop next products in next market places. 
+
+Today we may be down. But I think the next 18 months, will show we are sitting on a winner.</div></div><div class="news-item"><div class="meta">2026-07-29T18:23:32Z · Bullish</div><div class="snippet">$MBLY still shorting this? 🤣</div></div><div class="news-item"><div class="meta">2026-07-29T17:54:13Z · untagged</div><div class="snippet">$MBLY FSD bearish I guess lol</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card full">
+  <h2>News</h2>
+  
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/technology/articles/qualcomm-wins-bmw-chip-supply-130645860.html" target="_blank" rel="noopener">Qualcomm wins BMW chip supply deal for future vehicle platforms</a></div>
+  <div class="meta">Reuters · 2026-07-29</div>
+  <div class="snippet">Qualcomm said on Wednesday it has signed a long-term deal to supply ‌chips for German luxury automaker BMW&#x27;s future ‌digital cockpit and advanced driver-assistance systems through the next decade.  Th</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/video/assessing-the-chip-sectors-damage-chart-of-the-day-195557807.html" target="_blank" rel="noopener">Assessing the chip sector&#x27;s damage: Chart of the Day</a></div>
+  <div class="meta">Yahoo Finance Video · 2026-07-28</div>
+  <div class="snippet">Yahoo Finance Markets and Data Editor Jared Blikre takes a closer look at recent market action in the semiconductor sector (^SOX).</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/news/qualcomm-downgraded-rivian-upgraded-wall-133405953.html" target="_blank" rel="noopener">Rivian upgraded, Check Point downgrade: Wall Street&#x27;s top analyst calls</a></div>
+  <div class="meta">The Fly · 2026-07-27</div>
+  <div class="snippet">Rivian upgraded, Check Point downgrade: Wall Street&#x27;s top analyst calls</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://www.marketbeat.com/articles/forget-tesla-these-2-earnings-reports-reveal-where-the-auto-market-is-heading/?utm_source=yahoofinance&amp;utm_medium=yahoofinance" target="_blank" rel="noopener">Forget Tesla: These 2 Earnings Reports Reveal Where the Auto Market Is Heading</a></div>
+  <div class="meta">MarketBeat · 2026-07-27</div>
+  <div class="snippet">GM raised profit guidance on steady pricing and strong truck sales, while Mobileye&#x27;s unit growth masked falling per-system prices and a founder&#x27;s planned departure.</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://www.barchart.com/story/news/3469426/mobileye-stock-is-down-despite-strong-results-as-its-founder-steps-down-view-the-ceo-switch-as-a-reset-not-a-red-flag" target="_blank" rel="noopener">Mobileye Stock Is Down Despite Strong Results as Its Founder Steps Down. View the CEO Switch as a Reset, Not a Red Flag.</a></div>
+  <div class="meta">Barchart · 2026-07-26</div>
+  <div class="snippet">Mobileye beat second-quarter expectations while raising full-year guidance, but shares plunged roughly 15% after founder and CEO Amnon Shashua announced he is stepping down once a successor is named.</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/mobileye-mbly-stock-fair-value-110930683.html" target="_blank" rel="noopener">Mobileye (MBLY) Stock Fair Value Edges Lower As Analysts Weigh CEO Change And 2026 Risks</a></div>
+  <div class="meta">Simply Wall St. · 2026-07-26</div>
+  <div class="snippet">Mobileye Global has seen its fair value estimate adjusted from US$13.29 to US$12.66, mirroring a price target range that is now more clustered in the high single digits to low teens. This shift lines </div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/intel-stock-outlook-ai-foundry-161200704.html" target="_blank" rel="noopener">Intel Stock Outlook as AI and Foundry Growth Reshape INTC Strategy</a></div>
+  <div class="meta">Zacks · 2026-07-24</div>
+  <div class="snippet">INTC is reshaping around AI, foundry services and enterprise infrastructure as improving execution and customer adoption reinforce its turnaround strategy.</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://www.barchart.com/story/news/3450362/mbly-stock-alert-what-to-know-as-mobileye-announces-leadership-transition" target="_blank" rel="noopener">MBLY Stock Alert: What to Know as Mobileye Announces Leadership Transition</a></div>
+  <div class="meta">Barchart · 2026-07-24</div>
+  <div class="snippet">Mobileye sinks as CEO steps down and the company reports its Q2 earnings. Here’s what the announcements mean for MBLY shares moving forward.</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/mobileye-q2-earnings-surpass-expectations-150500268.html" target="_blank" rel="noopener">Mobileye Q2 Earnings Surpass Expectations on R&amp;D Incentive Grant</a></div>
+  <div class="meta">Zacks · 2026-07-24</div>
+  <div class="snippet">MBLY&#x27;s Q2 earnings beat estimates as an R&amp;D grant boosts profits, while stronger shipments and a raised 2026 outlook point to continued momentum.</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://app.moby.co/home/research/tools/earningsCalendar/earnings-mobileye-global-inc-q2-2026-earnings-call-summary?utm_source=yahoo_finance&amp;utm_medium=rss" target="_blank" rel="noopener">Mobileye Global Inc. Q2 2026 Earnings Call Summary</a></div>
+  <div class="meta">Moby · 2026-07-24</div>
+  <div class="snippet">Moby summary of Mobileye Global Inc.&#x27;s Q2 2026 earnings call</div>
+</div>
+  
+</div>
+<div class="card full">
+  <h2>Filings & Proxy</h2>
+  <div class="filing-row"><span class="name">10-K</span><span class="badge good">Fetched</span><span class="info">Filed 2026-02-12 · 15063 chars</span></div><div class="filing-row"><span class="name">10-Q</span><span class="badge good">Fetched</span><span class="info">Filed 2026-07-23 · 15063 chars</span></div><div class="filing-row"><span class="name">8-K</span><span class="badge good">Fetched</span><span class="info">Filed 2026-07-23 · 15000 chars</span></div><div class="filing-row"><span class="name">DEF 14A</span><span class="badge good">Fetched</span><span class="info">Filed 2026-04-24 · 15000 chars</span></div>
+  <div class="viz-note" style="margin-top:10px;">Filings digest not generated (dry run or no API key).</div>
+</div>
+<div class="card full">
+  <h2>Data Quality Notes</h2>
+  <ul class="notes-list"><li><span class="badge neutral">note</span> <span>Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented.</span></li><li><span class="badge neutral">note</span> <span>Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge.</span></li><li><span class="badge neutral">note</span> <span>Skipped (dry run).</span></li><li><span class="badge neutral">note</span> <span>Skipped (dry run).</span></li></ul>
+</div>
+  </div>
+</div>
+<footer class="disclaimer">
+  StockLLM is a research/decision-support tool. It is NOT financial advice and never places trades.
+  This dashboard renders exactly what is in the underlying JSON research bundle — nothing here is
+  re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
+</footer>
+<script>
+(function () {
+  var tip = document.createElement('div');
+  tip.className = 'viz-tooltip';
+  document.body.appendChild(tip);
+
+  function showTip(x, y, text) {
+    tip.textContent = text;
+    tip.style.display = 'block';
+    tip.style.left = (x + 14) + 'px';
+    tip.style.top = (y + 14) + 'px';
+  }
+  function hideTip() { tip.style.display = 'none'; }
+
+  document.addEventListener('mousemove', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t && t.dataset.tip) {
+      showTip(e.clientX, e.clientY, t.dataset.tip);
+    } else {
+      hideTip();
+    }
+  });
+  document.addEventListener('mouseout', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t) hideTip();
+  });
+  document.addEventListener('focusin', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t && t.dataset.tip) {
+      var r = t.getBoundingClientRect();
+      showTip(r.left + r.width / 2, r.top, t.dataset.tip);
+    }
+  });
+  document.addEventListener('focusout', function (e) {
+    var t = e.target.closest && e.target.closest('.mark');
+    if (t) hideTip();
+  });
+
+  document.querySelectorAll('.viz-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.viz-card');
+      var nowTable = card.classList.toggle('is-table-view');
+      btn.textContent = nowTable ? 'View chart' : 'View as table';
+      btn.setAttribute('aria-pressed', String(nowTable));
+    });
+  });
+
+  var themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function () {
+      var root = document.documentElement;
+      var current = root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      themeBtn.textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
+      try { localStorage.setItem('stockllm-theme', next); } catch (e) {}
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -140,6 +140,19 @@ def main():
              "printing it to the terminal (the summary lines still print).",
     )
 
+    dashboard_parser = subparsers.add_parser(
+        "dashboard", help="Generate a self-contained HTML dashboard from a research bundle"
+    )
+    dashboard_parser.add_argument(
+        "source", type=str,
+        help="Path to an existing bundle JSON file (e.g. mobileye.json), or a ticker symbol "
+             "to fetch fresh (dry-run, free, no API key needed).",
+    )
+    dashboard_parser.add_argument(
+        "--output", "-o", type=str, default=None, metavar="PATH",
+        help="Output HTML path (default: <source>_dashboard.html).",
+    )
+
     args = parser.parse_args()
 
     if args.command == "check":
@@ -196,6 +209,29 @@ def main():
             sys.exit(1)
 
         print_result(ticker, result)
+
+    elif args.command == "dashboard":
+        from dashboard.generate_dashboard import build_dashboard
+
+        source = args.source
+        if source.lower().endswith(".json"):
+            with open(source, "r", encoding="utf-8") as f:
+                bundle = json.load(f)
+            base = source.rsplit(".", 1)[0]
+        else:
+            ticker = source.upper().strip()
+            print(f"Fetching data for {ticker} (dry run, no LLM calls)...")
+            try:
+                bundle, _ = build_research_bundle(ticker, run_digests=False)
+            except ValueError as e:
+                print(f"ERROR: {e}")
+                sys.exit(1)
+            base = ticker
+
+        output_path = args.output or f"{base}_dashboard.html"
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(build_dashboard(bundle))
+        print(f"Dashboard written to: {output_path}")
 
 
 if __name__ == "__main__":

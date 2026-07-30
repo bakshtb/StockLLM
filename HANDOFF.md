@@ -69,6 +69,9 @@ StockLLM/
 ├── storage/
 │   ├── schema.sql                 # runs, research_bundles, agent_outputs, outcomes tables
 │   └── db.py                      # SQLite helpers
+├── dashboard/
+│   └── generate_dashboard.py      # bundle JSON -> single self-contained HTML dashboard;
+│                                   #   pure rendering layer, no network calls, no deps beyond stdlib
 ├── config.py                      # model choices per agent, pricing table, spend limit
 ├── main.py                        # CLI entrypoint: `python main.py check TICKER [--dry-run] [--output PATH]`
 ├── backtest/                      # empty placeholder, not built yet
@@ -329,6 +332,34 @@ StockLLM/
       user-generated text, apply the same two-part pattern (self-documenting
       key name + explicit system-prompt callout) rather than relying on
       prompt wording alone.
+
+23. **`dashboard/generate_dashboard.py`**: a viewer, not a new data source —
+    takes any bundle JSON (existing file or a fresh `--dry-run` fetch) and
+    renders it as a single offline HTML file (no CDN, no build step, no
+    server). Built following the project's dataviz skill (color-by-job,
+    validated reference palette used verbatim, table-view twin on every
+    chart, hover+keyboard-focus tooltips). Two judgment calls worth knowing
+    if you touch this file:
+    - **RSI and the 13D badge are deliberately NOT colored good/bad.** An
+      earlier draft colored RSI zones green (oversold)/red (overbought) and
+      the 13D ownership badge orange/"warning" — both walked back to neutral
+      grays/blue, because RSI extremes and active-investor filings aren't
+      unambiguously good or bad (unlike an analyst upgrade/downgrade, or an
+      insider buying with their own money, which ARE unambiguous and do get
+      status-colored). Don't re-introduce directional coloring for genuinely
+      ambiguous signals — it oversteps this tool's own "research tool, not
+      financial advice, stay grounded" stance from the agent prompts.
+    - **Handles bundles from before this session's data additions.**
+      `AAPL.json`/`aapl_dryrun.json`/`google.json`/`qqq.json`/`spcx.json`
+      predate `analyst_ratings`/`earnings_estimates`/`macro_context`/etc. —
+      every section uses `bundle.get(key, {}) or {}` and renders an empty
+      state rather than crashing when a key is missing. Verified live
+      against all six existing bundle files in the repo, old and new.
+    - No headless browser was available in this environment to screenshot
+      the output — verified instead via BeautifulSoup structural parsing
+      (svg/table counts, no leaked `None`/`nan` values) and manual read of
+      the generated markup. Actually open the HTML in a real browser before
+      trusting the visual layout completely.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

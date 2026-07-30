@@ -38,6 +38,8 @@ licensed financial advisor.**
 ```
 python main.py check AAPL                # full run: data + digests + 4-agent pipeline
 python main.py check AAPL --dry-run       # raw data fetch only, no LLM calls, free
+python main.py dashboard AAPL             # fetch fresh (dry-run) + write an HTML dashboard
+python main.py dashboard mobileye.json    # or build one from an existing bundle JSON file
 ```
 
 **Full run** fetches:
@@ -76,6 +78,19 @@ Every full run is logged to a local SQLite database at `storage/stockllm.db`,
 including the full research bundle and every agent's (and digest's) raw output and
 cost — nothing is thrown away, so you can review the reasoning behind any past
 recommendation later.
+
+## Dashboard
+
+`python main.py dashboard TICKER` (or point it at any existing bundle JSON file,
+e.g. `python main.py dashboard mobileye.json`) generates a single self-contained
+`.html` file — no server, no build step, no internet connection needed to view it,
+just open it in a browser. It renders every section of the research bundle as
+charts/tables: price & technicals, analyst ratings + estimates, relative
+performance & valuation, financials, ownership, dividends/buybacks/options/
+macro/sentiment, news, filings, and a data-quality-notes panel. Supports light/dark
+mode (persisted across opens) and a "view as table" toggle on every chart. See
+`dashboard/generate_dashboard.py` — it's a pure rendering layer over the bundle
+JSON, no network calls of its own.
 
 ## Cost control
 
