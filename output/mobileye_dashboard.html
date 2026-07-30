@@ -135,6 +135,15 @@ button.chip:hover { background: var(--gridline); }
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   margin-bottom: 20px;
 }
+/* Fixed-column-count variants (used where auto-fit's column count would
+   otherwise vary awkwardly, e.g. a 3-tile MACD row). Named classes instead
+   of inline styles so the mobile media query below can collapse them. */
+.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+/* Two sub-panels side by side within one section (distinct from the
+   page-level .grid below, which arranges whole section cards). */
+.split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .stat-tile {
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px;
@@ -161,7 +170,7 @@ button.chip:hover { background: var(--gridline); }
 .info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
 .info-pop {
   display: none; position: absolute; z-index: 100; left: 0; top: 22px;
-  width: 240px; background: var(--text-primary); color: var(--surface-1);
+  width: 240px; max-width: min(240px, calc(100vw - 32px)); background: var(--text-primary); color: var(--surface-1);
   font-size: 12px; font-weight: 400; line-height: 1.5; padding: 10px 12px;
   border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); text-align: left;
   white-space: normal;
@@ -298,6 +307,24 @@ footer.disclaimer {
   max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
   font-size: 12px; color: var(--text-muted); line-height: 1.6;
 }
+
+/* Phones: every fixed-column grid on this page was sized for desktop --
+   the page-level .grid's 460px column floor in particular forces the
+   whole page to scroll horizontally on any phone screen (observed live on
+   an iPhone: page rendered wider than the viewport, content clipped on
+   the right). Collapse all of them well before that point. */
+@media (max-width: 700px) {
+  .wrap { padding: 14px 14px; }
+  .topbar { padding: 12px 14px; flex-wrap: wrap; }
+  .grid { grid-template-columns: 1fr !important; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .split-2col, .rec-thesis-grid { grid-template-columns: 1fr !important; }
+  .rec-top { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 420px) {
+  .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
+}
 </style>
 </head>
 <body>
@@ -345,7 +372,7 @@ footer.disclaimer {
   <div class="viz-note">Green zone (below 30) is conventionally read as oversold, red zone (above 70) as overbought -- a short-term momentum signal, not a verdict on the company. Click the &quot;i&quot; above for more.</div>
 </div>
   
-<div class="kpi-row" style="margin-top:6px;grid-template-columns:repeat(3,1fr);">
+<div class="kpi-row cols-3" style="margin-top:6px;">
   <div class="stat-tile"><div class="label">MACD</div><div class="value">-0.330</div></div>
   <div class="stat-tile"><div class="label">Signal</div><div class="value">-0.205</div></div>
   <div class="stat-tile"><div class="label">Histogram<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">A momentum signal: positive means the stock&#x27;s short-term trend is strengthening upward, negative means it&#x27;s weakening or turning down. It reacts to recent price moves, not to news about the business.</span></button></div><div class="value critical">-0.125</div><div class="sub"><span class="delta critical">Bearish momentum</span></div></div>
@@ -354,7 +381,7 @@ footer.disclaimer {
 <div class="card full">
   <h2>Analyst Ratings & Estimates <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">What professional Wall Street analysts think this stock is worth, and whether their profit estimates have been rising or falling.</span></button></h2>
   <div class="card-sub">Recommendation: buy · last 60 days of rating actions</div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
 <div class="viz-card">
   <div class="viz-card-head">
@@ -394,7 +421,7 @@ footer.disclaimer {
   
 </div>
   
-<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:12px;">
+<div class="kpi-row cols-3" style="margin-top:12px;">
   <div class="stat-tile"><div class="label">Stock P/E<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Price-to-Earnings ratio: how many dollars investors are paying for every $1 of the company&#x27;s yearly profit. Higher usually means investors expect faster growth ahead; it can also mean the stock is expensive relative to what it currently earns. Shows — if the company lost money, since the math doesn&#x27;t work with a loss.</span></button></div><div class="value">N/A</div><div class="sub">No trailing P/E (company had a loss) — forward P/E (based on next year&#x27;s estimate): 17.1</div></div>
   <div class="stat-tile"><div class="label">P/E vs S&amp;P 500<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Compares this company&#x27;s P/E ratio (see above) to the S&amp;P 500&#x27;s and to its own sector&#x27;s. A positive number means investors are paying more per dollar of profit than they would for the average stock in that group — which isn&#x27;t automatically good or bad, it can mean &quot;expensive&quot; or &quot;expected to grow faster,&quot; depending on why.</span></button></div><div class="value">—</div><div class="sub">S&amp;P 500 P/E 26.7</div></div>
   <div class="stat-tile"><div class="label">P/E vs sector<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Compares this company&#x27;s P/E ratio (see above) to the S&amp;P 500&#x27;s and to its own sector&#x27;s. A positive number means investors are paying more per dollar of profit than they would for the average stock in that group — which isn&#x27;t automatically good or bad, it can mean &quot;expensive&quot; or &quot;expected to grow faster,&quot; depending on why.</span></button></div><div class="value">—</div><div class="sub">Sector P/E 28.7</div></div>
@@ -403,7 +430,7 @@ footer.disclaimer {
 <div class="card full">
   <h2>Financials <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The actual business results: how much money is coming in, how much is profit, and how healthy the balance sheet is.</span></button></h2>
   
-<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+<div class="kpi-row cols-4">
   <div class="stat-tile"><div class="label">Total debt<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The company&#x27;s financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.</span></button></div><div class="value">—</div></div>
   <div class="stat-tile"><div class="label">Total cash<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The company&#x27;s financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.</span></button></div><div class="value">$1.44B</div></div>
   <div class="stat-tile"><div class="label">Debt / equity<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The company&#x27;s financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.</span></button></div><div class="value">—</div><div class="sub">Lower generally means less financial risk</div></div>
@@ -427,7 +454,7 @@ footer.disclaimer {
 <div class="card full">
   <h2>Ownership <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Who holds the stock and what company insiders have been doing with their own shares.</span></button></h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
       
 <div class="viz-card">
@@ -450,10 +477,10 @@ footer.disclaimer {
 </div>
 <div class="card full">
   <h2>Dividends, Buybacks, Options & Sentiment <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.</span></button></h2>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
       
-<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+<div class="kpi-row cols-3">
   <div class="stat-tile"><div class="label">Dividend yield<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">If the company pays a dividend, this is the yearly payout per share as a percentage of the share price — like a savings-account interest rate, but not guaranteed and can be cut. Shows &quot;None&quot; if this company doesn&#x27;t currently pay one (common for younger/growth-focused companies that reinvest profits instead).</span></button></div><div class="value">No dividend</div></div>
   <div class="stat-tile"><div class="label">Payout ratio<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">What percentage of the company&#x27;s profit is paid out as dividends rather than kept/reinvested. A very high number can mean the dividend is at risk if profits dip.</span></button></div><div class="value">0.0%</div></div>
   <div class="stat-tile"><div class="label">5y avg yield<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">If the company pays a dividend, this is the yearly payout per share as a percentage of the share price — like a savings-account interest rate, but not guaranteed and can be cut. Shows &quot;None&quot; if this company doesn&#x27;t currently pay one (common for younger/growth-focused companies that reinvest profits instead).</span></button></div><div class="value">—</div></div>
@@ -469,7 +496,7 @@ footer.disclaimer {
   
 </div>
       
-<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+<div class="kpi-row cols-2">
   <div class="stat-tile"><div class="label">VIX level<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">See the VIX explanation above — the market-wide fear gauge, shown again here alongside the interest-rate context.</span></button></div><div class="value">17.4</div><div class="sub"><span class="delta critical">1.3 (20d)</span></div></div>
   <div class="stat-tile"><div class="label">10Y Treasury yield<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The interest rate the U.S. government pays to borrow money for 10 years. It matters here because when this rate rises, investors often demand more from stocks too, which tends to hurt expensive/high-growth stocks the most. Same for every stock — it&#x27;s not about this company.</span></button></div><div class="value">4.7%</div><div class="sub"><span class="delta critical">+0.2% (20d)</span></div></div>
 </div>
@@ -477,7 +504,7 @@ footer.disclaimer {
     </div>
     <div>
       
-<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+<div class="kpi-row cols-2">
   <div class="stat-tile"><div class="label">Put/call volume ratio<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">In the options market, &quot;puts&quot; are bets a stock will fall and &quot;calls&quot; are bets it will rise. This ratio compares how much of each is being traded — a lot more puts than calls can indicate traders are hedging against or betting on a drop, though it&#x27;s an imperfect read on sentiment.</span></button></div><div class="value">0.777</div></div>
   <div class="stat-tile"><div class="label">Put/call open interest ratio<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">In the options market, &quot;puts&quot; are bets a stock will fall and &quot;calls&quot; are bets it will rise. This ratio compares how much of each is being traded — a lot more puts than calls can indicate traders are hedging against or betting on a drop, though it&#x27;s an imperfect read on sentiment.</span></button></div><div class="value">0.451</div></div>
 </div>

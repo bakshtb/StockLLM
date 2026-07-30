@@ -619,6 +619,48 @@ StockLLM/
     treatment** — this isn't a one-off fix, it's a standing constraint on
     every URL this app generates for itself.
 
+30. **Fixed a real mobile-responsive-design bug, reported with a phone
+    screenshot**: the whole dashboard page rendered wider than the
+    viewport on a phone (iPhone Safari), clipping content on the right
+    with no way to see it short of scrolling horizontally. Root cause: the
+    page-level `.grid` (arranges section cards) used
+    `grid-template-columns: repeat(auto-fit, minmax(460px, 1fr))` — a
+    460px floor per column that's simply wider than most phone viewports
+    (commonly 375-430 CSS px), so the grid had no choice but to overflow.
+    Several sections also used **inline** `style="grid-template-columns:
+    repeat(N,1fr)"` (fixed N-column KPI rows, two-column sub-panel splits)
+    which don't respond to viewport width at all.
+    - Converted every inline grid override to a named class
+      (`.kpi-row.cols-2/3/4`, `.split-2col`) specifically so a mobile media
+      query could target them — inline styles can't be overridden by a
+      later CSS rule without `!important` fighting inline specificity, so
+      this wasn't optional cleanup, it was required to make the fix work
+      at all.
+    - Added `@media (max-width: 700px)` collapsing `.grid` to one column,
+      all fixed-column `.kpi-row` variants to 2 columns, and `.split-2col`/
+      `.rec-thesis-grid` to one column, plus a tighter
+      `@media (max-width: 420px)` collapsing KPI rows further to one
+      column for small phones. Also fixed a secondary issue found while
+      auditing this: `.info-pop` (the info-icon popover) had a fixed
+      `width: 240px` that could overflow a narrow viewport if the icon it's
+      attached to sits near the right edge — added
+      `max-width: min(240px, calc(100vw - 32px))` as a safety net (this
+      doesn't reposition the popover if it's near the right edge, just
+      caps its width so it can't blow past the viewport; a fully correct
+      fix would need JS-based edge-aware positioning, not attempted here
+      since the known info-icon placements are all near the left of their
+      row).
+    - `webapp/app.py` needed no separate fix — it imports `CSS_STYLE`
+      directly from `dashboard/generate_dashboard.py`, so it inherited all
+      of this automatically. If `webapp/app.py` ever adds its OWN
+      fixed-column grid layout outside of what `CSS_STYLE` provides, it
+      will need the same treatment.
+    - Verified with the BeautifulSoup structural checks across all 6
+      bundle files (svg counts, no leaked values) plus confirming the
+      media query text is actually present in the generated output — still
+      no real browser/device available to visually confirm the fix beyond
+      that, so it's worth another look on an actual phone.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

@@ -149,6 +149,15 @@ button.chip:hover { background: var(--gridline); }
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   margin-bottom: 20px;
 }
+/* Fixed-column-count variants (used where auto-fit's column count would
+   otherwise vary awkwardly, e.g. a 3-tile MACD row). Named classes instead
+   of inline styles so the mobile media query below can collapse them. */
+.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+/* Two sub-panels side by side within one section (distinct from the
+   page-level .grid below, which arranges whole section cards). */
+.split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .stat-tile {
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px;
@@ -175,7 +184,7 @@ button.chip:hover { background: var(--gridline); }
 .info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
 .info-pop {
   display: none; position: absolute; z-index: 100; left: 0; top: 22px;
-  width: 240px; background: var(--text-primary); color: var(--surface-1);
+  width: 240px; max-width: min(240px, calc(100vw - 32px)); background: var(--text-primary); color: var(--surface-1);
   font-size: 12px; font-weight: 400; line-height: 1.5; padding: 10px 12px;
   border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); text-align: left;
   white-space: normal;
@@ -311,6 +320,24 @@ table.data-table tr:last-child td { border-bottom: none; }
 footer.disclaimer {
   max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
   font-size: 12px; color: var(--text-muted); line-height: 1.6;
+}
+
+/* Phones: every fixed-column grid on this page was sized for desktop --
+   the page-level .grid's 460px column floor in particular forces the
+   whole page to scroll horizontally on any phone screen (observed live on
+   an iPhone: page rendered wider than the viewport, content clipped on
+   the right). Collapse all of them well before that point. */
+@media (max-width: 700px) {
+  .wrap { padding: 14px 14px; }
+  .topbar { padding: 12px 14px; flex-wrap: wrap; }
+  .grid { grid-template-columns: 1fr !important; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .split-2col, .rec-thesis-grid { grid-template-columns: 1fr !important; }
+  .rec-top { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 420px) {
+  .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
 }
 """
 
@@ -1303,7 +1330,7 @@ def section_price_technicals(bundle):
     macd_hist = price.get("macd_histogram")
     macd_status = "good" if (macd_hist or 0) > 0 else "critical" if (macd_hist or 0) < 0 else "neutral"
     macd_html = f"""
-<div class="kpi-row" style="margin-top:6px;grid-template-columns:repeat(3,1fr);">
+<div class="kpi-row cols-3" style="margin-top:6px;">
   {stat_tile("MACD", fmt_num(macd,3))}
   {stat_tile("Signal", fmt_num(macd_signal,3))}
   {stat_tile("Histogram", fmt_num(macd_hist,3), delta_text=("Bullish momentum" if macd_status=="good" else "Bearish momentum" if macd_status=="critical" else "Flat"), delta_cls=macd_status, value_cls=macd_status if macd_status != "neutral" else None, info="macd_histogram")}
@@ -1378,7 +1405,7 @@ def section_analyst(bundle):
 <div class="card full">
   <h2>Analyst Ratings & Estimates {info_icon('section_analyst')}</h2>
   <div class="card-sub">Recommendation: {esc(fundamentals.get('analyst_recommendation') or '—')} · last {analyst_ratings.get('lookback_days', 60)} days of rating actions</div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>{range_card}{surprise_card}</div>
     <div>
       <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Recent rating actions {info_icon('analyst_actions')}</span></div>{actions_table}</div>
@@ -1419,7 +1446,7 @@ def section_relative_performance(bundle):
             if forward_pe is not None else "No trailing P/E — company had a loss over the past year"
         )
     pe_tiles = f"""
-<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:12px;">
+<div class="kpi-row cols-3" style="margin-top:12px;">
   {stat_tile("Stock P/E", stock_pe_display, sub=stock_pe_sub, info="pe_ratio")}
   {stat_tile("P/E vs S&P 500", fmt_pct(rp.get('pe_premium_vs_benchmark_pct')), sub=f"S&P 500 P/E {fmt_num(rp.get('benchmark_pe_ratio'),1)}", info="pe_premium")}
   {stat_tile("P/E vs sector", fmt_pct(rp.get('pe_premium_vs_sector_pct')), sub=f"Sector P/E {fmt_num(rp.get('sector_pe_ratio'),1)}", info="pe_premium")}
@@ -1476,7 +1503,7 @@ def section_ownership(bundle):
 <div class="card full">
   <h2>Ownership {info_icon('section_ownership')}</h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
       {stack_card}
       <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Top institutional holders {info_icon('top_holders')}</span></div>{holders_table}</div>
@@ -1502,7 +1529,7 @@ def section_financials(bundle):
     fcf = bs.get("free_cash_flow")
 
     bs_tiles = f"""
-<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+<div class="kpi-row cols-4">
   {stat_tile("Total debt", fmt_usd(bs.get('total_debt')), info="balance_sheet")}
   {stat_tile("Total cash", fmt_usd(bs.get('total_cash')), info="balance_sheet")}
   {stat_tile("Debt / equity", fmt_num(bs.get('debt_to_equity'),1), info="balance_sheet",
@@ -1542,7 +1569,7 @@ def section_dividends_options_macro_social(bundle):
     soc = bundle.get("social_sentiment", {}) or {}
 
     div_tiles = f"""
-<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+<div class="kpi-row cols-3">
   {stat_tile("Dividend yield", fmt_pct(div.get('dividend_yield_pct'), signed=False) if div.get('dividend_yield_pct') is not None else "No dividend", info="dividend_yield")}
   {stat_tile("Payout ratio", fmt_pct(div.get('payout_ratio_pct'), signed=False), info="payout_ratio")}
   {stat_tile("5y avg yield", fmt_pct(div.get('five_year_avg_dividend_yield_pct'), signed=False) if div.get('five_year_avg_dividend_yield_pct') is not None else "—", info="dividend_yield")}
@@ -1557,7 +1584,7 @@ def section_dividends_options_macro_social(bundle):
 
     opt_reliable = opt.get("put_call_volume_ratio") is not None
     opt_html = f"""
-<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+<div class="kpi-row cols-2">
   {stat_tile("Put/call volume ratio", fmt_num(opt.get('put_call_volume_ratio'),3) if opt_reliable else "—", info="put_call_ratio")}
   {stat_tile("Put/call open interest ratio", fmt_num(opt.get('put_call_open_interest_ratio'),3) if opt_reliable else "—", info="put_call_ratio")}
 </div>
@@ -1565,7 +1592,7 @@ def section_dividends_options_macro_social(bundle):
 <div class="viz-note" style="margin-top:8px;">{esc(opt.get('note') or '')}</div>"""
 
     macro_tiles = f"""
-<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+<div class="kpi-row cols-2">
   {stat_tile("VIX level", fmt_num(macro.get('vix_level'),1), delta_text=fmt_num(macro.get('vix_change_20d'),1)+" (20d)" if macro.get('vix_change_20d') is not None else None, delta_cls=delta_class(macro.get('vix_change_20d'), invert=True), info="vix_macro")}
   {stat_tile("10Y Treasury yield", fmt_pct(macro.get('treasury_10y_yield_pct'), signed=False), delta_text=fmt_pct(macro.get('treasury_10y_yield_change_20d_pct'))+" (20d)" if macro.get('treasury_10y_yield_change_20d_pct') is not None else None, delta_cls=delta_class(macro.get('treasury_10y_yield_change_20d_pct'), invert=True), info="treasury_10y")}
 </div>
@@ -1587,7 +1614,7 @@ def section_dividends_options_macro_social(bundle):
     return f"""
 <div class="card full">
   <h2>Dividends, Buybacks, Options & Sentiment {info_icon('section_extras')}</h2>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
       {div_tiles}
       {bb_card}

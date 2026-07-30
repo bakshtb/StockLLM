@@ -1,6 +1,6 @@
 {
   "ticker": "AAPL",
-  "fetched_at": "2026-07-30T22:03:22.172566Z",
+  "fetched_at": "2026-07-30T22:15:19.634399Z",
   "price": {
     "current_price": 333.43,
     "ma20": 324.35,
@@ -25,11 +25,11 @@
     "industry": "Consumer Electronics",
     "next_earnings_date": "2026-07-30",
     "analyst_recommendation": "buy",
-    "target_mean_price": 321.6566,
-    "target_median_price": 330.0,
+    "target_mean_price": 319.71722,
+    "target_median_price": 329.0,
     "target_high_price": 400.0,
     "target_low_price": 215.0,
-    "number_of_analyst_opinions": 41,
+    "number_of_analyst_opinions": 43,
     "short_interest": {
       "shares_short": 146547784,
       "shares_short_prior_month": 144248476,
@@ -178,6 +178,12 @@
   "earnings_estimates": {
     "earnings_surprise_history": [
       {
+        "quarter_end": "2025-06-30",
+        "eps_actual": 1.57,
+        "eps_estimate": 1.42572,
+        "surprise_pct": 10.12
+      },
+      {
         "quarter_end": "2025-09-30",
         "eps_actual": 1.85,
         "eps_estimate": 1.76993,
@@ -194,54 +200,48 @@
         "eps_actual": 2.01,
         "eps_estimate": 1.94275,
         "surprise_pct": 3.46
-      },
-      {
-        "quarter_end": "2026-06-30",
-        "eps_actual": 2.02,
-        "eps_estimate": 1.89243,
-        "surprise_pct": 6.74
       }
     ],
     "eps_estimate_trend": {
       "current_quarter": {
-        "current": 2.00997,
+        "current": 1.89138,
+        "7daysAgo": 1.89396,
+        "30daysAgo": 1.89429,
+        "60daysAgo": 1.89429,
+        "90daysAgo": 1.73951
+      },
+      "next_quarter": {
+        "current": 2.01204,
         "7daysAgo": 2.0179,
         "30daysAgo": 2.00836,
         "60daysAgo": 2.00767,
         "90daysAgo": 1.97244
-      },
-      "next_quarter": {
-        "current": 2.97326,
-        "7daysAgo": 2.96507,
-        "30daysAgo": 2.94829,
-        "60daysAgo": 2.94699,
-        "90daysAgo": 2.94772
       },
       "current_year": {
         "current": 8.7615,
         "7daysAgo": 8.7676,
         "30daysAgo": 8.75958,
         "60daysAgo": 8.75324,
-        "90daysAgo": 8.52472
+        "90daysAgo": 8.51118
       },
       "next_year": {
-        "current": 9.73237,
+        "current": 9.71808,
         "7daysAgo": 9.7111,
         "30daysAgo": 9.68258,
         "60daysAgo": 9.65517,
-        "90daysAgo": 9.43238
+        "90daysAgo": 9.39625
       }
     },
     "eps_estimate_revisions": {
       "current_quarter": {
-        "upLast7days": 1,
-        "upLast30days": 2,
+        "upLast7days": 0,
+        "upLast30days": 24,
         "downLast30days": 0,
         "downLast7Days": 0
       },
       "next_quarter": {
         "upLast7days": 1,
-        "upLast30days": 1,
+        "upLast30days": 2,
         "downLast30days": 0,
         "downLast7Days": 0
       },
@@ -260,20 +260,20 @@
     },
     "revenue_estimate": {
       "current_quarter": {
+        "avg": 108959817930,
+        "low": 107516300000,
+        "high": 112168000000,
+        "num_analysts": 27,
+        "year_ago_revenue": 94036000000,
+        "growth_pct": 15.87
+      },
+      "next_quarter": {
         "avg": 114954831890,
         "low": 106178615430,
         "high": 125959800000,
         "num_analysts": 26,
         "year_ago_revenue": 102466000000,
         "growth_pct": 12.19
-      },
-      "next_quarter": {
-        "avg": 154879483800,
-        "low": 134145734029,
-        "high": 170414000000,
-        "num_analysts": 20,
-        "year_ago_revenue": 143756000000,
-        "growth_pct": 7.74
       },
       "current_year": {
         "avg": 478846665480,
@@ -284,12 +284,12 @@
         "growth_pct": 15.06
       },
       "next_year": {
-        "avg": 525634620140,
-        "low": 495383500000,
+        "avg": 523644400140,
+        "low": 483566000000,
         "high": 594863000000,
-        "num_analysts": 40,
+        "num_analysts": 42,
         "year_ago_revenue": 478846665480,
-        "growth_pct": 9.77
+        "growth_pct": 9.36
       }
     },
     "note": null
@@ -383,29 +383,29 @@
     "bullish_pct_of_tagged": 36.4,
     "sample_messages_unverified": [
       {
-        "created_at": "2026-07-30T22:02:15Z",
-        "body": "$AAPL \ud83e\ude78 \n\nYikes\u2026. Lowering the bar even more. \n\nGrowth is slowing \ud83d\udcc9\ud83d\udd73\ufe0f",
+        "created_at": "2026-07-30T22:14:52Z",
+        "body": "$AAPL I\u2019d love to see 295 but it\u2019s likely gonna rebound and open around 325",
+        "sentiment": null
+      },
+      {
+        "created_at": "2026-07-30T22:14:47Z",
+        "body": "$AAPL and Tim just left Tetrus to handle this shit show",
+        "sentiment": null
+      },
+      {
+        "created_at": "2026-07-30T22:14:24Z",
+        "body": "$AAPL PURE BULLSHIT !!! WTF !!!!",
+        "sentiment": "Bullish"
+      },
+      {
+        "created_at": "2026-07-30T22:13:51Z",
+        "body": "$AAPL I was short this POS yesterday at the top, it feels so good",
         "sentiment": "Bearish"
       },
       {
-        "created_at": "2026-07-30T22:02:14Z",
-        "body": "$aapL that 535 Billion is me using there true cash assets/marketable securities, Treasury Bonds at a 3.5x multiple nearly equalybto the 4 week treasury yield . You can use a higher multiple reflecting intermediate Treasury yields such as 10,20,30..  think about it they are valuing iPhone as an asset of at least 1.5 Trillion aint no way.. you coukd fix global pocerty forever with 1.5 trillion dollars, heck jus tusing the combine cash pile of $brK.B thats 420 billions thats just sitting waiting dor equities and bitcoin to be swallowed while record folks starved and priced out of",
-        "sentiment": null
-      },
-      {
-        "created_at": "2026-07-30T22:02:01Z",
-        "body": "@Joe_Mama $aapl wrong...Apple phones are crap fake china copies. I have the real thing a google one phone LOL nice try",
-        "sentiment": null
-      },
-      {
-        "created_at": "2026-07-30T22:01:59Z",
-        "body": "$SPY $AVGO $48 stock 5 years ago !!! make it make sense !! WS pulling the AI \ud83e\udd216 year scam on everyone !!! 2026 EVERYONE IS LATE !!!\u23f0 congratulations to those who locked profits - LIFE CHANGING - NOW ONLY FOR THE WORSE !!! NO BAGS 2026 !!! $AAPL $QQQ",
-        "sentiment": null
-      },
-      {
-        "created_at": "2026-07-30T22:01:58Z",
-        "body": "$AAPL buy high sell low",
-        "sentiment": null
+        "created_at": "2026-07-30T22:13:36Z",
+        "body": "$AAPL another great call by Downtown Josh Brown lol",
+        "sentiment": "Bearish"
       }
     ],
     "note": null
@@ -676,18 +676,18 @@
   },
   "news_headlines": [
     {
-      "headline": "Apple earnings: iPhone prices are 'not immune' to rising memory costs",
+      "headline": "Apple commits more than $30 Billion to US manufacturing",
       "source": "Yahoo Finance Video",
       "date": "2026-07-30",
-      "snippet": "Apple (AAPL) stock is stumbling in Thursday's after-hours since reporting fiscal third quarter earnings and revenue that topped estimates, carried by strong iPhone sales. New Street Research technolog",
-      "url": "https://finance.yahoo.com/video/apple-earnings-iphone-prices-not-211500247.html"
+      "snippet": "During Thursday night's earnings call, Apple (AAPL) CEO Tim Cook highlighted a string of milestones, including the company's best-ever June quarter, with revenue reaching $109.4 billion. iPhone revenu",
+      "url": "https://finance.yahoo.com/video/apple-commits-more-30-billion-220800117.html"
     },
     {
-      "headline": "Chip stocks are rebounding \u2014 except for Qualcomm: Why it might just be a 'one off'",
+      "headline": "Apple exceeds Q3 earnings estimates, boasts $109.4 billion in revenue",
       "source": "Yahoo Finance Video",
       "date": "2026-07-30",
-      "snippet": "Chip stocks are rebounding on Thursday, with the exception of Qualcomm (QCOM), which provided profit guidance that disappointed Wall Street. BD8 Capital Partners CEO and CIO Barbara Doran and Yahoo Fi",
-      "url": "https://finance.yahoo.com/video/chip-stocks-rebounding-except-qualcomm-140656227.html"
+      "snippet": "Apple (AAPL) released results for its fiscal third quarter, revealing earnings of $2.02 per share (vs. estimates of $1.80) and revenue of $109.42 billion (vs. estimates of $108.85 billion). The stock ",
+      "url": "https://finance.yahoo.com/video/apple-exceeds-q3-earnings-estimates-boasts-1094-billion-in-revenue-203505015.html"
     },
     {
       "headline": "Dow Jones Futures: Apple, Amazon Diverge Late; What To Do After AI Stocks Surge",
@@ -697,25 +697,18 @@
       "url": "https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-earnings-microsoft-powers-ai-stock/?src=A00220&yptr=yahoo"
     },
     {
-      "headline": "Apple and Amazon report rising revenues as investors turn on some tech stocks",
-      "source": "The Guardian",
+      "headline": "Apple Sales Exceed $109 Billion, but Revenue Guidance Disappoints",
+      "source": "The Wall Street Journal",
       "date": "2026-07-30",
-      "snippet": "Both tech companies beat Wall Street predictions on revenue in their second quarters",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-amazon-report-rising-revenues-214222486.html"
+      "snippet": "The company is set to release an upgraded Siri assistant in the fall, and it continues to contend with higher component costs.",
+      "url": "https://www.wsj.com/tech/apple-aapl-q3-earnings-report-2026-stock-a2eed24e?siteid=yhoof2&yptr=yahoo"
     },
     {
-      "headline": "Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short",
-      "source": "MT Newswires",
+      "headline": "Microsoft\u2019s One-Day Market-Cap Gain Makes History",
+      "source": "The Wall Street Journal",
       "date": "2026-07-30",
-      "snippet": "Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-tops-third-quarter-estimates-211942912.html"
-    },
-    {
-      "headline": "Apple Q3 2026 earnings beat estimates but services revenue misses",
-      "source": "Quartz",
-      "date": "2026-07-30",
-      "snippet": "Revenue rose 16% to $109.4 billion and EPS climbed 29%, but a shortfall in services sent Apple stock down in after-hours trading",
-      "url": "https://qz.com/apple-q3-2026-earnings-record-june-quarter-073026"
+      "snippet": "Plus, banks are in talks to lend $15 billion for a Google-backed Anthropic data center, and Spider-Man\u2019s youngest fans might help make the new movie a hit.",
+      "url": "https://www.wsj.com/tech/microsofts-one-day-market-cap-gain-makes-history-2b3a5cb3?siteid=yhoof2&yptr=yahoo"
     },
     {
       "headline": "Apple Stock Falls As iPhone Maker Guides Below Views",
@@ -725,69 +718,69 @@
       "url": "https://www.investors.com/news/technology/apple-stock-aapl-fiscal-q3-2026-earnings/?src=A00220&yptr=yahoo"
     },
     {
-      "headline": "Memecoins Are Trading Against Stocks Now",
-      "source": "Bankless",
+      "headline": "Apple Earnings Look Good, T. Rowe Price's Wang Says",
+      "source": "Bloomberg",
       "date": "2026-07-30",
-      "snippet": "Stock-paired memecoins are Robinhood Chain's newest meta.",
-      "url": "https://www.bankless.com/read/tb"
+      "snippet": "Tony Wang, T. Rowe Price science and technology equity strategy portfolio manager, reacts to Apple's third-quarter earnings and outlook. He speaks on \"Bloomberg The Close.\"",
+      "url": "https://finance.yahoo.com/video/apple-earnings-look-good-t-214401229.html"
     },
     {
-      "headline": "Apple's final Tim Cook quarter ends strong",
-      "source": "Axios",
+      "headline": "Apple and Amazon report rising revenues as investors turn on some tech stocks",
+      "source": "The Guardian",
       "date": "2026-07-30",
-      "snippet": "Apple on Thursday reported earnings and revenue that topped Wall Street expectations, though tariff refunds added 11 cents per share to earnings.",
-      "url": "https://www.axios.com/2026/07/30/apple-earnings-beat-estimates-boosted-by-tariff-refunds#utm_source=yahoo_finance&utm_medium=partner&utm_campaign=subs-partner-yahoo-finance-AI"
+      "snippet": "Both tech companies beat Wall Street predictions on revenue in their second quarters",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-amazon-report-rising-revenues-214222486.html"
     },
     {
-      "headline": "Apple beats Q3 estimates on strong iPhone sales, but China, Services come up short",
-      "source": "Yahoo Finance",
-      "date": "2026-07-29",
-      "snippet": "Apple reported its Q3 earnings on Thursday.",
-      "url": "https://finance.yahoo.com/technology/article/apple-beats-q3-estimates-on-strong-iphone-sales-but-china-services-come-up-short-115246491.html"
+      "headline": "Apple Stock Falls After Earnings Release",
+      "source": "The Wall Street Journal",
+      "date": "2026-07-30",
+      "snippet": "Apple's third-quarter earnings featured strong growth for its flagship product, but shares are falling about 4% after market close. IPhone sales grew 21% , but Apple's overall revenue of $109.4 billio",
+      "url": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-07-30-2026/card/apple-stock-falls-after-earnings-release-Ot54Mn2XDtAD8pkP9PcM?siteid=yhoof2&yptr=yahoo"
+    },
+    {
+      "headline": "Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short",
+      "source": "MT Newswires",
+      "date": "2026-07-30",
+      "snippet": "Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-tops-third-quarter-estimates-211942912.html"
     }
   ],
   "news_articles_raw": [
     {
-      "headline": "Apple earnings: iPhone prices are 'not immune' to rising memory costs",
+      "headline": "Apple commits more than $30 Billion to US manufacturing",
       "source": "Yahoo Finance Video",
       "date": "2026-07-30",
-      "text": "Apple (AAPL) stock is stumbling in Thursday's after-hours since reporting fiscal third quarter earnings and revenue that topped estimates, carried by strong iPhone sales. New Street Research technology Infrastructure analyst Antoine Chkaiban explains the problem areas that could emerge down the line for Apple tied to the memory chip shortage. Apple just reported results. Uh the stock at least initially here edging lower in the after hours. Of course, we don't have guidance yet. Antoine, we we would wait for that on the call, but give us your initial reactions on the print. What do you think? Hey Josh, good to see you again. Um, I would say, you know, like the the very strong iPhone 17 cycle that we're experiencing right now, um, was kind of, you know, to be expected. Uh we we were expecting that, you know, you you could see already in US telecom operator um, upgrade rates, you know, stabilizing. Um, the installed base, you know, and refresh dynamics, like stable refresh dynamics, you know, implied that we would see, you know, some units growth and on top of that, as you mentioned, you know, Apple is raising prices. Um, so all of that so far has has um, you know, has has supported Apple's strong results. Now, as you said, um, what we're concerned about uh is that demand destruction, you know, memory driven demand destruction could start hitting the higher end the same way it has already hit, you know, the lower end uh of the market, like cheaper cheaper phones. Um, and so that we'll only know when we hear, you know, uh how Apple is going to guide the next quarter. So that's really what we what we care about. I I'm interested, Antoine, if if Apple raises prices on those next gen iPhones in the fall, you know, is there a price point Antoine where, you know, Tim Cook could raise prices to protect his margins but not meaningfully dent demand? Yes, I mean, smartphones, you know, uh are uh like it's it's an elastic market. There is like a very high elasticity in this market. Consumers are uh sensitive to to prices. They are more sensitive to prices in the lower end. And that's why, you know, so far the higher end has uh, you know, performed better and and you could actually see that also in the past, you know, when you have, you know, like similar, um, like down cycles in the smartphone market, typically the higher end performs better. Uh, but it's not immune. You know, like at the end of the day, uh, when you have memory prices, you know, increasing and know three, four, even 5X, uh, you know, and and um, and memory represents, you know, like even if it's like a single digit percentage of of the phone, you have to raise prices by double digits. Uh, and as you do that, you know, like uh it necessarily impacts your your demand. Uh and so you saw that uh in uh in Qualcomm's print, you saw that in arm's print, you know, and even comments, you know, on uh that that that phenomenon hitting the higher end, um we are concerned that we could start seeing that in Apple's numbers and the guidance.",
+      "text": "During Thursday night's earnings call, Apple (AAPL) CEO Tim Cook highlighted a string of milestones, including the company's best-ever June quarter, with revenue reaching $109.4 billion. iPhone revenue surged 22% year-over-year to $54.3 billion, while Mac revenue climbed to a record $10.4 billion. Beyond the financial results, Cook reaffirmed Apple's commitment to US manufacturing, announcing plans to invest $600 billion in the United States over the next four years. The investment, which the company said includes the reinvestment of tariff-related funds, expands Apple's long-term domestic manufacturing strategy. As part of that effort, Apple has entered a new multiyear agreement with Broadcom (AVGO) under its American Manufacturing Program. The partnership is expected to contribute more than $30 billion in investment to build an end-to-end silicon supply chain and advanced manufacturing equipment in the United States. Last year, we made a $600 billion commitment to the US over four years, and now, as we said before, we plan to reinvest the tariff refunds we've received into the US. We're pleased with the progress we've already made advancing the American supply chain. Earlier this month, Apple announced a new agreement with Broadcom to design and produce custom silicon components and cutting-edge wireless connectivity technologies. The new multi-year agreement with Broadcom, which is part of Apple's American manufacturing program, is expected to exceed $30 billion. This marks our largest ever American manufacturing program commitment. It's also an important step forward in our work to build an end-to-end silicon supply chain here in the US. We're excited for the upcoming opening of the Apple Advanced manufacturing Center in Houston. The center is located in a facility where we currently assemble advanced AI servers. Later this year, we'll make Mac Mini there too. The center will teach students, supplier employees, and business of all sizes the same innovative processes we use to make our products. The goal is to empower American manufacturers to take their work to the next level and strengthen the entire advanced manufacturing ecosystem. We have an exciting fall ahead and an incredible future beyond.",
       "full_text_fetched": true
     },
     {
-      "headline": "Chip stocks are rebounding \u2014 except for Qualcomm: Why it might just be a 'one off'",
+      "headline": "Apple exceeds Q3 earnings estimates, boasts $109.4 billion in revenue",
       "source": "Yahoo Finance Video",
       "date": "2026-07-30",
-      "text": "Chip stocks are rebounding on Thursday, with the exception of Qualcomm (QCOM), which provided profit guidance that disappointed Wall Street. BD8 Capital Partners CEO and CIO Barbara Doran and Yahoo Finance Technology Editor Dan Howley chat with Morning Brief host Julie Hyman about Qualcomm and the larger chip sector. Quick mention of chips here this morning, which we know have been getting clobbered lately. Um the indications are for as a group for them to be rebounding. Um and there are, you know, some mixed catalysts this morning. You have Samsung on the one hand, um saying that basically they think the chip shortage is going to keep going through 2028. Um and they gave a a a positive outlook. Their net profit was up 1300%. Um of course. Sure. as it does. Um uh operating profit was up 19 times. got Qualcomm on the other hand, give a weak profit forecast. Um, you have arm out there as well. So, but we're seeing a rebound here this morning and there does seem to be, you know, in some of these names and collectively, Qualcomm though is not participating in that. Yeah, and I was just gonna say Qualcomm, I think is a one off. You mean that's because I think they're trying to diversify their revenue stream because they they're losing Apple. Apple used to be 20, 25% of their total revenue and then Apple has started to make their own, you know, um modems, you know, internally and by the end of this year, this should be zero. So they've been, they've known this for years and they're ramping up, but I think that's it's a problem. You know, they're not there yet. And you talked to the CFO yesterday, right? Or today you're going to talk to the CFO. Great. We're uh we'll dive into everything that that happened obviously in the earnings. Uh the smart, I think the smartphone market obviously is, you know, it's a drag on them, right? And it's going to continue to be, they mentioned that, it's just AI means that it's it's interesting that, you know, the same thing with Microsoft too, uh where these companies are diving into AI. I mean, obviously Microsoft's been there, but Qualcomm now has its own rack that's own accelerator, CPU, you know, memory, it's it's all in for the data center. That's all good and great, but then on the back end, it's also hurting you because, you know, all the memory is going to AI, all the storage is going to AI, that means smartphone sales drop, that means for Microsoft, that means Windows PC sales drop. And so, you know, you're you're contending with that. I think Microsoft said that they would see a, a high teens drop in uh Windows uh revenue and and Qualcomm obviously basically just saying the smartphone market is what it is right now. There's we're we're diversifying, automotive will increase, data center will increase, we'll see uh the revenue from that. I forget what it was uh off the top of my head, but there was a certain number by 2029. Um and you know, they're they're basically saying, look, we're doing it, we're we're transitioning away from a heavy dependence on smartphone, but for now, it it it's stinging.",
+      "text": "Apple (AAPL) released results for its fiscal third quarter, revealing earnings of $2.02 per share (vs. estimates of $1.80) and revenue of $109.42 billion (vs. estimates of $108.85 billion). The stock is ticking lower in Thursday's after-hours trading. Asking for a Trend Host Josh Lipton dives into Apple's earnings figures. Apple quarterly earnings. They are just now across the wire. So let's get right to those numbers. Apple Q3 EPS 202. The street had pencild in 10 189. So that is a beat on the bottom line. Uh Q3 revenue, 109.42 billion. Anasts had been looking for 108.85 billion. So that's beats there on on the bottom and the top. Uh iPhone revenue, 54.25 billion. Uh the street was closer to 53.6 billion. So there's a beat there as well. Greater China. that comes in a bit light versus consensus. It looks like 18.82 billion. Uh and else we were looking more for 19.58 billion. Uh iPhone uh services, Q3 services revenue, 30.74. Uh the street was closer to 31.36 billion. Uh but that does look like June quarter records for both EPS there. Um remember this stock, we're down here uh a bit here about 2% so far in the after hours. You would expect to get greater clarity on on what Apple sees ahead on the call in terms of their forecast. This stock also, remember had been running hot into this print. It was up about 20% year to date. It was up about 15% in just the past month. and perhaps that's that's uh investors thinking that, you know what? maybe Apple's relatively uh restrained AI spending was a strength, maybe not a weakness. Apple is though, of course, dealing with the same challenges as a lot of other companies, specifically, uh rising memory and storage costs. You saw them react to that by raising prices on the Mac and the iPad. The expectation is they're also going to raise prices on those next uh gen iPhones coming in the fall. Remember, uh this is also we expect Tim Tim Cook's last conference call. So it is a a historic moment for Apple as he now turns over the reins to John Ternus.",
       "full_text_fetched": true
     },
     {
       "headline": "Dow Jones Futures: Apple, Amazon Diverge Late; What To Do After AI Stocks Surge",
       "source": "Investor's Business Daily",
       "date": "2026-07-30",
-      "text": "BREAKING:Apple, Amazon Lead Big Earnings After AI Stocks Rip Higher  Dow Jones futures rose slightly after hours, along with S&P 500 futures and Nasdaq futures. Apple (AAPL) and Amazon.com (AMZN) headlined another heavy night of earnings, with the tech titans diverging. The stock market saw chips and AI plays rebound, fueled by Microsoft (MSFT), short covering and more. But much of the market had quiet gains or lost ground, with\u2026 Copyright \u00a92026 Investor's Business Daily, LLC. All rights reserved. 87990cbe856818d5eddac44c7b1cdeb8 9:44 AM ETApple late Thursday beat Wall Street's targets for its fiscal third quarter. But Apple stock fell in extended trading. 9:44 AM ETApple late Thursday beat Wall Street's targets for its fiscal... Get instant access to exclusive stock lists, expert market analysis and powerful tools with 2 months of IBD Digital for only $20! Get market updates, educational videos, webinars, and stock analysis. Learn how you can make more money with IBD's investing tools, top-performing stock lists, and educational content.",
+      "text": "BREAKING:Apple, Amazon Lead Big Earnings After AI Stocks Rip Higher  Dow Jones futures rose slightly after hours, along with S&P 500 futures and Nasdaq futures. Apple (AAPL) and Amazon.com (AMZN) headlined another heavy night of earnings, with the tech titans diverging. The stock market saw chips and AI plays rebound, fueled by Microsoft (MSFT), short covering and more. But much of the market had quiet gains or lost ground, with\u2026 Copyright \u00a92026 Investor's Business Daily, LLC. All rights reserved. 87990cbe856818d5eddac44c7b1cdeb8 10:57 AM ETThe tech-heavy Nasdaq composite and AI chip stocks stage a snapback rally Thursday. 10:57 AM ETThe tech-heavy Nasdaq composite and AI chip stocks stage a... Get instant access to exclusive stock lists, expert market analysis and powerful tools with 2 months of IBD Digital for only $20! Get market updates, educational videos, webinars, and stock analysis. Learn how you can make more money with IBD's investing tools, top-performing stock lists, and educational content.",
       "full_text_fetched": true
     },
     {
-      "headline": "Apple and Amazon report rising revenues as investors turn on some tech stocks",
-      "source": "The Guardian",
+      "headline": "Apple Sales Exceed $109 Billion, but Revenue Guidance Disappoints",
+      "source": "The Wall Street Journal",
       "date": "2026-07-30",
-      "text": "Apple and Amazon both released their second quarter earnings on Thursday, a test of investor confidence in major tech companies amidgrowing concerns over exorbitant AI spending. Apple revealed quarterly revenue of $109.4bn, beating Wall Street expectations of $108.65bn in revenue. It also reported $2.02 earnings per share, driven by sales of its marquee products such as iPhones and laptops. Amazon reported that its revenue was $200.6bn compared with analyst predictions of $196.47bn. The company also grew its AWS cloud computing service and beat market expectations on advertising revenue, thoughfree cash flow declined. Amazon's stock jumped more than 8% in immediate after hours trading. It has been a tough month for several prominent tech companies, with shares in Tesla and Meta both plunging after they revealed huge spending on AI infrastructure in their latest earnings reports. A recent selloff in chip stocks like Nvidia, the result of loss in investor confidence and advances in Chinese chip manufacturing, has also rattled the market. Investors have paid especially close attention in recent weeks to tech companies' free cash flow after large capital expenditures \u2013 largely on AI \u2013 have caused concern. As the industry continues to plow money into building out AI capabilities in search of future profits, shareholders have become more jittery when earnings reports reveal larger-than expected AI spending. Apple, meanwhile, has benefitted from the chip stock selloff as investors viewed the company as a safe haven amid the broaderAI-driven volatility. The company's stock is up around 23% this year, leading the so-called Magnificent Seven tech stocks, which include Meta, Microsoft, Alphabet, Amazon, Tesla and Nvidia. Apple's stock price dropped slightly on Thursday following earnings after it reported its revenue from its services division was below market expectations. Thursday's earnings call was also CEO Tim Cook's final report before he steps down after 15 years as Apple's top executive. Apple's market value grew immensely over Cook's tenure as chief executive, from around $350bn in 2011 tosurpassing the $5tn markdays before Thursday's earnings call. Earlier this month the company overtook Nvidia to become the world's most valuable company. Cook will bereplaced by John Ternus, a longtime hardware engineering executive who has been at the company since 2001. Ternus stated earlier this week that he aims to expand the Apple's entertainment business, which has had success with movies like the blockbuster F1 and streaming series such as The Studio. \"As you know, this will be my final earnings call,\" Cook said on Thursday. \"I am beyond excited for John to step into his new role and lead Apple into its next era. He is truly one of a kind and there is no better person to take the helm of the company.\"",
-      "full_text_fetched": true
-    },
-    {
-      "headline": "Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short",
-      "source": "MT Newswires",
-      "date": "2026-07-30",
-      "text": "Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the",
+      "text": "The company is set to release an upgraded Siri assistant in the fall, and it continues to contend with higher component costs.",
       "full_text_fetched": false
     },
     {
-      "headline": "Apple Q3 2026 earnings beat estimates but services revenue misses",
-      "source": "Quartz",
+      "headline": "Microsoft\u2019s One-Day Market-Cap Gain Makes History",
+      "source": "The Wall Street Journal",
       "date": "2026-07-30",
-      "text": "Revenue rose 16% to $109.4 billion and EPS climbed 29%, but a shortfall in services sent Apple stock down in after-hours trading \u00a9 2026 Quartz Media, Inc. All rights reserved. David Paul Morris / Bloomberg via Getty Images Apple$AAPLreportedits strongest June quarter on record Thursday, with revenue of $109.4 billion up 16% from a year earlier and diluted earnings per share of $2.02 up 29% year over year. Despite beating top-line estimates,Apple's services revenue came in at $30.74 billion, below analyst expectations of $31.22 billion, according toCNBC. The stock fell roughly 3% to 4% in extended trading. Heading into Thursday, the stock had gained about 23% on the year. iPhone revenue of $54.25 billion exceeded estimates of $53.86 billion, representing 22% growth year over year. Mac revenue of $10.35 billion topped an $8.74 billion estimate, but iPad revenue of $6.19 billion fell short of the $6.92 billion analysts had projected. China revenue also disappointed. Sales in Greater China totaled $18.8 billion, well below analyst projections of $19.6 billion, according toBloomberg. Gross margin came in at 50.1%, including a roughly 2% boost from tariff refunds, the company said. Earnings per share also included an $0.11 benefit from tariff refunds. Net income rose to $29.79 billion from $23.43 billion in the same quarter a year earlier. \"Today,Appleis proud to report our strongest June quarter ever, with double-digit revenue growth across iPhone, Mac and Services, and in every geographic segment,\" Chief Executive Officer Tim Cook said in a statement. The quarter is Cook's last as CEO, with the 65-year-oldset to handthe role to hardware engineering chief John Ternus on Sept. 1. Appleis grappling with a worldwide scarcity of memory chips and processors, a crunch that has pushed the company to increase prices on Macs and iPads. Customers have faced lengthening delivery delays on hardware such as the Mac mini and Mac Studio as a result. Applealso recently reclaimed its position as the world's most valuable company, overtakingNvidia$NVDAwith a market capitalization of nearly $5 trillion. Join 500,000+ readers who start their day with Quartz. By subscribing, you agree to our Terms of Service and Privacy Policy.",
-      "full_text_fetched": true
+      "text": "Plus, banks are in talks to lend $15 billion for a Google-backed Anthropic data center, and Spider-Man\u2019s youngest fans might help make the new movie a hit.",
+      "full_text_fetched": false
     },
     {
       "headline": "Apple Stock Falls As iPhone Maker Guides Below Views",
@@ -797,24 +790,31 @@
       "full_text_fetched": true
     },
     {
-      "headline": "Memecoins Are Trading Against Stocks Now",
-      "source": "Bankless",
+      "headline": "Apple Earnings Look Good, T. Rowe Price's Wang Says",
+      "source": "Bloomberg",
       "date": "2026-07-30",
-      "text": "Subscribe to Banklessorsign in The main barbell on Robinhood Chain thus far has been memes and real world assets (RWA), and now these trends have coalesced into a new mechanism gaining significant traction on the network:RWA-paired memecoin launches. One of the early pillars on the L2 has beenRobinhood Stock Tokens, e.g. onchain versions of NVDA, SPCX, TSLA, AAPL, etc. Yet to date most memecoins deployed on the chain have been paired againstETH(and specifically WETH) for the widespread liquidity. That said, what would happen if you paired new launches against tokenized stocks instead? We're getting answers in production, as a handful of launchpads are now testing what memecoins' charts look like tied tostocksinstead of ETH. For instance, LONG was anearly oncomerand supports a large swathe of the stock-paired memes dropping on Robinhood Chain. Bankr, havingrecently added this capability, is supporting similar levels of activity here. The popular indie launchpad Pons isadding custom pairsto its V2, and Flaunch isworking on stock tokens, too. So the race is on, but what are the actual mechanics here? Notably, pairing against a stock isn't a pure bet on the meme itself. A pool's price is a ratio, i.e. how much of the stock token it takes to buy one meme token. This dynamic isolates relative demand, but thedollarreturn is that price ratio times whatever the stock itself does over the same stretch. Consider an \u201cXYZ\u201d memecoin launched at a price of 0.001 NVDA. If NVDA is worth $180, each XYZ token starts at $0.18. Enjoying this article? Subscribe to Banklessorsign in Now assume demand for XYZ rises and, one month later, it trades at 0.0015 NVDA. That means XYZ has gained 50% relative to NVDA. Your actual dollar return, however, still depends on what happened to NVDA itself: In other words, buying a stock-paired memecoin is a combined bet: you are betting that the meme will outperform the stock, while also remaining fully exposed to the stock\u2019s price movement. As such, pairing against a stock trades ETH's volatility for the stock's. And since top equities are way less volatile than crypto, the chop amid these pools can be considerably calmer. That's one big appeal of this model. Anotherinteresting dynamic to note here is these sorts of pools let token creators accrue fees in whatever stocks their launches are paired against, meaning they get paid directly with tokenized equity exposure over time (if their pools continue to generate meaningful onchain volume, of course). This sort of architecture mostly depends on liquidity, and Robinhood Stock Tokens don't have tons of that right now. That's straightforward enough to steadily improve going forward, though, and things are apparently liquid enough considering how Robinhood Chainalreadyboasts the most tokenized stock holders in all of crypto. Wow. Less than a month after launch, Robinhood Chain has become the largest network by tokenized stock holders, surpassing Solana, BNB Chain, Ethereum, and Base.Distribution matters.Source:@tokenterminalpic.twitter.com/HIlYA4fjoJ There are geofencing restrictions in place around these tokens in various jurisdictions, so we'll have to see if these soften or tighten in the months ahead. Even in spite of them, this new pool style is already moving serious volume onchain and will lead to further second-order experiments. Keep it on your radar for 2026, as it's a trend poised to continue blooming. Written by William M. Peaster 1024 Articles\u2022View all William M. Peaster, Senior Writer, has been with Bankless since January 2021. Immersed in Ethereum since 2017, he covers the onchain frontier with a particular interest in art, games, and other culture apps. He has a background in creative writing and writes fiction in his free time. Listening to Bankless articles is just the beginning of what you'll unlock with Citizenship... Ad-Free Podcast Feed 100+ Airdrop Hunter Guides Exclusive Newsletter Analysis Daily Token Hub Ratings Private Discord w/ Bankless team",
-      "full_text_fetched": true
-    },
-    {
-      "headline": "Apple's final Tim Cook quarter ends strong",
-      "source": "Axios",
-      "date": "2026-07-30",
-      "text": "Apple on Thursday reported earnings and revenue that topped Wall Street expectations, though tariff refunds added 11 cents per share to earnings.",
+      "text": "Tony Wang, T. Rowe Price science and technology equity strategy portfolio manager, reacts to Apple's third-quarter earnings and outlook. He speaks on \"Bloomberg The Close.\"",
       "full_text_fetched": false
     },
     {
-      "headline": "Apple beats Q3 estimates on strong iPhone sales, but China, Services come up short",
-      "source": "Yahoo Finance",
-      "date": "2026-07-29",
-      "text": "Apple reported its Q3 earnings on Thursday.",
+      "headline": "Apple and Amazon report rising revenues as investors turn on some tech stocks",
+      "source": "The Guardian",
+      "date": "2026-07-30",
+      "text": "Apple and Amazon both released their second quarter earnings on Thursday, a test of investor confidence in major tech companies amidgrowing concerns over exorbitant AI spending. Apple revealed quarterly revenue of $109.4bn, beating Wall Street expectations of $108.65bn in revenue. It also reported $2.02 earnings per share, driven by sales of its marquee products such as iPhones and laptops. Amazon reported that its revenue was $200.6bn compared with analyst predictions of $196.47bn. The company also grew its AWS cloud computing service and beat market expectations on advertising revenue, thoughfree cash flow declined. Amazon's stock jumped more than 8% in immediate after hours trading. It has been a tough month for several prominent tech companies, with shares in Tesla and Meta both plunging after they revealed huge spending on AI infrastructure in their latest earnings reports. A recent selloff in chip stocks like Nvidia, the result of loss in investor confidence and advances in Chinese chip manufacturing, has also rattled the market. Investors have paid especially close attention in recent weeks to tech companies' free cash flow after large capital expenditures \u2013 largely on AI \u2013 have caused concern. As the industry continues to plow money into building out AI capabilities in search of future profits, shareholders have become more jittery when earnings reports reveal larger-than expected AI spending. Apple, meanwhile, has benefitted from the chip stock selloff as investors viewed the company as a safe haven amid the broaderAI-driven volatility. The company's stock is up around 23% this year, leading the so-called Magnificent Seven tech stocks, which include Meta, Microsoft, Alphabet, Amazon, Tesla and Nvidia. Apple's stock price dropped slightly on Thursday following earnings after it reported its revenue from its services division was below market expectations. Thursday's earnings call was also CEO Tim Cook's final report before he steps down after 15 years as Apple's top executive. Apple's market value grew immensely over Cook's tenure as chief executive, from around $350bn in 2011 tosurpassing the $5tn markdays before Thursday's earnings call. Earlier this month the company overtook Nvidia to become the world's most valuable company. Cook will bereplaced by John Ternus, a longtime hardware engineering executive who has been at the company since 2001. Ternus stated earlier this week that he aims to expand the Apple's entertainment business, which has had success with movies like the blockbuster F1 and streaming series such as The Studio. \"As you know, this will be my final earnings call,\" Cook said on Thursday. \"I am beyond excited for John to step into his new role and lead Apple into its next era. He is truly one of a kind and there is no better person to take the helm of the company.\"",
+      "full_text_fetched": true
+    },
+    {
+      "headline": "Apple Stock Falls After Earnings Release",
+      "source": "The Wall Street Journal",
+      "date": "2026-07-30",
+      "text": "Apple's third-quarter earnings featured strong growth for its flagship product, but shares are falling about 4% after market close. IPhone sales grew 21% , but Apple's overall revenue of $109.4 billio",
+      "full_text_fetched": false
+    },
+    {
+      "headline": "Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short",
+      "source": "MT Newswires",
+      "date": "2026-07-30",
+      "text": "Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the",
       "full_text_fetched": false
     }
   ],

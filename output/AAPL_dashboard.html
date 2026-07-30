@@ -135,6 +135,15 @@ button.chip:hover { background: var(--gridline); }
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   margin-bottom: 20px;
 }
+/* Fixed-column-count variants (used where auto-fit's column count would
+   otherwise vary awkwardly, e.g. a 3-tile MACD row). Named classes instead
+   of inline styles so the mobile media query below can collapse them. */
+.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+/* Two sub-panels side by side within one section (distinct from the
+   page-level .grid below, which arranges whole section cards). */
+.split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .stat-tile {
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px;
@@ -161,7 +170,7 @@ button.chip:hover { background: var(--gridline); }
 .info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
 .info-pop {
   display: none; position: absolute; z-index: 100; left: 0; top: 22px;
-  width: 240px; background: var(--text-primary); color: var(--surface-1);
+  width: 240px; max-width: min(240px, calc(100vw - 32px)); background: var(--text-primary); color: var(--surface-1);
   font-size: 12px; font-weight: 400; line-height: 1.5; padding: 10px 12px;
   border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); text-align: left;
   white-space: normal;
@@ -298,6 +307,24 @@ footer.disclaimer {
   max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
   font-size: 12px; color: var(--text-muted); line-height: 1.6;
 }
+
+/* Phones: every fixed-column grid on this page was sized for desktop --
+   the page-level .grid's 460px column floor in particular forces the
+   whole page to scroll horizontally on any phone screen (observed live on
+   an iPhone: page rendered wider than the viewport, content clipped on
+   the right). Collapse all of them well before that point. */
+@media (max-width: 700px) {
+  .wrap { padding: 14px 14px; }
+  .topbar { padding: 12px 14px; flex-wrap: wrap; }
+  .grid { grid-template-columns: 1fr !important; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .split-2col, .rec-thesis-grid { grid-template-columns: 1fr !important; }
+  .rec-top { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 420px) {
+  .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
+}
 </style>
 </head>
 <body>
@@ -305,7 +332,7 @@ footer.disclaimer {
 <div class="topbar">
   <div>
     <h1>AAPL — Research Dashboard</h1>
-    <div class="meta">Bundle fetched 2026-07-30T22:03:22.172566Z · StockLLM (research/decision-support only, not financial advice)</div>
+    <div class="meta">Bundle fetched 2026-07-30T22:15:19.634399Z · StockLLM (research/decision-support only, not financial advice)</div>
   </div>
   <div class="topbar-actions">
     <button type="button" class="chip" id="theme-toggle">Dark mode</button>
@@ -316,7 +343,7 @@ footer.disclaimer {
   
 <div class="card full">
   <h2>At a Glance <span style="font-weight:400;color:var(--text-secondary);font-size:12px;">— plain-language summary, auto-generated from the data below</span></h2>
-  <ul class="glance-list"><li class="glance-item"><span class="glance-icon good">↑</span><span><b>AAPL is up 61.3% over the past year.</b> That's beating the S&P 500 by 42.6% — it outperformed the broader market, not just "stocks went up in general."</span></li><li class="glance-item"><span class="glance-icon neutral">$</span><span><b>Trading at a premium valuation</b> — its P/E ratio (40.4) is 51.5% higher than the S&P 500's, meaning investors are paying more per dollar of profit than for an average stock.</span></li><li class="glance-item"><span class="glance-icon neutral">•</span><span><b>41 Wall Street analysts</b> have an average 12-month price target of $321.66, 3.5% below today's price — their overall rating is <b>"buy"</b>.</span></li><li class="glance-item"><span class="glance-icon good">$</span><span><b>Profitable</b> — net income of $112.01B over the last full year.</span></li><li class="glance-item"><span class="glance-icon neutral">•</span><span><b>Mixed insider activity</b> — 4 recent buy(s) and 12 sale(s) by company insiders; sales are common and often routine, not necessarily a bad sign.</span></li></ul>
+  <ul class="glance-list"><li class="glance-item"><span class="glance-icon good">↑</span><span><b>AAPL is up 61.3% over the past year.</b> That's beating the S&P 500 by 42.6% — it outperformed the broader market, not just "stocks went up in general."</span></li><li class="glance-item"><span class="glance-icon neutral">$</span><span><b>Trading at a premium valuation</b> — its P/E ratio (40.4) is 51.5% higher than the S&P 500's, meaning investors are paying more per dollar of profit than for an average stock.</span></li><li class="glance-item"><span class="glance-icon neutral">•</span><span><b>43 Wall Street analysts</b> have an average 12-month price target of $319.72, 4.1% below today's price — their overall rating is <b>"buy"</b>.</span></li><li class="glance-item"><span class="glance-icon good">$</span><span><b>Profitable</b> — net income of $112.01B over the last full year.</span></li><li class="glance-item"><span class="glance-icon neutral">•</span><span><b>Mixed insider activity</b> — 4 recent buy(s) and 12 sale(s) by company insiders; sales are common and often routine, not necessarily a bad sign.</span></li></ul>
 </div>
   <div class="kpi-row"><div class="stat-tile"><div class="label">Current price<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The price of one share right now, the last time the market updated.</span></button></div><div class="value">$333.43</div><div class="sub"><span class="delta good">+8.0% (20d)</span></div></div><div class="stat-tile"><div class="label">1-year return<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">How much the share price has gone up or down over the past year, if you&#x27;d bought it then. Green means it&#x27;s worth more now, red means less.</span></button></div><div class="value good">+61.3%</div><div class="sub"><span class="delta good">vs S&amp;P500 +42.6%</span></div></div><div class="stat-tile"><div class="label">P/E ratio<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Price-to-Earnings ratio: how many dollars investors are paying for every $1 of the company&#x27;s yearly profit. Higher usually means investors expect faster growth ahead; it can also mean the stock is expensive relative to what it currently earns. Shows — if the company lost money, since the math doesn&#x27;t work with a loss.</span></button></div><div class="value">40.4</div><div class="sub">Forward 34.5</div></div><div class="stat-tile"><div class="label">Market cap<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The total value of every share of the company added up — shares outstanding × share price. This is what it would cost to buy the whole company at today&#x27;s price.</span></button></div><div class="value">4.90T</div><div class="sub">Technology</div></div><div class="stat-tile"><div class="label">RSI (14d)<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Relative Strength Index: a 0-100 score for whether a stock has been bought or sold a lot recently, based only on price movement (not the company&#x27;s actual business). Above 70 is traditionally called &quot;overbought,&quot; below 30 &quot;oversold.&quot; This is a short-term trading signal, not a verdict on whether the company is good — a strong stock can stay &quot;overbought&quot; for a long time.</span></button></div><div class="value">64.4</div><div class="sub">Overbought &gt; 70, oversold &lt; 30</div></div><div class="stat-tile"><div class="label">VIX<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The market&#x27;s &quot;fear gauge&quot; — how much price swings investors expect across the whole stock market in the next 30 days, not just this company. Higher means more nervousness/volatility expected market-wide; lower means calmer conditions. This number is the same for every stock, since it&#x27;s about the whole market, not this company.</span></button></div><div class="value">17.1</div><div class="sub"><span class="delta critical">0.9 (20d)</span></div></div><div class="stat-tile"><div class="label">10Y Treasury yield<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The interest rate the U.S. government pays to borrow money for 10 years. It matters here because when this rate rises, investors often demand more from stocks too, which tends to hurt expensive/high-growth stocks the most. Same for every stock — it&#x27;s not about this company.</span></button></div><div class="value">4.7%</div><div class="sub"><span class="delta critical">+0.2% (20d)</span></div></div></div>
   <div class="grid">
@@ -345,7 +372,7 @@ footer.disclaimer {
   <div class="viz-note">Green zone (below 30) is conventionally read as oversold, red zone (above 70) as overbought -- a short-term momentum signal, not a verdict on the company. Click the &quot;i&quot; above for more.</div>
 </div>
   
-<div class="kpi-row" style="margin-top:6px;grid-template-columns:repeat(3,1fr);">
+<div class="kpi-row cols-3" style="margin-top:6px;">
   <div class="stat-tile"><div class="label">MACD</div><div class="value">9.244</div></div>
   <div class="stat-tile"><div class="label">Signal</div><div class="value">8.602</div></div>
   <div class="stat-tile"><div class="label">Histogram<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">A momentum signal: positive means the stock&#x27;s short-term trend is strengthening upward, negative means it&#x27;s weakening or turning down. It reacts to recent price moves, not to news about the business.</span></button></div><div class="value good">0.642</div><div class="sub"><span class="delta good">Bullish momentum</span></div></div>
@@ -354,15 +381,15 @@ footer.disclaimer {
 <div class="card full">
   <h2>Analyst Ratings & Estimates <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">What professional Wall Street analysts think this stock is worth, and whether their profit estimates have been rising or falling.</span></button></h2>
   <div class="card-sub">Recommendation: buy · last 60 days of rating actions</div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
 <div class="viz-card">
   <div class="viz-card-head">
-    <span class="viz-title">Analyst target price range (41 analysts)<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Wall Street analysts each publish a 12-month price target for the stock. This shows the lowest, average, and highest of those targets, plus where today&#x27;s price sits inside that range. A wide range means analysts disagree a lot about where this is headed.</span></button></span>
+    <span class="viz-title">Analyst target price range (43 analysts)<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Wall Street analysts each publish a 12-month price target for the stock. This shows the lowest, average, and highest of those targets, plus where today&#x27;s price sits inside that range. A wide range means analysts disagree a lot about where this is headed.</span></button></span>
     <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
   </div>
-  <div class="viz-chart"><svg viewBox="0 0 620 90" class="viz-svg" role="img" aria-label="analyst target price range"><text x="60" y="20" font-size="12" fill="var(--text-secondary)">Low $215.00</text><text x="560" y="20" text-anchor="end" font-size="12" fill="var(--text-secondary)">High $400.00</text><path d="M 60 41 H 555 Q 560 41 560 46 V 46 Q 560 51 555 51 H 60 Z" fill="var(--gridline)"/><g class="mark" tabindex="0" data-tip="Mean: $321.66"><title>Mean: $321.66</title><circle cx="348.26108108108116" cy="46" r="6" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="348.26108108108116" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Mean</text><g class="mark" tabindex="0" data-tip="Median: $330.00"><title>Median: $330.00</title><circle cx="370.8108108108108" cy="46" r="6" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="370.8108108108108" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Median</text><g class="mark" tabindex="0" data-tip="Current: $333.43"><title>Current: $333.43</title><path d="M 374.0810810810811 30 L 386.0810810810811 30 L 380.0810810810811 40 Z" fill="var(--text-primary)"/></g><text x="380.0810810810811" y="26" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-primary)">Current</text></svg></div>
-  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Point</th><th>Price</th></tr></thead><tbody><tr><td>Low</td><td>$215.00</td></tr><tr><td>Mean</td><td>$321.66</td></tr><tr><td>Median</td><td>$330.00</td></tr><tr><td>High</td><td>$400.00</td></tr><tr><td>Current price</td><td>$333.43</td></tr></tbody></table></div></div>
+  <div class="viz-chart"><svg viewBox="0 0 620 90" class="viz-svg" role="img" aria-label="analyst target price range"><text x="60" y="20" font-size="12" fill="var(--text-secondary)">Low $215.00</text><text x="560" y="20" text-anchor="end" font-size="12" fill="var(--text-secondary)">High $400.00</text><path d="M 60 41 H 555 Q 560 41 560 46 V 46 Q 560 51 555 51 H 60 Z" fill="var(--gridline)"/><g class="mark" tabindex="0" data-tip="Mean: $319.72"><title>Mean: $319.72</title><circle cx="343.0195135135135" cy="46" r="6" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="343.0195135135135" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Mean</text><g class="mark" tabindex="0" data-tip="Median: $329.00"><title>Median: $329.00</title><circle cx="368.1081081081081" cy="46" r="6" fill="var(--series-3)" stroke="var(--surface-1)" stroke-width="2"/></g><text x="368.1081081081081" y="72" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">Median</text><g class="mark" tabindex="0" data-tip="Current: $333.43"><title>Current: $333.43</title><path d="M 374.0810810810811 30 L 386.0810810810811 30 L 380.0810810810811 40 Z" fill="var(--text-primary)"/></g><text x="380.0810810810811" y="26" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-primary)">Current</text></svg></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Point</th><th>Price</th></tr></thead><tbody><tr><td>Low</td><td>$215.00</td></tr><tr><td>Mean</td><td>$319.72</td></tr><tr><td>Median</td><td>$329.00</td></tr><tr><td>High</td><td>$400.00</td></tr><tr><td>Current price</td><td>$333.43</td></tr></tbody></table></div></div>
   
 </div>
 <div class="viz-card">
@@ -370,13 +397,13 @@ footer.disclaimer {
     <span class="viz-title">EPS surprise history (actual vs. estimate)<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Each quarter, Wall Street predicts what the company&#x27;s profit-per-share will be before it&#x27;s reported. This compares the actual number to that prediction. Green/above the line means the company beat expectations; red/below means it missed.</span></button></span>
     <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
   </div>
-  <div class="viz-chart"><svg viewBox="0 0 620 156" class="viz-svg" role="img" aria-label="values relative to baseline"><line x1="355.0" y1="10" x2="355.0" y2="146" stroke="var(--baseline)" stroke-width="1"/><text x="102" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-09-30: +4.5%"><title>2025-09-30: +4.5%</title><path d="M 355.0 16 H 508.59643916913944 Q 512.5964391691394 16 512.5964391691394 20 V 34 Q 512.5964391691394 38 508.59643916913944 38 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="506.59643916913944" y="31.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+4.5%</text><text x="102" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2025-12-31: +6.3%"><title>2025-12-31: +6.3%</title><path d="M 355.0 50 H 572.053412462908 Q 576.053412462908 50 576.053412462908 54 V 68 Q 576.053412462908 72 572.053412462908 72 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="570.053412462908" y="65.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+6.3%</text><text x="102" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2026-03-31</text><g class="mark " tabindex="0" data-tip="2026-03-31: +3.5%"><title>2026-03-31: +3.5%</title><path d="M 355.0 84 H 471.63798219584567 Q 475.63798219584567 84 475.63798219584567 88 V 102 Q 475.63798219584567 106 471.63798219584567 106 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="469.63798219584567" y="99.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+3.5%</text><text x="102" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2026-06-30</text><g class="mark " tabindex="0" data-tip="2026-06-30: +6.7%"><title>2026-06-30: +6.7%</title><path d="M 355.0 118 H 586.0 Q 590.0 118 590.0 122 V 136 Q 590.0 140 586.0 140 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="584.0" y="133.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+6.7%</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--diverge-pos)"></span>Beat / above baseline</span><span class="key"><span class="swatch" style="background:var(--diverge-neg)"></span>Miss / below baseline</span></div></div>
-  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>Value</th></tr></thead><tbody><tr><td>2025-09-30</td><td>+4.5%</td></tr><tr><td>2025-12-31</td><td>+6.3%</td></tr><tr><td>2026-03-31</td><td>+3.5%</td></tr><tr><td>2026-06-30</td><td>+6.7%</td></tr></tbody></table></div></div>
+  <div class="viz-chart"><svg viewBox="0 0 620 156" class="viz-svg" role="img" aria-label="values relative to baseline"><line x1="355.0" y1="10" x2="355.0" y2="146" stroke="var(--baseline)" stroke-width="1"/><text x="102" y="31.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-06-30</text><g class="mark " tabindex="0" data-tip="2025-06-30: +10.1%"><title>2025-06-30: +10.1%</title><path d="M 355.0 16 H 586.0 Q 590.0 16 590.0 20 V 34 Q 590.0 38 586.0 38 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="584.0" y="31.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+10.1%</text><text x="102" y="65.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-09-30</text><g class="mark " tabindex="0" data-tip="2025-09-30: +4.5%"><title>2025-09-30: +4.5%</title><path d="M 355.0 50 H 455.9604743083004 Q 459.9604743083004 50 459.9604743083004 54 V 68 Q 459.9604743083004 72 455.9604743083004 72 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="453.9604743083004" y="65.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+4.5%</text><text x="102" y="99.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2025-12-31</text><g class="mark " tabindex="0" data-tip="2025-12-31: +6.3%"><title>2025-12-31: +6.3%</title><path d="M 355.0 84 H 498.22332015810275 Q 502.22332015810275 84 502.22332015810275 88 V 102 Q 502.22332015810275 106 498.22332015810275 106 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="496.22332015810275" y="99.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+6.3%</text><text x="102" y="133.0" text-anchor="end" font-size="12" fill="var(--text-secondary)">2026-03-31</text><g class="mark " tabindex="0" data-tip="2026-03-31: +3.5%"><title>2026-03-31: +3.5%</title><path d="M 355.0 118 H 431.34584980237156 Q 435.34584980237156 118 435.34584980237156 122 V 136 Q 435.34584980237156 140 431.34584980237156 140 H 355.0 Z" fill="var(--diverge-pos)"/></g><text x="429.34584980237156" y="133.0" text-anchor="end" font-size="12" font-weight="600" fill="#fff">+3.5%</text></svg><div class="viz-legend"><span class="key"><span class="swatch" style="background:var(--diverge-pos)"></span>Beat / above baseline</span><span class="key"><span class="swatch" style="background:var(--diverge-neg)"></span>Miss / below baseline</span></div></div>
+  <div class="viz-table"><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>Value</th></tr></thead><tbody><tr><td>2025-06-30</td><td>+10.1%</td></tr><tr><td>2025-09-30</td><td>+4.5%</td></tr><tr><td>2025-12-31</td><td>+6.3%</td></tr><tr><td>2026-03-31</td><td>+3.5%</td></tr></tbody></table></div></div>
   
 </div></div>
     <div>
       <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Recent rating actions <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Recent individual decisions by analyst firms: upgrading or downgrading their rating, or raising/lowering their price target. This is more detailed than a single &quot;buy/hold/sell&quot; consensus — it shows who moved, and when.</span></button></span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Date</th><th>Firm</th><th>Action</th><th>Grade change</th><th>Price target</th></tr></thead><tbody><tr><td>2026-07-23</td><td>Morgan Stanley</td><td><span class="badge neutral">maintained</span></td><td>Overweight → Overweight</td><td>$364.00 (was $360.00)</td></tr><tr><td>2026-07-17</td><td>HSBC</td><td><span class="badge good">upgrade</span></td><td>Hold → Buy</td><td>$366.00 (was $260.00)</td></tr><tr><td>2026-07-14</td><td>Keybanc</td><td><span class="badge critical">downgrade</span></td><td>Sector Weight → Underweight</td><td>$250.00</td></tr><tr><td>2026-07-13</td><td>Citigroup</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$365.00 (was $315.00)</td></tr><tr><td>2026-06-25</td><td>Evercore ISI Group</td><td><span class="badge neutral">reiterated</span></td><td>Outperform → Outperform</td><td>$365.00 (was $365.00)</td></tr><tr><td>2026-06-22</td><td>KGI Securities</td><td><span class="badge critical">downgrade</span></td><td>Outperform → Hold</td><td>$315.00</td></tr><tr><td>2026-06-18</td><td>B of A Securities</td><td><span class="badge neutral">reiterated</span></td><td>Buy → Buy</td><td>$380.00 (was $380.00)</td></tr><tr><td>2026-06-09</td><td>TD Cowen</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$350.00 (was $335.00)</td></tr><tr><td>2026-06-09</td><td>Maxim Group</td><td><span class="badge neutral">maintained</span></td><td>Buy → Buy</td><td>$350.00 (was $310.00)</td></tr><tr><td>2026-06-09</td><td>Rosenblatt</td><td><span class="badge neutral">maintained</span></td><td>Neutral → Neutral</td><td>$276.00 (was $276.00)</td></tr><tr><td>2026-06-09</td><td>Morgan Stanley</td><td><span class="badge neutral">maintained</span></td><td>Overweight → Overweight</td><td>$360.00 (was $330.00)</td></tr><tr><td>2026-06-09</td><td>Needham</td><td><span class="badge neutral">reiterated</span></td><td>Hold → Hold</td><td>—</td></tr></tbody></table></div></div>
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">EPS estimate trend (Street consensus) <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">How Wall Street&#x27;s profit predictions for this quarter/year have changed over the last few months. If the &quot;current&quot; estimate is higher than it was 90 days ago, analysts have been getting more optimistic — and vice versa.</span></button></span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>90d ago</th><th>30d ago</th><th>7d ago</th><th>Current est.</th></tr></thead><tbody><tr><td>Current quarter</td><td>1.97</td><td>2.01</td><td>2.02</td><td>2.01</td></tr><tr><td>Next quarter</td><td>2.95</td><td>2.95</td><td>2.97</td><td>2.97</td></tr><tr><td>Current year</td><td>8.52</td><td>8.76</td><td>8.77</td><td>8.76</td></tr><tr><td>Next year</td><td>9.43</td><td>9.68</td><td>9.71</td><td>9.73</td></tr></tbody></table></div></div>
+      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">EPS estimate trend (Street consensus) <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">How Wall Street&#x27;s profit predictions for this quarter/year have changed over the last few months. If the &quot;current&quot; estimate is higher than it was 90 days ago, analysts have been getting more optimistic — and vice versa.</span></button></span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Period</th><th>90d ago</th><th>30d ago</th><th>7d ago</th><th>Current est.</th></tr></thead><tbody><tr><td>Current quarter</td><td>1.74</td><td>1.89</td><td>1.89</td><td>1.89</td></tr><tr><td>Next quarter</td><td>1.97</td><td>2.01</td><td>2.02</td><td>2.01</td></tr><tr><td>Current year</td><td>8.51</td><td>8.76</td><td>8.77</td><td>8.76</td></tr><tr><td>Next year</td><td>9.40</td><td>9.68</td><td>9.71</td><td>9.72</td></tr></tbody></table></div></div>
     </div>
   </div>
 </div>
@@ -394,7 +421,7 @@ footer.disclaimer {
   
 </div>
   
-<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-top:12px;">
+<div class="kpi-row cols-3" style="margin-top:12px;">
   <div class="stat-tile"><div class="label">Stock P/E<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Price-to-Earnings ratio: how many dollars investors are paying for every $1 of the company&#x27;s yearly profit. Higher usually means investors expect faster growth ahead; it can also mean the stock is expensive relative to what it currently earns. Shows — if the company lost money, since the math doesn&#x27;t work with a loss.</span></button></div><div class="value">40.4</div></div>
   <div class="stat-tile"><div class="label">P/E vs S&amp;P 500<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Compares this company&#x27;s P/E ratio (see above) to the S&amp;P 500&#x27;s and to its own sector&#x27;s. A positive number means investors are paying more per dollar of profit than they would for the average stock in that group — which isn&#x27;t automatically good or bad, it can mean &quot;expensive&quot; or &quot;expected to grow faster,&quot; depending on why.</span></button></div><div class="value">+51.5%</div><div class="sub">S&amp;P 500 P/E 26.7</div></div>
   <div class="stat-tile"><div class="label">P/E vs sector<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Compares this company&#x27;s P/E ratio (see above) to the S&amp;P 500&#x27;s and to its own sector&#x27;s. A positive number means investors are paying more per dollar of profit than they would for the average stock in that group — which isn&#x27;t automatically good or bad, it can mean &quot;expensive&quot; or &quot;expected to grow faster,&quot; depending on why.</span></button></div><div class="value">+23.0%</div><div class="sub">Sector P/E 32.9</div></div>
@@ -403,7 +430,7 @@ footer.disclaimer {
 <div class="card full">
   <h2>Financials <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The actual business results: how much money is coming in, how much is profit, and how healthy the balance sheet is.</span></button></h2>
   
-<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+<div class="kpi-row cols-4">
   <div class="stat-tile"><div class="label">Total debt<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The company&#x27;s financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.</span></button></div><div class="value">$84.71B</div></div>
   <div class="stat-tile"><div class="label">Total cash<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The company&#x27;s financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.</span></button></div><div class="value">$68.51B</div></div>
   <div class="stat-tile"><div class="label">Debt / equity<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The company&#x27;s financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.</span></button></div><div class="value">79.5</div><div class="sub">Lower generally means less financial risk</div></div>
@@ -427,7 +454,7 @@ footer.disclaimer {
 <div class="card full">
   <h2>Ownership <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">Who holds the stock and what company insiders have been doing with their own shares.</span></button></h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
       
 <div class="viz-card">
@@ -450,10 +477,10 @@ footer.disclaimer {
 </div>
 <div class="card full">
   <h2>Dividends, Buybacks, Options & Sentiment <button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.</span></button></h2>
-  <div class="grid" style="grid-template-columns:1fr 1fr;">
+  <div class="split-2col">
     <div>
       
-<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);">
+<div class="kpi-row cols-3">
   <div class="stat-tile"><div class="label">Dividend yield<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">If the company pays a dividend, this is the yearly payout per share as a percentage of the share price — like a savings-account interest rate, but not guaranteed and can be cut. Shows &quot;None&quot; if this company doesn&#x27;t currently pay one (common for younger/growth-focused companies that reinvest profits instead).</span></button></div><div class="value">0.3%</div></div>
   <div class="stat-tile"><div class="label">Payout ratio<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">What percentage of the company&#x27;s profit is paid out as dividends rather than kept/reinvested. A very high number can mean the dividend is at risk if profits dip.</span></button></div><div class="value">12.6%</div></div>
   <div class="stat-tile"><div class="label">5y avg yield<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">If the company pays a dividend, this is the yearly payout per share as a percentage of the share price — like a savings-account interest rate, but not guaranteed and can be cut. Shows &quot;None&quot; if this company doesn&#x27;t currently pay one (common for younger/growth-focused companies that reinvest profits instead).</span></button></div><div class="value">0.5%</div></div>
@@ -469,7 +496,7 @@ footer.disclaimer {
   
 </div>
       
-<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+<div class="kpi-row cols-2">
   <div class="stat-tile"><div class="label">VIX level<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">See the VIX explanation above — the market-wide fear gauge, shown again here alongside the interest-rate context.</span></button></div><div class="value">17.1</div><div class="sub"><span class="delta critical">0.9 (20d)</span></div></div>
   <div class="stat-tile"><div class="label">10Y Treasury yield<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">The interest rate the U.S. government pays to borrow money for 10 years. It matters here because when this rate rises, investors often demand more from stocks too, which tends to hurt expensive/high-growth stocks the most. Same for every stock — it&#x27;s not about this company.</span></button></div><div class="value">4.7%</div><div class="sub"><span class="delta critical">+0.2% (20d)</span></div></div>
 </div>
@@ -477,7 +504,7 @@ footer.disclaimer {
     </div>
     <div>
       
-<div class="kpi-row" style="grid-template-columns:repeat(2,1fr);">
+<div class="kpi-row cols-2">
   <div class="stat-tile"><div class="label">Put/call volume ratio<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">In the options market, &quot;puts&quot; are bets a stock will fall and &quot;calls&quot; are bets it will rise. This ratio compares how much of each is being traded — a lot more puts than calls can indicate traders are hedging against or betting on a drop, though it&#x27;s an imperfect read on sentiment.</span></button></div><div class="value">1.087</div></div>
   <div class="stat-tile"><div class="label">Put/call open interest ratio<button type="button" class="info-ic" aria-label="What does this mean?" aria-haspopup="true">i<span class="info-pop" role="tooltip">In the options market, &quot;puts&quot; are bets a stock will fall and &quot;calls&quot; are bets it will rise. This ratio compares how much of each is being traded — a lot more puts than calls can indicate traders are hedging against or betting on a drop, though it&#x27;s an imperfect read on sentiment.</span></button></div><div class="value">0.616</div></div>
 </div>
@@ -495,11 +522,7 @@ footer.disclaimer {
 </div></div>
       <div class="viz-card" style="margin-top:16px;">
         <div class="viz-card-head"><span class="viz-title">Sample posts (unverified)</span></div>
-        <div class="news-item"><div class="meta">2026-07-30T22:02:15Z · Bearish</div><div class="snippet">$AAPL 🩸 
-
-Yikes…. Lowering the bar even more. 
-
-Growth is slowing 📉🕳️</div></div><div class="news-item"><div class="meta">2026-07-30T22:02:14Z · untagged</div><div class="snippet">$aapL that 535 Billion is me using there true cash assets/marketable securities, Treasury Bonds at a 3.5x multiple nearly equalybto the 4 week treasury yield . You can use a higher multiple reflecting intermediate Treasury yields such as 10,20,30..  think about it they are valuing iPhone as an asset of at least 1.5 Trillion aint no way.. you coukd fix global pocerty forever with 1.5 trillion dollars, heck jus tusing the combine cash pile of $brK.B thats 420 billions thats just sitting waiting dor equities and bitcoin to be swallowed while record folks starved and priced out of</div></div><div class="news-item"><div class="meta">2026-07-30T22:02:01Z · untagged</div><div class="snippet">@Joe_Mama $aapl wrong...Apple phones are crap fake china copies. I have the real thing a google one phone LOL nice try</div></div><div class="news-item"><div class="meta">2026-07-30T22:01:59Z · untagged</div><div class="snippet">$SPY $AVGO $48 stock 5 years ago !!! make it make sense !! WS pulling the AI 🤡6 year scam on everyone !!! 2026 EVERYONE IS LATE !!!⏰ congratulations to those who locked profits - LIFE CHANGING - NOW ONLY FOR THE WORSE !!! NO BAGS 2026 !!! $AAPL $QQQ</div></div><div class="news-item"><div class="meta">2026-07-30T22:01:58Z · untagged</div><div class="snippet">$AAPL buy high sell low</div></div>
+        <div class="news-item"><div class="meta">2026-07-30T22:14:52Z · untagged</div><div class="snippet">$AAPL I’d love to see 295 but it’s likely gonna rebound and open around 325</div></div><div class="news-item"><div class="meta">2026-07-30T22:14:47Z · untagged</div><div class="snippet">$AAPL and Tim just left Tetrus to handle this shit show</div></div><div class="news-item"><div class="meta">2026-07-30T22:14:24Z · Bullish</div><div class="snippet">$AAPL PURE BULLSHIT !!! WTF !!!!</div></div><div class="news-item"><div class="meta">2026-07-30T22:13:51Z · Bearish</div><div class="snippet">$AAPL I was short this POS yesterday at the top, it feels so good</div></div><div class="news-item"><div class="meta">2026-07-30T22:13:36Z · Bearish</div><div class="snippet">$AAPL another great call by Downtown Josh Brown lol</div></div>
       </div>
     </div>
   </div>
@@ -508,14 +531,14 @@ Growth is slowing 📉🕳️</div></div><div class="news-item"><div class="meta
   <h2>News</h2>
   
 <div class="news-item">
-  <div class="headline"><a href="https://finance.yahoo.com/video/apple-earnings-iphone-prices-not-211500247.html" target="_blank" rel="noopener">Apple earnings: iPhone prices are &#x27;not immune&#x27; to rising memory costs</a></div>
+  <div class="headline"><a href="https://finance.yahoo.com/video/apple-commits-more-30-billion-220800117.html" target="_blank" rel="noopener">Apple commits more than $30 Billion to US manufacturing</a></div>
   <div class="meta">Yahoo Finance Video · 2026-07-30</div>
-  <div class="snippet">Apple (AAPL) stock is stumbling in Thursday&#x27;s after-hours since reporting fiscal third quarter earnings and revenue that topped estimates, carried by strong iPhone sales. New Street Research technolog</div>
+  <div class="snippet">During Thursday night&#x27;s earnings call, Apple (AAPL) CEO Tim Cook highlighted a string of milestones, including the company&#x27;s best-ever June quarter, with revenue reaching $109.4 billion. iPhone revenu</div>
 </div>
 <div class="news-item">
-  <div class="headline"><a href="https://finance.yahoo.com/video/chip-stocks-rebounding-except-qualcomm-140656227.html" target="_blank" rel="noopener">Chip stocks are rebounding — except for Qualcomm: Why it might just be a &#x27;one off&#x27;</a></div>
+  <div class="headline"><a href="https://finance.yahoo.com/video/apple-exceeds-q3-earnings-estimates-boasts-1094-billion-in-revenue-203505015.html" target="_blank" rel="noopener">Apple exceeds Q3 earnings estimates, boasts $109.4 billion in revenue</a></div>
   <div class="meta">Yahoo Finance Video · 2026-07-30</div>
-  <div class="snippet">Chip stocks are rebounding on Thursday, with the exception of Qualcomm (QCOM), which provided profit guidance that disappointed Wall Street. BD8 Capital Partners CEO and CIO Barbara Doran and Yahoo Fi</div>
+  <div class="snippet">Apple (AAPL) released results for its fiscal third quarter, revealing earnings of $2.02 per share (vs. estimates of $1.80) and revenue of $109.42 billion (vs. estimates of $108.85 billion). The stock </div>
 </div>
 <div class="news-item">
   <div class="headline"><a href="https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-earnings-microsoft-powers-ai-stock/?src=A00220&amp;yptr=yahoo" target="_blank" rel="noopener">Dow Jones Futures: Apple, Amazon Diverge Late; What To Do After AI Stocks Surge</a></div>
@@ -523,19 +546,14 @@ Growth is slowing 📉🕳️</div></div><div class="news-item"><div class="meta
   <div class="snippet">The stock market jumped Thursday as Microsoft powered a big AI rebound. Apple and Amazon led earnings late.</div>
 </div>
 <div class="news-item">
-  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/apple-amazon-report-rising-revenues-214222486.html" target="_blank" rel="noopener">Apple and Amazon report rising revenues as investors turn on some tech stocks</a></div>
-  <div class="meta">The Guardian · 2026-07-30</div>
-  <div class="snippet">Both tech companies beat Wall Street predictions on revenue in their second quarters</div>
+  <div class="headline"><a href="https://www.wsj.com/tech/apple-aapl-q3-earnings-report-2026-stock-a2eed24e?siteid=yhoof2&amp;yptr=yahoo" target="_blank" rel="noopener">Apple Sales Exceed $109 Billion, but Revenue Guidance Disappoints</a></div>
+  <div class="meta">The Wall Street Journal · 2026-07-30</div>
+  <div class="snippet">The company is set to release an upgraded Siri assistant in the fall, and it continues to contend with higher component costs.</div>
 </div>
 <div class="news-item">
-  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/apple-tops-third-quarter-estimates-211942912.html" target="_blank" rel="noopener">Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short</a></div>
-  <div class="meta">MT Newswires · 2026-07-30</div>
-  <div class="snippet">Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the</div>
-</div>
-<div class="news-item">
-  <div class="headline"><a href="https://qz.com/apple-q3-2026-earnings-record-june-quarter-073026" target="_blank" rel="noopener">Apple Q3 2026 earnings beat estimates but services revenue misses</a></div>
-  <div class="meta">Quartz · 2026-07-30</div>
-  <div class="snippet">Revenue rose 16% to $109.4 billion and EPS climbed 29%, but a shortfall in services sent Apple stock down in after-hours trading</div>
+  <div class="headline"><a href="https://www.wsj.com/tech/microsofts-one-day-market-cap-gain-makes-history-2b3a5cb3?siteid=yhoof2&amp;yptr=yahoo" target="_blank" rel="noopener">Microsoft’s One-Day Market-Cap Gain Makes History</a></div>
+  <div class="meta">The Wall Street Journal · 2026-07-30</div>
+  <div class="snippet">Plus, banks are in talks to lend $15 billion for a Google-backed Anthropic data center, and Spider-Man’s youngest fans might help make the new movie a hit.</div>
 </div>
 <div class="news-item">
   <div class="headline"><a href="https://www.investors.com/news/technology/apple-stock-aapl-fiscal-q3-2026-earnings/?src=A00220&amp;yptr=yahoo" target="_blank" rel="noopener">Apple Stock Falls As iPhone Maker Guides Below Views</a></div>
@@ -543,19 +561,24 @@ Growth is slowing 📉🕳️</div></div><div class="news-item"><div class="meta
   <div class="snippet">Apple late Thursday beat Wall Street&#x27;s targets for its fiscal third quarter ended June 27. But its sales outlook was weak.</div>
 </div>
 <div class="news-item">
-  <div class="headline"><a href="https://www.bankless.com/read/tb" target="_blank" rel="noopener">Memecoins Are Trading Against Stocks Now</a></div>
-  <div class="meta">Bankless · 2026-07-30</div>
-  <div class="snippet">Stock-paired memecoins are Robinhood Chain&#x27;s newest meta.</div>
+  <div class="headline"><a href="https://finance.yahoo.com/video/apple-earnings-look-good-t-214401229.html" target="_blank" rel="noopener">Apple Earnings Look Good, T. Rowe Price&#x27;s Wang Says</a></div>
+  <div class="meta">Bloomberg · 2026-07-30</div>
+  <div class="snippet">Tony Wang, T. Rowe Price science and technology equity strategy portfolio manager, reacts to Apple&#x27;s third-quarter earnings and outlook. He speaks on &quot;Bloomberg The Close.&quot;</div>
 </div>
 <div class="news-item">
-  <div class="headline"><a href="https://www.axios.com/2026/07/30/apple-earnings-beat-estimates-boosted-by-tariff-refunds#utm_source=yahoo_finance&amp;utm_medium=partner&amp;utm_campaign=subs-partner-yahoo-finance-AI" target="_blank" rel="noopener">Apple&#x27;s final Tim Cook quarter ends strong</a></div>
-  <div class="meta">Axios · 2026-07-30</div>
-  <div class="snippet">Apple on Thursday reported earnings and revenue that topped Wall Street expectations, though tariff refunds added 11 cents per share to earnings.</div>
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/apple-amazon-report-rising-revenues-214222486.html" target="_blank" rel="noopener">Apple and Amazon report rising revenues as investors turn on some tech stocks</a></div>
+  <div class="meta">The Guardian · 2026-07-30</div>
+  <div class="snippet">Both tech companies beat Wall Street predictions on revenue in their second quarters</div>
 </div>
 <div class="news-item">
-  <div class="headline"><a href="https://finance.yahoo.com/technology/article/apple-beats-q3-estimates-on-strong-iphone-sales-but-china-services-come-up-short-115246491.html" target="_blank" rel="noopener">Apple beats Q3 estimates on strong iPhone sales, but China, Services come up short</a></div>
-  <div class="meta">Yahoo Finance · 2026-07-29</div>
-  <div class="snippet">Apple reported its Q3 earnings on Thursday.</div>
+  <div class="headline"><a href="https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-07-30-2026/card/apple-stock-falls-after-earnings-release-Ot54Mn2XDtAD8pkP9PcM?siteid=yhoof2&amp;yptr=yahoo" target="_blank" rel="noopener">Apple Stock Falls After Earnings Release</a></div>
+  <div class="meta">The Wall Street Journal · 2026-07-30</div>
+  <div class="snippet">Apple&#x27;s third-quarter earnings featured strong growth for its flagship product, but shares are falling about 4% after market close. IPhone sales grew 21% , but Apple&#x27;s overall revenue of $109.4 billio</div>
+</div>
+<div class="news-item">
+  <div class="headline"><a href="https://finance.yahoo.com/markets/stocks/articles/apple-tops-third-quarter-estimates-211942912.html" target="_blank" rel="noopener">Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short</a></div>
+  <div class="meta">MT Newswires · 2026-07-30</div>
+  <div class="snippet">Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the</div>
 </div>
   
 </div>
