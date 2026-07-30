@@ -128,6 +128,12 @@ code the CLI uses — nothing
 is duplicated, and the CLI keeps working exactly as before regardless of
 whether the add-on is installed.
 
+**If you're developing on this repo**: run `git config core.hooksPath
+.githooks` once per checkout. Home Assistant only notices an add-on update
+when `config.yaml`'s `version:` field changes, so a pre-commit hook (and a
+GitHub Actions check on every push, as a backstop) both block/flag any
+commit that changes add-on-relevant files without bumping it.
+
 ## Cost control
 
 `config.py` / `.env` has `MONTHLY_SPEND_LIMIT_USD` (default $50). The CLI checks

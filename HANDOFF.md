@@ -585,11 +585,15 @@ StockLLM/
       Flask's debug mode ships an interactive in-browser debugger that can
       execute arbitrary code, not appropriate even behind HA's ingress
       proxy.
-    - **Remember to bump `version:` in `config.yaml` on every future
-      change that should ship** — that's the only thing that makes HA's
-      "Auto update" toggle actually notice something changed. A code
-      change without a version bump will sit invisible to installed add-on
-      instances until someone happens to reinstall it.
+    - **Bump `version:` in `config.yaml` on every future change that
+      should ship** — that's the only thing that makes HA's "Auto update"
+      toggle actually notice something changed. A code change without a
+      version bump sits invisible to installed add-on instances until
+      someone happens to reinstall it. **This was originally just a
+      written reminder here, and it got forgotten twice in a row within
+      the same session** (the Ingress fix and the mobile-responsive fix
+      both shipped without a version bump, silently) — see item 31 below
+      for the actual enforcement that replaced relying on memory for this.
     - Verification note: no Docker and no real HA instance were available
       in the environment this was built in. Verified as much as possible
       without them — `docker build` itself was NOT run; the Dockerfile/
@@ -660,6 +664,39 @@ StockLLM/
       media query text is actually present in the generated output — still
       no real browser/device available to visually confirm the fix beyond
       that, so it's worth another look on an actual phone.
+
+31. **Replaced "remember to bump the version" with an actual enforced
+    check** — a written reminder (item 28/30 above) got forgotten twice in
+    a row in the same session, so it clearly wasn't sufficient. Two layers,
+    same underlying logic (diff the changed files against the previous
+    commit; if anything outside `README.md`/`HANDOFF.md`/`CHANGELOG.md`/
+    `DOCS.md`/`output/`/`.github/`/`.githooks/` changed, `config.yaml`'s
+    `version:` field must have changed too):
+    - **`.github/workflows/version-check.yml`** — the authoritative one.
+      Runs on every push/PR to `main` regardless of local setup; fails the
+      GitHub check (visible on the commit/PR) if code shipped without a
+      version bump.
+    - **`.githooks/pre-commit`** — the immediate-feedback one. Blocks the
+      commit locally *before* it's even made, with a clear message telling
+      you what to do. Requires a one-time
+      `git config core.hooksPath .githooks` per checkout (git doesn't
+      auto-install hooks from a plain clone — already run in this
+      environment's checkout, but a fresh clone elsewhere needs it again).
+      `--no-verify` bypasses it deliberately, for the rare case a change
+      genuinely shouldn't need a version bump.
+    - Both tested live before trusting them: confirmed the hook blocks a
+      commit that touches `main.py` without touching `config.yaml`, and
+      confirmed it allows a commit touching only excluded paths (this very
+      commit, which only added `.github/`/`.githooks/` files, went through
+      without needing a version bump — correct, since neither path
+      changes the running add-on itself).
+    - **If this check ever needs adjusting** (e.g. a new file/directory
+      that shouldn't require a version bump), update the exclude pattern
+      in BOTH files — they're deliberately kept as two independent copies
+      of the same logic rather than one script both call, since the
+      workflow runs in GitHub's environment and the hook runs in whatever
+      local environment is doing the committing; don't let them drift
+      apart silently if only one gets edited.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
