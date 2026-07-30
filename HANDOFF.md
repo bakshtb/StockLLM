@@ -46,6 +46,8 @@ StockLLM/
 │   ├── fetch_options_sentiment.py # put/call volume+OI ratio, ATM/OTM implied vol skew (free, yfinance)
 │   ├── fetch_macro_context.py     # VIX level + 10Y Treasury yield, both with 20d change; same for
 │   │                               #   every ticker on a given day, not ticker-specific (free, yfinance)
+│   ├── fetch_social_sentiment.py  # StockTwits crowd bullish/bearish tag counts + sample messages
+│   │                               #   (free, public API, no auth -- retail sentiment, not fact)
 │   ├── fetch_balance_sheet.py     # debt, cash, free cash flow (free, yfinance)
 │   ├── fetch_income_statement.py  # revenue/margins/EPS: latest annual + ALL recent quarters (free, yfinance)
 │   ├── fetch_insider.py           # SEC Form 4 insider transactions (free, SEC EDGAR)
@@ -278,6 +280,39 @@ StockLLM/
     been quoted by some sources scaled by 10 (46.22 meaning 4.622%) — verified
     live that the yfinance feed returns the plain percent directly (4.62, not
     46.2), so there's deliberately no rescaling in this module.
+
+19. **Two sources checked and rejected this session** (asked about
+    explicitly, worth remembering so they're not re-proposed): ESG/
+    sustainability scores (`yfinance`'s `tk.sustainability` returns a 404 —
+    that endpoint is gone/deprecated in the current version) and
+    congressional trading disclosures (Senate/House Stock Watcher's open S3
+    datasets both returned 403 — dead/inaccessible, and even when up
+    they're unofficial scrapers of periodic filings, not a stable API).
+
+20. **`fetch_relative_performance.py` extended to compare valuation, not just
+    returns**: stock's trailing P/E vs. SPY's and the sector ETF's trailing
+    P/E (`pe_premium_vs_benchmark_pct`/`pe_premium_vs_sector_pct`). A stock
+    can outperform its sector on returns while trading at a valuation
+    discount to it, or vice versa — deliberately kept as a separate
+    question from `relative_vs_*_pct`. `stock_pe_ratio` is passed in from
+    `fundamentals.pe_ratio` rather than re-fetched, same pattern as the
+    pct-change values already passed in. Returns `None` cleanly (not a
+    crash) for non-earning/loss-making tickers with no P/E, e.g. MBLY.
+
+21. **`fetch_social_sentiment.py`**: pulls the last ~30 public StockTwits
+    posts for the ticker and counts self-tagged Bullish/Bearish sentiment
+    (free, no auth, documented public limit 200 req/hour/IP — irrelevant
+    for a manually-run CLI). This is the first genuinely non-professional
+    data source in the bundle — retail/crowd chatter, not analyst/
+    institutional data. Deliberately scoped as a sentiment gauge only:
+    message bodies are unmoderated public chatter, included for color/
+    citation, not as facts the agents should reason from — the existing
+    "only use facts from RESEARCH_BUNDLE" grounding rule in
+    `agents/prompts/*.md` still stands, but nothing in those prompts
+    currently distinguishes "vetted fact" from "retail chatter provided for
+    color," worth revisiting if this ever seems to mislead an agent.
+    Request timeout is 15s (bumped up from an initial 10s after a live
+    transient timeout failure) matching `edgar_utils.py`'s convention.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

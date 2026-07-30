@@ -1,6 +1,6 @@
 {
   "ticker": "MBLY",
-  "fetched_at": "2026-07-30T11:50:26.299795Z",
+  "fetched_at": "2026-07-30T12:04:43.634851Z",
   "price": {
     "current_price": 8.01,
     "ma20": 9.06,
@@ -287,6 +287,11 @@
     "sector_pct_change_1y": 0.79,
     "relative_vs_sector_20d_pct": -11.68,
     "relative_vs_sector_1y_pct": -43.37,
+    "stock_pe_ratio": null,
+    "benchmark_pe_ratio": 26.238798,
+    "sector_pe_ratio": 28.495438,
+    "pe_premium_vs_benchmark_pct": null,
+    "pe_premium_vs_sector_pct": null,
     "note": null
   },
   "dividends_buybacks": {
@@ -319,10 +324,45 @@
     "note": "Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge."
   },
   "macro_context": {
-    "vix_level": 19.25,
-    "vix_change_20d": 3.1,
+    "vix_level": 19.14,
+    "vix_change_20d": 2.99,
     "treasury_10y_yield_pct": 4.62,
     "treasury_10y_yield_change_20d_pct": 0.15,
+    "note": null
+  },
+  "social_sentiment": {
+    "message_count": 30,
+    "bullish_count": 18,
+    "bearish_count": 1,
+    "untagged_count": 11,
+    "bullish_pct_of_tagged": 94.7,
+    "sample_messages": [
+      {
+        "created_at": "2026-07-30T01:50:50Z",
+        "body": "$MBLY WTF",
+        "sentiment": null
+      },
+      {
+        "created_at": "2026-07-29T22:48:49Z",
+        "body": "$MBLY \n\nFYI\n\nhttps://www.reuters.com/business/qualcomm-wins-bmw-chip-supply-deal-future-vehicle-platforms-2026-07-29/",
+        "sentiment": null
+      },
+      {
+        "created_at": "2026-07-29T20:56:09Z",
+        "body": "$MBLY uncertainty priced in due to CEO change and questions marks over their 26-27 catalyst launches. With a long term view, I like the strong cash position, their relatively stable Moat, their forward outlook, the product development being best at what they do, and foresight to develop next products in next market places. \n\nToday we may be down. But I think the next 18 months, will show we are sitting on a winner.",
+        "sentiment": null
+      },
+      {
+        "created_at": "2026-07-29T18:23:32Z",
+        "body": "$MBLY still shorting this? \ud83e\udd23",
+        "sentiment": "Bullish"
+      },
+      {
+        "created_at": "2026-07-29T17:54:13Z",
+        "body": "$MBLY FSD bearish I guess lol",
+        "sentiment": null
+      }
+    ],
     "note": null
   },
   "balance_sheet_health": {

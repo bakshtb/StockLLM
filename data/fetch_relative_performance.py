@@ -9,9 +9,15 @@ two windows for a broad-market benchmark (SPY) and, where the ticker's sector
 maps to a SPDR sector ETF, that sector ETF too, then reports the stock's
 return minus each benchmark's return ("relative_vs_*_pct").
 
-Takes the stock's own pct_change_20d/pct_change_1y as arguments (already
-computed by fetch_prices.py) rather than re-deriving them here, to avoid a
-second divergent implementation of the same calculation.
+Also compares valuation, not just returns: the stock's own trailing P/E
+against SPY's and the sector ETF's trailing P/E. A stock can outperform its
+sector on returns while still trading at a valuation discount to it (or vice
+versa) -- these are two different questions and both matter.
+
+Takes the stock's own pct_change_20d/pct_change_1y/pe_ratio as arguments
+(already computed by fetch_prices.py / fetch_fundamentals.py) rather than
+re-deriving them here, to avoid a second divergent implementation of the
+same calculation.
 """
 
 import yfinance as yf
@@ -46,12 +52,25 @@ def _pct_changes(etf_ticker: str):
     return pct_20d, pct_1y
 
 
-def fetch_relative_performance(ticker: str, sector: str, stock_pct_change_20d, stock_pct_change_1y) -> dict:
+def _trailing_pe(etf_ticker: str):
+    info = yf.Ticker(etf_ticker).info or {}
+    return info.get("trailingPE")
+
+
+def _pe_premium_pct(stock_pe, other_pe):
+    if stock_pe is None or not other_pe:
+        return None
+    return round((stock_pe / other_pe - 1) * 100, 2)
+
+
+def fetch_relative_performance(ticker: str, sector: str, stock_pct_change_20d, stock_pct_change_1y, stock_pe_ratio=None) -> dict:
     """
     Returns the stock's 20d/1y return alongside SPY's and (if the sector maps
     to a known SPDR ETF) that sector ETF's return, plus the stock's return
-    minus each. Returns whatever pieces succeed; a benchmark fetch failure
-    doesn't block the others.
+    minus each -- and the same idea for trailing P/E (valuation premium/
+    discount vs. benchmark and sector, a different question from returns).
+    Returns whatever pieces succeed; a benchmark fetch failure doesn't block
+    the others.
     """
     result = {
         "benchmark": BENCHMARK_TICKER,
@@ -66,6 +85,11 @@ def fetch_relative_performance(ticker: str, sector: str, stock_pct_change_20d, s
         "sector_pct_change_1y": None,
         "relative_vs_sector_20d_pct": None,
         "relative_vs_sector_1y_pct": None,
+        "stock_pe_ratio": stock_pe_ratio,
+        "benchmark_pe_ratio": None,
+        "sector_pe_ratio": None,
+        "pe_premium_vs_benchmark_pct": None,
+        "pe_premium_vs_sector_pct": None,
         "note": None,
     }
     notes = []
@@ -81,6 +105,13 @@ def fetch_relative_performance(ticker: str, sector: str, stock_pct_change_20d, s
     except Exception:
         notes.append(f"Could not fetch benchmark ({BENCHMARK_TICKER}) performance.")
 
+    try:
+        bench_pe = _trailing_pe(BENCHMARK_TICKER)
+        result["benchmark_pe_ratio"] = bench_pe
+        result["pe_premium_vs_benchmark_pct"] = _pe_premium_pct(stock_pe_ratio, bench_pe)
+    except Exception:
+        notes.append(f"Could not fetch benchmark ({BENCHMARK_TICKER}) P/E.")
+
     sector_etf = SECTOR_ETF_MAP.get(sector)
     if sector_etf:
         try:
@@ -93,6 +124,13 @@ def fetch_relative_performance(ticker: str, sector: str, stock_pct_change_20d, s
                 result["relative_vs_sector_1y_pct"] = round(stock_pct_change_1y - sect_1y, 2)
         except Exception:
             notes.append(f"Could not fetch sector ETF ({sector_etf}) performance.")
+
+        try:
+            sector_pe = _trailing_pe(sector_etf)
+            result["sector_pe_ratio"] = sector_pe
+            result["pe_premium_vs_sector_pct"] = _pe_premium_pct(stock_pe_ratio, sector_pe)
+        except Exception:
+            notes.append(f"Could not fetch sector ETF ({sector_etf}) P/E.")
     else:
         notes.append(f"No SPDR sector ETF mapping for sector '{sector}'.")
 
@@ -109,6 +147,9 @@ if __name__ == "__main__":
     price = fetch_price_summary(ticker)
     fundamentals = fetch_fundamentals(ticker)
     print(json.dumps(
-        fetch_relative_performance(ticker, fundamentals.get("sector"), price.get("pct_change_20d"), price.get("pct_change_1y")),
+        fetch_relative_performance(
+            ticker, fundamentals.get("sector"), price.get("pct_change_20d"), price.get("pct_change_1y"),
+            fundamentals.get("pe_ratio"),
+        ),
         indent=2,
     ))

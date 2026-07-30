@@ -53,6 +53,10 @@ python main.py check AAPL --dry-run       # raw data fetch only, no LLM calls, f
 - Analyst target price range/dispersion, and institutional/insider ownership
   % (both fixed/added to existing free fields) — free
 - Macro backdrop: VIX level and 10-year Treasury yield, with 20-day change — free
+- Stock's trailing P/E vs. the S&P 500's and its sector ETF's P/E (valuation
+  premium/discount, distinct from return comparison) — free
+- Social/crowd sentiment: bullish vs. bearish tag counts from recent public
+  StockTwits posts — free
 - Balance sheet health (debt, cash, free cash flow) — free
 - Insider transactions (SEC Form 4 filings) — free
 - Institutional ownership snapshot (top holders) — free

@@ -1,11 +1,13 @@
 """
 Combines price/technicals, fundamentals (incl. short interest), analyst
 rating actions, earnings surprise/estimate revisions, relative performance
-vs. benchmark/sector, dividends/buybacks, options sentiment, balance sheet
-health, income statement, insider transactions (Form 4), Form 144 sale
-notices, beneficial ownership (13D/13G), institutional ownership, raw filing
-text (incl. 8-K earnings exhibits), raw proxy text, raw news article text,
-filings digest, and news digest into a single structured "research bundle".
+vs. benchmark/sector (returns AND valuation), dividends/buybacks, options
+sentiment, macro context (VIX/10Y yield), social/crowd sentiment
+(StockTwits), balance sheet health, income statement, insider transactions
+(Form 4), Form 144 sale notices, beneficial ownership (13D/13G),
+institutional ownership, raw filing text (incl. 8-K earnings exhibits), raw
+proxy text, raw news article text, filings digest, and news digest into a
+single structured "research bundle".
 This bundle is the ONLY source of truth the LLM reasoning agents
 (bull/bear/skeptic/judge) are allowed to reason from -- see
 agents/prompts/*.md for the grounding instructions.
@@ -31,6 +33,7 @@ from data.fetch_relative_performance import fetch_relative_performance
 from data.fetch_dividends_buybacks import fetch_dividends_buybacks
 from data.fetch_options_sentiment import fetch_options_sentiment
 from data.fetch_macro_context import fetch_macro_context
+from data.fetch_social_sentiment import fetch_social_sentiment
 from data.fetch_balance_sheet import fetch_balance_sheet_health
 from data.fetch_income_statement import fetch_income_statement
 from data.fetch_insider import fetch_insider_transactions
@@ -56,11 +59,13 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
     analyst_ratings = fetch_analyst_ratings(ticker)
     earnings_estimates = fetch_earnings_estimates(ticker)
     relative_performance = fetch_relative_performance(
-        ticker, fundamentals.get("sector"), price.get("pct_change_20d"), price.get("pct_change_1y")
+        ticker, fundamentals.get("sector"), price.get("pct_change_20d"), price.get("pct_change_1y"),
+        fundamentals.get("pe_ratio"),
     )
     dividends_buybacks = fetch_dividends_buybacks(ticker)
     options_sentiment = fetch_options_sentiment(ticker, price.get("current_price"))
     macro_context = fetch_macro_context()
+    social_sentiment = fetch_social_sentiment(ticker)
     balance_sheet = fetch_balance_sheet_health(ticker)
     income_statement = fetch_income_statement(ticker)
     insider = fetch_insider_transactions(ticker)
@@ -103,6 +108,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "dividends_buybacks": dividends_buybacks,  # dividend yield/history + quarterly buyback spend, no LLM
         "options_sentiment": options_sentiment,  # put/call ratio + IV skew, no LLM
         "macro_context": macro_context,  # VIX + 10Y yield, same for every ticker on a given day, no LLM
+        "social_sentiment": social_sentiment,  # StockTwits crowd bullish/bearish tags, no LLM
         "balance_sheet_health": balance_sheet,
         "income_statement": income_statement,
         "insider_transactions": insider,
@@ -120,7 +126,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
                 insider.get("note"), institutional.get("note"), analyst_ratings.get("note"),
                 earnings_estimates.get("note"), relative_performance.get("note"),
                 dividends_buybacks.get("note"), options_sentiment.get("note"), macro_context.get("note"),
-                income_statement.get("note"),
+                social_sentiment.get("note"), income_statement.get("note"),
                 *[f.get("note") for f in filings_raw.values()],
                 form144.get("note"), beneficial_ownership.get("note"), proxy_raw.get("note"),
                 filings_digest.get("note"), news_digest.get("note"),
