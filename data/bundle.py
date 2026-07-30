@@ -23,6 +23,7 @@ import datetime as dt
 from data.fetch_prices import fetch_price_summary
 from data.fetch_news import fetch_news_summary, fetch_news_articles_raw, summarize_news
 from data.fetch_fundamentals import fetch_fundamentals
+from data.fetch_analyst_ratings import fetch_analyst_ratings
 from data.fetch_balance_sheet import fetch_balance_sheet_health
 from data.fetch_income_statement import fetch_income_statement
 from data.fetch_insider import fetch_insider_transactions
@@ -45,6 +46,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
     # --- Stage 1: raw data, always runs, no LLM calls ---
     price = fetch_price_summary(ticker)  # raises ValueError if ticker invalid -- do this first, fail fast
     fundamentals = fetch_fundamentals(ticker)
+    analyst_ratings = fetch_analyst_ratings(ticker)
     balance_sheet = fetch_balance_sheet_health(ticker)
     income_statement = fetch_income_statement(ticker)
     insider = fetch_insider_transactions(ticker)
@@ -81,6 +83,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "fetched_at": dt.datetime.utcnow().isoformat() + "Z",
         "price": price,
         "fundamentals": fundamentals,
+        "analyst_ratings": analyst_ratings,  # individual firm actions (last ~60 days), no LLM
         "balance_sheet_health": balance_sheet,
         "income_statement": income_statement,
         "insider_transactions": insider,
@@ -95,7 +98,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "filings_digest": filings_digest.get("digest"),
         "data_notes": [
             n for n in [
-                insider.get("note"), institutional.get("note"),
+                insider.get("note"), institutional.get("note"), analyst_ratings.get("note"),
                 income_statement.get("note"),
                 *[f.get("note") for f in filings_raw.values()],
                 form144.get("note"), beneficial_ownership.get("note"), proxy_raw.get("note"),

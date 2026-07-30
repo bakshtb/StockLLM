@@ -37,6 +37,8 @@ StockLLM/
 ├── data/                          # data fetching layer
 │   ├── fetch_prices.py            # price history + RSI/MACD/moving averages (free, yfinance)
 │   ├── fetch_fundamentals.py      # P/E, market cap, analyst targets, short interest (free, yfinance)
+│   ├── fetch_analyst_ratings.py   # individual analyst-firm actions: upgrade/downgrade/reiterate,
+│   │                               #   from/to grade, price target changes, last ~60 days (free, yfinance)
 │   ├── fetch_balance_sheet.py     # debt, cash, free cash flow (free, yfinance)
 │   ├── fetch_income_statement.py  # revenue/margins/EPS: latest annual + ALL recent quarters (free, yfinance)
 │   ├── fetch_insider.py           # SEC Form 4 insider transactions (free, SEC EDGAR)
@@ -189,6 +191,20 @@ StockLLM/
     - Unlike Form 4, the newer 13D/13G XML schema declares a default XML
       namespace, so plain `ElementTree.find("tagName")` silently returns
       nothing. `edgar_utils.strip_xml_namespaces()` handles this.
+
+14. **`analyst_ratings` (individual firm actions) is a different, more
+    granular signal than `fundamentals.analyst_recommendation`, and both are
+    kept.** The latter is yfinance's single aggregated consensus + mean
+    target (a static snapshot); `fetch_analyst_ratings.py` instead returns
+    yfinance's `Ticker.upgrades_downgrades` feed as-is: one row per named
+    firm's action (upgrade/downgrade/reiterate/initiate/maintain) with its
+    from/to grade and price-target change, filtered to the last 60 days
+    (`LOOKBACK_DAYS`). This lets the agents notice recent sentiment shifts
+    (e.g. "3 upgrades in the last 2 weeks") that a single consensus number
+    can't show. **Explicitly scoped as agent context only, not backtesting**
+    — the person asked for this specifically so the bull/bear/skeptic/judge
+    pipeline has more perspective to reason from, not to check past calls
+    against outcomes (backtesting itself is still deferred, see below).
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

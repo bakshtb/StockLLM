@@ -1,26 +1,26 @@
 {
   "ticker": "MBLY",
-  "fetched_at": "2026-07-29T12:17:11.208029Z",
+  "fetched_at": "2026-07-30T10:13:13.862981Z",
   "price": {
     "current_price": 8.01,
-    "ma20": 9.13,
-    "ma50": 9.36,
-    "ma200": 9.98,
+    "ma20": 9.06,
+    "ma50": 9.28,
+    "ma200": 9.91,
     "52w_high": 15.54,
     "52w_low": 6.56,
-    "volatility_20d": 0.0641,
+    "volatility_20d": 0.0516,
     "volume_trend": "increasing",
-    "pct_change_20d": -3.49,
-    "pct_change_1y": -44.22,
-    "rsi_14": 35.48,
-    "macd": -0.276,
-    "macd_signal": -0.108,
-    "macd_histogram": -0.168
+    "pct_change_20d": -17.17,
+    "pct_change_1y": -42.58,
+    "rsi_14": 35.44,
+    "macd": -0.303,
+    "macd_signal": -0.174,
+    "macd_histogram": -0.129
   },
   "fundamentals": {
     "pe_ratio": null,
-    "forward_pe": 18.231758,
-    "market_cap": "2.13B",
+    "forward_pe": 17.323414,
+    "market_cap": "2.02B",
     "sector": "Consumer Cyclical",
     "industry": "Auto Parts",
     "next_earnings_date": "2026-07-23",
@@ -34,6 +34,122 @@
       "short_pct_of_float": 0.1884,
       "as_of_date": "2026-07-15"
     }
+  },
+  "analyst_ratings": {
+    "actions": [
+      {
+        "date": "2026-07-27",
+        "firm": "Evercore ISI Group",
+        "action": "maintained",
+        "from_grade": "Outperform",
+        "to_grade": "Outperform",
+        "price_target_action": "Lowers",
+        "current_price_target": 16.0,
+        "prior_price_target": 20.0
+      },
+      {
+        "date": "2026-07-27",
+        "firm": "Piper Sandler",
+        "action": "upgrade",
+        "from_grade": "Neutral",
+        "to_grade": "Overweight",
+        "price_target_action": "Raises",
+        "current_price_target": 12.0,
+        "prior_price_target": 10.0
+      },
+      {
+        "date": "2026-07-25",
+        "firm": "UBS",
+        "action": "maintained",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "price_target_action": "Lowers",
+        "current_price_target": 9.0,
+        "prior_price_target": 10.0
+      },
+      {
+        "date": "2026-07-25",
+        "firm": "Canaccord Genuity",
+        "action": "maintained",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "price_target_action": "Lowers",
+        "current_price_target": 12.0,
+        "prior_price_target": 17.0
+      },
+      {
+        "date": "2026-07-24",
+        "firm": "Mizuho",
+        "action": "maintained",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "price_target_action": "Lowers",
+        "current_price_target": 8.0,
+        "prior_price_target": 9.0
+      },
+      {
+        "date": "2026-07-24",
+        "firm": "JP Morgan",
+        "action": "maintained",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "price_target_action": "Lowers",
+        "current_price_target": 9.0,
+        "prior_price_target": 10.0
+      },
+      {
+        "date": "2026-07-24",
+        "firm": "TD Cowen",
+        "action": "maintained",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "price_target_action": "Lowers",
+        "current_price_target": 9.0,
+        "prior_price_target": 11.5
+      },
+      {
+        "date": "2026-07-24",
+        "firm": "RBC Capital",
+        "action": "maintained",
+        "from_grade": "Sector Perform",
+        "to_grade": "Sector Perform",
+        "price_target_action": "Lowers",
+        "current_price_target": 7.0,
+        "prior_price_target": 10.0
+      },
+      {
+        "date": "2026-07-24",
+        "firm": "Needham",
+        "action": "reiterated",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "price_target_action": "Maintains",
+        "current_price_target": 13.0,
+        "prior_price_target": 13.0
+      },
+      {
+        "date": "2026-07-13",
+        "firm": "TD Cowen",
+        "action": "maintained",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "price_target_action": "Raises",
+        "current_price_target": 11.5,
+        "prior_price_target": 10.0
+      },
+      {
+        "date": "2026-07-13",
+        "firm": "RBC Capital",
+        "action": "maintained",
+        "from_grade": "Sector Perform",
+        "to_grade": "Sector Perform",
+        "price_target_action": "Raises",
+        "current_price_target": 10.0,
+        "prior_price_target": 9.0
+      }
+    ],
+    "lookback_days": 60,
+    "note": null
   },
   "balance_sheet_health": {
     "total_debt": null,
@@ -236,31 +352,31 @@
         "holder": "INTEL CORP",
         "shares": 50000000,
         "pct_out": 0.1981,
-        "value": 421500015
+        "value": 400500011
       },
       {
         "holder": "Manufacturers Life Insurance Co.",
         "shares": 10305431,
         "pct_out": 0.040799998,
-        "value": 86874786
+        "value": 82546504
       },
       {
         "holder": "Two Sigma Investments, LP",
         "shares": 9890390,
         "pct_out": 0.0392,
-        "value": 83375990
+        "value": 79222026
       },
       {
         "holder": "Goldman Sachs Group Inc",
         "shares": 9259643,
         "pct_out": 0.0367,
-        "value": 78058793
+        "value": 74169742
       },
       {
         "holder": "Blackrock Inc.",
         "shares": 5917179,
         "pct_out": 0.0234,
-        "value": 49881820
+        "value": 47396605
       }
     ],
     "pct_held_by_institutions": null,
@@ -268,6 +384,13 @@
     "note": "Snapshot of current holders, not a quarter-over-quarter change -- true 13F delta tracking not yet implemented."
   },
   "news_headlines": [
+    {
+      "headline": "Qualcomm wins BMW chip supply deal for future vehicle platforms",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "snippet": "Qualcomm said on Wednesday it has signed a long-term deal to supply \u200cchips for German luxury automaker BMW's future \u200cdigital cockpit and advanced driver-assistance systems through the next decade.  Th",
+      "url": "https://finance.yahoo.com/technology/articles/qualcomm-wins-bmw-chip-supply-130645860.html"
+    },
     {
       "headline": "Assessing the chip sector's damage: Chart of the Day",
       "source": "Yahoo Finance Video",
@@ -330,16 +453,16 @@
       "date": "2026-07-24",
       "snippet": "Moby summary of Mobileye Global Inc.'s Q2 2026 earnings call",
       "url": "https://app.moby.co/home/research/tools/earningsCalendar/earnings-mobileye-global-inc-q2-2026-earnings-call-summary?utm_source=yahoo_finance&utm_medium=rss"
-    },
-    {
-      "headline": "Mobileye CEO Amnon Shashua to step aside as company pushes into robotaxis, robotics",
-      "source": "TechCrunch",
-      "date": "2026-07-23",
-      "snippet": "Shashua has been invited to take the chairman of the board seat.",
-      "url": "https://finance.yahoo.com/technology/ai/articles/mobileye-ceo-amnon-shashua-step-224008848.html"
     }
   ],
   "news_articles_raw": [
+    {
+      "headline": "Qualcomm wins BMW chip supply deal for future vehicle platforms",
+      "source": "Reuters",
+      "date": "2026-07-29",
+      "text": "Oops, something went wrong July 29 (Reuters) - Qualcomm said on Wednesday it has signed a long-term deal to supply \u200cchips for German luxury automaker BMW's future \u200cdigital cockpit and advanced driver-assistance systems through the next decade. The \u200bagreement comes as competition intensifies in the automated driving market, withNvidiaand Mobileye Global also aiming to supply chips and software platforms to automakers. \u2022 The \u200cdeal includes Qualcomm's \u2060Snapdragon Digital Chassis solutions, including cockpit processors, automated driving chips and AI accelerators, which \u2060the companies said would establish the hardware basis for BMW's AI-led platforms. \u2022 No financial details of the \u200bagreement \u200bwere disclosed. \u2022 Qualcomm, which \u200bis a leading supplier \u200cof the chips used in smartphones, has been pushing deeper into automotive electronics, from infotainment to advanced driver-assistance systems. \u2022 \"As agentic and physical AI drive a new generation of intelligent vehicles, this collaboration enables both \u200ccompanies to define the future \u200bof mobility,\" said Nakul Duggal, \u200bgroup general manager \u200bfor automotive, industrial and embedded IoT \u200cand robotics at Qualcomm. \u2022 The \u200bdeal expands \u200ban existing partnership that launched the Snapdragon Ride Pilot driver-assistance system in BMW's electric iX3, which \u200boffered drivers \u200chands-free highway driving, automatic lane changes and \u200bparking assistance. (Reporting by Harshita Mary Varghese in Bengaluru; \u200bEditing by Jonathan Ananda)",
+      "full_text_fetched": true
+    },
     {
       "headline": "Assessing the chip sector's damage: Chart of the Day",
       "source": "Yahoo Finance Video",
@@ -393,21 +516,14 @@
       "headline": "Mobileye Q2 Earnings Surpass Expectations on R&D Incentive Grant",
       "source": "Zacks",
       "date": "2026-07-24",
-      "text": "Oops, something went wrong Mobileye Global Inc.MBLY reported second-quarter 2026 adjusted earnings of 19 cents per share, beating the Zacks Consensus Estimate of 6 cents by 216.7%. Adjusted earnings increased 50% year over year, aided by an Israeli R&D incentive grant that reduced research and development expenses.Revenues of $508 million surpassed the consensus estimate of $484 million by 5% and edged up 0.4% year over year. Systems shipped rose 3% to 10 million, though lower EyeQ pricing limited revenue growth. Mobileye Global Inc. price-consensus-eps-surprise-chart | Mobileye Global Inc. Quote EyeQ and SuperVision revenues totaled $485 million compared with $481 million in the year-ago quarter. The number of systems shipped increased from 9.7 million, reflecting higher customer demand.Average system price declined to $48.50 from $49.70. Mobileye attributed the pressure mainly to higher-than-expected export volumes from China-based automakers, which carry lower EyeQ average selling prices. GAAP gross profit declined 7% to $235 million, while gross margin contracted to 46% from 50%. The lower EyeQ average selling price and a larger share of SuperVision revenues weighed on profitability because SuperVision includes more hardware content.Adjusted gross profit fell 4% to $333 million. Adjusted gross margin narrowed 303 basis points to 66%, showing that shipment growth did not fully offset the less favorable pricing and product mix. Adjusted operating income climbed 46% to $155 million, lifting adjusted operating margin to 31% from 21%. The improvement primarily reflected the R&D incentive grant recognized in the quarter for the entire first half of 2026.Mobileye recorded roughly $110 million on a GAAP basis and $93 million on a non-GAAP basis as an offset to second-quarter R&D expenses. The law applies from the beginning of 2026 and has no scheduled expiration date. The company added a high-volume Cloud-Enhanced ADAS design win with Stellantis. Gross profit per unit for the program is expected to be roughly in line with Surround ADAS and more than twice Mobileye's current average base ADAS profitability.Robotaxi preparations with Volkswagen Group's MOIA remained on track. MOIA began public user testing in Hamburg with safety drivers, while Mobileye advanced vendor discussions and Moovit applications for its planned vertically integrated mobility service. The GAAP operating loss narrowed to $30 million from $74 million, while operating margin improved to negative 6% from negative 15%. Net loss narrowed to $21 million from $67 million, and GAAP loss per share narrowed to 3 cents from 8 cents. Operating cash flow totaled $210 million in the first six months of 2026, while capital expenditures were $51 million. The company repurchased $24 million of shares through the end of the second quarter under its $250 million authorization.As of June 27, 2026, Mobileye had $1.31 billion in cash and cash equivalents, down from $1.84 billion as of Dec. 27, 2025. Inventories declined to $310 million from $327 million at the end of 2025, while accounts receivable increased to $208 million from $131 million. MBLY now expects 2026 revenues of $1.97-$2.02 billion, up from the prior range of $1.94-$2.02 billion. The new midpoint is $20 million higher and implies year-over-year growth of 4-7%.Adjusted operating income is projected at $365-$425 million, sharply above the previous estimated range of $185-$235 million. The revision mainly reflects an expected non-GAAP R&D grant benefit of $180-$200 million for the year.MBLY currently sports a Zacks Rank #1 (Strong Buy). You can seethe complete list of today's Zacks #1 Rank stocks here. General Motors CompanyGM reported second-quarter 2026 adjusted earnings of $3.57 per share, up 41.3% year over year. The figure beat the Zacks Consensus Estimate of $3.13 by 14.06%. Revenues increased 1.9% to $48.03 billion and surpassed the consensus estimate of $46.56 billion by 3.15%. Strong pricing, lower costs and dis",
-      "full_text_fetched": true
+      "text": "MBLY's Q2 earnings beat estimates as an R&D grant boosts profits, while stronger shipments and a raised 2026 outlook point to continued momentum.",
+      "full_text_fetched": false
     },
     {
       "headline": "Mobileye Global Inc. Q2 2026 Earnings Call Summary",
       "source": "Moby",
       "date": "2026-07-24",
       "text": "Moby summary of Mobileye Global Inc.'s Q2 2026 earnings call",
-      "full_text_fetched": false
-    },
-    {
-      "headline": "Mobileye CEO Amnon Shashua to step aside as company pushes into robotaxis, robotics",
-      "source": "TechCrunch",
-      "date": "2026-07-23",
-      "text": "Shashua has been invited to take the chairman of the board seat.",
       "full_text_fetched": false
     }
   ],

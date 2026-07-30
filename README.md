@@ -43,6 +43,8 @@ python main.py check AAPL --dry-run       # raw data fetch only, no LLM calls, f
 **Full run** fetches:
 - Price history + technical indicators (RSI, MACD, moving averages) — free
 - Fundamentals (P/E, market cap, analyst targets) — free
+- Analyst rating actions (individual firm upgrades/downgrades/reiterations,
+  last ~60 days) — free
 - Balance sheet health (debt, cash, free cash flow) — free
 - Insider transactions (SEC Form 4 filings) — free
 - Institutional ownership snapshot (top holders) — free
