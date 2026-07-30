@@ -5,7 +5,7 @@
 A multi-agent LLM research tool: give it a stock ticker, it deterministically
 gathers price/news/fundamentals data, then runs a Bull / Bear / Skeptic / Judge
 agent pipeline and prints a structured recommendation to the terminal.
-Available as both a CLI and a private Home Assistant add-on with a web UI
+Available as both a CLI and a Home Assistant add-on with a web UI
 (see "Home Assistant add-on" below) — the CLI keeps working unchanged either way.
 
 **This is a research/decision-support tool. It is NOT financial advice, and it
@@ -117,14 +117,14 @@ and that panel just doesn't render.
 
 ## Home Assistant add-on
 
-StockLLM can also run as a private Home Assistant add-on: install it from
-your own (private) GitHub repo, configure your API key once in the add-on's
-Configuration tab, and get a web page in the HA sidebar to pick a ticker,
-toggle dry-run, and view the dashboard — no terminal needed. See `DOCS.md`
-for the full install walkthrough (including the private-repo access-token
-setup) and `HANDOFF.md` for the packaging decisions behind it. The add-on
-is just a second entrypoint (`webapp/app.py`, a small Flask app) into the
-exact same `data/`, `agents/`, and `dashboard/` code the CLI uses — nothing
+StockLLM can also run as a Home Assistant add-on: install it from this
+GitHub repo, configure your API key once in the add-on's Configuration
+tab, and get a web page in the HA sidebar to pick a ticker, toggle
+dry-run, and view the dashboard — no terminal needed. See `DOCS.md` for
+the full install walkthrough and `HANDOFF.md` for the packaging decisions
+behind it. The add-on is just a second entrypoint (`webapp/app.py`, a
+small Flask app) into the exact same `data/`, `agents/`, and `dashboard/`
+code the CLI uses — nothing
 is duplicated, and the CLI keeps working exactly as before regardless of
 whether the add-on is installed.
 

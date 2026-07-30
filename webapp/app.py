@@ -116,6 +116,21 @@ button.submit:disabled {{ opacity: 0.6; cursor: wait; }}
 PAGE_TAIL = "</body></html>"
 
 
+def _ingress_prefix() -> str:
+    """
+    Home Assistant's Ingress proxy mounts this add-on at a dynamic sub-path
+    (e.g. /api/hassio_ingress/<token>) rather than the domain root, and
+    tells the backend what that prefix currently is via the X-Ingress-Path
+    request header. Any URL this app generates -- form action, links,
+    redirects -- has to be built with this prefix, or the browser resolves
+    it against the domain root instead and the request goes to HA core
+    (or nowhere) instead of back into this add-on. Empty string when not
+    behind ingress (e.g. `python -m webapp.app` directly, or `docker run`
+    without HA), so plain root-relative paths keep working unprefixed there.
+    """
+    return request.headers.get("X-Ingress-Path", "")
+
+
 def _recent_runs(limit=15):
     if not os.path.isdir(OUTPUT_DIR):
         return []
@@ -128,9 +143,10 @@ def _recent_runs(limit=15):
 
 
 def _render_form(error=None):
+    prefix = _ingress_prefix()
     recent = _recent_runs()
     recent_html = "".join(
-        f'<div class="news-item"><a href="/output/{name}">{name}</a> <span class="meta">{mtime}</span></div>'
+        f'<div class="news-item"><a href="{prefix}/output/{name}">{name}</a> <span class="meta">{mtime}</span></div>'
         for name, mtime in recent
     ) or '<div class="empty">No runs yet.</div>'
     error_html = f'<div class="error-box">{error}</div>' if error else ""
@@ -140,7 +156,7 @@ def _render_form(error=None):
     <h2>StockLLM</h2>
     <div class="card-sub">Pick a ticker to research. Not financial advice.</div>
     {error_html}
-    <form method="post" action="/run" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Running...';">
+    <form method="post" action="{prefix}/run" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Running...';">
       <div class="form-row">
         <label for="ticker">Ticker symbol</label>
         <input type="text" id="ticker" name="ticker" placeholder="e.g. AAPL" maxlength="10" required autofocus>
@@ -220,7 +236,7 @@ def run_check():
     with open(os.path.join(OUTPUT_DIR, dashboard_name), "w", encoding="utf-8") as f:
         f.write(build_dashboard(bundle, pipeline_result))
 
-    return redirect(f"/output/{dashboard_name}")
+    return redirect(f"{_ingress_prefix()}/output/{dashboard_name}")
 
 
 @app.route("/output/<path:filename>")

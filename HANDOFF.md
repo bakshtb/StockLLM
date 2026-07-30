@@ -598,6 +598,27 @@ StockLLM/
       a real HA install) is still worth doing before fully trusting this
       packaging works end-to-end.
 
+29. **Fixed a real bug found on the first actual HA install** (exactly the
+    kind of thing #28 above flagged as unverified): submitting the form
+    produced a blank page with nothing in the add-on's log — no `POST /run`
+    at all, meaning the request never reached the Flask app. Root cause:
+    HA's Ingress proxy mounts an add-on's UI at a dynamic sub-path (e.g.
+    `/api/hassio_ingress/<token>`), not the domain root, but
+    `webapp/app.py` hardcoded root-relative paths (`action="/run"`,
+    `redirect("/output/...")`, the recent-runs `href`s) — a browser resolves
+    those against the *domain root*, so the POST went straight past the
+    add-on to HA core itself instead. Fixed with `_ingress_prefix()`,
+    reading the `X-Ingress-Path` header HA sets on every proxied request
+    (empty string when not behind ingress — e.g. `python -m webapp.app`
+    directly, or bare `docker run` without HA — so local/docker testing is
+    unaffected) and prefixing all three generated URLs with it. Verified
+    both branches with Flask's test client (with and without the header
+    set) before pushing this time, rather than relying on the Docker/HA
+    testing gap #28 already flagged. **If any future route/link/redirect
+    is added to `webapp/app.py`, it needs the same `_ingress_prefix()`
+    treatment** — this isn't a one-off fix, it's a standing constraint on
+    every URL this app generates for itself.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
