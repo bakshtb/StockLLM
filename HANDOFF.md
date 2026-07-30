@@ -463,6 +463,29 @@ StockLLM/
       `>None<` / leaked-value grep across the generated HTML, not by eye —
       re-run that grep after any formatting-helper change.
 
+26. **Fixed a real bug the user spotted by eye**: the "Return vs. benchmark &
+    sector" chart's bars were ALL rendered in `var(--series-1)` (blue),
+    regardless of whether the bar was Stock/S&P 500/Sector — `bar_chart_horizontal`
+    hardcodes a single color, so it was never capable of the per-series
+    coloring the chart's own legend implied. Testing also turned up a second,
+    related bug in the same chart: `bar_chart_horizontal` draws
+    `w = abs(v)/max_v` and always grows the bar rightward, so a negative
+    return (MBLY's numbers are mostly negative) rendered as a rightward bar
+    indistinguishable in shape from a positive one — only the text label
+    said otherwise. Fixed by adding `grouped_bar_horizontal()`: bars grow
+    from a shared center baseline in the correct left/right direction for
+    the value's sign (like `diverging_bar_horizontal`), but colored by
+    series identity (categorical, like `bar_chart_horizontal`) rather than
+    by sign — this chart's job is "which is bigger," not "is it good," so
+    identity color is correct here even though the values can be negative.
+    `section_relative_performance` now builds `groups = [("20-day return",
+    [(name, color, value), ...]), ("1-year return", [...])]` instead of
+    flattening everything into single-series `bar_chart_horizontal` items.
+    `bar_chart_horizontal` itself is unchanged and still correct for its
+    remaining two callers (price-vs-moving-averages, quarterly buyback
+    spend) — both are genuinely single-series, all-comparable-sign
+    magnitude comparisons, which is exactly what it's for.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

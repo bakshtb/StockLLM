@@ -732,6 +732,67 @@ def diverging_bar_horizontal(items, value_fmt=None):
     return "".join(parts), table, leg
 
 
+def grouped_bar_horizontal(groups, value_fmt=None):
+    """groups: list of (group_title, [(series_name, color_var, value), ...]) --
+    e.g. one group per time window, each with one bar per series (stock vs.
+    benchmark vs. sector), colored by series identity (categorical), not by
+    sign. Bars grow from a shared center baseline in the correct direction
+    for the value's sign -- unlike a plain magnitude bar, a negative value
+    visibly grows the opposite way, not just via its text label. Use this
+    whenever the job is "tell distinct series apart, AND the series can be
+    positive or negative" (e.g. returns); use bar_chart_horizontal for a
+    single-series magnitude comparison, diverging_bar_horizontal for one
+    series against a baseline."""
+    value_fmt = value_fmt or (lambda v: fmt_pct(v))
+    all_vals = [v for _, items in groups for _, _, v in items if v is not None]
+    if not all_vals:
+        return "<svg></svg>", empty_state(), ""
+    max_abs = max(abs(v) for v in all_vals) or 1
+
+    row_h, gap, group_gap, header_h, pad = 20, 8, 22, 22, 16
+    label_w = 130
+    W = 620
+    half = (W - label_w - 20) / 2
+    center = label_w + half
+
+    H = pad
+    for _, items in groups:
+        H += header_h + len(items) * (row_h + gap) - gap + group_gap
+    H = H - group_gap + pad
+
+    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="grouped comparison chart">']
+    parts.append(f'<line x1="{center}" y1="{pad}" x2="{center}" y2="{H-pad}" stroke="var(--baseline)" stroke-width="1"/>')
+
+    y = pad
+    for group_title, items in groups:
+        parts.append(f'<text x="{label_w}" y="{y+12}" font-size="12" font-weight="600" fill="var(--text-primary)">{esc(group_title)}</text>')
+        y += header_h
+        for name, color, v in items:
+            if v is None:
+                y += row_h + gap
+                continue
+            w = (abs(v) / max_abs) * (half - 10)
+            d = _hbar_path(center, y, w if v >= 0 else -w, row_h)
+            tip = f"{name} — {group_title}: {value_fmt(v)}"
+            parts.append(f'<text x="{label_w-8}" y="{y+row_h/2+4}" text-anchor="end" font-size="12" fill="var(--text-secondary)">{esc(name)}</text>')
+            parts.append(_mark(d, color, tip))
+            label_x = center + w + 6 if v >= 0 else center - w - 6
+            anchor = "start" if v >= 0 else "end"
+            parts.append(f'<text x="{label_x}" y="{y+row_h/2+4}" text-anchor="{anchor}" font-size="12" fill="var(--text-primary)">{esc(value_fmt(v))}</text>')
+            y += row_h + gap
+        y += group_gap - gap
+    parts.append("</svg>")
+
+    rows = []
+    for group_title, items in groups:
+        for name, _, v in items:
+            rows.append([group_title, name, value_fmt(v) if v is not None else "—"])
+    table = data_table(["Period", "Series", "Value"], rows)
+    leg_items = groups[0][1] if groups else []
+    leg = legend([(name, color) for name, color, _ in leg_items])
+    return "".join(parts), table, leg
+
+
 def grouped_column_chart(categories, series):
     """categories: list of str (x-axis). series: list of (name, color_var, [values])."""
     n_cat = len(categories)
@@ -1229,21 +1290,21 @@ def section_analyst(bundle):
 def section_relative_performance(bundle):
     rp = bundle.get("relative_performance", {}) or {}
     fundamentals = bundle.get("fundamentals", {}) or {}
-    cats = ["20-day return", "1-year return"]
-    series = [
-        ("Stock", "var(--series-1)", [rp.get("stock_pct_change_20d"), rp.get("stock_pct_change_1y")]),
-        ("S&P 500", "var(--series-2)", [rp.get("benchmark_pct_change_20d"), rp.get("benchmark_pct_change_1y")]),
+
+    # (series name, color, 20d field, 1y field)
+    series_specs = [
+        ("Stock", "var(--series-1)", "stock_pct_change_20d", "stock_pct_change_1y"),
+        ("S&P 500", "var(--series-2)", "benchmark_pct_change_20d", "benchmark_pct_change_1y"),
     ]
     if rp.get("sector_etf"):
-        series.append((f"Sector ({rp.get('sector_etf')})", "var(--series-3)",
-                        [rp.get("sector_pct_change_20d"), rp.get("sector_pct_change_1y")]))
+        series_specs.append((f"Sector ({rp.get('sector_etf')})", "var(--series-3)",
+                              "sector_pct_change_20d", "sector_pct_change_1y"))
 
-    items = []
-    for i, cat in enumerate(cats):
-        for name, _, vals in series:
-            items.append((f"{name} — {cat}", vals[i]))
-    svg, table = bar_chart_horizontal(items, value_fmt=lambda v: fmt_pct(v))
-    leg = legend([(name, color) for name, color, _ in series])
+    groups = [
+        ("20-day return", [(name, color, rp.get(k20)) for name, color, k20, _ in series_specs]),
+        ("1-year return", [(name, color, rp.get(k1y)) for name, color, _, k1y in series_specs]),
+    ]
+    svg, table, leg = grouped_bar_horizontal(groups, value_fmt=lambda v: fmt_pct(v))
     perf_card = viz_card("Return vs. benchmark & sector", svg, table, leg, info="relative_performance")
 
     if rp.get("stock_pe_ratio") is not None:
