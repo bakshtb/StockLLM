@@ -31,15 +31,9 @@ def fetch_institutional_ownership(ticker: str) -> dict:
     pct_institutions = None
     pct_insiders = None
     try:
-        major = tk.major_holders
-        if major is not None and not major.empty:
-            # yfinance major_holders format varies by version; try to find rows by label
-            for _, row in major.iterrows():
-                label = " ".join(str(v) for v in row.values).lower()
-                if "institutions" in label and "%" in label:
-                    pct_institutions = row.iloc[0]
-                elif "insiders" in label and "%" in label:
-                    pct_insiders = row.iloc[0]
+        info = tk.info or {}
+        pct_institutions = info.get("heldPercentInstitutions")
+        pct_insiders = info.get("heldPercentInsiders")
     except Exception:
         pass
 

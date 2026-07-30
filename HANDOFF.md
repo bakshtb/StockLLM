@@ -44,6 +44,8 @@ StockLLM/
 │   ├── fetch_relative_performance.py # stock's 20d/1y return vs. SPY and sector SPDR ETF (free, yfinance)
 │   ├── fetch_dividends_buybacks.py # dividend yield/payout/history + quarterly buyback spend (free, yfinance)
 │   ├── fetch_options_sentiment.py # put/call volume+OI ratio, ATM/OTM implied vol skew (free, yfinance)
+│   ├── fetch_macro_context.py     # VIX level + 10Y Treasury yield, both with 20d change; same for
+│   │                               #   every ticker on a given day, not ticker-specific (free, yfinance)
 │   ├── fetch_balance_sheet.py     # debt, cash, free cash flow (free, yfinance)
 │   ├── fetch_income_statement.py  # revenue/margins/EPS: latest annual + ALL recent quarters (free, yfinance)
 │   ├── fetch_insider.py           # SEC Form 4 insider transactions (free, SEC EDGAR)
@@ -245,6 +247,37 @@ StockLLM/
       stale/uncalculated), not a bug in this module. The module's own
       output note says this explicitly — don't remove that caveat, and
       weight `iv_skew_put_minus_call` accordingly in any future prompt work.
+
+16. **Fixed a real bug in `fetch_institutional.py`** (found while looking
+    for more data to add, not reported by the user): `pct_held_by_institutions`
+    /`pct_held_by_insiders` had been `null` in every bundle generated so far
+    (see the original AAPL.json/mobileye.json in git history). The old code
+    tried to match row *labels* off `tk.major_holders` via
+    `" ".join(str(v) for v in row.values)` — but that DataFrame keys the
+    data by **index** (`insidersPercentHeld`, `institutionsPercentHeld`),
+    not by a labeled column, so `row.values` only ever contained the numeric
+    value, never a string with "institutions"/"insiders" in it — the match
+    always failed silently. Fixed by reading `info.get("heldPercentInstitutions")`
+    /`heldPercentInsiders")` directly instead (same free `info` dict every
+    other module already uses); confirmed live (AAPL: 65.7%/1.6%, MBLY:
+    59.0%/31.9%).
+
+17. **Added analyst target price range/dispersion** to `fetch_fundamentals.py`:
+    `target_median_price`, `target_high_price`, `target_low_price`,
+    `number_of_analyst_opinions` — all were sitting unused in the same
+    `info` dict already being read; only `target_mean_price` was surfaced
+    before. Shows whether analysts are in tight agreement or split (AAPL:
+    $215–$400 across 43 analysts).
+
+18. **`fetch_macro_context.py`** is the one module that is NOT ticker-specific
+    — it fetches `^VIX` and `^TNX` (10Y Treasury yield) once per run,
+    identical for every ticker checked the same day, so the agents have some
+    sense of the broader risk environment (rising rates pressure high-multiple
+    growth names; elevated/rising VIX signals a risk-off backdrop) instead of
+    reasoning about a ticker in a vacuum. Gotcha avoided: ^TNX has historically
+    been quoted by some sources scaled by 10 (46.22 meaning 4.622%) — verified
+    live that the yfinance feed returns the plain percent directly (4.62, not
+    46.2), so there's deliberately no rescaling in this module.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

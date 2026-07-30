@@ -50,6 +50,9 @@ python main.py check AAPL --dry-run       # raw data fetch only, no LLM calls, f
 - Relative performance vs. the S&P 500 and the ticker's sector ETF — free
 - Dividend yield/history and recent quarterly buyback spend — free
 - Options-market sentiment (put/call ratio, implied volatility skew) — free
+- Analyst target price range/dispersion, and institutional/insider ownership
+  % (both fixed/added to existing free fields) — free
+- Macro backdrop: VIX level and 10-year Treasury yield, with 20-day change — free
 - Balance sheet health (debt, cash, free cash flow) — free
 - Insider transactions (SEC Form 4 filings) — free
 - Institutional ownership snapshot (top holders) — free

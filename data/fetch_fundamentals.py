@@ -63,6 +63,10 @@ def fetch_fundamentals(ticker: str) -> dict:
         "next_earnings_date": next_earnings,
         "analyst_recommendation": info.get("recommendationKey"),
         "target_mean_price": info.get("targetMeanPrice"),
+        "target_median_price": info.get("targetMedianPrice"),
+        "target_high_price": info.get("targetHighPrice"),
+        "target_low_price": info.get("targetLowPrice"),
+        "number_of_analyst_opinions": info.get("numberOfAnalystOpinions"),
         "short_interest": {
             "shares_short": info.get("sharesShort"),
             "shares_short_prior_month": info.get("sharesShortPriorMonth"),

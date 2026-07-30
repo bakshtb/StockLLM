@@ -30,6 +30,7 @@ from data.fetch_earnings_estimates import fetch_earnings_estimates
 from data.fetch_relative_performance import fetch_relative_performance
 from data.fetch_dividends_buybacks import fetch_dividends_buybacks
 from data.fetch_options_sentiment import fetch_options_sentiment
+from data.fetch_macro_context import fetch_macro_context
 from data.fetch_balance_sheet import fetch_balance_sheet_health
 from data.fetch_income_statement import fetch_income_statement
 from data.fetch_insider import fetch_insider_transactions
@@ -59,6 +60,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
     )
     dividends_buybacks = fetch_dividends_buybacks(ticker)
     options_sentiment = fetch_options_sentiment(ticker, price.get("current_price"))
+    macro_context = fetch_macro_context()
     balance_sheet = fetch_balance_sheet_health(ticker)
     income_statement = fetch_income_statement(ticker)
     insider = fetch_insider_transactions(ticker)
@@ -100,6 +102,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "relative_performance": relative_performance,  # stock return vs. SPY + sector ETF, no LLM
         "dividends_buybacks": dividends_buybacks,  # dividend yield/history + quarterly buyback spend, no LLM
         "options_sentiment": options_sentiment,  # put/call ratio + IV skew, no LLM
+        "macro_context": macro_context,  # VIX + 10Y yield, same for every ticker on a given day, no LLM
         "balance_sheet_health": balance_sheet,
         "income_statement": income_statement,
         "insider_transactions": insider,
@@ -116,7 +119,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
             n for n in [
                 insider.get("note"), institutional.get("note"), analyst_ratings.get("note"),
                 earnings_estimates.get("note"), relative_performance.get("note"),
-                dividends_buybacks.get("note"), options_sentiment.get("note"),
+                dividends_buybacks.get("note"), options_sentiment.get("note"), macro_context.get("note"),
                 income_statement.get("note"),
                 *[f.get("note") for f in filings_raw.values()],
                 form144.get("note"), beneficial_ownership.get("note"), proxy_raw.get("note"),
