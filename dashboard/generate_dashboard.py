@@ -730,7 +730,7 @@ def bar_chart_horizontal(items, unit="", value_fmt=None):
     bar_area = W - label_w - tail_w
     H = pad * 2 + len(items) * (row_h + gap) - gap
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="{esc(unit or "bar chart")}">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(unit or "bar chart")}">']
     y = pad
     for label, v in items:
         w = (abs(v) / max_v) * bar_area
@@ -782,7 +782,7 @@ def diverging_bar_horizontal(items, value_fmt=None):
     center = label_w + half
     H = pad * 2 + len(items) * (row_h + gap) - gap
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="values relative to baseline">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="values relative to baseline">']
     parts.append(f'<line x1="{center}" y1="{pad-6}" x2="{center}" y2="{H-pad+6}" stroke="var(--baseline)" stroke-width="1"/>')
     y = pad
     for label, v in items:
@@ -831,7 +831,7 @@ def grouped_bar_horizontal(groups, value_fmt=None):
         H += header_h + len(items) * (row_h + gap) - gap + group_gap
     H = H - group_gap + pad
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="grouped comparison chart">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="grouped comparison chart">']
     parts.append(f'<line x1="{center}" y1="{pad}" x2="{center}" y2="{H-pad}" stroke="var(--baseline)" stroke-width="1"/>')
 
     y = pad
@@ -887,7 +887,7 @@ def grouped_column_chart(categories, series):
         return pad_t + plot_h - ((v - min_v) / span) * plot_h
 
     baseline_y = y_for(0)
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="grouped column chart">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="grouped column chart">']
     # gridlines at 0, mid, max
     for gv in [min_v, (min_v + max_v) / 2, max_v]:
         gy = y_for(gv)
@@ -936,7 +936,7 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
         v = max(low, min(high, v))
         return track_x0 + (v - low) / (high - low) * track_w
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="analyst target price range">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="analyst target price range">']
     parts.append(f'<text x="{track_x0}" y="20" font-size="12" fill="var(--text-secondary)">Low {label_fmt(low)}</text>')
     parts.append(f'<text x="{track_x1}" y="20" text-anchor="end" font-size="12" fill="var(--text-secondary)">High {label_fmt(high)}</text>')
     d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
@@ -980,7 +980,7 @@ def gauge_meter(value, min_v, max_v, zones, label=""):
         v = max(min_v, min(max_v, v))
         return track_x0 + (v - min_v) / (max_v - min_v) * track_w
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="{esc(label)} gauge">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(label)} gauge">']
     prev = min_v
     for upto, color, _ in zones:
         x0, x1 = x_for(prev), x_for(upto)
@@ -1011,7 +1011,7 @@ def stacked_bar_parts(parts_data, total=100.0):
     bar_w = W - pad * 2
     gap = 2
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="ownership breakdown">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="ownership breakdown">']
     x = pad
     n = len(parts_data)
     r = 4
@@ -1047,7 +1047,7 @@ def diverging_stacked_sentiment(bearish, untagged, bullish):
     right_w = (bullish / total) * (W - 40)
 
     mid_x0 = center_x - mid_w / 2
-    parts = [f'<svg viewBox="0 0 {W} {H}" class="viz-svg" role="img" aria-label="social sentiment split">']
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="social sentiment split">']
     parts.append(f'<line x1="{center_x}" y1="{bar_y-6}" x2="{center_x}" y2="{bar_y+bar_h+6}" stroke="var(--baseline)" stroke-width="1"/>')
 
     if mid_w > 0:

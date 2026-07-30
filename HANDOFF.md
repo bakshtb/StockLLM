@@ -698,6 +698,35 @@ StockLLM/
       local environment is doing the committing; don't let them drift
       apart silently if only one gets edited.
 
+32. **Fixed a second, more subtle mobile bug** (reported via a follow-up
+    phone screenshot after #30's fix already improved things): individual
+    charts — not the whole page anymore — were still overflowing past the
+    phone viewport, specifically the SVG bar charts rendering at their raw
+    ~620-unit `viewBox` width as if it were literal pixels, ignoring the
+    `.viz-svg { width: 100%; height: auto; }` CSS meant to scale them down.
+    Root cause: none of the 8 SVG-generating functions set explicit
+    `width`/`height` attributes on the `<svg>` root, only `viewBox`. Some
+    mobile WebKit/Safari versions need BOTH `viewBox` and explicit
+    intrinsic `width`/`height` attributes present to reliably compute the
+    aspect ratio `height: auto` depends on for CSS-driven responsive
+    scaling — with only `viewBox`, the fallback behavior can render at an
+    undefined or raw-unit intrinsic size instead. Fixed by adding
+    `width="{W}" height="{H}"` (matching each chart's own `viewBox`
+    dimensions) to every `<svg viewBox="0 0 {W} {H}" ...>` tag — this is
+    the standard, well-established technique for reliable cross-browser
+    responsive SVG (same principle as an `<img>` with both `width`/`height`
+    attributes AND a CSS override — the attributes give the intrinsic
+    size/aspect-ratio, CSS still fully controls the rendered size). If a
+    9th chart function is ever added, it needs the same `width="{W}"
+    height="{H}"` on its `<svg>` tag — this isn't optional boilerplate,
+    it's what makes the responsive CSS actually take effect on mobile.
+    Verified: all 9 real (non-empty-state) SVGs across both example
+    dashboards now carry explicit dimensions; the handful of bare
+    `<svg></svg>` empty-state placeholders in thinner/older bundles
+    (QQQ, an ETF with little fundamental data) are intentional and
+    unrelated — confirmed those are the existing "no data for this chart"
+    fallback, not a regression.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

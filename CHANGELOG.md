@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Fix: individual charts still overflowed the phone viewport after 0.1.1's
+  page-layout fix -- the SVG charts had no explicit width/height attributes,
+  which some mobile Safari versions need (alongside viewBox) to reliably
+  apply responsive CSS scaling. Found via a follow-up phone screenshot.
+
 ## 0.1.1
 
 - Fix: Ingress path handling. The form, redirects, and "recent runs" links
