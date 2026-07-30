@@ -306,13 +306,29 @@ StockLLM/
     data source in the bundle — retail/crowd chatter, not analyst/
     institutional data. Deliberately scoped as a sentiment gauge only:
     message bodies are unmoderated public chatter, included for color/
-    citation, not as facts the agents should reason from — the existing
-    "only use facts from RESEARCH_BUNDLE" grounding rule in
-    `agents/prompts/*.md` still stands, but nothing in those prompts
-    currently distinguishes "vetted fact" from "retail chatter provided for
-    color," worth revisiting if this ever seems to mislead an agent.
-    Request timeout is 15s (bumped up from an initial 10s after a live
-    transient timeout failure) matching `edgar_utils.py`'s convention.
+    citation, not as facts the agents should reason from. Request timeout is
+    15s (bumped up from an initial 10s after a live transient timeout
+    failure) matching `edgar_utils.py`'s convention.
+
+22. **Defense-in-depth for the StockTwits caveat above, added right after
+    confirming `agents/pipeline.py` sends the ENTIRE bundle verbatim to
+    every agent** (`bundle_json_str = json.dumps(bundle)` — no filtering,
+    so a raw post like `"$AAPL dropping to $25 thanks to trump"` reaches the
+    model exactly as written, same visual weight as an SEC filing fact):
+    - Renamed the field from `sample_messages` to
+      `sample_messages_unverified` in `fetch_social_sentiment.py` — a
+      self-documenting key that's visible every time regardless of whether
+      the model "remembers" a prompt instruction from earlier in a long
+      context, unlike a rule that only lives in the system prompt.
+    - Added one line to `SHARED_SYSTEM_PROMPT` in `agents/client.py` (used
+      by all four agents) explicitly naming
+      `social_sentiment.sample_messages_unverified` as unmoderated public
+      chatter, not to be cited as evidence — only
+      `bullish_count`/`bearish_count`/`bullish_pct_of_tagged` are usable
+      signal. If a future digest/fetch module adds more raw
+      user-generated text, apply the same two-part pattern (self-documenting
+      key name + explicit system-prompt callout) rather than relying on
+      prompt wording alone.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

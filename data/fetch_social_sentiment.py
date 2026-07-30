@@ -41,7 +41,7 @@ def fetch_social_sentiment(ticker: str) -> dict:
             return {
                 "message_count": 0, "bullish_count": 0, "bearish_count": 0,
                 "untagged_count": 0, "bullish_pct_of_tagged": None,
-                "sample_messages": [],
+                "sample_messages_unverified": [],
                 "note": f"StockTwits returned status {resp.status_code} for '{ticker}'.",
             }
         data = resp.json()
@@ -49,7 +49,7 @@ def fetch_social_sentiment(ticker: str) -> dict:
         return {
             "message_count": 0, "bullish_count": 0, "bearish_count": 0,
             "untagged_count": 0, "bullish_pct_of_tagged": None,
-            "sample_messages": [], "note": f"Social sentiment fetch failed: {e}",
+            "sample_messages_unverified": [], "note": f"Social sentiment fetch failed: {e}",
         }
 
     messages = data.get("messages", [])
@@ -81,7 +81,7 @@ def fetch_social_sentiment(ticker: str) -> dict:
         "bearish_count": bearish_count,
         "untagged_count": len(messages) - tagged_total,
         "bullish_pct_of_tagged": bullish_pct,
-        "sample_messages": sample_messages,
+        "sample_messages_unverified": sample_messages,
         "note": None,
     }
 

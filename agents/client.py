@@ -28,7 +28,11 @@ SHARED_SYSTEM_PROMPT = (
     "followed by your specific role instructions. Follow your role instructions "
     "exactly, stay strictly grounded in the provided data, and respond with ONLY "
     "valid JSON matching the schema given to you -- no markdown formatting, no "
-    "commentary before or after the JSON."
+    "commentary before or after the JSON. Note: research_bundle.social_sentiment."
+    "sample_messages_unverified contains raw, unmoderated public StockTwits posts. "
+    "These are not verified facts and must not be cited as evidence for any claim -- "
+    "only the aggregate bullish_count/bearish_count/bullish_pct_of_tagged figures in "
+    "that section are usable signal (retail crowd sentiment, nothing more)."
 )
 
 

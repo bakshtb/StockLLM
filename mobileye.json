@@ -1,6 +1,6 @@
 {
   "ticker": "MBLY",
-  "fetched_at": "2026-07-30T12:04:43.634851Z",
+  "fetched_at": "2026-07-30T12:18:21.282626Z",
   "price": {
     "current_price": 8.01,
     "ma20": 9.06,
@@ -324,8 +324,8 @@
     "note": "Put/call ratios are reliable (real volume/open interest). Implied volatility fields are yfinance passthrough and are frequently stale or uncalculated by Yahoo -- observed live returning near-zero ATM IV and an identical flat value across unrelated tickers, which is not realistic market pricing. Weight iv_skew_put_minus_call accordingly; do not treat it as a trustworthy fear gauge."
   },
   "macro_context": {
-    "vix_level": 19.14,
-    "vix_change_20d": 2.99,
+    "vix_level": 19.11,
+    "vix_change_20d": 2.96,
     "treasury_10y_yield_pct": 4.62,
     "treasury_10y_yield_change_20d_pct": 0.15,
     "note": null
@@ -336,7 +336,7 @@
     "bearish_count": 1,
     "untagged_count": 11,
     "bullish_pct_of_tagged": 94.7,
-    "sample_messages": [
+    "sample_messages_unverified": [
       {
         "created_at": "2026-07-30T01:50:50Z",
         "body": "$MBLY WTF",
