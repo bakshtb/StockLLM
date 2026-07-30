@@ -727,6 +727,55 @@ StockLLM/
     unrelated — confirmed those are the existing "no data for this chart"
     fallback, not a regression.
 
+33. **Fixed a THIRD mobile overflow bug — #32's own fix caused this one.**
+    After #32 (adding explicit `width="{W}" height="{H}"` to every `<svg>`
+    for mobile Safari's benefit), a follow-up screenshot showed the
+    longest bar in a chart (the one with the highest value — by
+    construction the one whose bar+label reaches furthest right) still
+    running off the phone screen with no visible label, while every
+    shorter bar in the same chart rendered correctly. That specific
+    pattern — the *rest* of the chart properly responsive, only the
+    *widest* content clipped — is the signature of a completely different
+    CSS mechanism than #32's bug, not a leftover of the same one:
+    - **CSS Grid items default to `min-width: auto`**, which resolves to
+      the item's *content-based minimum size* as long as `overflow` is
+      `visible` (the default — true here). For a **replaced element**
+      (`<svg>`, `<img>`, etc.) with explicit width/height attributes, that
+      content-based minimum is its intrinsic size — i.e. exactly the
+      `width="620"` I added in #32. So a `.card` (a direct child of the
+      page-level `.grid`, i.e. an actual CSS Grid item) containing an SVG
+      with `width="620"` gets a **hard 620px floor** on its own minimum
+      width, completely independent of the `.viz-svg { width: 100%; }`
+      CSS meant to shrink it — `width: 100%` controls the *rendered* size
+      after layout, `min-width: auto` constrains what the *grid track
+      itself* is allowed to shrink to in the first place. This is a
+      well-documented, common CSS Grid gotcha (often called "grid
+      blowout"), and #32's fix (necessary and correct on its own) is
+      exactly the kind of change that triggers it.
+    - Fixed with `min-width: 0` on every actual grid-item class in this
+      page: `.card` (child of the page grid), `.stat-tile` (child of
+      `.kpi-row`), `.split-2col > div` and `.rec-thesis` (children of
+      their respective two-column grids). This is the standard fix for
+      this exact issue — explicitly overriding the `auto` default lets
+      the grid track shrink freely; the descendant's own `width: 100%`
+      (or text wrapping, for non-SVG content) then actually takes effect
+      instead of being overridden by the track's content-based floor.
+      Also added `max-width: 100%` to `.viz-svg` itself as a second,
+      independent safety net.
+    - **If a new `display: grid` container is ever added to this page,
+      its direct children need `min-width: 0`** (or `overflow` other than
+      `visible`) as a matter of course, *especially* if they might contain
+      a replaced element (svg/img/video/canvas) with explicit intrinsic
+      dimensions — don't wait for a fourth screenshot to rediscover this.
+    - Honest note on why this took three rounds: each fix was individually
+      correct and tested as thoroughly as this environment allows (no
+      real browser/device, only structural HTML checks), but CSS Grid's
+      interaction with replaced-element intrinsic sizing is a genuinely
+      non-obvious mechanism that structural checks (svg counts, leaked
+      values) can't catch — only an actual rendered viewport can, which is
+      exactly why the user's phone screenshots kept finding things a
+      "does the HTML look reasonable" pass didn't.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

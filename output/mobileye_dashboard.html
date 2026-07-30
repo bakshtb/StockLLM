@@ -144,7 +144,9 @@ button.chip:hover { background: var(--gridline); }
 /* Two sub-panels side by side within one section (distinct from the
    page-level .grid below, which arranges whole section cards). */
 .split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.split-2col > div { min-width: 0; } /* same grid-item auto-min-width fix, its direct children wrap SVG charts too */
 .stat-tile {
+  min-width: 0; /* same grid-item auto-min-width fix as .card, see there */
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px;
 }
@@ -213,7 +215,7 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .rec-risks { margin: 10px 0 0 0; padding-left: 20px; }
 .rec-risks li { margin-bottom: 4px; }
 .rec-thesis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
-.rec-thesis { background: var(--page-plane); border-radius: 10px; padding: 12px 14px; font-size: 13px; }
+.rec-thesis { min-width: 0; background: var(--page-plane); border-radius: 10px; padding: 12px 14px; font-size: 13px; }
 .rec-thesis .who { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
 .rec-thesis.bull .who { color: var(--status-good); }
 .rec-thesis.bear .who { color: var(--status-critical); }
@@ -227,6 +229,14 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .card {
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 12px; padding: 18px 20px;
+  /* Grid items default to min-width: auto, meaning a track won't shrink
+     below the largest intrinsic content size of anything inside it -- an
+     SVG chart with explicit width/height attributes (added for mobile
+     Safari's benefit, see .viz-svg below) can set exactly that floor,
+     silently forcing this card (and its whole grid track) wider than the
+     viewport regardless of any width:100% override further down. This is
+     what actually still overflowed on a phone after that fix. */
+  min-width: 0;
 }
 .card.full { grid-column: 1 / -1; }
 .card h2 { font-size: 15px; margin: 0 0 4px 0; font-weight: 600; }
@@ -245,7 +255,7 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .viz-toggle:hover { background: var(--gridline); }
 .viz-card.is-table-view .viz-chart { display: none; }
 .viz-card:not(.is-table-view) .viz-table { display: none; }
-.viz-svg { width: 100%; height: auto; display: block; }
+.viz-svg { width: 100%; max-width: 100%; height: auto; display: block; }
 .viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
 .viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
 .viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3
+
+- Fix: the longest bar in a chart (e.g. 52-week high) still ran off the
+  phone screen after 0.1.2's fix -- a CSS Grid "min-width: auto" quirk
+  meant the SVG's explicit width attribute (added in 0.1.2) set a hard
+  620px floor on its card's grid track, overriding the responsive CSS.
+  Fixed with min-width: 0 on every grid-item class on the page.
+
 ## 0.1.2
 
 - Fix: individual charts still overflowed the phone viewport after 0.1.1's

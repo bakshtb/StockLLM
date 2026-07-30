@@ -1,6 +1,6 @@
 {
   "ticker": "AAPL",
-  "fetched_at": "2026-07-30T22:15:19.634399Z",
+  "fetched_at": "2026-07-30T22:42:44.364944Z",
   "price": {
     "current_price": 333.43,
     "ma20": 324.35,
@@ -25,11 +25,11 @@
     "industry": "Consumer Electronics",
     "next_earnings_date": "2026-07-30",
     "analyst_recommendation": "buy",
-    "target_mean_price": 319.71722,
-    "target_median_price": 329.0,
+    "target_mean_price": 321.6566,
+    "target_median_price": 330.0,
     "target_high_price": 400.0,
     "target_low_price": 215.0,
-    "number_of_analyst_opinions": 43,
+    "number_of_analyst_opinions": 41,
     "short_interest": {
       "shares_short": 146547784,
       "shares_short_prior_month": 144248476,
@@ -204,14 +204,14 @@
     ],
     "eps_estimate_trend": {
       "current_quarter": {
-        "current": 1.89138,
+        "current": 1.89243,
         "7daysAgo": 1.89396,
         "30daysAgo": 1.89429,
         "60daysAgo": 1.89429,
         "90daysAgo": 1.73951
       },
       "next_quarter": {
-        "current": 2.01204,
+        "current": 2.00997,
         "7daysAgo": 2.0179,
         "30daysAgo": 2.00836,
         "60daysAgo": 2.00767,
@@ -222,14 +222,14 @@
         "7daysAgo": 8.7676,
         "30daysAgo": 8.75958,
         "60daysAgo": 8.75324,
-        "90daysAgo": 8.51118
+        "90daysAgo": 8.52472
       },
       "next_year": {
-        "current": 9.71808,
+        "current": 9.73237,
         "7daysAgo": 9.7111,
         "30daysAgo": 9.68258,
         "60daysAgo": 9.65517,
-        "90daysAgo": 9.39625
+        "90daysAgo": 9.43238
       }
     },
     "eps_estimate_revisions": {
@@ -284,12 +284,12 @@
         "growth_pct": 15.06
       },
       "next_year": {
-        "avg": 523644400140,
-        "low": 483566000000,
+        "avg": 525634620140,
+        "low": 495383500000,
         "high": 594863000000,
-        "num_analysts": 42,
+        "num_analysts": 40,
         "year_ago_revenue": 478846665480,
-        "growth_pct": 9.36
+        "growth_pct": 9.77
       }
     },
     "note": null
@@ -377,35 +377,35 @@
   },
   "social_sentiment": {
     "message_count": 30,
-    "bullish_count": 4,
-    "bearish_count": 7,
-    "untagged_count": 19,
-    "bullish_pct_of_tagged": 36.4,
+    "bullish_count": 9,
+    "bearish_count": 4,
+    "untagged_count": 17,
+    "bullish_pct_of_tagged": 69.2,
     "sample_messages_unverified": [
       {
-        "created_at": "2026-07-30T22:14:52Z",
-        "body": "$AAPL I\u2019d love to see 295 but it\u2019s likely gonna rebound and open around 325",
+        "created_at": "2026-07-30T22:41:50Z",
+        "body": "$AAPL If the earnings were GOOD, why the sell off? Is it going to rally BIG on Friday?",
         "sentiment": null
       },
       {
-        "created_at": "2026-07-30T22:14:47Z",
-        "body": "$AAPL and Tim just left Tetrus to handle this shit show",
-        "sentiment": null
-      },
-      {
-        "created_at": "2026-07-30T22:14:24Z",
-        "body": "$AAPL PURE BULLSHIT !!! WTF !!!!",
+        "created_at": "2026-07-30T22:41:05Z",
+        "body": "$AAPL \n\nFinancial Highlights and Capital Return\n\nQ3 2026 Performance: Posted revenue of $109.4 billion and earnings of $2.02 per share, beating Wall Street expectations.\n\nOngoing Repurchases: Apple routinely executes massive open-market share repurchases utilizing prior multi-billion dollar authorizations, continuing its historical trend of returning excess cash to shareholders.\n\nDividend Update: Declared a cash dividend of $0.27 per share, payable on August 13, 2026.",
         "sentiment": "Bullish"
       },
       {
-        "created_at": "2026-07-30T22:13:51Z",
-        "body": "$AAPL I was short this POS yesterday at the top, it feels so good",
-        "sentiment": "Bearish"
+        "created_at": "2026-07-30T22:40:35Z",
+        "body": "$AAPL I don\u2019t trade apple \ud83c\udf4f This is a buy and hold for me. I\u2019m still holding",
+        "sentiment": null
       },
       {
-        "created_at": "2026-07-30T22:13:36Z",
-        "body": "$AAPL another great call by Downtown Josh Brown lol",
-        "sentiment": "Bearish"
+        "created_at": "2026-07-30T22:40:03Z",
+        "body": "$AAPL watch it open at 325 tmrw ; crazy shit happens In the markets",
+        "sentiment": "Bullish"
+      },
+      {
+        "created_at": "2026-07-30T22:39:58Z",
+        "body": "$AAPL lol, when did they start asking for that price specifically. 344$ ... Tragic... \ud83e\udd23",
+        "sentiment": null
       }
     ],
     "note": null
@@ -697,6 +697,13 @@
       "url": "https://www.investors.com/market-trend/stock-market-today/dow-jones-futures-apple-amazon-earnings-microsoft-powers-ai-stock/?src=A00220&yptr=yahoo"
     },
     {
+      "headline": "Tim Cook says Apple may charge for AI Siri",
+      "source": "Axios",
+      "date": "2026-07-30",
+      "snippet": "Apple hinted Thursday that heavy users of its revamped Siri may have to pay for access.",
+      "url": "https://www.axios.com/2026/07/30/tim-cook-apple-may-charge-for-ai-siri#utm_source=yahoo_finance&utm_medium=partner&utm_campaign=subs-partner-yahoo-finance-AI"
+    },
+    {
       "headline": "Apple Sales Exceed $109 Billion, but Revenue Guidance Disappoints",
       "source": "The Wall Street Journal",
       "date": "2026-07-30",
@@ -718,6 +725,13 @@
       "url": "https://www.investors.com/news/technology/apple-stock-aapl-fiscal-q3-2026-earnings/?src=A00220&yptr=yahoo"
     },
     {
+      "headline": "Breaking Down Apple's 3Q Results and Outlook",
+      "source": "Bloomberg",
+      "date": "2026-07-30",
+      "snippet": "Apple&nbsp;sales grew more slowly than analysts anticipated in China and its services business last quarter. Though&nbsp;total revenue&nbsp;topped estimates, the China sales amounted to $18.8 billion ",
+      "url": "https://finance.yahoo.com/video/breaking-down-apples-3q-results-215326365.html"
+    },
+    {
       "headline": "Apple Earnings Look Good, T. Rowe Price's Wang Says",
       "source": "Bloomberg",
       "date": "2026-07-30",
@@ -730,20 +744,6 @@
       "date": "2026-07-30",
       "snippet": "Both tech companies beat Wall Street predictions on revenue in their second quarters",
       "url": "https://finance.yahoo.com/markets/stocks/articles/apple-amazon-report-rising-revenues-214222486.html"
-    },
-    {
-      "headline": "Apple Stock Falls After Earnings Release",
-      "source": "The Wall Street Journal",
-      "date": "2026-07-30",
-      "snippet": "Apple's third-quarter earnings featured strong growth for its flagship product, but shares are falling about 4% after market close. IPhone sales grew 21% , but Apple's overall revenue of $109.4 billio",
-      "url": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-07-30-2026/card/apple-stock-falls-after-earnings-release-Ot54Mn2XDtAD8pkP9PcM?siteid=yhoof2&yptr=yahoo"
-    },
-    {
-      "headline": "Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short",
-      "source": "MT Newswires",
-      "date": "2026-07-30",
-      "snippet": "Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the",
-      "url": "https://finance.yahoo.com/markets/stocks/articles/apple-tops-third-quarter-estimates-211942912.html"
     }
   ],
   "news_articles_raw": [
@@ -765,8 +765,15 @@
       "headline": "Dow Jones Futures: Apple, Amazon Diverge Late; What To Do After AI Stocks Surge",
       "source": "Investor's Business Daily",
       "date": "2026-07-30",
-      "text": "BREAKING:Apple, Amazon Lead Big Earnings After AI Stocks Rip Higher  Dow Jones futures rose slightly after hours, along with S&P 500 futures and Nasdaq futures. Apple (AAPL) and Amazon.com (AMZN) headlined another heavy night of earnings, with the tech titans diverging. The stock market saw chips and AI plays rebound, fueled by Microsoft (MSFT), short covering and more. But much of the market had quiet gains or lost ground, with\u2026 Copyright \u00a92026 Investor's Business Daily, LLC. All rights reserved. 87990cbe856818d5eddac44c7b1cdeb8 10:57 AM ETThe tech-heavy Nasdaq composite and AI chip stocks stage a snapback rally Thursday. 10:57 AM ETThe tech-heavy Nasdaq composite and AI chip stocks stage a... Get instant access to exclusive stock lists, expert market analysis and powerful tools with 2 months of IBD Digital for only $20! Get market updates, educational videos, webinars, and stock analysis. Learn how you can make more money with IBD's investing tools, top-performing stock lists, and educational content.",
+      "text": "BREAKING:Apple, Amazon Lead Big Earnings After AI Stocks Rip Higher  Dow Jones futures and S&P 500 futures edged higher after hours, while Nasdaq futures rose modestly. Apple (AAPL) and Amazon.com (AMZN) headlined another heavy night of earnings, with the tech titans diverging. The stock market saw chips and AI plays rebound, fueled by Microsoft (MSFT), short covering and more. But much of the market had quiet gains or lost ground,\u2026 Copyright \u00a92026 Investor's Business Daily, LLC. All rights reserved. 87990cbe856818d5eddac44c7b1cdeb8 10:57 AM ETThe tech-heavy Nasdaq composite and AI chip stocks stage a snapback rally Thursday. 10:57 AM ETThe tech-heavy Nasdaq composite and AI chip stocks stage a... Get instant access to exclusive stock lists, expert market analysis and powerful tools with 2 months of IBD Digital for only $20! Get market updates, educational videos, webinars, and stock analysis. Learn how you can make more money with IBD's investing tools, top-performing stock lists, and educational content.",
       "full_text_fetched": true
+    },
+    {
+      "headline": "Tim Cook says Apple may charge for AI Siri",
+      "source": "Axios",
+      "date": "2026-07-30",
+      "text": "Apple hinted Thursday that heavy users of its revamped Siri may have to pay for access.",
+      "full_text_fetched": false
     },
     {
       "headline": "Apple Sales Exceed $109 Billion, but Revenue Guidance Disappoints",
@@ -790,6 +797,13 @@
       "full_text_fetched": true
     },
     {
+      "headline": "Breaking Down Apple's 3Q Results and Outlook",
+      "source": "Bloomberg",
+      "date": "2026-07-30",
+      "text": "Apple sales grew more slowly than analysts anticipated in China and its services business last quarter. Though total revenue topped estimates, the China sales amounted to $18.8 billion in the fiscal third quarter, well short of the $19.6 billion estimated by analysts. Revenue from services was $30.7 billion, compared with a $31.4 billion projection. Mark Gurman breaks down the numbers on \"Bloomberg The Close.\"",
+      "full_text_fetched": true
+    },
+    {
       "headline": "Apple Earnings Look Good, T. Rowe Price's Wang Says",
       "source": "Bloomberg",
       "date": "2026-07-30",
@@ -800,21 +814,7 @@
       "headline": "Apple and Amazon report rising revenues as investors turn on some tech stocks",
       "source": "The Guardian",
       "date": "2026-07-30",
-      "text": "Apple and Amazon both released their second quarter earnings on Thursday, a test of investor confidence in major tech companies amidgrowing concerns over exorbitant AI spending. Apple revealed quarterly revenue of $109.4bn, beating Wall Street expectations of $108.65bn in revenue. It also reported $2.02 earnings per share, driven by sales of its marquee products such as iPhones and laptops. Amazon reported that its revenue was $200.6bn compared with analyst predictions of $196.47bn. The company also grew its AWS cloud computing service and beat market expectations on advertising revenue, thoughfree cash flow declined. Amazon's stock jumped more than 8% in immediate after hours trading. It has been a tough month for several prominent tech companies, with shares in Tesla and Meta both plunging after they revealed huge spending on AI infrastructure in their latest earnings reports. A recent selloff in chip stocks like Nvidia, the result of loss in investor confidence and advances in Chinese chip manufacturing, has also rattled the market. Investors have paid especially close attention in recent weeks to tech companies' free cash flow after large capital expenditures \u2013 largely on AI \u2013 have caused concern. As the industry continues to plow money into building out AI capabilities in search of future profits, shareholders have become more jittery when earnings reports reveal larger-than expected AI spending. Apple, meanwhile, has benefitted from the chip stock selloff as investors viewed the company as a safe haven amid the broaderAI-driven volatility. The company's stock is up around 23% this year, leading the so-called Magnificent Seven tech stocks, which include Meta, Microsoft, Alphabet, Amazon, Tesla and Nvidia. Apple's stock price dropped slightly on Thursday following earnings after it reported its revenue from its services division was below market expectations. Thursday's earnings call was also CEO Tim Cook's final report before he steps down after 15 years as Apple's top executive. Apple's market value grew immensely over Cook's tenure as chief executive, from around $350bn in 2011 tosurpassing the $5tn markdays before Thursday's earnings call. Earlier this month the company overtook Nvidia to become the world's most valuable company. Cook will bereplaced by John Ternus, a longtime hardware engineering executive who has been at the company since 2001. Ternus stated earlier this week that he aims to expand the Apple's entertainment business, which has had success with movies like the blockbuster F1 and streaming series such as The Studio. \"As you know, this will be my final earnings call,\" Cook said on Thursday. \"I am beyond excited for John to step into his new role and lead Apple into its next era. He is truly one of a kind and there is no better person to take the helm of the company.\"",
-      "full_text_fetched": true
-    },
-    {
-      "headline": "Apple Stock Falls After Earnings Release",
-      "source": "The Wall Street Journal",
-      "date": "2026-07-30",
-      "text": "Apple's third-quarter earnings featured strong growth for its flagship product, but shares are falling about 4% after market close. IPhone sales grew 21% , but Apple's overall revenue of $109.4 billio",
-      "full_text_fetched": false
-    },
-    {
-      "headline": "Apple Tops Third-Quarter Estimates; IPad, Services Revenue Falls Short",
-      "source": "MT Newswires",
-      "date": "2026-07-30",
-      "text": "Apple (AAPL) reported strong fiscal third-quarter results amid momentum in iPhone sales, though the",
+      "text": "Both tech companies beat Wall Street predictions on revenue in their second quarters",
       "full_text_fetched": false
     }
   ],
