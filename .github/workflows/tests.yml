@@ -1,0 +1,31 @@
+name: Tests
+
+# Runs the fast, deterministic Tier 1 test suite on every push/PR to main.
+# Tier 2 (@pytest.mark.live -- real yfinance/SEC EDGAR/StockTwits calls) is
+# deliberately excluded here (pytest.ini's addopts already default to
+# `-m "not live"`): those are slow, network-dependent, and can fail for
+# reasons unrelated to code correctness. Run them locally with
+# `pytest -m live -v` instead. See tests/conftest.py and pytest.ini.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest -m "not live" -v

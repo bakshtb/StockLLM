@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.4
+
+- Add a pytest test suite (`tests/`) covering formatting, chart SVG
+  generation, dashboard assembly, the agent JSON parser, webapp routes
+  (including the Ingress path-prefix and ticker-validation security
+  boundary), the CLI's output-path resolution, config, and storage --
+  wired into a new CI workflow (`.github/workflows/tests.yml`) that runs
+  on every push/PR. Live-API tests (yfinance/SEC EDGAR/StockTwits) are
+  marked `@pytest.mark.live` and excluded from CI by default.
+- Fix: `diverging_bar_horizontal`'s empty-input case returned a 2-tuple
+  instead of the 3-tuple every other chart function returns, found while
+  writing its test. Never triggered in production (its one call site
+  already guards against empty input), but would crash on direct use.
+
 ## 0.1.3
 
 - Fix: the longest bar in a chart (e.g. 52-week high) still ran off the

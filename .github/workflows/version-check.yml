@@ -45,10 +45,11 @@ jobs:
 
           # Files/paths that never require an add-on version bump on their own:
           # exact doc/config filenames, plus anything under output/ (generated
-          # example data), .github/ (this workflow itself), .githooks/.
+          # example data), .github/ (this workflow itself), .githooks/, tests/
+          # (dev-only, never shipped in the add-on image -- see .dockerignore).
           RELEVANT=$(echo "$CHANGED" \
-            | grep -vE '^(README\.md|HANDOFF\.md|CHANGELOG\.md|DOCS\.md|\.gitignore|\.dockerignore)$' \
-            | grep -vE '^(output|\.github|\.githooks)/' \
+            | grep -vE '^(README\.md|HANDOFF\.md|CHANGELOG\.md|DOCS\.md|\.gitignore|\.dockerignore|pytest\.ini|requirements-dev\.txt)$' \
+            | grep -vE '^(output|\.github|\.githooks|tests)/' \
             || true)
 
           if [ -z "$RELEVANT" ]; then

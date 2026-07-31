@@ -782,7 +782,7 @@ def diverging_bar_horizontal(items, value_fmt=None):
     """items: list of (label, value) where value can be +/-. Baseline at center."""
     items = [it for it in items if it[1] is not None]
     if not items:
-        return "<svg></svg>", empty_state()
+        return "<svg></svg>", empty_state(), ""
     value_fmt = value_fmt or (lambda v: fmt_pct(v))
     max_v = max(abs(v) for _, v in items) or 1
     row_h, gap, pad = 22, 12, 16

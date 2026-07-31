@@ -845,6 +845,41 @@ confidence):
 - **Full `python main.py check TICKER` (no `--dry-run`)** — never completed
   successfully, same reason.
 
+## Automated test suite (`tests/`, `pytest.ini`, CI)
+
+Added after a long stretch of everything being validated by hand (ad hoc
+Python one-liners, manual BeautifulSoup checks, Flask test-client calls
+typed into Bash). Two tiers:
+
+- **Tier 1 — `pytest` (default), runs in CI on every push/PR
+  (`.github/workflows/tests.yml`)**: pure functions and anything that can
+  use a fixture instead of a live network call. 160 tests across
+  formatting (`test_formatting.py`), SVG chart generation
+  (`test_charts.py`), full dashboard assembly against every committed
+  `output/*.json` bundle (`test_dashboard_build.py`), the agent JSON
+  parser (`test_agents_client.py`), Flask routes including the Ingress
+  path-prefix bug and the ticker-validation security boundary
+  (`test_webapp.py`), CLI output-path resolution (`test_main_cli.py`),
+  config/cost-estimation (`test_config.py`), and SQLite storage
+  (`test_storage_db.py`).
+- **Tier 2 — `pytest -m live`, never run in CI**: one shape-only test per
+  `data/fetch_*.py` module against a real AAPL fetch
+  (`test_live_fetchers.py`). Excluded by default via `pytest.ini`'s
+  `addopts = -m "not live"`. Slow, network-dependent, not something CI
+  should ever gate on.
+
+A real bug was found writing these: `diverging_bar_horizontal`'s
+empty-input branch returned a 2-tuple instead of the 3-tuple every other
+chart function returns (never triggered in production — its one call
+site already guards against empty input — but would crash on direct
+use). Fixed in `dashboard/generate_dashboard.py`, shipped as 0.1.4.
+
+`.githooks/pre-commit` and `.github/workflows/version-check.yml`'s
+exclude lists were extended to cover `tests/`, `pytest.ini`, and
+`requirements-dev.txt` — dev-only files that shouldn't force an add-on
+version bump (they're also excluded from the Docker build via
+`.dockerignore`).
+
 ## Explicitly deferred (do not build unless asked)
 
 - Telegram notifications (design was sketched earlier: only notify on

@@ -21,8 +21,8 @@ fi
 
 # Files/paths that never require an add-on version bump on their own.
 RELEVANT=$(echo "$STAGED" \
-  | grep -vE '^(README\.md|HANDOFF\.md|CHANGELOG\.md|DOCS\.md|\.gitignore|\.dockerignore)$' \
-  | grep -vE '^(output|\.github|\.githooks)/' \
+  | grep -vE '^(README\.md|HANDOFF\.md|CHANGELOG\.md|DOCS\.md|\.gitignore|\.dockerignore|pytest\.ini|requirements-dev\.txt)$' \
+  | grep -vE '^(output|\.github|\.githooks|tests)/' \
   || true)
 
 if [ -z "$RELEVANT" ]; then

@@ -1,0 +1,7 @@
+# Dev/test-only dependencies -- not installed in the Docker image (only
+# requirements.txt is). Flask's test client and BeautifulSoup are already
+# production dependencies (requirements.txt), so pytest is genuinely all
+# that's needed here; no separate mocking library, `monkeypatch` is built
+# into pytest itself.
+-r requirements.txt
+pytest>=8.0.0
