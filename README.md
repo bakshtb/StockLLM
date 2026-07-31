@@ -1,7 +1,5 @@
 # StockLLM
 
-<!-- push test: verifying cross-machine git push works -->
-
 A multi-agent LLM research tool: give it a stock ticker, it deterministically
 gathers price/news/fundamentals data, then runs a Bull / Bear / Skeptic / Judge
 agent pipeline and prints a structured recommendation to the terminal.
