@@ -493,7 +493,7 @@ GLOSSARY = {
     "section_financials": "The actual business results: how much money is coming in, how much is profit, and how healthy the balance sheet is.",
     "section_ownership": "Who holds the stock and what company insiders have been doing with their own shares.",
     "section_extras": "A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.",
-    "ai_recommendation": "The output of StockLLM's own 4-agent pipeline: a Bull agent argues the case to buy, a Bear agent argues the case against, a Skeptic critiques both for unsupported claims, and a Judge weighs everything (including all the data below) into one final call. This is the one section that's an AI-generated opinion, not raw data — read the reasoning and key risks, not just the verdict, and remember this is a research aid, not financial advice.",
+    "ai_recommendation": "The output of StockLLM's own 6-agent pipeline: a Bull agent argues the case to buy, a Bear agent argues the case against, two independent Skeptics (different AI models) critique both for unsupported claims, a Quant Checker verifies the specific numbers cited, and a Judge weighs everything (including all the data below) into one final call. This is the one section that's an AI-generated opinion, not raw data — read the reasoning and key risks, not just the verdict, and remember this is a research aid, not financial advice.",
 }
 
 
@@ -1112,7 +1112,7 @@ _REC_STYLE = {
 
 def section_ai_recommendation(bundle, pipeline_result):
     """
-    Renders the 4-agent pipeline's actual output (only present for a full,
+    Renders the 6-agent pipeline's actual output (only present for a full,
     non-dry-run check) -- the one section of this dashboard that's an AI
     opinion rather than raw data. See GLOSSARY['ai_recommendation'] for the
     user-facing framing; this function just lays it out.
@@ -1748,7 +1748,8 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
   turns numbers into sentences — every sentence there comes from a fixed, mechanical rule applied
   to a real field below (e.g. "P/E premium over 15% = trading at a premium"), not from any judgment
   call or outside opinion. The "AI Recommendation" panel, when present, is different: it is the
-  actual output of StockLLM's own 4-agent LLM pipeline (Bull/Bear/Skeptic/Judge) — read it as one
+  actual output of StockLLM's own 6-agent LLM pipeline (Bull/Bear/two independent Skeptics/Quant
+  Checker/Judge) — read it as one
   automated opinion informed by the data below, not as fact. Everything else on this page is
   unmodified data, not re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
 </footer>

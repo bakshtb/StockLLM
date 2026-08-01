@@ -16,13 +16,15 @@ Two clearly separated stages:
   1. RAW DATA -- everything above except the two digests. All deterministic,
      free, no LLM calls. Runs in FULL every time, including --dry-run.
   2. DIGESTS -- filings_digest and news_digest summarize the raw filing text
-     / raw article text above via a cheap model. This is the only stage that
-     costs money and requires ANTHROPIC_API_KEY. Controlled by run_digests;
-     skipped entirely in --dry-run, but the raw material it would summarize
-     is still present in the bundle either way.
+     / raw article text above via a cheap Gemini model (see config.MODEL_DIGEST).
+     This is the only stage that costs money and requires GEMINI_API_KEY.
+     Controlled by run_digests; skipped entirely in --dry-run, but the raw
+     material it would summarize is still present in the bundle either way.
 """
 
 import datetime as dt
+
+from config import MODEL_DIGEST
 
 from data.fetch_prices import fetch_price_summary
 from data.fetch_news import fetch_news_summary, fetch_news_articles_raw, summarize_news
@@ -88,13 +90,16 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
                 "name": "filings_digest", "cost_usd": filings_digest["cost_usd"],
                 "input_tokens": filings_digest.get("input_tokens", 0),
                 "output_tokens": filings_digest.get("output_tokens", 0),
+                "model": filings_digest.get("model", MODEL_DIGEST),
             })
 
         news_digest = summarize_news(news_articles_raw)
         if news_digest.get("cost_usd"):
             digest_calls.append({
                 "name": "news_digest", "cost_usd": news_digest["cost_usd"],
-                "input_tokens": 0, "output_tokens": 0,
+                "input_tokens": news_digest.get("input_tokens", 0),
+                "output_tokens": news_digest.get("output_tokens", 0),
+                "model": news_digest.get("model", MODEL_DIGEST),
             })
 
     bundle = {

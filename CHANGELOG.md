@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.0
+
+- Move Bull, Bear, and both digest steps (news + filings) from Claude to
+  Gemini, picked per-role from benchmarks matched to each role's actual job
+  rather than using one provider everywhere: Bull/Bear need strict grounding
+  (best faithfulness/calibration benchmarks), digests need faithful
+  extraction with no reasoning (best summarization-faithfulness benchmark,
+  and the cheapest/fastest tier). Skeptic (original) stays on Claude Sonnet
+  (best LLM-as-judge/critique benchmark) and Judge stays on Claude Opus
+  (best confidence-calibration benchmark) -- see config.py for the reasoning
+  behind each pick.
+- New shared `agents/compat_client.py` for any OpenAI-compatible provider
+  (used by both Qwen and Gemini) -- `agents/qwen_client.py` and the new
+  `agents/gemini_client.py` are now thin wrappers around it.
+- Fix: digest cost logging (webapp and CLI) hardcoded "claude-haiku..." as
+  the model name regardless of what actually ran -- harmless before since
+  digests really were on Haiku, but would have mislabeled every digest call
+  in the database once digests moved providers. Now logs the real model.
+- New required config for a full (non-dry-run) check: `GEMINI_API_KEY`
+  (`.env.example`, and the add-on's Configuration tab), alongside the
+  existing `ANTHROPIC_API_KEY` and `QWEN_API_KEY`. Dry runs are unaffected.
+
 ## 0.2.0
 
 - Add two new agents on Qwen (Alibaba Cloud Model Studio, OpenAI-compatible

@@ -119,14 +119,25 @@ class TestFullRun:
         monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "")
+        monkeypatch.setattr(wa, "GEMINI_API_KEY", "sk-gemini-test-key")
         resp = client.post("/run", data={"ticker": "AAPL"})
         assert resp.status_code == 400
         assert b"QWEN_API_KEY" in resp.data
+
+    def test_blocked_without_gemini_api_key(self, monkeypatch, client):
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
+        monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
+        monkeypatch.setattr(wa, "GEMINI_API_KEY", "")
+        resp = client.post("/run", data={"ticker": "AAPL"})
+        assert resp.status_code == 400
+        assert b"GEMINI_API_KEY" in resp.data
 
     def test_succeeds_with_mocked_pipeline(self, monkeypatch, client, temp_db):
         monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
+        monkeypatch.setattr(wa, "GEMINI_API_KEY", "sk-gemini-test-key")
         monkeypatch.setattr(wa, "MONTHLY_SPEND_LIMIT_USD", 50.0)
         monkeypatch.setattr(wa, "get_monthly_spend", lambda: 0.0)
 
@@ -148,6 +159,7 @@ class TestFullRun:
         monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
+        monkeypatch.setattr(wa, "GEMINI_API_KEY", "sk-gemini-test-key")
         monkeypatch.setattr(wa, "MONTHLY_SPEND_LIMIT_USD", 50.0)
         monkeypatch.setattr(wa, "get_monthly_spend", lambda: 75.0)
 

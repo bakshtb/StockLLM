@@ -38,6 +38,7 @@ def _load_ha_options():
     option_to_env = {
         "anthropic_api_key": "ANTHROPIC_API_KEY",
         "qwen_api_key": "QWEN_API_KEY",
+        "gemini_api_key": "GEMINI_API_KEY",
         "sec_edgar_user_agent": "SEC_EDGAR_USER_AGENT",
         "finnhub_api_key": "FINNHUB_API_KEY",
         "monthly_spend_limit_usd": "MONTHLY_SPEND_LIMIT_USD",
@@ -56,7 +57,7 @@ import datetime as dt
 
 from flask import Flask, request, redirect, send_from_directory
 
-from config import ANTHROPIC_API_KEY, QWEN_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
+from config import ANTHROPIC_API_KEY, QWEN_API_KEY, GEMINI_API_KEY, MODEL_DIGEST, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
 from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
@@ -212,6 +213,13 @@ def run_check():
                       "(or use Dry run, which needs no API key)."
             ), 400
 
+        if not GEMINI_API_KEY:
+            return _render_form(
+                error="GEMINI_API_KEY is not set. Bull, Bear, and both digest steps need it -- fill "
+                      "it in under this add-on's Configuration tab (or use Dry run, which needs no "
+                      "API key)."
+            ), 400
+
         try:
             db.init_db()
             spent = get_monthly_spend()
@@ -227,7 +235,7 @@ def run_check():
             digest_cost = 0.0
             for dc in digest_calls:
                 db.save_agent_output(
-                    run_id, dc["name"], "claude-haiku-4-5-20251001",
+                    run_id, dc["name"], dc.get("model", MODEL_DIGEST),
                     dc["input_tokens"], dc["output_tokens"], 0, dc["cost_usd"], {},
                 )
                 digest_cost += dc["cost_usd"]

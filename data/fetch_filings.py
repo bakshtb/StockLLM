@@ -23,7 +23,7 @@ back, kept for standalone/CLI use.
 
 from data.edgar_utils import get_cik_for_ticker, get_submissions, fetch_document, find_exhibit_document
 from data.edgar_text import strip_html, select_prose_window
-from agents.client import call_digest
+from agents.gemini_client import call_gemini_digest
 from config import MODEL_DIGEST, MAX_FILING_CHARS
 
 DIGEST_SYSTEM_PROMPT = (
@@ -133,12 +133,13 @@ def summarize_filing(filings_raw: dict) -> dict:
     )
 
     try:
-        digest_result = call_digest(MODEL_DIGEST, DIGEST_SYSTEM_PROMPT, combined_text)
+        digest_result = call_gemini_digest(MODEL_DIGEST, DIGEST_SYSTEM_PROMPT, combined_text)
         return {
             "digest": digest_result["parsed"],
             "cost_usd": digest_result["cost_usd"],
             "input_tokens": digest_result["input_tokens"],
             "output_tokens": digest_result["output_tokens"],
+            "model": digest_result["model"],
             "note": None,
         }
     except Exception as e:

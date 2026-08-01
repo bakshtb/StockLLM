@@ -21,7 +21,7 @@ import yfinance as yf
 from bs4 import BeautifulSoup
 
 from config import FINNHUB_API_KEY, MAX_NEWS_ITEMS, MODEL_DIGEST, MAX_NEWS_ARTICLES_TO_FETCH
-from agents.client import call_digest
+from agents.gemini_client import call_gemini_digest
 
 NEWS_DIGEST_SYSTEM_PROMPT = (
     "You are a financial news summarizer. You will be given the headlines and, where "
@@ -202,10 +202,13 @@ def summarize_news(enriched: list[dict]) -> dict:
     )
 
     try:
-        digest_result = call_digest(MODEL_DIGEST, NEWS_DIGEST_SYSTEM_PROMPT, combined_text)
+        digest_result = call_gemini_digest(MODEL_DIGEST, NEWS_DIGEST_SYSTEM_PROMPT, combined_text)
         return {
             "digest": digest_result["parsed"],
             "cost_usd": digest_result["cost_usd"],
+            "input_tokens": digest_result["input_tokens"],
+            "output_tokens": digest_result["output_tokens"],
+            "model": digest_result["model"],
             "articles_with_full_text": sum(1 for e in enriched if e["full_text_fetched"]),
             "note": None,
         }

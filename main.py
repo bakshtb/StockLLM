@@ -19,7 +19,7 @@ import sys
 import json
 import argparse
 
-from config import ANTHROPIC_API_KEY, QWEN_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
+from config import ANTHROPIC_API_KEY, QWEN_API_KEY, GEMINI_API_KEY, MODEL_DIGEST, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
 from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
@@ -190,6 +190,12 @@ def main():
             print("(Tip: use --dry-run to test raw data fetching without an API key.)")
             sys.exit(1)
 
+        if not GEMINI_API_KEY:
+            print("ERROR: GEMINI_API_KEY is not set. Bull, Bear, and both digest steps need it --")
+            print("copy .env.example to .env and fill it in.")
+            print("(Tip: use --dry-run to test raw data fetching without an API key.)")
+            sys.exit(1)
+
         db.init_db()
 
         spent = get_monthly_spend()
@@ -213,12 +219,12 @@ def main():
         digest_cost = 0.0
         for dc in digest_calls:
             db.save_agent_output(
-                run_id, dc["name"], "claude-haiku-4-5-20251001",
+                run_id, dc["name"], dc.get("model", MODEL_DIGEST),
                 dc["input_tokens"], dc["output_tokens"], 0, dc["cost_usd"], {},
             )
             digest_cost += dc["cost_usd"]
 
-        print(f"Running 4-agent analysis pipeline for {ticker} (this calls the Anthropic API, costs a few more cents)...")
+        print(f"Running analysis pipeline for {ticker} (calls Anthropic, Gemini, and Qwen -- costs a few more cents)...")
         try:
             result = run_pipeline(run_id, ticker, bundle, starting_cost_usd=digest_cost)
         except RuntimeError as e:

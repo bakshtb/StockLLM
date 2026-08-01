@@ -20,26 +20,43 @@ MONTHLY_SPEND_LIMIT_USD = float(os.getenv("MONTHLY_SPEND_LIMIT_USD", "50"))
 QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
 QWEN_BASE_URL = os.getenv("QWEN_BASE_URL", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
 
-# Model assigned per agent role. Deliberately not all Opus -- see project spec's
-# Cost Management section. Update these model IDs if Anthropic renames/replaces them.
-MODEL_BULL = "claude-haiku-4-5-20251001"
-MODEL_BEAR = "claude-haiku-4-5-20251001"
+# Gemini -- called via Google's OpenAI-compatible endpoint (same agents/compat_client.py
+# code path as Qwen). Used for Bull/Bear (best faithfulness + calibration benchmarks
+# found for a strictly-grounded persuasive-argument role) and both digest steps (best
+# summarization-faithfulness benchmark, and the cheapest/fastest tier besides).
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
+
+# Model assigned per agent role -- chosen per-role from benchmarks matched to that
+# role's actual job (see HANDOFF.md), not just "use the same provider everywhere":
+#   Bull/Bear: grounding is the #1 rule in their prompts -> best faithfulness/
+#     calibration benchmarks (Gemini).
+#   Skeptic (original): critiquing another model's claims is a judge/critic task ->
+#     best LLM-as-judge benchmark (Claude Sonnet).
+#   Judge: must self-report a *calibrated* confidence, not just be accurate ->
+#     best calibration benchmark, ConfidenceBench (Claude Opus).
+#   Digests: pure faithful extraction, no reasoning needed -> best faithfulness
+#     benchmark + cheapest/fastest (Gemini Flash).
+MODEL_BULL = "gemini-3.1-pro"
+MODEL_BEAR = "gemini-3.1-pro"
 MODEL_SKEPTIC = "claude-sonnet-5"
 MODEL_JUDGE = "claude-opus-5"
-MODEL_DIGEST = "claude-haiku-4-5-20251001"  # cheap model for summarizing filings/news
+MODEL_DIGEST = "gemini-3.6-flash"  # cheap, faithful model for summarizing filings/news
 
 # Qwen-backed supporting agents (see agents/skeptic_qwen_agent.py, agents/quant_checker_agent.py).
 MODEL_SKEPTIC_QWEN = "qwen3.7-plus"
 MODEL_QUANT_CHECKER = "qwen3.7-plus"
 
 # Pricing per million tokens (input, output), in USD. Update if rates change.
-# Source: Anthropic pricing page, checked July 2026; Alibaba Cloud Model Studio
-# pricing for Qwen, checked July 2026.
+# Source: Anthropic pricing page, Alibaba Cloud Model Studio pricing for Qwen,
+# and Google AI pricing for Gemini -- all checked July 2026.
 PRICING = {
     "claude-haiku-4-5-20251001": {"input": 1.00, "output": 5.00},
     "claude-sonnet-5": {"input": 2.00, "output": 10.00},  # intro pricing through Aug 31 2026
     "claude-opus-5": {"input": 5.00, "output": 25.00},
     "qwen3.7-plus": {"input": 0.32, "output": 1.28},
+    "gemini-3.1-pro": {"input": 2.00, "output": 12.00},  # up to 200K context; $4/$18 above that
+    "gemini-3.6-flash": {"input": 1.50, "output": 7.50},
 }
 
 # Cache reads cost 10% of base input price
