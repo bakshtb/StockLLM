@@ -1,7 +1,7 @@
 name: StockLLM
-version: "0.1.4"
+version: "0.2.0"
 slug: stockllm
-description: "Multi-agent LLM stock research dashboard -- pick a ticker, get price/fundamentals/filings/news data and (optionally) a 4-agent AI recommendation."
+description: "Multi-agent LLM stock research dashboard -- pick a ticker, get price/fundamentals/filings/news data and (optionally) a 6-agent AI recommendation."
 url: "https://github.com/bakshtb/StockLLM"
 arch:
   - amd64
@@ -15,11 +15,13 @@ panel_icon: mdi:chart-line
 panel_title: StockLLM
 options:
   anthropic_api_key: ""
+  qwen_api_key: ""
   sec_edgar_user_agent: ""
   finnhub_api_key: ""
   monthly_spend_limit_usd: 50
 schema:
   anthropic_api_key: str?
+  qwen_api_key: str?
   sec_edgar_user_agent: str
   finnhub_api_key: str?
   monthly_spend_limit_usd: float

@@ -107,16 +107,26 @@ class TestDryRun:
 
 
 class TestFullRun:
-    def test_blocked_without_api_key(self, monkeypatch, client):
+    def test_blocked_without_anthropic_api_key(self, monkeypatch, client):
         monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "")
+        monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
         resp = client.post("/run", data={"ticker": "AAPL"})  # dry_run omitted = full run
         assert resp.status_code == 400
         assert b"ANTHROPIC_API_KEY" in resp.data
 
+    def test_blocked_without_qwen_api_key(self, monkeypatch, client):
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
+        monkeypatch.setattr(wa, "QWEN_API_KEY", "")
+        resp = client.post("/run", data={"ticker": "AAPL"})
+        assert resp.status_code == 400
+        assert b"QWEN_API_KEY" in resp.data
+
     def test_succeeds_with_mocked_pipeline(self, monkeypatch, client, temp_db):
         monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
+        monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
         monkeypatch.setattr(wa, "MONTHLY_SPEND_LIMIT_USD", 50.0)
         monkeypatch.setattr(wa, "get_monthly_spend", lambda: 0.0)
 
@@ -126,6 +136,8 @@ class TestFullRun:
             "bull": {"thesis": "x", "confidence": 50},
             "bear": {"thesis": "x", "confidence": 50},
             "skeptic": {"unsupported_claims": [], "data_gaps": [], "overall_data_quality": "high"},
+            "skeptic_qwen": {"unsupported_claims": [], "data_gaps": [], "overall_data_quality": "high"},
+            "quant_check": {"verified_claims": [], "flagged_claims": [], "note": None},
         }
         monkeypatch.setattr(wa, "run_pipeline", lambda run_id, ticker, bundle, starting_cost_usd: fake_result)
 
@@ -135,6 +147,7 @@ class TestFullRun:
     def test_blocked_when_over_spend_limit(self, monkeypatch, client, temp_db):
         monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
+        monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
         monkeypatch.setattr(wa, "MONTHLY_SPEND_LIMIT_USD", 50.0)
         monkeypatch.setattr(wa, "get_monthly_spend", lambda: 75.0)
 

@@ -12,6 +12,14 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "")
 MONTHLY_SPEND_LIMIT_USD = float(os.getenv("MONTHLY_SPEND_LIMIT_USD", "50"))
 
+# Qwen (Alibaba Cloud Model Studio) -- OpenAI-compatible endpoint, used for the
+# independent second-opinion Skeptic and the Quant Checker agent. Both are cheap
+# supporting checks, not the primary reasoning path, so they're kept on a
+# separate cheap provider deliberately (see judge.md for how their output is
+# actually weighed, not just logged).
+QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
+QWEN_BASE_URL = os.getenv("QWEN_BASE_URL", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
+
 # Model assigned per agent role. Deliberately not all Opus -- see project spec's
 # Cost Management section. Update these model IDs if Anthropic renames/replaces them.
 MODEL_BULL = "claude-haiku-4-5-20251001"
@@ -20,12 +28,18 @@ MODEL_SKEPTIC = "claude-sonnet-5"
 MODEL_JUDGE = "claude-opus-5"
 MODEL_DIGEST = "claude-haiku-4-5-20251001"  # cheap model for summarizing filings/news
 
+# Qwen-backed supporting agents (see agents/skeptic_qwen_agent.py, agents/quant_checker_agent.py).
+MODEL_SKEPTIC_QWEN = "qwen3.7-plus"
+MODEL_QUANT_CHECKER = "qwen3.7-plus"
+
 # Pricing per million tokens (input, output), in USD. Update if rates change.
-# Source: Anthropic pricing page, checked July 2026.
+# Source: Anthropic pricing page, checked July 2026; Alibaba Cloud Model Studio
+# pricing for Qwen, checked July 2026.
 PRICING = {
     "claude-haiku-4-5-20251001": {"input": 1.00, "output": 5.00},
     "claude-sonnet-5": {"input": 2.00, "output": 10.00},  # intro pricing through Aug 31 2026
     "claude-opus-5": {"input": 5.00, "output": 25.00},
+    "qwen3.7-plus": {"input": 0.32, "output": 1.28},
 }
 
 # Cache reads cost 10% of base input price

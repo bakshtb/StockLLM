@@ -1,6 +1,7 @@
 """
-Orchestrates the full 4-agent pipeline: bull + bear (independent) -> skeptic -> judge.
-Logs every agent call to the database as it goes.
+Orchestrates the full pipeline: bull + bear (independent) -> two independent
+skeptic reviews (Claude + Qwen) + a Qwen quant check (all three independent of
+each other) -> judge. Logs every agent call to the database as it goes.
 """
 
 import json
@@ -8,13 +9,15 @@ import json
 from agents.bull_agent import run_bull_agent
 from agents.bear_agent import run_bear_agent
 from agents.skeptic_agent import run_skeptic_agent
+from agents.skeptic_qwen_agent import run_skeptic_qwen_agent
+from agents.quant_checker_agent import run_quant_checker_agent
 from agents.judge_agent import run_judge_agent
 from storage import db
 
 
 def run_pipeline(run_id: int, ticker: str, bundle: dict, starting_cost_usd: float = 0.0) -> dict:
     """
-    Runs the full 4-agent pipeline for a research bundle that's already been
+    Runs the full agent pipeline for a research bundle that's already been
     fetched and logged under run_id (see main.py). starting_cost_usd carries
     over any cost already spent on digest steps (filings/news summarization)
     so the final total_cost_usd reflects the true cost of the whole run.
@@ -45,6 +48,10 @@ def run_pipeline(run_id: int, ticker: str, bundle: dict, starting_cost_usd: floa
         )
         total_cost += bear_result["cost_usd"]
 
+        # Skeptic (Claude), Skeptic-Qwen, and the Quant Checker are all
+        # independent of each other -- each sees only the bundle + bull/bear,
+        # never each other's output, so their agreement/disagreement is a
+        # genuine signal for the judge rather than one review echoing another.
         skeptic_result = run_skeptic_agent(bundle_json_str, bull_result["parsed"], bear_result["parsed"])
         db.save_agent_output(
             run_id, "skeptic", skeptic_result.get("model", "skeptic-model"),
@@ -54,8 +61,27 @@ def run_pipeline(run_id: int, ticker: str, bundle: dict, starting_cost_usd: floa
         )
         total_cost += skeptic_result["cost_usd"]
 
+        skeptic_qwen_result = run_skeptic_qwen_agent(bundle_json_str, bull_result["parsed"], bear_result["parsed"])
+        db.save_agent_output(
+            run_id, "skeptic_qwen", skeptic_qwen_result.get("model", "skeptic-qwen-model"),
+            skeptic_qwen_result["input_tokens"], skeptic_qwen_result["output_tokens"],
+            skeptic_qwen_result["cache_read_tokens"], skeptic_qwen_result["cost_usd"],
+            skeptic_qwen_result["parsed"],
+        )
+        total_cost += skeptic_qwen_result["cost_usd"]
+
+        quant_check_result = run_quant_checker_agent(bundle_json_str, bull_result["parsed"], bear_result["parsed"])
+        db.save_agent_output(
+            run_id, "quant_checker", quant_check_result.get("model", "quant-checker-model"),
+            quant_check_result["input_tokens"], quant_check_result["output_tokens"],
+            quant_check_result["cache_read_tokens"], quant_check_result["cost_usd"],
+            quant_check_result["parsed"],
+        )
+        total_cost += quant_check_result["cost_usd"]
+
         judge_result = run_judge_agent(
-            bundle_json_str, bull_result["parsed"], bear_result["parsed"], skeptic_result["parsed"]
+            bundle_json_str, bull_result["parsed"], bear_result["parsed"],
+            skeptic_result["parsed"], skeptic_qwen_result["parsed"], quant_check_result["parsed"],
         )
         db.save_agent_output(
             run_id, "judge", judge_result.get("model", "judge-model"),
@@ -79,6 +105,8 @@ def run_pipeline(run_id: int, ticker: str, bundle: dict, starting_cost_usd: floa
             "bull": bull_result["parsed"],
             "bear": bear_result["parsed"],
             "skeptic": skeptic_result["parsed"],
+            "skeptic_qwen": skeptic_qwen_result["parsed"],
+            "quant_check": quant_check_result["parsed"],
             "judge": judge_output,
             "total_cost_usd": round(total_cost, 4),
         }

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0
+
+- Add two new agents on Qwen (Alibaba Cloud Model Studio, OpenAI-compatible
+  API): an independent second-opinion Skeptic (same task/schema as the
+  existing Claude Skeptic, run on a different model so it can catch blind
+  spots the first one shares with itself) and a Quant Checker (verifies
+  every specific number/percentage/ratio claimed by Bull/Bear against the
+  bundle's raw figures). The full pipeline is now 6 agent calls instead of
+  4: Bull, Bear, Skeptic (Claude), Skeptic (Qwen), Quant Checker, Judge.
+- Judge's prompt (`agents/prompts/judge.md`) now explicitly weighs both
+  skeptic reviews (agreement = stronger signal, disagreement = noted
+  explicitly) and discounts any claim the quant checker flagged, rather
+  than just receiving the extra JSON as decoration.
+- New required config for a full (non-dry-run) check: `QWEN_API_KEY`
+  (`.env.example`, and the add-on's Configuration tab). Dry runs are
+  unaffected. `qwen_api_key` added to `config.yaml`'s options/schema.
+
 ## 0.1.4
 
 - Add a pytest test suite (`tests/`) covering formatting, chart SVG

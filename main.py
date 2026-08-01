@@ -19,7 +19,7 @@ import sys
 import json
 import argparse
 
-from config import ANTHROPIC_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
+from config import ANTHROPIC_API_KEY, QWEN_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
 from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
@@ -181,6 +181,12 @@ def main():
 
         if not ANTHROPIC_API_KEY:
             print("ERROR: ANTHROPIC_API_KEY is not set. Copy .env.example to .env and fill it in.")
+            print("(Tip: use --dry-run to test raw data fetching without an API key.)")
+            sys.exit(1)
+
+        if not QWEN_API_KEY:
+            print("ERROR: QWEN_API_KEY is not set. The independent second-opinion Skeptic and Quant")
+            print("Checker agents need it -- copy .env.example to .env and fill it in.")
             print("(Tip: use --dry-run to test raw data fetching without an API key.)")
             sys.exit(1)
 
