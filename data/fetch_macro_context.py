@@ -30,6 +30,8 @@ Not ticker-specific -- identical for every ticker checked on the same day,
 by design.
 """
 
+import datetime as dt
+
 import requests
 import yfinance as yf
 
@@ -73,15 +75,24 @@ def _fred_latest(series_id: str):
 
 
 def _fred_yoy_pct_change(series_id: str):
-    """For a monthly index series (e.g. CPI): latest value vs. ~12 months
-    ago. Pulls 13 observations to have one to spare for missing months."""
-    obs = _fred_observations(series_id, limit=13)
+    """For a monthly index series (e.g. CPI): latest value vs. the value
+    closest to 12 months earlier, matched by date rather than a fixed list
+    position. FRED series occasionally have a one-off missing month
+    (observed live on CPIAUCSL: October 2025 came back "." -- a government
+    shutdown delayed that release), which would silently misalign a
+    fixed-position lookback by a month. Pulls extra observations as a
+    buffer against one or two such gaps."""
+    obs = _fred_observations(series_id, limit=15)
     if len(obs) < 13:
         return None
-    latest, year_ago = float(obs[0]["value"]), float(obs[12]["value"])
-    if year_ago == 0:
+    latest = obs[0]
+    latest_date = dt.datetime.strptime(latest["date"], "%Y-%m-%d")
+    target_date = latest_date - dt.timedelta(days=365)
+    year_ago = min(obs[1:], key=lambda o: abs((dt.datetime.strptime(o["date"], "%Y-%m-%d") - target_date).days))
+    year_ago_val = float(year_ago["value"])
+    if year_ago_val == 0:
         return None
-    return round((latest / year_ago - 1) * 100, 2)
+    return round((float(latest["value"]) / year_ago_val - 1) * 100, 2)
 
 
 def _fetch_fred_indicators() -> tuple[dict, list[str]]:

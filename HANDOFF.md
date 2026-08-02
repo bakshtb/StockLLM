@@ -907,11 +907,21 @@ the existing pattern for every other optional fetch in this codebase:
   over time, different from the individual firm-level actions already
   pulled from yfinance).
 
-None of these three have been verified against a real API key in this
-environment (no keys configured here) -- verified only that the
-graceful-no-key path works correctly (null fields, no crash, no leaked
-values in the dashboard). Worth a real live check with actual keys before
-fully trusting the FMP endpoint paths especially.
+All three have since been verified live against real API keys (never
+committed anywhere -- entered only as local environment variables for a
+one-off test, then discarded). Two real bugs were found and fixed this way:
+- FMP's `/api/v3/discounted-cash-flow` and `/api/v3/ratios-ttm` returned
+  403 Forbidden even with a valid key -- v3 is dead, not just "legacy."
+  Fixed to use FMP's newer `/stable/...` namespace (query-param `symbol=`
+  instead of a path param). Also: the field FMP calls "PEG" was renamed
+  from `pegRatioTTM` (v3) to `priceToEarningsGrowthRatioTTM` (stable).
+- FRED's CPI YoY calculation used a fixed list position (`obs[12]`) to find
+  "12 months ago," which broke when CPIAUCSL had a one-off missing month
+  (October 2025 came back `"."` -- FRED's marker for a not-yet-published
+  observation, likely a government-shutdown-delayed release). Fixed to
+  match by actual date (closest observation to exactly 365 days before the
+  latest one) with a few extra months of buffer, so a single gap doesn't
+  silently misalign the whole calculation.
 
 ## Explicitly deferred (do not build unless asked)
 

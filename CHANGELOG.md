@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.1
+
+- Fix: FMP's DCF and PEG endpoints returned 403 Forbidden against a real
+  key -- their `/api/v3/...` paths are dead, not just legacy. Switched to
+  `/stable/...`, and picked up the PEG field's new name
+  (`priceToEarningsGrowthRatioTTM`, was `pegRatioTTM`). Found and fixed by
+  testing live against a real FMP key.
+- Fix: FRED's CPI year-over-year calculation used a fixed list position to
+  find "12 months ago," which silently misaligned by a month when
+  CPIAUCSL had a one-off missing observation (a government-shutdown-
+  delayed release). Now matches by actual date instead of list position.
+  Found and fixed by testing live against a real FRED key.
+
 ## 0.6.0
 
 - Add three optional data sources, each free-tier and each degrading
