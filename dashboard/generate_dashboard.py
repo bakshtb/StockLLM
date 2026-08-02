@@ -441,12 +441,31 @@ footer.disclaimer {
      element still scales with the viewBox transform even when it wins
      the cascade over the inline attribute, so overriding it to a bigger
      *unscaled* value here brings the on-screen result back up to a
-     legible size without any scrolling or clipping. Sized so the
-     worst-case mobile scale (~0.485x) lands around 12px body text /
-     15-16px for the one-per-chart headline readout (RSI's value, MACD's
-     equivalent) -- see .viz-headline. */
-  .viz-svg text:not(.viz-headline) { font-size: 25px !important; }
-  .viz-svg text.viz-headline { font-size: 32px !important; }
+     legible size without any scrolling or clipping.
+
+     Three tiers, not one -- a single blanket size broke two different
+     ways when tried (each found from a real screenshot, not guessed):
+       - .viz-track-label / .viz-headline (range_meter, range_position_plot,
+         gauge_meter): these 3 functions' internal spacing (track_y, row_gap,
+         collision margins) was deliberately widened to fit a bigger font --
+         see their own comments. Safe up to ~30px / ~34px (measured via
+         real getBBox, not eyeballed em-heights).
+       - Every other chart (bar_chart_horizontal, diverging_bar_horizontal,
+         grouped_bar_horizontal, grouped_column_chart, the diverging-
+         stacked-bar family, etc.) packs labels far more tightly and
+         wasn't redesigned here -- grouped_column_chart alone can show up
+         to 8 quarters across a fixed 620-unit plot width, so its category
+         labels are the tightest constraint in the whole file. Tested
+         empirically (real getBBox overlap checks against real fixture
+         data rendered with real mobile-viewport emulation, not eyeballed
+         or checked only in a plain desktop-browser window -- font metrics
+         genuinely differ between the two, which cost a round of this
+         being miscalibrated) up through several candidate sizes before
+         landing on 14px as the largest one with zero collisions across
+         every chart in this tier. */
+  .viz-svg text:not(.viz-headline):not(.viz-track-label) { font-size: 14px !important; }
+  .viz-svg text.viz-track-label { font-size: 30px !important; }
+  .viz-svg text.viz-headline { font-size: 34px !important; }
 }
 @media (max-width: 420px) {
   .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
@@ -1007,7 +1026,11 @@ def grouped_column_chart(categories, series):
     span = (max_v - min_v) or 1
 
     W, H = 620, 260
-    pad_l, pad_b, pad_t = 46, 30, 14
+    # pad_t has to leave room for the tallest bar's value label sitting
+    # just above it (see the mobile-boosted "general" text tier in
+    # CSS_STYLE) -- a real screenshot showed it clipped against the
+    # viewBox top when a bar landed at/near max_v.
+    pad_l, pad_b, pad_t = 46, 30, 56
     plot_w = W - pad_l - 16
     plot_h = H - pad_b - pad_t
     slot_w = plot_w / n_cat
@@ -1026,6 +1049,7 @@ def grouped_column_chart(categories, series):
         parts.append(f'<line x1="{pad_l}" y1="{gy}" x2="{W-16}" y2="{gy}" stroke="var(--gridline)" stroke-width="1"/>')
         parts.append(f'<text x="{pad_l-6}" y="{gy+3}" text-anchor="end" font-size="12" fill="var(--text-muted)">{fmt_compact(gv,1)}</text>')
 
+    last_cat_labels = []  # (x_center, natural_y) for the stagger pass below
     for ci, cat in enumerate(categories):
         group_x0 = pad_l + ci * slot_w + (slot_w - (bar_w * n_series + bar_gap * (n_series - 1))) / 2
         for si, (name, color, vals) in enumerate(series):
@@ -1039,8 +1063,26 @@ def grouped_column_chart(categories, series):
             tip = f"{cat} — {name}: {fmt_usd(v)}"
             parts.append(_mark(d, color, tip))
             if ci == n_cat - 1:  # direct label on the last/most-recent category only
-                parts.append(f'<text x="{x+bar_w/2}" y="{y0-6}" text-anchor="middle" font-size="12" fill="var(--text-primary)">{fmt_usd(v,1)}</text>')
+                last_cat_labels.append((x + bar_w / 2, y0 - 6, fmt_usd(v, 1)))
         parts.append(f'<text x="{group_x0 + (bar_w*n_series+bar_gap*(n_series-1))/2}" y="{H-8}" text-anchor="middle" font-size="12.5" fill="var(--text-secondary)">{esc(cat)}</text>')
+
+    # Adjacent series' bars in the same (last) group sit only bar_gap apart
+    # -- their value labels, placed at each one's own natural height right
+    # above its bar, can end up close enough to overlap regardless of which
+    # bar is taller (found from real data: a shorter second bar can land
+    # its label almost exactly where the first bar's label already is).
+    # Anchor the bottom-most (shortest-bar) label at its natural position
+    # and push any label above it further up if it isn't already clear --
+    # never the other way, which would push a label down into its own bar.
+    MIN_LABEL_GAP = 20
+    last_cat_labels.sort(key=lambda item: -item[1])
+    for i in range(1, len(last_cat_labels)):
+        x, y, txt = last_cat_labels[i]
+        prev_y = last_cat_labels[i - 1][1]
+        if prev_y - y < MIN_LABEL_GAP:
+            last_cat_labels[i] = (x, prev_y - MIN_LABEL_GAP, txt)
+    for x, y, txt in last_cat_labels:
+        parts.append(f'<text x="{x}" y="{y}" text-anchor="middle" font-size="12" fill="var(--text-primary)">{txt}</text>')
     parts.append(f'<line x1="{pad_l}" y1="{baseline_y}" x2="{W-16}" y2="{baseline_y}" stroke="var(--baseline)" stroke-width="1"/>')
     parts.append("</svg>")
 
@@ -1062,7 +1104,13 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     pad = 60
     track_x0, track_x1 = pad, W - pad
     track_w = track_x1 - track_x0
-    track_y = 46
+    # track_y (and the offsets below) are sized with real headroom for the
+    # mobile-boosted ".viz-track-label"/".viz-headline" font sizes, not
+    # just the desktop default -- measured empirically (getBBox in a real
+    # browser, not eyeballed em-heights) after a screenshot showed the
+    # original tighter spacing clipping/colliding once mobile made the
+    # text bigger.
+    track_y = 54
 
     def x_for(v):
         v = max(low, min(high, v))
@@ -1076,11 +1124,11 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     # Mean and median are frequently close in real data -- without a
     # stagger, their labels collide the same way MA20/MA50 did in
     # range_position_plot, and worse once the mobile font override makes
-    # them ~50-60 viewBox units wide each.
+    # them ~70-95 viewBox units wide each.
     marker_xs = [x_for(v) for _, v, _ in markers]
     row_of, n_rows = _stagger_rows(marker_xs) if markers else ([], 0)
-    row_gap = 34
-    H = max(90, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
+    row_gap = 44  # >= a mobile-sized label's full glyph height (~38 units) so stacked rows don't touch
+    H = max(100, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
 
     # "Current" (above the track) can land right next to a Low/High corner
     # label (below/at the same height) when today's price sits near either
@@ -1090,16 +1138,16 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     # (COLLISION_MARGIN sized for the mobile-boosted font, not desktop --
     # "Low $215.00" is a longer string than range_position_plot's bare
     # price, hence the bigger margin here).
-    COLLISION_MARGIN = 190
+    COLLISION_MARGIN = 235
     current_x = x_for(current) if current is not None else None
     show_low_label = current_x is None or current_x > track_x0 + COLLISION_MARGIN
     show_high_label = current_x is None or current_x < track_x1 - COLLISION_MARGIN
 
     parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="analyst target price range">']
     if show_low_label:
-        parts.append(f'<text x="{track_x0}" y="20" font-size="13.5" fill="var(--text-secondary)">Low {label_fmt(low)}</text>')
+        parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">Low {label_fmt(low)}</text>')
     if show_high_label:
-        parts.append(f'<text x="{track_x1}" y="20" text-anchor="end" font-size="13.5" fill="var(--text-secondary)">High {label_fmt(high)}</text>')
+        parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">High {label_fmt(high)}</text>')
     d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
     parts.append(f'<path d="{d}" fill="var(--gridline)"/>')
 
@@ -1107,13 +1155,13 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
         y_label = track_y + 26 + row_gap * row
         parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(name)}: {esc(label_fmt(v))}"><title>{esc(name)}: {esc(label_fmt(v))}</title>'
                       f'<circle cx="{x}" cy="{track_y}" r="6" fill="{color}" stroke="var(--surface-1)" stroke-width="2"/></g>')
-        parts.append(f'<text x="{x}" y="{y_label}" text-anchor="middle" font-size="12" fill="var(--text-secondary)">{esc(name)}</text>')
+        parts.append(f'<text x="{x}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(name)}</text>')
 
     if current is not None:
         x = x_for(current)
         parts.append(f'<g class="mark" tabindex="0" data-tip="Current: {esc(label_fmt(current))}"><title>Current: {esc(label_fmt(current))}</title>'
                       f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
-        parts.append(f'<text x="{x}" y="{track_y-20}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text-primary)">Current</text>')
+        parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-size="12" font-weight="600" fill="var(--text-primary)">Current</text>')
     parts.append("</svg>")
 
     rows = [["Low", label_fmt(low)], ["Mean", label_fmt(mean)], ["Median", label_fmt(median)],
@@ -1122,7 +1170,7 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     return "".join(parts), table
 
 
-def _stagger_rows(xs, min_gap=90):
+def _stagger_rows(xs, min_gap=100):
     """Greedy row assignment for direct labels placed under evenly-spaced
     points: sorted left-to-right, each label takes the first row whose
     last-placed label is at least min_gap px away, else drops to a new row.
@@ -1174,7 +1222,12 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     pad = 60
     track_x0, track_x1 = pad, W - pad
     track_w = track_x1 - track_x0
-    track_y = 46
+    # See range_meter's identical comment: these offsets are sized with
+    # real headroom for the mobile-boosted ".viz-track-label" font size,
+    # measured empirically (getBBox in a real browser) after a screenshot
+    # showed the original tighter spacing colliding once mobile made the
+    # text bigger.
+    track_y = 54
 
     def x_for(v):
         v = max(low, min(high, v))
@@ -1183,8 +1236,8 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     valid_markers = [(l, v, c) for l, v, c in markers if v is not None]
     marker_xs = [x_for(v) for _, v, _ in valid_markers]
     row_of, n_rows = _stagger_rows(marker_xs) if valid_markers else ([], 0)
-    row_gap = 34  # tall enough to clear a mobile-boosted label's full height (~31 viewBox units), not just its width
-    H = max(90, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
+    row_gap = 44  # >= a mobile-sized label's full glyph height (~38 units) so stacked rows don't touch
+    H = max(100, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
 
     # "Current" sits above the track and is labeled the same way the Low/
     # High corner labels are (see below) -- when the current price is near
@@ -1193,19 +1246,19 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     # label Current's would collide with rather than let them run
     # together; Current's own marker+label already conveys a near-
     # identical value at that position. COLLISION_MARGIN is sized for the
-    # mobile-boosted font (~98 viewBox units for a "$340.08"-length label,
-    # ~80 for "Current") -- see _stagger_rows for why mobile sizing, not
-    # desktop, is what actually has to fit here.
-    COLLISION_MARGIN = 150
+    # mobile-boosted font (~117 viewBox units for a "$340.08"-length
+    # label, ~96 for "Current") -- see _stagger_rows for why mobile
+    # sizing, not desktop, is what actually has to fit here.
+    COLLISION_MARGIN = 170
     current_x = x_for(current) if current is not None else None
     show_low_label = current_x is None or current_x > track_x0 + COLLISION_MARGIN
     show_high_label = current_x is None or current_x < track_x1 - COLLISION_MARGIN
 
     parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(aria_label)}">']
     if show_low_label:
-        parts.append(f'<text x="{track_x0}" y="20" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(low))}</text>')
+        parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(low))}</text>')
     if show_high_label:
-        parts.append(f'<text x="{track_x1}" y="20" text-anchor="end" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(high))}</text>')
+        parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(high))}</text>')
     d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
     parts.append(f'<path d="{d}" fill="var(--gridline)"/>')
 
@@ -1213,13 +1266,13 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
         y_label = track_y + 26 + row_gap * row
         parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(label)}: {esc(label_fmt(v))}"><title>{esc(label)}: {esc(label_fmt(v))}</title>'
                       f'<circle cx="{x}" cy="{track_y}" r="6" fill="{color}" stroke="var(--surface-1)" stroke-width="2"/></g>')
-        parts.append(f'<text x="{x}" y="{y_label}" text-anchor="middle" font-size="12" fill="var(--text-secondary)">{esc(label)}</text>')
+        parts.append(f'<text x="{x}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(label)}</text>')
 
     if current is not None:
         x = x_for(current)
         parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(current_label)}: {esc(label_fmt(current))}"><title>{esc(current_label)}: {esc(label_fmt(current))}</title>'
                       f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
-        parts.append(f'<text x="{x}" y="{track_y-20}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text-primary)">{esc(current_label)}</text>')
+        parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-weight="600" font-size="12" fill="var(--text-primary)">{esc(current_label)}</text>')
     parts.append("</svg>")
 
     rows = [[label, label_fmt(v)] for label, v, _ in valid_markers]
@@ -1234,11 +1287,11 @@ def gauge_meter(value, min_v, max_v, zones, label=""):
     """zones: list of (threshold_upto, color_var, status_name) covering min_v..max_v in order."""
     if value is None:
         return "<svg></svg>", empty_state()
-    W, H = 620, 70
+    W, H = 620, 100
     pad = 20
     track_x0, track_x1 = pad, W - pad
     track_w = track_x1 - track_x0
-    track_y = 30
+    track_y = 54
 
     def x_for(v):
         v = max(min_v, min(max_v, v))
@@ -1255,9 +1308,14 @@ def gauge_meter(value, min_v, max_v, zones, label=""):
     x = x_for(value)
     parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(label)}: {esc(fmt_num(value,1))}"><title>{esc(label)}: {esc(fmt_num(value,1))}</title>'
                   f'<circle cx="{x}" cy="{track_y}" r="7" fill="var(--text-primary)" stroke="var(--surface-1)" stroke-width="2"/></g>')
-    parts.append(f'<text x="{x}" y="{track_y-14}" text-anchor="middle" font-size="15" font-weight="650" class="viz-headline" fill="var(--text-primary)">{esc(fmt_num(value,1))}</text>')
-    parts.append(f'<text x="{track_x0}" y="{track_y+28}" font-size="12.5" fill="var(--text-muted)">{esc(fmt_num(min_v))}</text>')
-    parts.append(f'<text x="{track_x1}" y="{track_y+28}" text-anchor="end" font-size="12.5" fill="var(--text-muted)">{esc(fmt_num(max_v))}</text>')
+    # y offset from the track is deliberately generous (not the tighter
+    # spacing the other track charts use) -- this is the one headline-
+    # sized readout on the page (see .viz-headline's mobile font-size),
+    # and a real screenshot showed its ascender clipped against the top
+    # of the viewBox when the offset was tuned for the old, smaller size.
+    parts.append(f'<text x="{x}" y="{track_y-20}" text-anchor="middle" class="viz-headline" font-size="15" font-weight="650" fill="var(--text-primary)">{esc(fmt_num(value,1))}</text>')
+    parts.append(f'<text x="{track_x0}" y="{track_y+30}" class="viz-track-label" font-size="12.5" fill="var(--text-muted)">{esc(fmt_num(min_v))}</text>')
+    parts.append(f'<text x="{track_x1}" y="{track_y+30}" text-anchor="end" class="viz-track-label" font-size="12.5" fill="var(--text-muted)">{esc(fmt_num(max_v))}</text>')
     parts.append("</svg>")
 
     table = data_table(["Metric", "Value"], [[label, fmt_num(value, 1)]])

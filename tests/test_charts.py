@@ -122,6 +122,21 @@ class TestGroupedColumnChart:
         svg, table, legend = grouped_column_chart(categories, series)
         assert_svg_has_dimensions(svg)
 
+    def test_last_category_value_labels_are_staggered_apart(self):
+        # Regression: found on real data (Revenue vs. Net income close in
+        # value for the most recent quarter) -- both series' value labels
+        # are only bar_gap apart horizontally and were landing at nearly
+        # the same height, overlapping. The shorter bar's label must stay
+        # at its natural position; the taller bar's label must be pushed
+        # at least 20 units further up rather than left to collide.
+        categories = ["Q1", "Q2"]
+        series = [("Revenue", "var(--series-1)", [100, 119.8]), ("Net income", "var(--series-2)", [90, 112.2])]
+        svg, table, legend = grouped_column_chart(categories, series)
+        import re
+        ys = [float(m) for m in re.findall(r'<text x="[\d.]+" y="([\d.-]+)" text-anchor="middle" font-size="12" fill="var\(--text-primary\)"', svg)]
+        assert len(ys) == 2
+        assert abs(ys[0] - ys[1]) >= 20 - 0.01
+
 
 class TestRangeMeter:
     def test_missing_low_high_returns_empty_state(self):
@@ -174,38 +189,40 @@ class TestRangePositionPlot:
         assert "Current" not in table
 
     def test_close_markers_are_staggered_not_overlapping(self):
-        # MA50 and MA20 a few cents apart on an $8.98 range -- these must
-        # not collide on the same label row (the bug this chart replaces
-        # a different symptom of: illegible closely-spaced values).
+        # MA50 and MA20 a few cents apart on an $8.98 range, and MA200 not
+        # a lot further -- none of the three fit on one row without
+        # overlapping once the mobile font override is applied (min_gap is
+        # sized for that wider rendering, not the desktop default).
         svg, table = range_position_plot(
             6.56, 15.54, 7.91,
             [("MA200", 9.87, "var(--series-3)"), ("MA50", 9.25, "var(--series-2)"), ("MA20", 8.97, "var(--series-1)")],
         )
-        # y="72" is the first label row; a second row (row_gap=34) must
-        # exist since MA50 and MA20 are only ~15px apart on the track.
-        assert 'y="72"' in svg
-        assert 'y="106"' in svg
+        # y="80" is the first label row (track_y=54, +26); each further
+        # row is row_gap=44 below the last.
+        assert 'y="80"' in svg
+        assert 'y="124"' in svg
+        assert 'y="168"' in svg
 
-    def test_real_aapl_data_staggers_ma50_and_ma20(self):
+    def test_real_aapl_data_staggers_ma20_onto_a_second_row(self):
         # Regression: this exact data (real AAPL fixture values) rendered
-        # "MA50MA20" running together on a phone screenshot -- the labels
-        # are only ~54 viewBox units apart, and each is ~65 units wide once
-        # the mobile font override applies, so they must land on different
-        # rows even though MA200 is comfortably far from both.
+        # "MA50MA20" running together on a phone screenshot -- MA50 and
+        # MA20 are only ~54 viewBox units apart, which the mobile-sized
+        # label (~77 units wide) doesn't clear, so MA20 must drop to a
+        # second row even though MA200 is comfortably far from both.
         svg, table = range_position_plot(
             201.58, 340.08, 333.43,
             [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
         )
-        assert 'y="72"' in svg
-        assert 'y="106"' in svg
+        assert 'y="80"' in svg
+        assert 'y="124"' in svg
 
     def test_widely_spaced_markers_share_one_row(self):
         svg, table = range_position_plot(
             0, 1000, 500,
             [("A", 100, "var(--series-1)"), ("B", 500, "var(--series-2)"), ("C", 900, "var(--series-3)")],
         )
-        assert 'y="72"' in svg
-        assert 'y="106"' not in svg
+        assert 'y="80"' in svg
+        assert 'y="124"' not in svg
 
     def test_table_lists_every_marker_and_range(self):
         svg, table = range_position_plot(

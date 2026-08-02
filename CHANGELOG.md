@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.8.5
+
+- Fix two more real mobile bugs from a follow-up screenshot: the RSI
+  gauge's headline number ("45.1") had its top clipped off, and the
+  "Price vs. moving averages" chart still read as too small despite
+  0.8.4's fix.
+  - **Clipping**: 0.8.4 boosted the gauge's headline text without giving
+    it more room above the track, so its ascender got clipped against the
+    SVG viewport's top edge. Gave `gauge_meter`, `range_meter`, and
+    `range_position_plot` real headroom (all three measured empirically
+    via `getBBox` in an actual browser, not estimated from font metrics)
+    and moved the headline/track-label offsets to fit.
+  - **Still small**: the previous mobile font-size override (25px) was
+    calibrated only against the 3 "track" charts. It's one shared CSS
+    rule across every chart on the page, and at that size it overlapped
+    labels in several chart types never redesigned for it (grouped
+    quarterly revenue/income columns, the relative-performance bars).
+    Split into three tiers: `.viz-track-label`/`.viz-headline` (the 3
+    track charts, now deliberately spaced for up to 30px/34px) and a
+    plain tier for everything else, sized at the largest value (14px)
+    that still doesn't collide anywhere -- including grouped_column_chart
+    showing up to 8 quarters across a fixed-width plot, the tightest
+    constraint in the file. Also fixed a real pre-existing bug this
+    surfaced: two series' value labels in the same quarter (Revenue vs.
+    Net income) could land at nearly the same height and overlap
+    regardless of font size -- now staggered apart.
+  - Verified this round by rendering every committed fixture with real
+    mobile-viewport emulation and checking every single chart's every
+    text element via `getBBox` for clipping against its own viewBox and
+    pairwise overlap against every other label -- zero of either, versus
+    doing spot checks by eye, which is what let both of these bugs
+    through in 0.8.4. (Also corrected the calibration process itself:
+    testing without mobile emulation gives different font metrics than a
+    real phone and had produced an unsafe 15px figure before this.)
+
 ## 0.8.4
 
 - Fix: 0.8.2's mobile chart fix (pin to native size + scroll) traded

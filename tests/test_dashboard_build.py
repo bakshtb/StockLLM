@@ -85,10 +85,14 @@ class TestBuildDashboardAgainstEveryFixture:
         # each <text> element's font-size larger specifically on mobile --
         # CSS font-size on SVG text still scales with the viewBox
         # transform, so this brings the rendered size back up without any
-        # clipping.
+        # clipping. Three tiers (not one): a single blanket size clipped
+        # the RSI gauge's headline number against the viewBox top and
+        # overlapped adjacent rows in the plain bar-list charts, both
+        # confirmed via real screenshots -- see CSS_STYLE's own comment.
         html = build_dashboard(sample_bundle)
-        assert "text:not(.viz-headline) { font-size: 25px" in html
-        assert "text.viz-headline { font-size: 32px" in html
+        assert "text:not(.viz-headline):not(.viz-track-label) { font-size: 14px" in html
+        assert "text.viz-track-label { font-size: 30px" in html
+        assert "text.viz-headline { font-size: 34px" in html
         assert ".viz-svg { width: 100%; max-width: 100%;" in html  # never pinned wider than its card
 
     def test_no_ai_recommendation_section_without_pipeline_result(self, sample_bundle):
