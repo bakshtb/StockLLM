@@ -41,6 +41,8 @@ def _load_ha_options():
         "gemini_api_key": "GEMINI_API_KEY",
         "sec_edgar_user_agent": "SEC_EDGAR_USER_AGENT",
         "finnhub_api_key": "FINNHUB_API_KEY",
+        "fred_api_key": "FRED_API_KEY",
+        "fmp_api_key": "FMP_API_KEY",
         "monthly_spend_limit_usd": "MONTHLY_SPEND_LIMIT_USD",
     }
     for option_key, env_key in option_to_env.items():

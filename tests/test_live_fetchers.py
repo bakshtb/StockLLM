@@ -36,6 +36,8 @@ from data.fetch_macro_context import fetch_macro_context
 from data.fetch_social_sentiment import fetch_social_sentiment
 from data.fetch_proxy import fetch_proxy_raw
 from data.fetch_filings import fetch_filings_raw
+from data.fetch_fmp_valuation import fetch_fmp_valuation
+from data.fetch_finnhub_signals import fetch_finnhub_signals
 
 TICKER = "AAPL"
 
@@ -168,6 +170,19 @@ class TestFetchMacroContext:
         assert result["vix_level"] is None or result["vix_level"] > 0
         assert result["treasury_10y_yield_pct"] is None or 0 < result["treasury_10y_yield_pct"] < 20
 
+    def test_fred_fields_present_regardless_of_key(self):
+        # FRED_API_KEY is optional -- these keys must exist either way, just
+        # null if no key is configured in this environment.
+        result = fetch_macro_context()
+        assert "cpi_yoy_pct" in result
+        assert "unemployment_rate_pct" in result
+        assert "fed_funds_rate_pct" in result
+        assert "yield_curve_10y_2y_pct" in result
+        if result["unemployment_rate_pct"] is not None:
+            assert 0 < result["unemployment_rate_pct"] < 30
+        if result["fed_funds_rate_pct"] is not None:
+            assert 0 <= result["fed_funds_rate_pct"] < 20
+
 
 class TestFetchSocialSentiment:
     def test_shape(self):
@@ -188,3 +203,35 @@ class TestFetchFilingsRaw:
         assert set(result.keys()) == {"10-K", "10-Q", "8-K"}
         for filing in result.values():
             assert "filing_type" in filing and "text" in filing
+
+
+class TestFetchFmpValuation:
+    def test_shape(self):
+        # Optional (FMP_API_KEY) -- fields must exist and be well-typed
+        # whether or not a key is configured in this environment.
+        result = fetch_fmp_valuation(TICKER)
+        assert "dcf_value" in result and "peg_ratio" in result
+        if result["dcf_value"] is not None:
+            assert result["dcf_value"] > 0
+        if result["peg_ratio"] is not None:
+            assert isinstance(result["peg_ratio"], float)
+
+    def test_invalid_ticker_does_not_raise(self):
+        result = fetch_fmp_valuation("ZZZZZINVALID")
+        assert result["dcf_value"] is None
+
+
+class TestFetchFinnhubSignals:
+    def test_shape(self):
+        # Optional (FINNHUB_API_KEY) -- fields must exist and be well-typed
+        # whether or not a key is configured in this environment.
+        result = fetch_finnhub_signals(TICKER)
+        assert "insider_sentiment_mspr" in result
+        assert isinstance(result["insider_sentiment_trend"], list)
+        assert isinstance(result["recommendation_trend"], list)
+        for row in result["recommendation_trend"]:
+            assert set(row.keys()) == {"period", "strong_buy", "buy", "hold", "sell", "strong_sell"}
+
+    def test_invalid_ticker_does_not_raise(self):
+        result = fetch_finnhub_signals("ZZZZZINVALID")
+        assert result["insider_sentiment_trend"] == []

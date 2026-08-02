@@ -38,6 +38,7 @@ EXPECTED_TOP_LEVEL_KEYS = {
     "balance_sheet_health", "income_statement", "insider_transactions",
     "institutional_ownership", "news_headlines", "news_articles_raw",
     "filings_raw", "form144_notices", "beneficial_ownership", "proxy_raw",
+    "fmp_valuation", "finnhub_signals",
     "news_digest", "filings_digest", "data_notes",
 }
 
@@ -265,6 +266,31 @@ class TestMacroContextFields:
         assert mc["treasury_10y_yield_pct"] is not None and 0 < mc["treasury_10y_yield_pct"] < 20
         assert is_num_or_none(mc["vix_change_20d"])
         assert is_num_or_none(mc["treasury_10y_yield_change_20d_pct"])
+        # FRED fields are optional (FRED_API_KEY) -- present either way, null if no key.
+        assert is_num_or_none(mc["cpi_yoy_pct"])
+        assert is_num_or_none(mc["unemployment_rate_pct"])
+        assert is_num_or_none(mc["fed_funds_rate_pct"])
+        assert is_num_or_none(mc["yield_curve_10y_2y_pct"])
+
+
+class TestFmpValuationFields:
+    def test_all_fields(self, bundle_and_calls):
+        bundle, _ = bundle_and_calls
+        fmp = bundle["fmp_valuation"]
+        assert is_num_or_none(fmp["dcf_value"])
+        assert is_num_or_none(fmp["peg_ratio"])
+        assert is_str_or_none(fmp["note"])
+
+
+class TestFinnhubSignalsFields:
+    def test_all_fields(self, bundle_and_calls):
+        bundle, _ = bundle_and_calls
+        fh = bundle["finnhub_signals"]
+        assert is_num_or_none(fh["insider_sentiment_mspr"])
+        assert isinstance(fh["insider_sentiment_trend"], list)
+        assert isinstance(fh["recommendation_trend"], list)
+        for row in fh["recommendation_trend"]:
+            assert set(row.keys()) == {"period", "strong_buy", "buy", "hold", "sell", "strong_sell"}
 
 
 class TestSocialSentimentFields:

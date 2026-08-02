@@ -880,6 +880,39 @@ exclude lists were extended to cover `tests/`, `pytest.ini`, and
 version bump (they're also excluded from the Docker build via
 `.dockerignore`).
 
+## Optional data sources (FRED, FMP, Finnhub signals)
+
+Three data sources beyond the original set, all genuinely optional -- each
+degrades gracefully to null fields + a note if its key isn't set, matching
+the existing pattern for every other optional fetch in this codebase:
+
+- **FRED** (`FRED_API_KEY`, `data/fetch_macro_context.py`) -- free forever,
+  no paid tier exists. Adds CPI inflation (YoY), unemployment rate, the fed
+  funds rate, and the 10y-2y yield curve spread to `macro_context`,
+  alongside the existing VIX/10Y-Treasury fields.
+- **FMP** (`FMP_API_KEY`, `data/fetch_fmp_valuation.py`) -- free tier, 250
+  calls/day. New `fmp_valuation` bundle section: a DCF fair-value estimate
+  and a PEG ratio. The DCF value is a second, independent valuation anchor
+  alongside yfinance's own analyst targets -- Bull/Bear/Judge's fair-value
+  estimate (see "fair-value range" above) now cites it too. Built against
+  FMP's `/api/v3/` endpoints since those are the most consistently
+  documented; FMP has been migrating toward a newer `/stable/` namespace,
+  so if this stops working, that's the first thing to check.
+- **Finnhub** (`FINNHUB_API_KEY`, `data/fetch_finnhub_signals.py`) -- same
+  key already used for the news source. New `finnhub_signals` bundle
+  section: Insider Sentiment (MSPR -- Finnhub's own aggregated "were
+  insiders net buying or selling this month" score, a summary on top of
+  the raw Form 4 transactions already pulled from SEC EDGAR) and
+  Recommendation Trend (monthly aggregate analyst buy/hold/sell counts
+  over time, different from the individual firm-level actions already
+  pulled from yfinance).
+
+None of these three have been verified against a real API key in this
+environment (no keys configured here) -- verified only that the
+graceful-no-key path works correctly (null fields, no crash, no leaked
+values in the dashboard). Worth a real live check with actual keys before
+fully trusting the FMP endpoint paths especially.
+
 ## Explicitly deferred (do not build unless asked)
 
 - Telegram notifications (design was sketched earlier: only notify on

@@ -2,12 +2,14 @@
 Combines price/technicals, fundamentals (incl. short interest), analyst
 rating actions, earnings surprise/estimate revisions, relative performance
 vs. benchmark/sector (returns AND valuation), dividends/buybacks, options
-sentiment, macro context (VIX/10Y yield), social/crowd sentiment
-(StockTwits), balance sheet health, income statement, insider transactions
-(Form 4), Form 144 sale notices, beneficial ownership (13D/13G),
-institutional ownership, raw filing text (incl. 8-K earnings exhibits), raw
-proxy text, raw news article text, filings digest, and news digest into a
-single structured "research bundle".
+sentiment, macro context (VIX/10Y yield, plus optional FRED inflation/
+unemployment/fed funds/yield curve), social/crowd sentiment (StockTwits),
+balance sheet health, income statement, insider transactions (Form 4), Form
+144 sale notices, beneficial ownership (13D/13G), institutional ownership,
+raw filing text (incl. 8-K earnings exhibits), raw proxy text, raw news
+article text, optional FMP DCF valuation + PEG ratio, optional Finnhub
+insider sentiment + analyst recommendation trend, filings digest, and news
+digest into a single structured "research bundle".
 This bundle is the ONLY source of truth the LLM reasoning agents
 (bull/bear/skeptic/judge) are allowed to reason from -- see
 agents/prompts/*.md for the grounding instructions.
@@ -44,6 +46,8 @@ from data.fetch_filings import fetch_filings_raw, summarize_filing
 from data.fetch_form144 import fetch_form144_notices
 from data.fetch_beneficial_ownership import fetch_beneficial_ownership
 from data.fetch_proxy import fetch_proxy_raw
+from data.fetch_fmp_valuation import fetch_fmp_valuation
+from data.fetch_finnhub_signals import fetch_finnhub_signals
 
 
 def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, list[dict]]:
@@ -78,6 +82,8 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
     form144 = fetch_form144_notices(ticker)
     beneficial_ownership = fetch_beneficial_ownership(ticker)
     proxy_raw = fetch_proxy_raw(ticker)
+    fmp_valuation = fetch_fmp_valuation(ticker)  # DCF + PEG, optional (FMP_API_KEY)
+    finnhub_signals = fetch_finnhub_signals(ticker)  # insider sentiment + rec trend, optional (FINNHUB_API_KEY)
 
     # --- Stage 2: digests, only when run_digests=True (costs money, needs API key) ---
     filings_digest = {"digest": None, "note": "Skipped (dry run)."}
@@ -124,6 +130,8 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "form144_notices": form144,                # proposed insider sales (leading signal), no LLM
         "beneficial_ownership": beneficial_ownership,  # 13D/13G >5% stakes, active vs passive, no LLM
         "proxy_raw": proxy_raw,                    # raw DEF 14A text (comp/governance), no LLM
+        "fmp_valuation": fmp_valuation,             # DCF fair value + PEG ratio, optional, no LLM
+        "finnhub_signals": finnhub_signals,         # insider sentiment (MSPR) + analyst rec trend, optional, no LLM
         "news_digest": news_digest.get("digest"),
         "filings_digest": filings_digest.get("digest"),
         "data_notes": [
@@ -134,6 +142,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
                 social_sentiment.get("note"), income_statement.get("note"),
                 *[f.get("note") for f in filings_raw.values()],
                 form144.get("note"), beneficial_ownership.get("note"), proxy_raw.get("note"),
+                fmp_valuation.get("note"), finnhub_signals.get("note"),
                 filings_digest.get("note"), news_digest.get("note"),
             ] if n
         ],

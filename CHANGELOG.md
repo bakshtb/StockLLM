@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.0
+
+- Add three optional data sources, each free-tier and each degrading
+  gracefully (null fields + a note, never a crash) if its key isn't set:
+  - **FRED** (free forever, no paid tier) -- adds CPI inflation, unemployment
+    rate, fed funds rate, and the 10y-2y yield curve spread to
+    `macro_context`.
+  - **Financial Modeling Prep** (free tier, 250 calls/day) -- new
+    `fmp_valuation` section: a DCF fair-value estimate (a second,
+    independent valuation anchor Bull/Bear/Judge's fair-value estimate now
+    cites alongside analyst targets) and a PEG ratio.
+  - **Finnhub** (same key already used for news) -- new `finnhub_signals`
+    section: Insider Sentiment (MSPR) and analyst Recommendation Trend.
+  New optional config: `FRED_API_KEY`, `FMP_API_KEY` (`.env.example`, add-on
+  Configuration tab). Dashboard shows all three when present, hides them
+  cleanly when not.
+
 ## 0.5.0
 
 - Add outcome tracking: every full (non-dry-run) check now records the

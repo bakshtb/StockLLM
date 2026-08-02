@@ -495,6 +495,14 @@ GLOSSARY = {
     "section_extras": "A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.",
     "ai_recommendation": "The output of StockLLM's own 6-agent pipeline: a Bull agent argues the case to buy, a Bear agent argues the case against, two independent Skeptics (different AI models) critique both for unsupported claims, a Quant Checker verifies the specific numbers cited, and a Judge weighs everything (including all the data below) into one final call. This is the one section that's an AI-generated opinion, not raw data — read the reasoning and key risks, not just the verdict, and remember this is a research aid, not financial advice.",
     "fair_value": "The Judge's estimate of what this stock is worth TODAY, based on the bull/bear cases and the data below — not a prediction of where the price will be at some future date. If the current price is below this range, the AI sees it as undervalued; above the range, overvalued. Treat this the same as the recommendation above: an AI-generated opinion, not a guarantee.",
+    "cpi_yoy": "How much prices for everyday goods have risen over the past 12 months, economy-wide — not specific to this company. High inflation tends to pressure the Federal Reserve to keep interest rates higher, which (like the 10Y Treasury yield above) tends to weigh more on expensive/high-growth stocks. Only shown if a free FRED API key is configured.",
+    "unemployment_rate": "The percentage of the U.S. workforce currently without a job and looking for one. A rising rate often signals a slowing economy; a falling rate often signals a strong one. Not specific to this company. Only shown if a free FRED API key is configured.",
+    "fed_funds_rate": "The interest rate the Federal Reserve sets for banks lending to each other overnight — the actual lever the Fed uses to fight inflation (raise it) or support growth (lower it). Higher rates generally make borrowing more expensive economy-wide, including for this company. Only shown if a free FRED API key is configured.",
+    "yield_curve": "The gap between the 10-year and 2-year U.S. Treasury yields. Normally longer loans pay more interest, so this is usually positive. When it goes negative (\"inverted\"), it means investors expect the economy to weaken — historically a widely-watched recession warning sign. Not specific to this company. Only shown if a free FRED API key is configured.",
+    "dcf_valuation": "An independent \"discounted cash flow\" fair-value estimate from Financial Modeling Prep — a different valuation method than analyst price targets, estimating what the stock is worth based on projecting the company's future cash flows. A second opinion to compare against the analyst target range and the AI's own fair-value estimate above. Only shown if a free FMP API key is configured.",
+    "peg_ratio": "P/E ratio adjusted for the company's growth rate. A P/E of 30 looks expensive on its own, but if earnings are growing 30%/year, a PEG near 1.0 suggests that growth may justify the price. Below 1.0 is traditionally read as potentially undervalued relative to growth; above 2.0 as potentially overvalued. Only shown if a free FMP API key is configured.",
+    "insider_sentiment_mspr": "Finnhub's own monthly score for whether company insiders (executives, directors) were net buying or net selling their own stock recently — positive means more buying, negative means more selling. A different, summarized view on top of the individual insider trades listed below. Only shown if the same Finnhub key used for news is configured.",
+    "recommendation_trend": "How many analysts rated this stock Strong Buy/Buy/Hold/Sell/Strong Sell in recent months, and whether that mix is improving or deteriorating over time — a trend, not just a single snapshot. A different view than the individual rating actions listed elsewhere. Only shown if a Finnhub key is configured.",
 }
 
 
@@ -1380,6 +1388,7 @@ def section_analyst(bundle):
     fundamentals = bundle.get("fundamentals", {}) or {}
     analyst_ratings = bundle.get("analyst_ratings", {}) or {}
     earnings_est = bundle.get("earnings_estimates", {}) or {}
+    fmp = bundle.get("fmp_valuation", {}) or {}
 
     range_svg, range_table = range_meter(
         fundamentals.get("target_low_price"), fundamentals.get("target_mean_price"),
@@ -1390,6 +1399,14 @@ def section_analyst(bundle):
         f"Analyst target price range ({fundamentals.get('number_of_analyst_opinions') or 0} analysts)",
         range_svg, range_table, info="analyst_target_range",
     )
+
+    dcf_html = ""
+    if fmp.get("dcf_value") is not None or fmp.get("peg_ratio") is not None:
+        dcf_html = f"""
+<div class="kpi-row cols-2" style="margin-top:12px;">
+  {stat_tile("DCF fair value (FMP)", fmt_price(fmp.get('dcf_value')), sub="independent of analyst targets above", info="dcf_valuation") if fmp.get('dcf_value') is not None else ""}
+  {stat_tile("PEG ratio", fmt_num(fmp.get('peg_ratio'), 2), info="peg_ratio") if fmp.get('peg_ratio') is not None else ""}
+</div>"""
 
     actions = analyst_ratings.get("actions", []) or []
     action_rows = []
@@ -1403,6 +1420,18 @@ def section_analyst(bundle):
             f"{a.get('from_grade') or '—'} → {a.get('to_grade') or '—'}", pt or "—",
         ])
     actions_table = data_table(["Date", "Firm", "Action", "Grade change", "Price target"], action_rows)
+
+    rec_trend = (bundle.get("finnhub_signals", {}) or {}).get("recommendation_trend", []) or []
+    rec_trend_html = ""
+    if rec_trend:
+        rec_trend_rows = [
+            [r.get("period") or "—", fmt_num(r.get("strong_buy")), fmt_num(r.get("buy")),
+             fmt_num(r.get("hold")), fmt_num(r.get("sell")), fmt_num(r.get("strong_sell"))]
+            for r in rec_trend
+        ]
+        rec_trend_table = data_table(["Period", "Strong buy", "Buy", "Hold", "Sell", "Strong sell"], rec_trend_rows)
+        rec_trend_html = f"""
+<div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Analyst recommendation trend {info_icon('recommendation_trend')}</span></div>{rec_trend_table}</div>"""
 
     surprises = earnings_est.get("earnings_surprise_history", []) or []
     surprise_items = [(s.get("quarter_end"), s.get("surprise_pct")) for s in surprises]
@@ -1430,9 +1459,10 @@ def section_analyst(bundle):
   <h2>Analyst Ratings & Estimates {info_icon('section_analyst')}</h2>
   <div class="card-sub">Recommendation: {esc(fundamentals.get('analyst_recommendation') or '—')} · last {analyst_ratings.get('lookback_days', 60)} days of rating actions</div>
   <div class="split-2col">
-    <div>{range_card}{surprise_card}</div>
+    <div>{range_card}{dcf_html}{surprise_card}</div>
     <div>
       <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Recent rating actions {info_icon('analyst_actions')}</span></div>{actions_table}</div>
+      {rec_trend_html}
       <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">EPS estimate trend (Street consensus) {info_icon('eps_trend')}</span></div>{trend_table}</div>
     </div>
   </div>
@@ -1509,6 +1539,16 @@ def section_ownership(bundle):
                               direction_badge, fmt_num(t.get("shares")), fmt_price(t.get("price_per_share")) if t.get("price_per_share") else "—"])
     insider_table = data_table(["Date", "Owner", "Title", "Direction", "Shares", "Price"], insider_rows)
 
+    finnhub = bundle.get("finnhub_signals", {}) or {}
+    mspr_html = ""
+    if finnhub.get("insider_sentiment_mspr") is not None:
+        mspr = finnhub["insider_sentiment_mspr"]
+        mspr_html = f"""
+<div class="kpi-row" style="margin-bottom:12px;">
+  {stat_tile("Insider sentiment (MSPR)", fmt_num(mspr, 2), value_cls=delta_class(mspr), info="insider_sentiment_mspr",
+             sub="Positive = net buying, negative = net selling, over the past month")}
+</div>"""
+
     f144 = (bundle.get("form144_notices", {}) or {}).get("notices", []) or []
     f144_rows = [[n.get("approx_sale_date") or "—", n.get("seller") or "—", n.get("relationship") or "—",
                   fmt_num(n.get("shares_proposed_to_sell")), fmt_usd(n.get("aggregate_market_value_usd"))] for n in f144]
@@ -1534,6 +1574,7 @@ def section_ownership(bundle):
       <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Schedule 13D/13G (&gt;5% stakes) {info_icon('beneficial_ownership')}</span></div>{ben_table if ben_rows else empty_state()}</div>
     </div>
     <div>
+      {mspr_html}
       <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4) {info_icon('insider_transactions')}</span></div>{insider_table if insider_rows else empty_state()}</div>
       <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales {info_icon('form144')}</span></div>{f144_table if f144_rows else empty_state()}</div>
     </div>
@@ -1615,11 +1656,22 @@ def section_dividends_options_macro_social(bundle):
 <div style="margin-top:10px;">{badge("IV/skew fields unreliable — see note", "warning")} {info_icon('iv_skew')}</div>
 <div class="viz-note" style="margin-top:8px;">{esc(opt.get('note') or '')}</div>"""
 
+    fred_tiles = ""
+    if any(macro.get(k) is not None for k in ("cpi_yoy_pct", "unemployment_rate_pct", "fed_funds_rate_pct", "yield_curve_10y_2y_pct")):
+        fred_tiles = f"""
+<div class="kpi-row cols-4" style="margin-top:10px;">
+  {stat_tile("CPI inflation (YoY)", fmt_pct(macro.get('cpi_yoy_pct'), signed=False), info="cpi_yoy")}
+  {stat_tile("Unemployment rate", fmt_pct(macro.get('unemployment_rate_pct'), signed=False), info="unemployment_rate")}
+  {stat_tile("Fed funds rate", fmt_pct(macro.get('fed_funds_rate_pct'), signed=False), info="fed_funds_rate")}
+  {stat_tile("10y-2y yield curve", fmt_pct(macro.get('yield_curve_10y_2y_pct')), delta_cls=delta_class(macro.get('yield_curve_10y_2y_pct')), info="yield_curve")}
+</div>"""
+
     macro_tiles = f"""
 <div class="kpi-row cols-2">
   {stat_tile("VIX level", fmt_num(macro.get('vix_level'),1), delta_text=fmt_num(macro.get('vix_change_20d'),1)+" (20d)" if macro.get('vix_change_20d') is not None else None, delta_cls=delta_class(macro.get('vix_change_20d'), invert=True), info="vix_macro")}
   {stat_tile("10Y Treasury yield", fmt_pct(macro.get('treasury_10y_yield_pct'), signed=False), delta_text=fmt_pct(macro.get('treasury_10y_yield_change_20d_pct'))+" (20d)" if macro.get('treasury_10y_yield_change_20d_pct') is not None else None, delta_cls=delta_class(macro.get('treasury_10y_yield_change_20d_pct'), invert=True), info="treasury_10y")}
 </div>
+{fred_tiles}
 <div class="viz-note">Not ticker-specific — same for every ticker checked the same day.</div>"""
 
     sent_svg, sent_table, sent_legend = diverging_stacked_sentiment(

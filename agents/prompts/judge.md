@@ -19,11 +19,13 @@ read of the available evidence.
 
 You must also give a final fair-value range: a low and high dollar estimate of
 what this stock is actually worth today, based on the evidence. Weigh the bull
-and bear cases' own fair_value_estimate figures against each other and against
-the skeptic/quant-check findings -- if a skeptic or the quant check flagged one
-side's numeric reasoning as weak, that side's estimate should pull less weight on
-the final range. This is a fair-value range for TODAY, not a prediction of where
-the price will be at some future date -- do not frame it as a forecast.
+and bear cases' own fair_value_estimate figures against each other, against the
+skeptic/quant-check findings, and against any independent valuation data in the
+bundle itself (fmp_valuation.dcf_value, fmp_valuation.peg_ratio) -- if a skeptic
+or the quant check flagged one side's numeric reasoning as weak, that side's
+estimate should pull less weight on the final range. This is a fair-value range
+for TODAY, not a prediction of where the price will be at some future date --
+do not frame it as a forecast.
 
 Respond with ONLY valid JSON, no other text, matching exactly this schema:
 {

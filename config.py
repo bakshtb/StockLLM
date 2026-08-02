@@ -12,6 +12,17 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "")
 MONTHLY_SPEND_LIMIT_USD = float(os.getenv("MONTHLY_SPEND_LIMIT_USD", "50"))
 
+# FRED (Federal Reserve Bank of St. Louis) -- free, no paid tier exists at all.
+# Deepens macro_context beyond VIX/10Y with inflation, unemployment, the Fed
+# funds rate, and the 2s10s yield curve spread. Optional -- macro_context
+# still works without it, just with fewer fields.
+FRED_API_KEY = os.getenv("FRED_API_KEY", "")
+
+# Financial Modeling Prep -- free tier (250 calls/day). Adds a DCF valuation
+# and PEG ratio, a second independent valuation anchor alongside yfinance's
+# own analyst targets for the Bull/Bear/Judge fair-value estimate. Optional.
+FMP_API_KEY = os.getenv("FMP_API_KEY", "")
+
 # Qwen (Alibaba Cloud Model Studio) -- OpenAI-compatible endpoint, used for the
 # independent second-opinion Skeptic and the Quant Checker agent. Both are cheap
 # supporting checks, not the primary reasoning path, so they're kept on a

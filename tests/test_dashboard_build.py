@@ -149,6 +149,88 @@ class TestBuildDashboardWithPipelineResult:
         assert_no_leaked_values(html)
 
 
+class TestOptionalDataSources:
+    """FRED (macro), FMP (DCF/PEG), and Finnhub (insider sentiment / rec
+    trend) are all optional -- no key means the bundle has these sections
+    present but empty (see data/fetch_*.py's own graceful-degradation
+    pattern). The dashboard must render correctly both with and without them."""
+
+    def test_renders_fred_macro_fields_when_present(self):
+        bundle = _minimal_bundle()
+        bundle["macro_context"] = {
+            "vix_level": 16.0, "vix_change_20d": 0.5,
+            "treasury_10y_yield_pct": 4.5, "treasury_10y_yield_change_20d_pct": 0.1,
+            "cpi_yoy_pct": 2.9, "unemployment_rate_pct": 4.1,
+            "fed_funds_rate_pct": 4.33, "yield_curve_10y_2y_pct": 0.45, "note": None,
+        }
+        html = build_dashboard(bundle)
+        assert "CPI inflation" in html
+        assert "Unemployment rate" in html
+        assert "Fed funds rate" in html
+        assert "yield curve" in html
+        assert_no_leaked_values(html)
+
+    def test_fred_macro_fields_absent_when_no_key(self):
+        bundle = _minimal_bundle()
+        bundle["macro_context"] = {
+            "vix_level": 16.0, "vix_change_20d": 0.5,
+            "treasury_10y_yield_pct": 4.5, "treasury_10y_yield_change_20d_pct": 0.1,
+            "cpi_yoy_pct": None, "unemployment_rate_pct": None,
+            "fed_funds_rate_pct": None, "yield_curve_10y_2y_pct": None, "note": None,
+        }
+        html = build_dashboard(bundle)
+        assert "CPI inflation" not in html
+        assert_no_leaked_values(html)
+
+    def test_renders_dcf_and_peg_when_present(self):
+        bundle = _minimal_bundle()
+        bundle["fmp_valuation"] = {"dcf_value": 245.30, "dcf_stock_price": 230.10, "peg_ratio": 1.85, "note": None}
+        html = build_dashboard(bundle)
+        assert "DCF fair value" in html
+        assert "PEG ratio" in html
+        assert_no_leaked_values(html)
+
+    def test_dcf_and_peg_absent_when_no_key(self):
+        bundle = _minimal_bundle()
+        bundle["fmp_valuation"] = {"dcf_value": None, "dcf_stock_price": None, "peg_ratio": None, "note": None}
+        html = build_dashboard(bundle)
+        assert "DCF fair value" not in html
+        assert_no_leaked_values(html)
+
+    def test_renders_insider_sentiment_and_rec_trend_when_present(self):
+        bundle = _minimal_bundle()
+        bundle["finnhub_signals"] = {
+            "insider_sentiment_mspr": -12.5,
+            "insider_sentiment_trend": [],
+            "recommendation_trend": [
+                {"period": "2026-07-01", "strong_buy": 10, "buy": 15, "hold": 5, "sell": 1, "strong_sell": 0},
+            ],
+            "note": None,
+        }
+        html = build_dashboard(bundle)
+        assert "Insider sentiment (MSPR)" in html
+        assert "Analyst recommendation trend" in html
+        assert_no_leaked_values(html)
+
+    def test_finnhub_signals_absent_when_no_key(self):
+        bundle = _minimal_bundle()
+        bundle["finnhub_signals"] = {
+            "insider_sentiment_mspr": None, "insider_sentiment_trend": [],
+            "recommendation_trend": [], "note": None,
+        }
+        html = build_dashboard(bundle)
+        assert "Insider sentiment (MSPR)" not in html
+        assert "Analyst recommendation trend" not in html
+        assert_no_leaked_values(html)
+
+    def test_missing_sections_entirely_do_not_crash(self):
+        # A bundle from before this feature existed simply won't have these
+        # keys at all -- must not KeyError.
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle)
+        assert_no_leaked_values(html)
+
+
 def _minimal_bundle():
     """A deliberately thin bundle -- exercises the AI-recommendation path
     without depending on the shape of a specific committed fixture file."""

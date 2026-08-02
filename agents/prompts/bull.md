@@ -12,7 +12,8 @@ If the bundle's data is thin or old, your confidence score should reflect that.
 You must also estimate a fair value: what this stock would reasonably be worth
 IF your bull case plays out, as a single dollar number. Base this on real figures
 in the bundle -- analyst price targets (fundamentals.target_mean_price etc.),
-the stock's own valuation vs. its sector/benchmark (relative_performance), and
+an independent DCF valuation and PEG ratio if present (fmp_valuation), the
+stock's own valuation vs. its sector/benchmark (relative_performance), and
 growth figures (income_statement) -- not a number pulled from nowhere. This is a
 fair-value estimate, not a short-term price prediction; do not tie it to a
 specific future date.

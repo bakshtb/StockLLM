@@ -1,5 +1,5 @@
 name: StockLLM
-version: "0.5.0"
+version: "0.6.0"
 slug: stockllm
 description: "Multi-agent LLM stock research dashboard -- pick a ticker, get price/fundamentals/filings/news data and (optionally) a 6-agent AI recommendation."
 url: "https://github.com/bakshtb/StockLLM"
@@ -19,6 +19,8 @@ options:
   gemini_api_key: ""
   sec_edgar_user_agent: ""
   finnhub_api_key: ""
+  fred_api_key: ""
+  fmp_api_key: ""
   monthly_spend_limit_usd: 50
 schema:
   anthropic_api_key: str?
@@ -26,4 +28,6 @@ schema:
   gemini_api_key: str?
   sec_edgar_user_agent: str
   finnhub_api_key: str?
+  fred_api_key: str?
+  fmp_api_key: str?
   monthly_spend_limit_usd: float
