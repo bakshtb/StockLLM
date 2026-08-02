@@ -1130,6 +1130,8 @@ def section_ai_recommendation(bundle, pipeline_result):
     bull = pipeline_result.get("bull", {}) or {}
     bear = pipeline_result.get("bear", {}) or {}
     skeptic = pipeline_result.get("skeptic", {}) or {}
+    skeptic_qwen = pipeline_result.get("skeptic_qwen", {}) or {}
+    quant_check = pipeline_result.get("quant_check", {}) or {}
 
     rec_key = (judge.get("recommendation") or "hold").lower()
     rec_cls, rec_label = _REC_STYLE.get(rec_key, ("neutral", rec_key.upper()))
@@ -1149,17 +1151,43 @@ def section_ai_recommendation(bundle, pipeline_result):
     <div class="viz-note">{esc(judge.get('fair_value_basis') or '')}</div>
   </div>"""
 
-    skeptic_html = ""
-    unsupported = skeptic.get("unsupported_claims") or []
-    gaps = skeptic.get("data_gaps") or []
-    if unsupported or gaps:
-        parts = ['<div class="rec-skeptic">', f'<b>Skeptic review</b> (data quality: {esc(skeptic.get("overall_data_quality") or "unknown")}):']
+    def _skeptic_block(label, review):
+        unsupported = review.get("unsupported_claims") or []
+        gaps = review.get("data_gaps") or []
+        if not unsupported and not gaps:
+            return ""
+        parts = ['<div class="rec-skeptic">', f'<b>{esc(label)}</b> (data quality: {esc(review.get("overall_data_quality") or "unknown")}):']
         if unsupported:
             parts.append("<div>Unsupported claims flagged: " + "; ".join(esc(c) for c in unsupported) + "</div>")
         if gaps:
             parts.append("<div>Data gaps noted: " + "; ".join(esc(g) for g in gaps) + "</div>")
         parts.append("</div>")
-        skeptic_html = "".join(parts)
+        return "".join(parts)
+
+    skeptic_html = _skeptic_block("Skeptic review (Claude)", skeptic)
+    skeptic_qwen_html = _skeptic_block("Skeptic review (Qwen, independent second opinion)", skeptic_qwen)
+    if skeptic_html or skeptic_qwen_html:
+        agree_note = ""
+        if unsupported_overlap := set(skeptic.get("unsupported_claims") or []) & set(skeptic_qwen.get("unsupported_claims") or []):
+            agree_note = f'<div class="viz-note" style="margin-top:6px;">Both independent skeptics flagged the same claim(s): {esc("; ".join(unsupported_overlap))} — treat this as a stronger signal.</div>'
+        skeptic_html = f'<div style="margin-top:12px;">{skeptic_html}{skeptic_qwen_html}{agree_note}</div>'
+
+    quant_html = ""
+    flagged = quant_check.get("flagged_claims") or []
+    if flagged:
+        rows = "".join(
+            f'<li><b>{esc(f.get("claim") or "—")}</b> — {esc(f.get("issue") or "—")} '
+            f'<span class="meta">(checked against: {esc(f.get("bundle_figures_checked") or "—")})</span></li>'
+            for f in flagged
+        )
+        quant_html = f"""
+  <div class="rec-skeptic" style="margin-top:12px;">
+    <b>Quant Checker</b> — numeric claims that didn't check out:
+    <ul class="rec-risks">{rows}</ul>
+  </div>"""
+    elif quant_check.get("verified_claims"):
+        quant_html = f"""
+  <div class="viz-note" style="margin-top:12px;">Quant Checker verified {len(quant_check['verified_claims'])} numeric claim(s) against the bundle's own figures — none flagged.</div>"""
 
     return f"""
 <div class="card full rec-card rec-{rec_cls}">
@@ -1180,6 +1208,7 @@ def section_ai_recommendation(bundle, pipeline_result):
   </div>
   {fv_html}
   {skeptic_html}
+  {quant_html}
 </div>"""
 
 

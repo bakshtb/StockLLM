@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.2
+
+- Fix: the AI Recommendation dashboard section never actually displayed
+  the independent second Skeptic (Qwen) or the Quant Checker's output --
+  both were fully wired into the pipeline and into Judge's reasoning, but
+  the dashboard template itself was never updated to show them. Now shows
+  both skeptic reviews side by side (and calls out when they flag the
+  same claim, a stronger signal than either alone), plus any numeric
+  claims the Quant Checker flagged as not checking out against the
+  bundle's own figures.
+
 ## 0.6.1
 
 - Fix: FMP's DCF and PEG endpoints returned 403 Forbidden against a real

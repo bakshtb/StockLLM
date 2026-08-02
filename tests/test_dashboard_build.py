@@ -94,6 +94,12 @@ class TestBuildDashboardWithPipelineResult:
             "bull": {"thesis": "Upside from margin expansion.", "confidence": 70, "fair_value_estimate": 220.0},
             "bear": {"thesis": "Priced for perfection.", "confidence": 65, "fair_value_estimate": 175.0},
             "skeptic": {"unsupported_claims": ["Bull overstates durability"], "data_gaps": [], "overall_data_quality": "high"},
+            "skeptic_qwen": {"unsupported_claims": ["Bull overstates durability", "Bear ignores buyback support"], "data_gaps": ["Missing recent insider activity"], "overall_data_quality": "medium"},
+            "quant_check": {
+                "verified_claims": ["Revenue grew 8% YoY"],
+                "flagged_claims": [{"claim": "Margins expanded 500bps", "issue": "Bundle shows ~150bps, not 500bps", "bundle_figures_checked": "income_statement.annual.operating_margin_pct"}],
+                "note": None,
+            },
         }
 
     def test_ai_recommendation_section_renders(self, mock_pipeline_result):
@@ -146,6 +152,50 @@ class TestBuildDashboardWithPipelineResult:
         bundle = _minimal_bundle()
         html = build_dashboard(bundle, mock_pipeline_result)
         assert "Fair value estimate" not in html
+        assert_no_leaked_values(html)
+
+    def test_both_skeptic_reviews_render(self, mock_pipeline_result):
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle, mock_pipeline_result)
+        assert "Skeptic review (Claude)" in html
+        assert "Skeptic review (Qwen, independent second opinion)" in html
+        assert "Missing recent insider activity" in html
+        assert_no_leaked_values(html)
+
+    def test_skeptic_agreement_highlighted(self, mock_pipeline_result):
+        # both skeptics flagged "Bull overstates durability" in the fixture --
+        # the dashboard should call out the overlap as a stronger signal.
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle, mock_pipeline_result)
+        assert "Both independent skeptics flagged the same claim" in html
+        assert "Bull overstates durability" in html
+
+    def test_quant_checker_flagged_claims_render(self, mock_pipeline_result):
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle, mock_pipeline_result)
+        assert "Quant Checker" in html
+        assert "Margins expanded 500bps" in html
+        assert "income_statement.annual.operating_margin_pct" in html
+
+    def test_quant_checker_all_verified_shows_reassurance_not_warning(self, mock_pipeline_result):
+        mock_pipeline_result["quant_check"] = {
+            "verified_claims": ["Revenue grew 8% YoY", "P/E is 28.5"], "flagged_claims": [], "note": None,
+        }
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle, mock_pipeline_result)
+        assert "verified 2 numeric claim(s)" in html
+        assert "Margins expanded" not in html  # no flagged-claims block leaking through
+
+    def test_skeptic_qwen_and_quant_check_absent_does_not_crash_or_leak(self, mock_pipeline_result):
+        del mock_pipeline_result["skeptic_qwen"]
+        del mock_pipeline_result["quant_check"]
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle, mock_pipeline_result)
+        assert "Skeptic review (Qwen" not in html
+        # "Quant Checker" itself still appears in the always-present glossary
+        # tooltip text -- check for the actual rendered block instead.
+        assert "numeric claims that didn't check out" not in html
+        assert "verified" not in html or "numeric claim(s)" not in html
         assert_no_leaked_values(html)
 
 
