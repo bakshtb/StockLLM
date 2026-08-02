@@ -1,8 +1,8 @@
 """
 Gemini-specific wrapper around agents/compat_client.py's shared OpenAI-compatible
 call logic (Google's Gemini API exposes an OpenAI-compatible endpoint). Used by
-Bull, Bear, and both digest steps -- see config.py for why those specific roles
-run on Gemini.
+Bull, Bear, and the news digest -- see config.py for why those specific roles
+run on Gemini (the filings digest runs on Qwen instead -- agents/qwen_client.py).
 """
 
 from agents.compat_client import call_compat_agent, call_compat_digest

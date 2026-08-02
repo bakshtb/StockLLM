@@ -17,16 +17,20 @@ agents/prompts/*.md for the grounding instructions.
 Two clearly separated stages:
   1. RAW DATA -- everything above except the two digests. All deterministic,
      free, no LLM calls. Runs in FULL every time, including --dry-run.
-  2. DIGESTS -- filings_digest and news_digest summarize the raw filing text
-     / raw article text above via a cheap Gemini model (see config.MODEL_DIGEST).
-     This is the only stage that costs money and requires GEMINI_API_KEY.
-     Controlled by run_digests; skipped entirely in --dry-run, but the raw
-     material it would summarize is still present in the bundle either way.
+  2. DIGESTS -- filings_digest (Qwen) and news_digest (Gemini) summarize the
+     raw filing text / raw article text above -- see config.MODEL_FILINGS_DIGEST
+     and config.MODEL_NEWS_DIGEST. This is the only stage that costs money
+     and requires GEMINI_API_KEY + QWEN_API_KEY. Controlled by run_digests;
+     skipped entirely in --dry-run, but the raw material it would summarize
+     is still present in the bundle either way. The filings digest reads a
+     larger window of each filing than `filings_raw` below carries (see
+     data/fetch_filings.py's `digest_text` field) -- that larger window
+     never itself lands in the bundle, only its summary does.
 """
 
 import datetime as dt
 
-from config import MODEL_DIGEST
+from config import MODEL_NEWS_DIGEST, MODEL_FILINGS_DIGEST
 
 from data.fetch_prices import fetch_price_summary
 from data.fetch_news import fetch_news_summary, fetch_news_articles_raw, summarize_news
@@ -96,7 +100,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
                 "name": "filings_digest", "cost_usd": filings_digest["cost_usd"],
                 "input_tokens": filings_digest.get("input_tokens", 0),
                 "output_tokens": filings_digest.get("output_tokens", 0),
-                "model": filings_digest.get("model", MODEL_DIGEST),
+                "model": filings_digest.get("model", MODEL_FILINGS_DIGEST),
             })
 
         news_digest = summarize_news(news_articles_raw)
@@ -105,8 +109,17 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
                 "name": "news_digest", "cost_usd": news_digest["cost_usd"],
                 "input_tokens": news_digest.get("input_tokens", 0),
                 "output_tokens": news_digest.get("output_tokens", 0),
-                "model": news_digest.get("model", MODEL_DIGEST),
+                "model": news_digest.get("model", MODEL_NEWS_DIGEST),
             })
+
+    # filings_raw's `digest_text` field (a larger window, read only by
+    # summarize_filing() above) never itself lands in the bundle -- only
+    # `text` (the smaller window every reasoning agent sees) does. Stripped
+    # here, after the digest call has already used it.
+    filings_raw_for_bundle = {
+        filing_type: {k: v for k, v in filing.items() if k != "digest_text"}
+        for filing_type, filing in filings_raw.items()
+    }
 
     bundle = {
         "ticker": ticker,
@@ -126,7 +139,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "institutional_ownership": institutional,
         "news_headlines": news_items,             # raw headline list kept for reference/citation
         "news_articles_raw": news_articles_raw,    # raw/full article text where fetchable, no LLM
-        "filings_raw": filings_raw,                # raw text for latest 10-K, 10-Q, AND 8-K (incl. earnings exhibit), no LLM
+        "filings_raw": filings_raw_for_bundle,      # raw text for latest 10-K, 10-Q, AND 8-K (incl. earnings exhibit), no LLM
         "form144_notices": form144,                # proposed insider sales (leading signal), no LLM
         "beneficial_ownership": beneficial_ownership,  # 13D/13G >5% stakes, active vs passive, no LLM
         "proxy_raw": proxy_raw,                    # raw DEF 14A text (comp/governance), no LLM

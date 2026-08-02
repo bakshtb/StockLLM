@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0
+
+- Decouple the filings digest's reading budget from what actually lands in
+  the shared bundle every reasoning agent sees. Previously one 15,000-char
+  cap applied to both -- meaning the one-time digest step could never read
+  more of a filing than the 6 expensive reasoning agents also had to pay to
+  see. Now: `MAX_FILING_CHARS` (15,000, unchanged) still caps what's stored
+  in `filings_raw`; a new `MAX_FILING_CHARS_FOR_DIGEST` (60,000) is a
+  separate, much larger window only the digest step reads, discarded before
+  the bundle is assembled.
+- Move the filings digest from Gemini Flash to Qwen3.7-Plus to make that
+  bigger window affordable: reading 4x more of the actual document now
+  costs *less* than the old smaller Gemini call did (Qwen's per-token price
+  is roughly 4.7x cheaper). News digest stays on Gemini Flash.
+- Each filing is still fetched from EDGAR exactly once -- both windows are
+  derived from that same fetch, not two network calls.
+
 ## 0.6.3
 
 - Set default values for `finnhub_api_key`, `fred_api_key`, and

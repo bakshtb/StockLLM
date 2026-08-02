@@ -46,13 +46,18 @@ GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googl
 #     best LLM-as-judge benchmark (Claude Sonnet).
 #   Judge: must self-report a *calibrated* confidence, not just be accurate ->
 #     best calibration benchmark, ConfidenceBench (Claude Opus).
-#   Digests: pure faithful extraction, no reasoning needed -> best faithfulness
-#     benchmark + cheapest/fastest (Gemini Flash).
+#   News digest: pure faithful extraction, no reasoning needed -> best
+#     faithfulness benchmark + cheapest/fastest (Gemini Flash).
+#   Filings digest: reads a much larger window than the other agents ever see
+#     (MAX_FILING_CHARS_FOR_DIGEST below) -> needs the cheapest-per-token
+#     option that's still good at finance text, so the bigger window doesn't
+#     cost more than the old smaller one (Qwen).
 MODEL_BULL = "gemini-3.1-pro"
 MODEL_BEAR = "gemini-3.1-pro"
 MODEL_SKEPTIC = "claude-sonnet-5"
 MODEL_JUDGE = "claude-opus-5"
-MODEL_DIGEST = "gemini-3.6-flash"  # cheap, faithful model for summarizing filings/news
+MODEL_NEWS_DIGEST = "gemini-3.6-flash"
+MODEL_FILINGS_DIGEST = "qwen3.7-plus"
 
 # Qwen-backed supporting agents (see agents/skeptic_qwen_agent.py, agents/quant_checker_agent.py).
 MODEL_SKEPTIC_QWEN = "qwen3.7-plus"
@@ -81,7 +86,11 @@ MAX_NEWS_ITEMS = 15
 SEC_EDGAR_USER_AGENT = os.getenv("SEC_EDGAR_USER_AGENT", "StockLLM research-tool contact@example.com")
 
 # Caps to keep digest LLM calls (filings, news) cheap and fast
-MAX_FILING_CHARS = 15000       # raw filing text truncated to this before summarizing
+MAX_FILING_CHARS = 15000       # raw filing text stored in the bundle every agent sees, truncated to this
+MAX_FILING_CHARS_FOR_DIGEST = 60000  # separate, larger window ONLY the one-time filings digest reads --
+                                      # bigger than MAX_FILING_CHARS on purpose: this doesn't inflate the
+                                      # cost of the 6 reasoning agents, and Qwen is cheap enough per-token
+                                      # that 4x the text still costs less than the old smaller Gemini call.
 MAX_NEWS_ARTICLES_TO_FETCH = 8  # how many full articles we attempt to fetch for the news digest
 
 DB_PATH = os.getenv("DB_PATH", os.path.join(os.path.dirname(__file__), "storage", "stockllm.db"))

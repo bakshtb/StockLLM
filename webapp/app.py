@@ -59,7 +59,7 @@ import datetime as dt
 
 from flask import Flask, request, redirect, send_from_directory
 
-from config import ANTHROPIC_API_KEY, QWEN_API_KEY, GEMINI_API_KEY, MODEL_DIGEST, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
+from config import ANTHROPIC_API_KEY, QWEN_API_KEY, GEMINI_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
 from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
@@ -237,7 +237,7 @@ def run_check():
             digest_cost = 0.0
             for dc in digest_calls:
                 db.save_agent_output(
-                    run_id, dc["name"], dc.get("model", MODEL_DIGEST),
+                    run_id, dc["name"], dc.get("model", "unknown"),
                     dc["input_tokens"], dc["output_tokens"], 0, dc["cost_usd"], {},
                 )
                 digest_cost += dc["cost_usd"]

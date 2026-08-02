@@ -8,8 +8,8 @@ News fetch, split into stages:
      runs in --dry-run too. Many fetches will fail (paywalls/blocking); that's
      expected and handled gracefully, falling back to the headline snippet.
   3. summarize_news()  -- takes the enriched article list and summarizes it
-     with a cheap model (Haiku). This is the "shrink" stage -- costs a small
-     amount, skipped in --dry-run.
+     with a cheap model (Gemini Flash -- see config.MODEL_NEWS_DIGEST). This
+     is the "shrink" stage -- costs a small amount, skipped in --dry-run.
 
 fetch_news_digest() is a convenience wrapper that runs stages 2+3 back to
 back, kept for standalone/CLI use.
@@ -20,7 +20,7 @@ import requests
 import yfinance as yf
 from bs4 import BeautifulSoup
 
-from config import FINNHUB_API_KEY, MAX_NEWS_ITEMS, MODEL_DIGEST, MAX_NEWS_ARTICLES_TO_FETCH
+from config import FINNHUB_API_KEY, MAX_NEWS_ITEMS, MODEL_NEWS_DIGEST, MAX_NEWS_ARTICLES_TO_FETCH
 from agents.gemini_client import call_gemini_digest
 
 NEWS_DIGEST_SYSTEM_PROMPT = (
@@ -202,7 +202,7 @@ def summarize_news(enriched: list[dict]) -> dict:
     )
 
     try:
-        digest_result = call_gemini_digest(MODEL_DIGEST, NEWS_DIGEST_SYSTEM_PROMPT, combined_text)
+        digest_result = call_gemini_digest(MODEL_NEWS_DIGEST, NEWS_DIGEST_SYSTEM_PROMPT, combined_text)
         return {
             "digest": digest_result["parsed"],
             "cost_usd": digest_result["cost_usd"],

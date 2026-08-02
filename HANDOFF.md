@@ -97,15 +97,29 @@ StockLLM/
    Stage 2 entirely. This means dry-run genuinely gets *all* the data, not a
    thinner version of it — see `data/bundle.py`'s module docstring.
 
-2. **Model assignment per agent role (not all Opus):**
-   - Bull, Bear, and the digest steps (filings/news summarization) → Haiku 4.5
-     (`claude-haiku-4-5-20251001`) — cheap, these are first-pass/mechanical tasks.
-   - Skeptic → Sonnet 5 (`claude-sonnet-5`) — needs to actually critique reasoning.
-   - Judge → Opus 5 (`claude-opus-5`) — the call that matters most, reserve the
-     strongest model for it.
+2. **Model assignment per agent role -- picked per-role by benchmark, not one
+   provider everywhere** (see the longer reasoning in config.py's comments):
+   - Bull, Bear → Gemini 3.1 Pro -- best faithfulness/calibration benchmarks
+     for a strictly-grounded persuasive-argument role.
+   - News digest → Gemini Flash -- best summarization-faithfulness benchmark,
+     cheapest/fastest tier.
+   - Filings digest → Qwen3.7-Plus -- reads a MUCH larger window of the raw
+     filing than the other agents ever see (`MAX_FILING_CHARS_FOR_DIGEST` =
+     60,000 chars, vs. `MAX_FILING_CHARS` = 15,000 for what's actually stored
+     in the shared bundle) -- Qwen's cost per token is cheap enough that 4x
+     the text still costs less than the old smaller Gemini call did.
+   - Skeptic (original) → Claude Sonnet -- best LLM-as-judge/critique benchmark.
+   - Skeptic (independent 2nd opinion) + Quant Checker → Qwen3.7-Plus -- cheap
+     supporting checks, deliberately a different provider from the original
+     Skeptic for genuine cross-model diversity.
+   - Judge → Claude Opus -- best confidence-calibration benchmark
+     (ConfidenceBench), the call that matters most.
    These model ID strings are in `config.py` (`MODEL_BULL`, `MODEL_BEAR`,
-   `MODEL_SKEPTIC`, `MODEL_JUDGE`, `MODEL_DIGEST`) — update there if Anthropic
-   renames/replaces models, not scattered through the codebase.
+   `MODEL_SKEPTIC`, `MODEL_JUDGE`, `MODEL_NEWS_DIGEST`, `MODEL_FILINGS_DIGEST`,
+   `MODEL_SKEPTIC_QWEN`, `MODEL_QUANT_CHECKER`) -- update there if a provider
+   renames/replaces a model, not scattered through the codebase. Three API
+   keys are required for a full run: `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
+   `QWEN_API_KEY`.
 
 3. **Prompt caching**: the research bundle is sent as a separate cached content
    block (`cache_control: {"type": "ephemeral"}`) ahead of each agent's

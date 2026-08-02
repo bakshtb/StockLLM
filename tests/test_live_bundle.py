@@ -432,6 +432,14 @@ class TestFilingsRawFields:
         assert filings["10-K"]["text"] is not None
         assert filings["10-Q"]["text"] is not None
 
+    def test_digest_text_never_lands_in_the_bundle(self, bundle_and_calls):
+        # digest_text (the larger window meant only for the filings digest
+        # LLM call) must never leak into the shared bundle every reasoning
+        # agent sees -- only the smaller `text` window belongs there.
+        bundle, _ = bundle_and_calls
+        for filing in bundle["filings_raw"].values():
+            assert "digest_text" not in filing
+
 
 class TestForm144NoticesFields:
     def test_all_fields(self, bundle_and_calls):

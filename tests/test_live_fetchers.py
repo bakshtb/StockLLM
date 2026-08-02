@@ -202,7 +202,16 @@ class TestFetchFilingsRaw:
         result = fetch_filings_raw(TICKER)
         assert set(result.keys()) == {"10-K", "10-Q", "8-K"}
         for filing in result.values():
-            assert "filing_type" in filing and "text" in filing
+            assert "filing_type" in filing and "text" in filing and "digest_text" in filing
+
+    def test_digest_text_is_at_least_as_long_as_text(self):
+        # digest_text uses a larger character budget than text (see
+        # config.MAX_FILING_CHARS_FOR_DIGEST vs MAX_FILING_CHARS) and starts
+        # from the same jump point, so it can never be shorter.
+        result = fetch_filings_raw(TICKER)
+        for filing in result.values():
+            if filing.get("text") is not None:
+                assert len(filing["digest_text"]) >= len(filing["text"])
 
 
 class TestFetchFmpValuation:
