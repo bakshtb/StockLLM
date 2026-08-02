@@ -73,16 +73,23 @@ class TestBuildDashboardAgainstEveryFixture:
         html = build_dashboard(sample_bundle)
         assert "overflow-x: hidden" in html
 
-    def test_mobile_chart_scroll_containers_present(self, sample_bundle):
-        # Charts share one fixed 620-unit viewBox; without a native-size
-        # override on mobile, width:100% shrinks every chart's text along
-        # with its geometry to the point of being illegible (found from a
-        # real iPhone screenshot: ~5-6px rendered text). Charts must be
-        # pinned to native size and made scrollable within their own card
-        # on narrow screens instead.
+    def test_mobile_chart_text_size_override_present(self, sample_bundle):
+        # Charts share one fixed 620-unit viewBox scaled by width:100% to
+        # fit their card -- on a ~300px mobile card that shrinks the same
+        # 12-15px authored text to an illegible ~6-7px (found from a real
+        # iPhone screenshot). A pin-to-native-size + scroll fix was tried
+        # and reverted: it hid content (Current, MA20, the high-end label)
+        # off-screen by default with no visual hint to swipe, which is
+        # worse than small text. The real fix stays with width:100% (the
+        # whole chart always visible, no scrolling) and instead overrides
+        # each <text> element's font-size larger specifically on mobile --
+        # CSS font-size on SVG text still scales with the viewBox
+        # transform, so this brings the rendered size back up without any
+        # clipping.
         html = build_dashboard(sample_bundle)
-        assert "min-width: 620px" in html
-        assert ".viz-chart, .rec-trend-chart { overflow-x: auto" in html
+        assert "text:not(.viz-headline) { font-size: 25px" in html
+        assert "text.viz-headline { font-size: 32px" in html
+        assert ".viz-svg { width: 100%; max-width: 100%;" in html  # never pinned wider than its card
 
     def test_no_ai_recommendation_section_without_pipeline_result(self, sample_bundle):
         html = build_dashboard(sample_bundle)

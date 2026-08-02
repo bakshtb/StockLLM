@@ -181,18 +181,31 @@ class TestRangePositionPlot:
             6.56, 15.54, 7.91,
             [("MA200", 9.87, "var(--series-3)"), ("MA50", 9.25, "var(--series-2)"), ("MA20", 8.97, "var(--series-1)")],
         )
-        # y="72" is the first label row; a second row must exist since
-        # MA50 and MA20 are only ~15px apart on the rendered track.
+        # y="72" is the first label row; a second row (row_gap=34) must
+        # exist since MA50 and MA20 are only ~15px apart on the track.
         assert 'y="72"' in svg
-        assert 'y="86"' in svg
+        assert 'y="106"' in svg
 
-    def test_far_apart_markers_share_one_row(self):
+    def test_real_aapl_data_staggers_ma50_and_ma20(self):
+        # Regression: this exact data (real AAPL fixture values) rendered
+        # "MA50MA20" running together on a phone screenshot -- the labels
+        # are only ~54 viewBox units apart, and each is ~65 units wide once
+        # the mobile font override applies, so they must land on different
+        # rows even though MA200 is comfortably far from both.
         svg, table = range_position_plot(
             201.58, 340.08, 333.43,
             [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
         )
         assert 'y="72"' in svg
-        assert 'y="86"' not in svg
+        assert 'y="106"' in svg
+
+    def test_widely_spaced_markers_share_one_row(self):
+        svg, table = range_position_plot(
+            0, 1000, 500,
+            [("A", 100, "var(--series-1)"), ("B", 500, "var(--series-2)"), ("C", 900, "var(--series-3)")],
+        )
+        assert 'y="72"' in svg
+        assert 'y="106"' not in svg
 
     def test_table_lists_every_marker_and_range(self):
         svg, table = range_position_plot(

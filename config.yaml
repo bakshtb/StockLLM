@@ -1,5 +1,5 @@
 name: StockLLM
-version: "0.8.3"
+version: "0.8.4"
 slug: stockllm
 description: "Multi-agent LLM stock research dashboard -- pick a ticker, get price/fundamentals/filings/news data and (optionally) a 6-agent AI recommendation."
 url: "https://github.com/bakshtb/StockLLM"

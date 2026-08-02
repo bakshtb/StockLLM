@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.8.4
+
+- Fix: 0.8.2's mobile chart fix (pin to native size + scroll) traded
+  illegible text for a worse problem, found from a follow-up screenshot --
+  charts were clipped to their card's visible width by default, hiding
+  Current/MA20/the high-end label off-screen with no visual hint to
+  swipe. Reverted that approach. The real fix: charts stay at
+  width:100% (always fully visible, never clipped), and a mobile media
+  query overrides each chart `<text>` element's font-size to a larger
+  value instead -- CSS font-size on SVG text still scales with the
+  viewBox transform even when it wins the cascade over the inline
+  attribute, so this brings the rendered size up without pinning the
+  chart wider than its card.
+- That larger mobile text uncovered two real label-collision bugs that
+  were invisible at the old smaller size (confirmed on a screenshot:
+  "MA50"/"MA20" running together as "MA50MA20", and "Current" overlapping
+  the 52-week-high price label): `range_position_plot`'s row-stagger
+  threshold was tuned for the old font size, and there was no collision
+  handling at all between the "Current" marker's label and the Low/High
+  corner labels. Fixed both -- the stagger threshold is now sized for the
+  actual mobile-rendered label width, and whichever corner label would
+  collide with "Current" is dropped (Current's own label already conveys
+  a near-identical value at that position). `range_meter` (analyst
+  target range) had the identical latent bugs and got the identical fix.
+
 ## 0.8.3
 
 - Fix: HA Supervisor logged a warning on every add-on update/restart --
