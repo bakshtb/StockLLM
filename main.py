@@ -3,12 +3,15 @@
 StockLLM CLI -- v1
 
 Usage:
-    python main.py check AAPL              # full run: data + 4-agent LLM pipeline
+    python main.py check AAPL              # full run: data + 6-agent LLM pipeline
     python main.py check AAPL --dry-run     # data fetch only, no LLM calls, no API key needed
+    python main.py performance             # update + print the track record of past calls
 
 This runs the deterministic data fetch (price, news, fundamentals), then the
-4-agent LLM pipeline (bull / bear / skeptic / judge), and prints a final
-recommendation to the terminal.
+6-agent LLM pipeline (bull / bear / two skeptics / quant checker / judge), and
+prints a final recommendation to the terminal. Every full run's recommendation
+is logged; `performance` checks what actually happened to the price afterward
+and reports whether the calls were any good -- see outcomes.py.
 
 This is a research/decision-support tool. It is NOT financial advice, and it
 does not place trades. Backtested or live performance is not guaranteed.
@@ -24,6 +27,7 @@ from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
 from storage.db import get_monthly_spend
+import outcomes
 
 
 def _resolve_output_path(explicit_path: str | None, default_filename: str) -> str:
@@ -163,6 +167,11 @@ def main():
         help="Output HTML path (default: <source>_dashboard.html).",
     )
 
+    subparsers.add_parser(
+        "performance",
+        help="Update and print the track record of past full-run recommendations vs. what actually happened",
+    )
+
     args = parser.parse_args()
 
     if args.command == "check":
@@ -231,6 +240,7 @@ def main():
             print(f"ERROR: {e}")
             sys.exit(1)
 
+        db.create_outcome(run_id, bundle["price"]["current_price"])
         print_result(ticker, result)
 
     elif args.command == "dashboard":
@@ -264,6 +274,13 @@ def main():
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(build_dashboard(bundle))
         print(f"Dashboard written to: {output_path}")
+
+    elif args.command == "performance":
+        db.init_db()
+        updated = outcomes.update_pending_outcomes()
+        if updated:
+            print(f"Updated {updated} price check(s) that came due.")
+        outcomes.print_report()
 
 
 if __name__ == "__main__":

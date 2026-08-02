@@ -35,7 +35,7 @@ def client():
 
 
 def _fake_bundle(ticker="AAPL"):
-    return {"ticker": ticker, "fetched_at": "2026-01-01T00:00:00Z"}, []
+    return {"ticker": ticker, "fetched_at": "2026-01-01T00:00:00Z", "price": {"current_price": 180.0}}, []
 
 
 class TestIndexPage:

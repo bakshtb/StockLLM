@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+- Add outcome tracking: every full (non-dry-run) check now records the
+  stock's price on the day of the call. A new `python main.py performance`
+  command checks the price again for any call now 7 or 30 days old (free --
+  one yfinance lookup, no LLM calls) and prints a track record: what was
+  called, what actually happened, and a win rate for buy/sell calls (hold
+  isn't scored win/loss, since it makes no directional claim). This is the
+  first real step toward measuring whether the system's calls are actually
+  good, instead of just plausible-sounding.
+- Uses the `outcomes` table that's existed in the schema since the first
+  commit but was never wired up until now.
+
 ## 0.4.0
 
 - Add a fair-value range to the AI recommendation, alongside the existing

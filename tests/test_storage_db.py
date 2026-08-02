@@ -121,3 +121,79 @@ class TestGetMonthlySpend:
         other = temp_db.create_run("MSFT")
         temp_db.finalize_run(other, "buy", 80, 5.0)
         assert temp_db.get_monthly_spend() == pytest.approx(5.0)
+
+
+class TestOutcomes:
+    def test_create_outcome_round_trips(self, temp_db):
+        run_id = temp_db.create_run("AAPL")
+        temp_db.create_outcome(run_id, 180.0)
+
+        conn = temp_db.get_connection()
+        row = conn.execute("SELECT * FROM outcomes WHERE run_id = ?", (run_id,)).fetchone()
+        conn.close()
+        assert row["price_at_run"] == pytest.approx(180.0)
+        assert row["price_after_7d"] is None
+        assert row["price_after_30d"] is None
+
+    def test_pending_update_includes_rows_missing_either_price(self, temp_db):
+        run_a = temp_db.create_run("AAPL")
+        temp_db.create_outcome(run_a, 180.0)
+        run_b = temp_db.create_run("MSFT")
+        temp_db.create_outcome(run_b, 400.0)
+        temp_db.update_outcome_7d(run_b, 410.0)
+        temp_db.update_outcome_30d(run_b, 420.0)
+
+        pending = temp_db.get_outcomes_pending_update()
+        pending_run_ids = {row["run_id"] for row in pending}
+        assert run_a in pending_run_ids  # missing both
+        assert run_b not in pending_run_ids  # both already filled in
+
+    def test_pending_update_includes_ticker_and_created_at(self, temp_db):
+        run_id = temp_db.create_run("AAPL")
+        temp_db.create_outcome(run_id, 180.0)
+        pending = temp_db.get_outcomes_pending_update()
+        row = next(r for r in pending if r["run_id"] == run_id)
+        assert row["ticker"] == "AAPL"
+        assert row["created_at"]
+
+    def test_update_outcome_7d_and_30d(self, temp_db):
+        run_id = temp_db.create_run("AAPL")
+        temp_db.create_outcome(run_id, 180.0)
+        temp_db.update_outcome_7d(run_id, 185.0)
+        temp_db.update_outcome_30d(run_id, 195.0)
+
+        conn = temp_db.get_connection()
+        row = conn.execute("SELECT * FROM outcomes WHERE run_id = ?", (run_id,)).fetchone()
+        conn.close()
+        assert row["price_after_7d"] == pytest.approx(185.0)
+        assert row["price_after_30d"] == pytest.approx(195.0)
+
+    def test_report_data_joins_run_fields(self, temp_db):
+        run_id = temp_db.create_run("AAPL")
+        temp_db.finalize_run(run_id, "buy", 80, 0.34)
+        temp_db.create_outcome(run_id, 180.0)
+        temp_db.update_outcome_30d(run_id, 195.0)
+
+        rows = temp_db.get_outcomes_report_data()
+        assert len(rows) == 1
+        row = rows[0]
+        assert row["ticker"] == "AAPL"
+        assert row["final_recommendation"] == "buy"
+        assert row["final_confidence"] == 80
+        assert row["price_at_run"] == pytest.approx(180.0)
+        assert row["price_after_30d"] == pytest.approx(195.0)
+
+    def test_report_data_most_recent_first(self, temp_db):
+        conn = temp_db.get_connection()
+        conn.execute("INSERT INTO runs (ticker, created_at, status) VALUES ('AAPL', '2026-01-01T00:00:00Z', 'complete')")
+        older_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        conn.execute("INSERT INTO runs (ticker, created_at, status) VALUES ('MSFT', '2026-06-01T00:00:00Z', 'complete')")
+        newer_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        conn.commit()
+        conn.close()
+        temp_db.create_outcome(older_id, 100.0)
+        temp_db.create_outcome(newer_id, 400.0)
+
+        rows = temp_db.get_outcomes_report_data()
+        assert rows[0]["ticker"] == "MSFT"
+        assert rows[1]["ticker"] == "AAPL"

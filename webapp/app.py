@@ -241,6 +241,7 @@ def run_check():
                 digest_cost += dc["cost_usd"]
 
             pipeline_result = run_pipeline(run_id, ticker, bundle, starting_cost_usd=digest_cost)
+            db.create_outcome(run_id, bundle["price"]["current_price"])
         except RuntimeError as e:
             return _render_form(error=str(e)), 500
 

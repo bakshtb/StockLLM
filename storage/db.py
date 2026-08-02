@@ -86,3 +86,68 @@ def get_monthly_spend() -> float:
     ).fetchone()
     conn.close()
     return row["total"] or 0.0
+
+
+def create_outcome(run_id: int, price_at_run: float):
+    """Called right after a full (non-dry-run) check completes -- records the
+    price on the day of the call, so it can be compared against the price
+    later. See outcomes.py for the 7d/30d follow-up and the track-record report."""
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO outcomes (run_id, price_at_run, checked_at) VALUES (?, ?, ?)",
+        (run_id, price_at_run, dt.datetime.utcnow().isoformat() + "Z"),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_outcomes_pending_update() -> list[dict]:
+    """Every outcome still missing its 7d or 30d price, with enough info
+    (ticker, created_at) for the caller to decide in Python whether it's
+    actually due yet -- deliberately not filtered by date in SQL, to avoid
+    depending on SQLite's parsing of the ISO8601 strings created_at is stored in."""
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT o.run_id, r.ticker, r.created_at, o.price_at_run,
+               o.price_after_7d, o.price_after_30d
+        FROM outcomes o
+        JOIN runs r ON r.id = o.run_id
+        WHERE o.price_after_7d IS NULL OR o.price_after_30d IS NULL
+    """).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def update_outcome_7d(run_id: int, price: float):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE outcomes SET price_after_7d = ?, checked_at = ? WHERE run_id = ?",
+        (price, dt.datetime.utcnow().isoformat() + "Z", run_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_outcome_30d(run_id: int, price: float):
+    conn = get_connection()
+    conn.execute(
+        "UPDATE outcomes SET price_after_30d = ?, checked_at = ? WHERE run_id = ?",
+        (price, dt.datetime.utcnow().isoformat() + "Z", run_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_outcomes_report_data() -> list[dict]:
+    """Every tracked outcome joined with its run's ticker/recommendation/
+    confidence, most recent first -- the raw material for the track-record report."""
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT r.ticker, r.created_at, r.final_recommendation, r.final_confidence,
+               o.price_at_run, o.price_after_7d, o.price_after_30d
+        FROM outcomes o
+        JOIN runs r ON r.id = o.run_id
+        ORDER BY r.created_at DESC
+    """).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
