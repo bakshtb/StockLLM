@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.8.8
+
+- Fix: "Price vs. moving averages" and the analyst target range chart
+  used a much wider internal margin (pad=60, track spans 500 of 620
+  units) than the RSI gauge directly below them on the same card
+  (pad=20, spans 580 of 620) -- found from a photo comparing the two
+  tracks side by side on a real phone. Matched both to gauge_meter's
+  pad=20; a marker/Current label sitting right at an extreme value can no
+  longer overflow the now-tighter margin because label positions are
+  clamped independently of the pad (`_label_x_clamp`) instead of relying
+  on extra whitespace to protect them.
+- Fixed two more real bugs found while checking that change: charts using
+  a centered-neutral-segment layout (`diverging_stacked_sentiment`,
+  `diverging_stacked_ordinal` -- the social sentiment split and analyst
+  recommendation trend) could push their larger side's bar and total
+  label past the canvas edge entirely when the split was heavily
+  imbalanced (found live: 18 bullish vs. 1 bearish; reproduced worse with
+  synthetic 1000-vs-1 splits). Both now scale the whole diagram down
+  together, preserving proportions, so neither side can exceed the
+  available space regardless of how skewed the data is. Also found and
+  fixed the quarterly revenue/income chart's y-axis labels clipping off
+  the left edge (pad_l was too narrow for the mobile font size).
+- Verification this round checked horizontal clipping for the first time,
+  not just vertical -- the extreme-imbalance bug above only ever showed
+  up on that axis, and every previous round's check had missed it.
+
 ## 0.8.7
 
 - Fix: on mobile, the page-level gutter (`.wrap`'s padding) and each

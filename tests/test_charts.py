@@ -204,6 +204,24 @@ class TestRangePositionPlot:
         assert "Current" not in svg
         assert "Current" not in table
 
+    def test_track_width_matches_gauge_meters_rsi_track(self):
+        # Regression: this chart used pad=60 (track spans 60..560, 500 of
+        # 620 units) while gauge_meter's RSI track -- shown directly below
+        # it on the same card, same width -- used pad=20 (spans 20..600,
+        # 580 of 620 units). Same card, two different-looking track
+        # widths right next to each other; a real screenshot called this
+        # out directly ("it's not in full width like the RSI line").
+        svg, table = range_position_plot(
+            100, 200, 150,
+            [("MA20", 150, "var(--series-1)")],
+        )
+        import re
+        m = re.search(r'<path d="M ([\d.]+) [\d.]+ H ([\d.]+)', svg)
+        span = float(m.group(2)) - float(m.group(1))
+        # 580 minus the track's own rounding radius (5) -- pad=20 on a
+        # 620-wide canvas, matching gauge_meter, not the old pad=60.
+        assert abs(span - 575) < 1
+
     def test_corner_labels_always_render_even_when_current_is_near_the_high(self):
         # Regression: this exact scenario (real AAPL data -- current price
         # close to its 52-week high) suppressed the "$340.08" corner label
@@ -312,6 +330,20 @@ class TestDivergingStackedSentiment:
         assert "var(--diverge-neg)" in svg  # bearish
         assert "var(--diverge-pos)" in svg  # bullish
 
+    def test_extreme_imbalance_does_not_overflow_canvas(self):
+        # Regression: the middle segment is centered on the canvas and
+        # each side extends outward by its own width -- fine when
+        # bearish/bullish are close, but a real screenshot showed 9
+        # bullish vs. 4 bearish already pushed the bullish bar and its
+        # count label past the right edge (W=620). This is worse with a
+        # bigger imbalance, real ones found live (18 vs. 1) and
+        # synthetic ones (1000 vs. 1) both overflowed before the fix.
+        import re
+        for bearish, untagged, bullish in [(1, 1, 1000), (1000, 1, 1), (1, 11, 18), (500, 0, 1)]:
+            svg, table, legend = diverging_stacked_sentiment(bearish, untagged, bullish)
+            xs = [float(m) for m in re.findall(r'<text x="([\d.-]+)"', svg)]
+            assert all(0 <= x <= 620 for x in xs), f"label x outside canvas for {(bearish, untagged, bullish)}: {xs}"
+
 
 class TestDivergingStackedOrdinal:
     """The recommendation-trend chart (Strong Sell..Strong Buy) -- a
@@ -350,6 +382,21 @@ class TestDivergingStackedOrdinal:
         )
         assert ">4<" in svg  # neg total: 3 + 1
         assert ">12<" in svg  # pos total: 8 + 4
+
+    def test_extreme_imbalance_does_not_overflow_canvas(self):
+        # Same class of bug as diverging_stacked_sentiment (they share the
+        # centered-middle-segment layout): a heavily lopsided split can
+        # push the larger side's bar and its total label past the canvas
+        # edge if nothing scales the whole diagram down to fit.
+        import re
+        cases = [
+            ([("Sell", 1), ("Strong sell", 1)], 1, [("Buy", 1), ("Strong buy", 500)]),
+            ([("Sell", 1), ("Strong sell", 500)], 1, [("Buy", 1), ("Strong buy", 1)]),
+        ]
+        for neg, mid, pos in cases:
+            svg, table, legend = diverging_stacked_ordinal(neg, mid, pos)
+            xs = [float(m) for m in re.findall(r'<text x="([\d.-]+)"', svg)]
+            assert all(0 <= x <= 620 for x in xs), f"label x outside canvas: {xs}"
 
     def test_one_sided_only_does_not_crash(self):
         # Real recommendation-trend data is often lopsided (e.g. all buys,

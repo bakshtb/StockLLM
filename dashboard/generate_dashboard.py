@@ -1039,8 +1039,13 @@ def grouped_column_chart(categories, series):
     # pad_t has to leave room for the tallest bar's value label sitting
     # just above it (see the mobile-boosted "general" text tier in
     # CSS_STYLE) -- a real screenshot showed it clipped against the
-    # viewBox top when a bar landed at/near max_v.
-    pad_l, pad_b, pad_t = 46, 30, 56
+    # viewBox top when a bar landed at/near max_v. pad_l has the same
+    # problem sideways: the y-axis gridline labels (e.g. "$143.8B") are
+    # right-anchored at pad_l-6, growing leftward -- measured via getBBox
+    # at the mobile font size, a 6-7 char compact-currency string is
+    # ~50-58 units wide, wider than the original 46px pad_l gave it,
+    # clipping off the left edge of the canvas.
+    pad_l, pad_b, pad_t = 70, 30, 56
     plot_w = W - pad_l - 16
     plot_h = H - pad_b - pad_t
     slot_w = plot_w / n_cat
@@ -1111,7 +1116,16 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     if low is None or high is None or high <= low:
         return "<svg></svg>", empty_state()
     W = 620
-    pad = 60
+    # Same pad as gauge_meter's RSI track (20, not the far larger 60 this
+    # used before) -- found from a screenshot placed directly next to the
+    # RSI gauge on the same page: this track visibly stopped well short of
+    # the card's edges while RSI's ran nearly edge to edge, on the same
+    # card, at the same width. The corner labels don't need the extra
+    # room (text-anchor start/end already keeps them growing inward, not
+    # off the canvas) -- only a middle-anchored marker/Current label
+    # sitting right at an extreme could overflow, which _label_x_clamp
+    # below handles directly instead of padding the whole track.
+    pad = 20
     track_x0, track_x1 = pad, W - pad
     track_w = track_x1 - track_x0
     # track_y (and the offsets below) are sized with real headroom for the
@@ -1167,20 +1181,31 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
         y_label = track_y + 26 + row_gap * row
         parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(name)}: {esc(label_fmt(v))}"><title>{esc(name)}: {esc(label_fmt(v))}</title>'
                       f'<circle cx="{x}" cy="{track_y}" r="6" fill="{color}" stroke="var(--surface-1)" stroke-width="2"/></g>')
-        parts.append(f'<text x="{x}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(name)}</text>')
+        parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(name)}</text>')
 
     if current is not None:
         x = x_for(current)
         parts.append(f'<g class="mark" tabindex="0" data-tip="Current: {esc(label_fmt(current))}"><title>Current: {esc(label_fmt(current))}</title>'
                       f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
         if show_current_label:
-            parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-size="12" font-weight="600" fill="var(--text-primary)">Current</text>')
+            parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-size="12" font-weight="600" fill="var(--text-primary)">Current</text>')
     parts.append("</svg>")
 
     rows = [["Low", label_fmt(low)], ["Mean", label_fmt(mean)], ["Median", label_fmt(median)],
             ["High", label_fmt(high)], ["Current price", label_fmt(current)]]
     table = data_table(["Point", "Price"], rows)
     return "".join(parts), table
+
+
+def _label_x_clamp(x, W, margin=50):
+    """Keeps a center-anchored label's x position at least `margin` in
+    from either edge of a W-wide viewBox, so a marker sitting right at an
+    extreme value (its dot can legitimately be at x=0 or x=W) doesn't
+    render its text half off the canvas. margin=50 covers half the widest
+    label measured in this file at the mobile font size (~95-100 units
+    for "MA200"/"Median"), with a small buffer. Only the label position
+    moves -- the marker dot itself stays at its true value position."""
+    return max(margin, min(W - margin, x))
 
 
 def _stagger_rows(xs, min_gap=100):
@@ -1232,7 +1257,14 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     if low is None or high is None or high <= low:
         return "<svg></svg>", empty_state()
     W = 620
-    pad = 60
+    # See range_meter's identical comment: matches gauge_meter's RSI track
+    # (pad=20, not the far larger 60 this used before) -- a screenshot
+    # placed this chart directly above the RSI gauge on the same page and
+    # showed this track stopping well short of the card's edges while
+    # RSI's ran nearly edge to edge, on the same card, at the same width.
+    # _label_x_clamp (not extra padding) is what keeps a marker's label
+    # from overflowing the canvas if its value sits right at an extreme.
+    pad = 20
     track_x0, track_x1 = pad, W - pad
     track_w = track_x1 - track_x0
     # See range_meter's identical comment: these offsets are sized with
@@ -1283,14 +1315,14 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
         y_label = track_y + 26 + row_gap * row
         parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(label)}: {esc(label_fmt(v))}"><title>{esc(label)}: {esc(label_fmt(v))}</title>'
                       f'<circle cx="{x}" cy="{track_y}" r="6" fill="{color}" stroke="var(--surface-1)" stroke-width="2"/></g>')
-        parts.append(f'<text x="{x}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(label)}</text>')
+        parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(label)}</text>')
 
     if current is not None:
         x = x_for(current)
         parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(current_label)}: {esc(label_fmt(current))}"><title>{esc(current_label)}: {esc(label_fmt(current))}</title>'
                       f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
         if show_current_label:
-            parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-weight="600" font-size="12" fill="var(--text-primary)">{esc(current_label)}</text>')
+            parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-weight="600" font-size="12" fill="var(--text-primary)">{esc(current_label)}</text>')
     parts.append("</svg>")
 
     rows = [[label, label_fmt(v)] for label, v, _ in valid_markers]
@@ -1382,9 +1414,25 @@ def diverging_stacked_sentiment(bearish, untagged, bullish):
     W, H = 620, 70
     bar_y, bar_h = 24, 26
     center_x = W / 2
-    mid_w = (untagged / total) * (W - 40)
-    left_w = (bearish / total) * (W - 40)
-    right_w = (bullish / total) * (W - 40)
+    usable_w = W - 40
+    # The middle (untagged) segment is centered on center_x, then bearish
+    # and bullish each extend outward from its own edges by their own
+    # width -- which only stays within the canvas when bearish and
+    # bullish are roughly equal. Real sentiment data is rarely balanced
+    # (found live: 9 bullish vs. 4 bearish pushed the bullish bar and its
+    # count label past the right edge entirely). Scale every segment down
+    # together, preserving their proportions, so neither side's reach
+    # from center_x can exceed the available radius.
+    radius = usable_w / 2
+    mid_w_natural = (untagged / total) * usable_w
+    left_reach = mid_w_natural / 2 + (bearish / total) * usable_w
+    right_reach = mid_w_natural / 2 + (bullish / total) * usable_w
+    scale = min(1.0, radius / left_reach if left_reach > 0 else 1.0, radius / right_reach if right_reach > 0 else 1.0)
+    usable_w *= scale
+
+    mid_w = (untagged / total) * usable_w
+    left_w = (bearish / total) * usable_w
+    right_w = (bullish / total) * usable_w
 
     mid_x0 = center_x - mid_w / 2
     parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="social sentiment split">']
@@ -1400,8 +1448,14 @@ def diverging_stacked_sentiment(bearish, untagged, bullish):
         d = _hbar_path(mid_x0 + mid_w + 2, bar_y, right_w, bar_h)
         parts.append(_mark(d, "var(--diverge-pos)", f"Bullish: {bullish} messages"))
 
-    parts.append(f'<text x="{mid_x0-left_w-8}" y="{bar_y+bar_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-primary)">{bearish}</text>')
-    parts.append(f'<text x="{mid_x0+mid_w+right_w+10}" y="{bar_y+bar_h/2+4}" font-size="13.5" fill="var(--text-primary)">{bullish}</text>')
+    # The scale factor above keeps the bars themselves on-canvas, but each
+    # end-label sits an extra 8-10 units further out still -- in an
+    # extreme split (found live: 18 bullish vs. 1 bearish) that extra
+    # offset alone was enough to push the label back off the edge even
+    # with the bar itself fitting. Clamp the label position directly
+    # rather than trying to fold a few more units into the scale math.
+    parts.append(f'<text x="{max(40, mid_x0-left_w-8)}" y="{bar_y+bar_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-primary)">{bearish}</text>')
+    parts.append(f'<text x="{min(W-40, mid_x0+mid_w+right_w+10)}" y="{bar_y+bar_h/2+4}" font-size="13.5" fill="var(--text-primary)">{bullish}</text>')
     parts.append("</svg>")
 
     table = data_table(["Sentiment", "Messages"], [["Bearish", bearish], ["Untagged", untagged], ["Bullish", bullish]])
@@ -1432,6 +1486,19 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
     bar_y, bar_h = 24, 26
     center_x = W / 2
     usable_w = W - 40
+    # Same fix as diverging_stacked_sentiment, same reason: the middle
+    # segment is centered on center_x and each side extends outward by
+    # its own total width, which only stays on-canvas when both sides are
+    # roughly equal. Scale every segment down together (proportions
+    # preserved) so neither side's reach from center_x can exceed the
+    # available radius, regardless of how skewed the distribution is.
+    radius = usable_w / 2
+    mid_w_natural = ((mid_value or 0) / total) * usable_w
+    neg_reach = mid_w_natural / 2 + sum(v or 0 for _, v in neg_segments) / total * usable_w
+    pos_reach = mid_w_natural / 2 + sum(v or 0 for _, v in pos_segments) / total * usable_w
+    scale = min(1.0, radius / neg_reach if neg_reach > 0 else 1.0, radius / pos_reach if pos_reach > 0 else 1.0)
+    usable_w *= scale
+
     mid_w = ((mid_value or 0) / total) * usable_w
     mid_x0 = center_x - mid_w / 2
 
@@ -1456,7 +1523,11 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
         x -= seg_w + 2
         neg_total += v
     if neg_total:
-        parts.append(f'<text x="{x+2-6}" y="{bar_y+bar_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-primary)">{fmt_num(neg_total)}</text>')
+        # Clamped the same way as diverging_stacked_sentiment's end-labels
+        # -- the scale factor above keeps the bars on-canvas, but each
+        # label's own extra offset can still push it back off the edge in
+        # an extreme split.
+        parts.append(f'<text x="{max(40, x+2-6)}" y="{bar_y+bar_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-primary)">{fmt_num(neg_total)}</text>')
 
     n_pos = len([1 for _, v in pos_segments if v])
     x = mid_x0 + mid_w + 2
@@ -1469,7 +1540,7 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
         x += seg_w + 2
         pos_total += v
     if pos_total:
-        parts.append(f'<text x="{x-2+8}" y="{bar_y+bar_h/2+4}" font-size="13.5" fill="var(--text-primary)">{fmt_num(pos_total)}</text>')
+        parts.append(f'<text x="{min(W-40, x-2+8)}" y="{bar_y+bar_h/2+4}" font-size="13.5" fill="var(--text-primary)">{fmt_num(pos_total)}</text>')
 
     parts.append("</svg>")
 
