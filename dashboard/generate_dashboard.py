@@ -494,6 +494,7 @@ GLOSSARY = {
     "section_ownership": "Who holds the stock and what company insiders have been doing with their own shares.",
     "section_extras": "A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.",
     "ai_recommendation": "The output of StockLLM's own 6-agent pipeline: a Bull agent argues the case to buy, a Bear agent argues the case against, two independent Skeptics (different AI models) critique both for unsupported claims, a Quant Checker verifies the specific numbers cited, and a Judge weighs everything (including all the data below) into one final call. This is the one section that's an AI-generated opinion, not raw data — read the reasoning and key risks, not just the verdict, and remember this is a research aid, not financial advice.",
+    "fair_value": "The Judge's estimate of what this stock is worth TODAY, based on the bull/bear cases and the data below — not a prediction of where the price will be at some future date. If the current price is below this range, the AI sees it as undervalued; above the range, overvalued. Treat this the same as the recommendation above: an AI-generated opinion, not a guarantee.",
 }
 
 
@@ -1128,6 +1129,18 @@ def section_ai_recommendation(bundle, pipeline_result):
 
     risks_html = "".join(f"<li>{esc(r)}</li>" for r in judge.get("key_risks", []) or []) or "<li>None flagged.</li>"
 
+    fv_low, fv_high = judge.get("fair_value_low"), judge.get("fair_value_high")
+    fv_html = ""
+    if fv_low is not None and fv_high is not None:
+        current_price = (bundle.get("price") or {}).get("current_price")
+        fv_svg, fv_table = range_meter(fv_low, None, None, fv_high, current_price)
+        fv_html = f"""
+  <div class="rec-fair-value" style="margin-top:14px;">
+    <div style="font-size:13px;margin-bottom:4px;"><b>Fair value estimate (today, not a price forecast)</b> {info_icon('fair_value')}</div>
+    {fv_svg}
+    <div class="viz-note">{esc(judge.get('fair_value_basis') or '')}</div>
+  </div>"""
+
     skeptic_html = ""
     unsupported = skeptic.get("unsupported_claims") or []
     gaps = skeptic.get("data_gaps") or []
@@ -1154,9 +1167,10 @@ def section_ai_recommendation(bundle, pipeline_result):
   <ul class="rec-risks">{risks_html}</ul>
   <div class="viz-note" style="margin-top:10px;">{esc(judge.get('data_quality_caveat') or '')}</div>
   <div class="rec-thesis-grid">
-    <div class="rec-thesis bull"><div class="who">Bull case ({esc(bull.get('confidence', '—'))}/100)</div>{esc(bull.get('thesis') or '—')}</div>
-    <div class="rec-thesis bear"><div class="who">Bear case ({esc(bear.get('confidence', '—'))}/100)</div>{esc(bear.get('thesis') or '—')}</div>
+    <div class="rec-thesis bull"><div class="who">Bull case ({esc(bull.get('confidence', '—'))}/100{f", fair value {fmt_price(bull.get('fair_value_estimate'))}" if bull.get('fair_value_estimate') is not None else ""})</div>{esc(bull.get('thesis') or '—')}</div>
+    <div class="rec-thesis bear"><div class="who">Bear case ({esc(bear.get('confidence', '—'))}/100{f", fair value {fmt_price(bear.get('fair_value_estimate'))}" if bear.get('fair_value_estimate') is not None else ""})</div>{esc(bear.get('thesis') or '—')}</div>
   </div>
+  {fv_html}
   {skeptic_html}
 </div>"""
 

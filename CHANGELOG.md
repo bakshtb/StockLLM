@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+- Add a fair-value range to the AI recommendation, alongside the existing
+  buy/sell/hold call. Bull and Bear each estimate what the stock would be
+  worth if their case is right (grounded in the bundle's own analyst
+  targets and sector valuation, not invented); Judge weighs both into a
+  final low/high range for today -- deliberately not a forecast of a
+  future price, since that's a different (and much less reliable) claim
+  than "what is this business worth right now." Shown on the dashboard
+  using the same range-meter chart already used for analyst price
+  targets, so the AI's own range and the analysts' range are visually
+  comparable.
+
 ## 0.3.0
 
 - Move Bull, Bear, and both digest steps (news + filings) from Claude to

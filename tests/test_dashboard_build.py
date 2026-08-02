@@ -87,9 +87,12 @@ class TestBuildDashboardWithPipelineResult:
                 "reasoning_summary": "Strong fundamentals but stretched valuation.",
                 "key_risks": ["Regulatory pressure", "High P/E leaves little room for error"],
                 "data_quality_caveat": "Data is fresh and comprehensive.",
+                "fair_value_low": 180.0,
+                "fair_value_high": 210.0,
+                "fair_value_basis": "Weighed bull/bear estimates against analyst consensus.",
             },
-            "bull": {"thesis": "Upside from margin expansion.", "confidence": 70},
-            "bear": {"thesis": "Priced for perfection.", "confidence": 65},
+            "bull": {"thesis": "Upside from margin expansion.", "confidence": 70, "fair_value_estimate": 220.0},
+            "bear": {"thesis": "Priced for perfection.", "confidence": 65, "fair_value_estimate": 175.0},
             "skeptic": {"unsupported_claims": ["Bull overstates durability"], "data_gaps": [], "overall_data_quality": "high"},
         }
 
@@ -119,6 +122,31 @@ class TestBuildDashboardWithPipelineResult:
         soup = BeautifulSoup(html, "html.parser")
         rec_card = soup.find("div", class_=lambda c: c and "rec-card" in c)
         assert expected_class in rec_card.get("class", [])
+
+    def test_fair_value_range_renders(self, mock_pipeline_result):
+        bundle = _minimal_bundle()
+        bundle["price"] = {"current_price": 195.0}
+        html = build_dashboard(bundle, mock_pipeline_result)
+        soup = BeautifulSoup(html, "html.parser")
+        rec_card = soup.find("div", class_="rec-card")
+        assert "Fair value estimate" in rec_card.get_text()
+        assert "Weighed bull/bear estimates" in rec_card.get_text()
+        # the range_meter chart itself: Low/High labels plus a Current marker
+        assert "Low $180.00" in html or "Low 180" in html
+        assert "$220.00" in html  # bull's fair_value_estimate surfaced in the thesis grid
+
+    def test_fair_value_absent_does_not_crash_or_leak(self, mock_pipeline_result):
+        # insufficient_data or a judge response missing these keys entirely
+        # (e.g. an older cached run from before this feature) must not crash
+        # or leave a stray empty chart.
+        del mock_pipeline_result["judge"]["fair_value_low"]
+        del mock_pipeline_result["judge"]["fair_value_high"]
+        del mock_pipeline_result["bull"]["fair_value_estimate"]
+        del mock_pipeline_result["bear"]["fair_value_estimate"]
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle, mock_pipeline_result)
+        assert "Fair value estimate" not in html
+        assert_no_leaked_values(html)
 
 
 def _minimal_bundle():
