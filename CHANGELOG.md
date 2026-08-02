@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.3
+
+- Set default values for `finnhub_api_key`, `fred_api_key`, and
+  `fmp_api_key` in `config.yaml` so new installs don't need to re-enter
+  them manually. Repo is private as of this version -- done at the
+  user's explicit request after being informed this only belongs in a
+  private repo (defaults here are visible to anyone with repo read
+  access).
+
 ## 0.6.2
 
 - Fix: the AI Recommendation dashboard section never actually displayed
