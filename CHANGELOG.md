@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.1
+
+- Fix a real chart-form problem in "Price & Technicals," found from a
+  screenshot: 52w Low/High, MA200/MA50/MA20, and Current all sit within
+  a narrow band relative to their own price (e.g. $201-$340), so a
+  zero-anchored bar chart rendered all six as near-identical-length bars
+  -- the actual relative positions (is price above or below its moving
+  averages? where in the 52-week range?) were nearly impossible to read
+  at a glance. Replaced with `range_position_plot`, a dot plot on one
+  shared axis (same visual language as the existing analyst-target-range
+  meter): a track from 52w low to high, dots for each moving average,
+  and a distinct triangle marker for the current price. Includes
+  collision-avoiding label stagger for moving averages that land only a
+  few cents/dollars apart.
+
 ## 0.8.0
 
 - Dashboard UX/UI redesign, mobile-first. Four changes:

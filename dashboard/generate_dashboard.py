@@ -1069,6 +1069,92 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     return "".join(parts), table
 
 
+def _stagger_rows(xs, min_gap=42):
+    """Greedy row assignment for direct labels placed under evenly-spaced
+    points: sorted left-to-right, each label takes the first row whose
+    last-placed label is at least min_gap px away, else drops to a new row.
+    Prevents adjacent labels (e.g. MA50 and MA20 sitting a few dollars
+    apart) from rendering on top of each other."""
+    order = sorted(range(len(xs)), key=lambda i: xs[i])
+    row_of = [0] * len(xs)
+    rows_last_x = []
+    for i in order:
+        x = xs[i]
+        placed = False
+        for r, last_x in enumerate(rows_last_x):
+            if x - last_x >= min_gap:
+                rows_last_x[r] = x
+                row_of[i] = r
+                placed = True
+                break
+        if not placed:
+            rows_last_x.append(x)
+            row_of[i] = len(rows_last_x) - 1
+    return row_of, len(rows_last_x)
+
+
+def range_position_plot(low, high, current, markers, aria_label="value range", current_label="Current", label_fmt=fmt_price):
+    """
+    A dot plot on one shared axis: a track from low to high with named
+    marker points placed by value, plus a distinct triangle marker for
+    "current" (same visual language as range_meter's analyst-target
+    track). This is the right form (dataviz skill: compare points along a
+    single numeric scale) for values that live in a narrow band relative
+    to their own magnitude -- e.g. price vs. its 52-week range and moving
+    averages, all within a few percent of each other. A zero-anchored bar
+    chart would render every bar as nearly the same length and hide
+    exactly the relative positions that matter; a shared track shows them
+    immediately.
+
+    markers: list of (label, value, color_css_var), rendered as dots below
+    the track with collision-avoiding label stagger. current is rendered
+    separately, above the track, so it never collides with the dots.
+    """
+    if low is None or high is None or high <= low:
+        return "<svg></svg>", empty_state()
+    W = 620
+    pad = 60
+    track_x0, track_x1 = pad, W - pad
+    track_w = track_x1 - track_x0
+    track_y = 46
+
+    def x_for(v):
+        v = max(low, min(high, v))
+        return track_x0 + (v - low) / (high - low) * track_w
+
+    valid_markers = [(l, v, c) for l, v, c in markers if v is not None]
+    marker_xs = [x_for(v) for _, v, _ in valid_markers]
+    row_of, n_rows = _stagger_rows(marker_xs) if valid_markers else ([], 0)
+    row_gap = 14
+    H = max(90, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
+
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(aria_label)}">']
+    parts.append(f'<text x="{track_x0}" y="20" font-size="12" fill="var(--text-secondary)">{esc(label_fmt(low))}</text>')
+    parts.append(f'<text x="{track_x1}" y="20" text-anchor="end" font-size="12" fill="var(--text-secondary)">{esc(label_fmt(high))}</text>')
+    d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
+    parts.append(f'<path d="{d}" fill="var(--gridline)"/>')
+
+    for (label, v, color), x, row in zip(valid_markers, marker_xs, row_of):
+        y_label = track_y + 26 + row_gap * row
+        parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(label)}: {esc(label_fmt(v))}"><title>{esc(label)}: {esc(label_fmt(v))}</title>'
+                      f'<circle cx="{x}" cy="{track_y}" r="6" fill="{color}" stroke="var(--surface-1)" stroke-width="2"/></g>')
+        parts.append(f'<text x="{x}" y="{y_label}" text-anchor="middle" font-size="10.5" fill="var(--text-secondary)">{esc(label)}</text>')
+
+    if current is not None:
+        x = x_for(current)
+        parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(current_label)}: {esc(label_fmt(current))}"><title>{esc(current_label)}: {esc(label_fmt(current))}</title>'
+                      f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
+        parts.append(f'<text x="{x}" y="{track_y-20}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--text-primary)">{esc(current_label)}</text>')
+    parts.append("</svg>")
+
+    rows = [[label, label_fmt(v)] for label, v, _ in valid_markers]
+    if current is not None:
+        rows.append([current_label, label_fmt(current)])
+    rows.append(["Range", f"{label_fmt(low)} – {label_fmt(high)}"])
+    table = data_table(["Point", "Price"], rows)
+    return "".join(parts), table
+
+
 def gauge_meter(value, min_v, max_v, zones, label=""):
     """zones: list of (threshold_upto, color_var, status_name) covering min_v..max_v in order."""
     if value is None:
@@ -1595,15 +1681,16 @@ def section_kpis(bundle):
 
 def section_price_technicals(bundle):
     price = bundle.get("price", {}) or {}
-    items = [
-        ("52w Low", price.get("52w_low")),
-        ("MA200", price.get("ma200")),
-        ("MA50", price.get("ma50")),
-        ("MA20", price.get("ma20")),
-        ("Current", price.get("current_price")),
-        ("52w High", price.get("52w_high")),
+    low_52w, high_52w = price.get("52w_low"), price.get("52w_high")
+    ma_markers = [
+        ("MA200", price.get("ma200"), "var(--series-3)"),
+        ("MA50", price.get("ma50"), "var(--series-2)"),
+        ("MA20", price.get("ma20"), "var(--series-1)"),
     ]
-    svg, table = bar_chart_horizontal(items, value_fmt=fmt_price)
+    svg, table = range_position_plot(
+        low_52w, high_52w, price.get("current_price"), ma_markers,
+        aria_label="price vs. 52-week range and moving averages",
+    )
     price_card = viz_card("Price vs. moving averages", svg, table, info="price_vs_ma")
 
     rsi_svg, rsi_table = gauge_meter(

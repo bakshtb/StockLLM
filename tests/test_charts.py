@@ -20,6 +20,7 @@ from dashboard.generate_dashboard import (
     grouped_bar_horizontal,
     grouped_column_chart,
     range_meter,
+    range_position_plot,
     gauge_meter,
     stacked_bar_parts,
     diverging_stacked_sentiment,
@@ -135,6 +136,72 @@ class TestRangeMeter:
         # Current price can legitimately fall outside the analyst range.
         svg, table = range_meter(low=100, mean=150, median=140, high=200, current=250)
         assert_svg_has_dimensions(svg)
+
+
+class TestRangePositionPlot:
+    """Price-vs-moving-averages: a dot plot on a shared axis, replacing a
+    zero-anchored bar chart that made every bar look near-identical length
+    when all values sit in a narrow band relative to their own magnitude
+    (found from a real dashboard screenshot -- see HANDOFF.md)."""
+
+    def test_missing_low_high_returns_empty_state(self):
+        svg, table = range_position_plot(None, 340, 300, [("MA20", 320, "var(--series-1)")])
+        assert svg == "<svg></svg>"
+
+    def test_real_data_has_dimensions(self):
+        svg, table = range_position_plot(
+            201.58, 340.08, 333.43,
+            [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
+        )
+        assert_svg_has_dimensions(svg)
+        assert "MA200" in svg and "MA50" in svg and "MA20" in svg
+        assert "Current" in svg
+
+    def test_current_outside_range_does_not_crash(self):
+        svg, table = range_position_plot(
+            100, 200, 250,
+            [("MA20", 150, "var(--series-1)")],
+        )
+        assert_svg_has_dimensions(svg)
+
+    def test_missing_current_omits_current_marker(self):
+        svg, table = range_position_plot(
+            100, 200, None,
+            [("MA20", 150, "var(--series-1)")],
+        )
+        assert_svg_has_dimensions(svg)
+        assert "Current" not in svg
+        assert "Current" not in table
+
+    def test_close_markers_are_staggered_not_overlapping(self):
+        # MA50 and MA20 a few cents apart on an $8.98 range -- these must
+        # not collide on the same label row (the bug this chart replaces
+        # a different symptom of: illegible closely-spaced values).
+        svg, table = range_position_plot(
+            6.56, 15.54, 7.91,
+            [("MA200", 9.87, "var(--series-3)"), ("MA50", 9.25, "var(--series-2)"), ("MA20", 8.97, "var(--series-1)")],
+        )
+        # y="72" is the first label row; a second row must exist since
+        # MA50 and MA20 are only ~15px apart on the rendered track.
+        assert 'y="72"' in svg
+        assert 'y="86"' in svg
+
+    def test_far_apart_markers_share_one_row(self):
+        svg, table = range_position_plot(
+            201.58, 340.08, 333.43,
+            [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
+        )
+        assert 'y="72"' in svg
+        assert 'y="86"' not in svg
+
+    def test_table_lists_every_marker_and_range(self):
+        svg, table = range_position_plot(
+            100, 200, 150,
+            [("MA20", 130, "var(--series-1)")],
+        )
+        assert "MA20" in table
+        assert "Current" in table
+        assert "Range" in table
 
 
 class TestGaugeMeter:
