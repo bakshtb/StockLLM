@@ -62,6 +62,16 @@ class TestBuildDashboardAgainstEveryFixture:
         assert "@media (max-width: 700px)" in html
         assert "min-width: 0" in html  # the CSS Grid blowout fix, HANDOFF.md #33
 
+    def test_mobile_margins_are_tightened_not_stacked(self, sample_bundle):
+        # Regression: found from a screenshot -- .wrap's page-level gutter
+        # and .card's own padding stack on top of each other on mobile
+        # (the card padding was never reduced at all), eating ~19% of a
+        # 375px screen's width before any content starts. Both must be
+        # tightened together, not just the outer one.
+        html = build_dashboard(sample_bundle)
+        assert ".wrap { padding: 10px 10px; }" in html
+        assert ".card { padding: 16px 14px; }" in html
+
     def test_page_overflow_hidden_safety_net_present(self, sample_bundle):
         # A real bug found on an actual iPhone: the page could be dragged
         # horizontally, revealing clipped content -- a sub-pixel of overflow

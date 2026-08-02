@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.7
+
+- Fix: on mobile, the page-level gutter (`.wrap`'s padding) and each
+  card's own padding stacked on top of each other -- the card padding was
+  never reduced for mobile at all -- eating about 19% of a 375px phone
+  screen's width in pure margin before any card content (a chart, a
+  table) even started. Found from a screenshot marking the visible gap
+  on both sides. Tightened both together (14px+22px -> 10px+14px per
+  side), which also gives every chart real extra rendered width, not
+  just less dead space.
+
 ## 0.8.6
 
 - Fix: "Price vs. moving averages" (and the analyst target range chart)

@@ -395,9 +395,19 @@ footer.disclaimer {
    an iPhone: page rendered wider than the viewport, content clipped on
    the right). Collapse all of them well before that point. */
 @media (max-width: 700px) {
-  .wrap { padding: 14px 14px; }
-  .topbar { padding: 12px 14px; flex-wrap: wrap; }
-  .hero { padding: 16px 14px 4px 14px; }
+  /* Every mobile screenshot in this pass showed the same thing once the
+     chart-content fixes above landed: real, visible margin between the
+     screen edge and where the card border starts, doubled up again
+     between the card border and where content (the chart, its labels)
+     actually begins -- .wrap's page-level gutter plus .card's own
+     padding, stacked. Desktop can afford both; a 375px phone can't --
+     the two together were eating ~19% of total screen width before any
+     content started. Tighten both, not just one, since fixing only the
+     outer gutter would leave the inner one just as wide. */
+  .wrap { padding: 10px 10px; }
+  .card { padding: 16px 14px; }
+  .topbar { padding: 12px 10px; flex-wrap: wrap; }
+  .hero { padding: 16px 10px 4px 10px; }
   .hero-price { font-size: 36px; }
   .grid { grid-template-columns: 1fr !important; }
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
