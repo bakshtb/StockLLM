@@ -336,6 +336,98 @@ class TestInsiderActivityAtAGlance:
         assert_no_leaked_values(html)
 
 
+class TestSectionNav:
+    """The mobile jump-to-section pill bar (HANDOFF.md: dashboard UX pass) --
+    every link's href must resolve to a real section id on the same page,
+    or a phone user tapping it lands nowhere."""
+
+    def test_nav_present_with_anchors_for_every_section(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        nav = soup.find("nav", class_="section-nav")
+        assert nav is not None
+        hrefs = [a["href"] for a in nav.find_all("a")]
+        assert hrefs, "nav has no links"
+        for href in hrefs:
+            assert href.startswith("#")
+            target_id = href[1:]
+            assert soup.find(id=target_id) is not None, f"nav links to #{target_id} but no element has that id"
+
+    def test_every_top_level_card_has_matching_nav_link(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        nav_targets = {a["href"][1:] for a in soup.find("nav", class_="section-nav").find_all("a")}
+        expected_ids = {
+            "sec-price", "sec-analyst", "sec-relative", "sec-ownership",
+            "sec-financials", "sec-extras", "sec-news", "sec-filings",
+        }
+        assert expected_ids <= nav_targets
+
+
+class TestHeroBlock:
+    """The hero price block (HANDOFF.md: dashboard UX pass) -- the one
+    focal point the page should lead with before any scrolling."""
+
+    def test_hero_present_with_price(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        hero = soup.find("div", class_="hero")
+        assert hero is not None
+        assert soup.find("span", class_="hero-price") is not None
+
+    def test_no_rec_badge_without_pipeline_result(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        assert soup.find("span", class_="hero-rec-badge") is None
+
+    def test_rec_badge_present_with_pipeline_result(self):
+        bundle = _minimal_bundle()
+        bundle["price"] = {"current_price": 195.0, "pct_change_20d": 3.2}
+        pipeline_result = {"judge": {"recommendation": "buy", "confidence": 80}}
+        html = build_dashboard(bundle, pipeline_result)
+        soup = BeautifulSoup(html, "html.parser")
+        badge = soup.find("span", class_="hero-rec-badge")
+        assert badge is not None
+        assert "BUY" in badge.get_text()
+        assert "80% confidence" in html
+
+    def test_hero_no_leaked_values(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        assert_no_leaked_values(html)
+
+    def test_missing_price_does_not_crash_or_leak(self):
+        # A dry-run or thin bundle may have no price section at all.
+        bundle = _minimal_bundle()
+        html = build_dashboard(bundle)
+        assert_no_leaked_values(html)
+
+
+class TestMobileSafeTables:
+    """data_table() emits a data-label on every <td> so the mobile media
+    query can render each row as a stacked card instead of a cramped
+    horizontally-scrolling table (HANDOFF.md: dashboard UX pass)."""
+
+    def test_data_tables_carry_data_label_on_every_cell(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        tables = soup.find_all("table", class_="data-table")
+        assert tables, "no data tables rendered for this fixture"
+        checked_any_row = False
+        for table in tables:
+            headers = [th.get_text() for th in table.find_all("th")]
+            for row in table.find("tbody").find_all("tr"):
+                cells = row.find_all("td")
+                assert len(cells) == len(headers)
+                for cell, header in zip(cells, headers):
+                    assert cell.get("data-label") == header
+                checked_any_row = True
+        assert checked_any_row
+
+    def test_mobile_card_list_css_present(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        assert "content: attr(data-label)" in html
+
+
 def _minimal_bundle():
     """A deliberately thin bundle -- exercises the AI-recommendation path
     without depending on the shape of a specific committed fixture file."""

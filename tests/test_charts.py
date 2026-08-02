@@ -23,6 +23,7 @@ from dashboard.generate_dashboard import (
     gauge_meter,
     stacked_bar_parts,
     diverging_stacked_sentiment,
+    diverging_stacked_ordinal,
 )
 
 
@@ -175,3 +176,69 @@ class TestDivergingStackedSentiment:
         assert_svg_has_dimensions(svg)
         assert "var(--diverge-neg)" in svg  # bearish
         assert "var(--diverge-pos)" in svg  # bullish
+
+
+class TestDivergingStackedOrdinal:
+    """The recommendation-trend chart (Strong Sell..Strong Buy) -- a
+    generalization of diverging_stacked_sentiment to N segments per side,
+    added when section_analyst() moved off a bare table (see HANDOFF.md)."""
+
+    def test_all_zero_returns_empty_state(self):
+        svg, table, legend = diverging_stacked_ordinal(
+            neg_segments=[("Sell", 0), ("Strong sell", 0)],
+            mid_value=0,
+            pos_segments=[("Buy", 0), ("Strong buy", 0)],
+        )
+        assert svg == "<svg></svg>"
+        assert "empty" in table
+
+    def test_real_counts_have_dimensions_and_both_hues(self):
+        svg, table, legend = diverging_stacked_ordinal(
+            neg_segments=[("Sell", 3), ("Strong sell", 1)],
+            mid_value=5,
+            pos_segments=[("Buy", 8), ("Strong buy", 4)],
+            mid_label="Hold",
+        )
+        assert_svg_has_dimensions(svg)
+        assert "var(--diverge-neg)" in svg
+        assert "var(--diverge-pos)" in svg
+        assert "var(--gridline)" in svg  # neutral/hold segment
+
+    def test_end_labels_show_running_totals_not_last_segment_only(self):
+        # The bug this guards: end-labels must sum every segment on a side
+        # (e.g. Sell + Strong sell = 4), not just show the last segment's
+        # own value (1).
+        svg, table, legend = diverging_stacked_ordinal(
+            neg_segments=[("Sell", 3), ("Strong sell", 1)],
+            mid_value=5,
+            pos_segments=[("Buy", 8), ("Strong buy", 4)],
+        )
+        assert ">4<" in svg  # neg total: 3 + 1
+        assert ">12<" in svg  # pos total: 8 + 4
+
+    def test_one_sided_only_does_not_crash(self):
+        # Real recommendation-trend data is often lopsided (e.g. all buys,
+        # no sells at all for a given period) -- zero segments on one side
+        # must not divide by zero in the opacity gradient.
+        svg, table, legend = diverging_stacked_ordinal(
+            neg_segments=[("Sell", 0), ("Strong sell", 0)],
+            mid_value=2,
+            pos_segments=[("Buy", 6), ("Strong buy", 2)],
+        )
+        assert_svg_has_dimensions(svg)
+        assert "var(--diverge-neg)" not in svg
+        assert "var(--diverge-pos)" in svg
+
+    def test_table_rows_ordered_worst_to_best(self):
+        svg, table, legend = diverging_stacked_ordinal(
+            neg_segments=[("Sell", 3), ("Strong sell", 1)],
+            mid_value=5,
+            pos_segments=[("Buy", 8), ("Strong buy", 4)],
+            mid_label="Hold",
+        )
+        strong_sell_idx = table.index("Strong sell")
+        sell_idx = table.index(">Sell<")
+        hold_idx = table.index("Hold")
+        buy_idx = table.index(">Buy<")
+        strong_buy_idx = table.index("Strong buy")
+        assert strong_sell_idx < sell_idx < hold_idx < buy_idx < strong_buy_idx

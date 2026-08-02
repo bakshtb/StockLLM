@@ -124,8 +124,12 @@ html, body {
 }
 body { padding: 0 0 64px 0; }
 
+/* Topbar and the section nav below it stick together as one unit -- see
+   .sticky-top, the wrapper that actually holds position: sticky (putting
+   sticky on each separately would need the nav to know the topbar's exact
+   rendered height, which varies with content/wrapping). */
+.sticky-top { position: sticky; top: 0; z-index: 20; }
 .topbar {
-  position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; justify-content: space-between;
   gap: 16px; padding: 16px 24px;
   background: var(--surface-1);
@@ -133,16 +137,47 @@ body { padding: 0 0 64px 0; }
 }
 .topbar h1 { font-size: 20px; margin: 0; font-weight: 600; }
 .topbar .meta { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+
+.section-nav {
+  display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  padding: 8px 24px; background: var(--surface-1); border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.section-nav::-webkit-scrollbar { display: none; }
+.section-nav a {
+  flex-shrink: 0; font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+  text-decoration: none; background: var(--page-plane); border: 1px solid var(--border);
+  border-radius: 999px; padding: 6px 13px; white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.section-nav a:hover, .section-nav a:focus { color: var(--text-primary); border-color: var(--text-secondary); outline: none; }
+@media (min-width: 900px) { .section-nav { display: none; } }
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
 button.chip {
   font: inherit; font-size: 13px; cursor: pointer;
   background: var(--surface-1); color: var(--text-primary);
   border: 1px solid var(--border); border-radius: 8px;
   padding: 7px 12px;
+  transition: background-color 0.15s ease;
 }
 button.chip:hover { background: var(--gridline); }
 
 .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 24px; }
+
+/* Hero: the one focal point the page leads with, before any scrolling --
+   see dataviz skill's figure spec (>=48px, same sans, exactly one per view). */
+.hero { max-width: 1180px; margin: 0 auto; padding: 22px 24px 6px 24px; }
+.hero-price-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.hero-price { font-size: 48px; font-weight: 650; line-height: 1; letter-spacing: -0.5px; }
+.hero-price-row .delta { font-size: 17px; }
+.hero-delta-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-left: 4px; }
+.hero-rec { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.hero-rec-badge { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; padding: 5px 14px; border-radius: 8px; }
+.hero-rec-badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
+.hero-rec-badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
+.hero-rec-badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
+.hero-rec-badge.neutral { background: var(--gridline); color: var(--text-secondary); }
+.hero-rec-conf { font-size: 13px; color: var(--text-secondary); }
 
 .kpi-row {
   display: grid; gap: 12px;
@@ -163,9 +198,10 @@ button.chip:hover { background: var(--gridline); }
   min-width: 0; /* same grid-item auto-min-width fix as .card, see there */
   background: var(--surface-1); border: 1px solid var(--border);
   border-radius: 12px; padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(11,11,11,0.03);
 }
 .stat-tile .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
-.stat-tile .value { font-size: 24px; font-weight: 600; margin-top: 4px; line-height: 1.15; }
+.stat-tile .value { font-size: 24px; font-weight: 650; margin-top: 4px; line-height: 1.15; letter-spacing: -0.2px; }
 .stat-tile .value.good { color: var(--status-good); }
 .stat-tile .value.critical { color: var(--status-critical); }
 .stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
@@ -181,7 +217,7 @@ button.chip:hover { background: var(--gridline); }
   background: var(--gridline); color: var(--text-secondary);
   font-size: 10px; font-weight: 700; font-style: normal;
   border: none; cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
-  position: relative;
+  position: relative; transition: background-color 0.15s ease, color 0.15s ease;
 }
 .info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
 .info-pop {
@@ -235,14 +271,23 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .rec-thesis.bear .who { color: var(--status-critical); }
 .rec-skeptic { margin-top: 14px; font-size: 13px; }
 
+.rec-trend-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.rec-trend-row:last-child { margin-bottom: 0; }
+.rec-trend-period { width: 76px; flex-shrink: 0; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.rec-trend-chart { flex: 1; min-width: 0; }
+
 .grid {
-  display: grid; gap: 16px;
+  display: grid; gap: 18px;
   grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   align-items: start;
 }
 .card {
   background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 12px; padding: 18px 20px;
+  border-radius: 14px; padding: 20px 22px;
+  /* A quiet, considered look -- a near-invisible shadow for depth, not a
+     heavy drop shadow (see dataviz skill: "the data is the only thing
+     allowed to be loud"). */
+  box-shadow: 0 1px 2px rgba(11,11,11,0.03), 0 1px 10px rgba(11,11,11,0.025);
   /* Grid items default to min-width: auto, meaning a track won't shrink
      below the largest intrinsic content size of anything inside it -- an
      SVG chart with explicit width/height attributes (added for mobile
@@ -253,8 +298,8 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
   min-width: 0;
 }
 .card.full { grid-column: 1 / -1; }
-.card h2 { font-size: 15px; margin: 0 0 4px 0; font-weight: 600; }
-.card .card-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.card h2 { font-size: 16px; margin: 0 0 4px 0; font-weight: 650; letter-spacing: -0.1px; }
+.card .card-sub { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; }
 
 .viz-card { margin-top: 6px; }
 .viz-card-head {
@@ -265,6 +310,7 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .viz-toggle {
   font-size: 11px; color: var(--text-secondary); background: none;
   border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 .viz-toggle:hover { background: var(--gridline); }
 .viz-card.is-table-view .viz-chart { display: none; }
@@ -340,11 +386,38 @@ footer.disclaimer {
 @media (max-width: 700px) {
   .wrap { padding: 14px 14px; }
   .topbar { padding: 12px 14px; flex-wrap: wrap; }
+  .hero { padding: 16px 14px 4px 14px; }
+  .hero-price { font-size: 36px; }
   .grid { grid-template-columns: 1fr !important; }
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
   .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
   .split-2col, .rec-thesis-grid { grid-template-columns: 1fr !important; }
   .rec-top { flex-direction: column; align-items: flex-start; }
+
+  /* Dense multi-column tables (5-7 columns is common here -- rating
+     actions, insider transactions, institutional holders) are cramped or
+     horizontal-scrolling on a phone even full-width. Turn each row into a
+     small stacked card instead: no JS, data_table() already emits a
+     data-label on every <td> for exactly this. */
+  table.data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  table.data-table, table.data-table tbody, table.data-table tr, table.data-table td { display: block; width: 100%; }
+  table.data-table tr {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 4px 12px; margin-bottom: 10px; background: var(--page-plane);
+  }
+  table.data-table tr:last-child { margin-bottom: 0; }
+  table.data-table td {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gridline);
+    text-align: right; white-space: normal;
+  }
+  table.data-table td:last-child { border-bottom: none; }
+  table.data-table td::before {
+    content: attr(data-label);
+    font-size: 11.5px; font-weight: 600; color: var(--text-secondary);
+    text-align: left; flex-shrink: 0; padding-right: 12px;
+  }
+  .table-scroll { overflow-x: visible; }
 }
 @media (max-width: 420px) {
   .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
@@ -661,12 +734,13 @@ def _vbar_path(x0, y_base, w, h, r=4):
     )
 
 
-def _mark(path_d, color, tip, extra_class=""):
+def _mark(path_d, color, tip, extra_class="", opacity=1.0):
     tip_attr = esc(tip)
+    opacity_attr = f' opacity="{opacity:.2f}"' if opacity < 1.0 else ""
     return (
         f'<g class="mark {extra_class}" tabindex="0" data-tip="{tip_attr}">'
         f'<title>{tip_attr}</title>'
-        f'<path d="{path_d}" fill="{color}"/></g>'
+        f'<path d="{path_d}" fill="{color}"{opacity_attr}/></g>'
     )
 
 
@@ -696,12 +770,22 @@ def empty_state(msg="No data available for this ticker."):
 
 
 def data_table(headers, rows):
+    """
+    Renders a data table that also works as a mobile card-list: every <td>
+    carries a data-label attribute (its column header), which a mobile media
+    query uses to render each row as a small stacked "label: value" card
+    instead of a cramped horizontally-scrolling table -- see .data-table's
+    max-width: 640px rule in CSS_STYLE. No JS, pure CSS.
+    """
     if not rows:
         return empty_state()
     thead = "".join(f"<th>{esc(h)}</th>" for h in headers)
     body_rows = []
     for r in rows:
-        cells = "".join(f"<td>{c if isinstance(c, str) and c.startswith('<span') else esc(c)}</td>" for c in r)
+        cells = "".join(
+            f'<td data-label="{esc(h)}">{c if isinstance(c, str) and c.startswith("<span") else esc(c)}</td>'
+            for h, c in zip(headers, r)
+        )
         body_rows.append(f"<tr>{cells}</tr>")
     return (
         '<div class="table-scroll"><table class="data-table">'
@@ -1088,6 +1172,85 @@ def diverging_stacked_sentiment(bearish, untagged, bullish):
     return "".join(parts), table, leg
 
 
+def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="Neutral", aria_label="distribution"):
+    """
+    Diverging stacked bar for an ordered categorical scale (Likert-style --
+    e.g. Strong Sell/Sell/Hold/Buy/Strong Buy), centered on the neutral
+    middle segment. This is the skill's recommended form for "ordered-scale
+    share" (see dataviz skill's choosing-a-form.md) -- a generalization of
+    diverging_stacked_sentiment above to more than one segment per side.
+
+    neg_segments / pos_segments: ordered list of (label, value), closest-to-
+    neutral first, most extreme last -- stacked outward from the center.
+    Same 2-hue-plus-neutral-gray convention as diverging_stacked_sentiment:
+    graduated opacity (not a new hue) distinguishes "strong" from "regular"
+    within a side, so this stays colorblind-safe -- only diverge-pos,
+    diverge-neg, and gridline are ever used as actual hues.
+    """
+    total = (mid_value or 0) + sum(v or 0 for _, v in neg_segments) + sum(v or 0 for _, v in pos_segments)
+    if total == 0:
+        return "<svg></svg>", empty_state(), ""
+
+    W, H = 620, 70
+    bar_y, bar_h = 24, 26
+    center_x = W / 2
+    usable_w = W - 40
+    mid_w = ((mid_value or 0) / total) * usable_w
+    mid_x0 = center_x - mid_w / 2
+
+    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(aria_label)}">']
+    parts.append(f'<line x1="{center_x}" y1="{bar_y-6}" x2="{center_x}" y2="{bar_y+bar_h+6}" stroke="var(--baseline)" stroke-width="1"/>')
+
+    if mid_w > 0:
+        d = _hbar_path(mid_x0, bar_y, mid_w, bar_h, r=0)
+        parts.append(_mark(d, "var(--gridline)", f"{mid_label}: {fmt_num(mid_value)}"))
+
+    # Direct-label selectively (skill guidance: the endpoint/extreme, not
+    # every segment) -- each side's outer edge gets its running total,
+    # matching diverging_stacked_sentiment's convention above.
+    n_neg = len([1 for _, v in neg_segments if v])
+    x = mid_x0 - 2
+    neg_total = 0
+    for i, (label, v) in enumerate(seg for seg in neg_segments if seg[1]):
+        seg_w = (v / total) * usable_w
+        opacity = 0.55 + 0.45 * ((i + 1) / n_neg)
+        d = _hbar_path(x, bar_y, -seg_w, bar_h)
+        parts.append(_mark(d, "var(--diverge-neg)", f"{label}: {fmt_num(v)}", opacity=opacity))
+        x -= seg_w + 2
+        neg_total += v
+    if neg_total:
+        parts.append(f'<text x="{x+2-6}" y="{bar_y+bar_h/2+4}" text-anchor="end" font-size="12" fill="var(--text-primary)">{fmt_num(neg_total)}</text>')
+
+    n_pos = len([1 for _, v in pos_segments if v])
+    x = mid_x0 + mid_w + 2
+    pos_total = 0
+    for i, (label, v) in enumerate(seg for seg in pos_segments if seg[1]):
+        seg_w = (v / total) * usable_w
+        opacity = 0.55 + 0.45 * ((i + 1) / n_pos)
+        d = _hbar_path(x, bar_y, seg_w, bar_h)
+        parts.append(_mark(d, "var(--diverge-pos)", f"{label}: {fmt_num(v)}", opacity=opacity))
+        x += seg_w + 2
+        pos_total += v
+    if pos_total:
+        parts.append(f'<text x="{x-2+8}" y="{bar_y+bar_h/2+4}" font-size="12" fill="var(--text-primary)">{fmt_num(pos_total)}</text>')
+
+    parts.append("</svg>")
+
+    rows = (
+        [[label, fmt_num(v)] for label, v in reversed(neg_segments)]
+        + [[mid_label, fmt_num(mid_value)]]
+        + [[label, fmt_num(v)] for label, v in pos_segments]
+    )
+    table = data_table(["Category", "Count"], rows)
+    leg_items = (
+        [(label, "var(--diverge-neg)") for label, _ in neg_segments]
+        + [(mid_label, "var(--gridline)")]
+        + [(label, "var(--diverge-pos)") for label, _ in pos_segments]
+    )
+    leg = legend(leg_items)
+    return "".join(parts), table, leg
+
+
 # ============================================================================
 # Sections
 # ============================================================================
@@ -1104,6 +1267,64 @@ def section_header(bundle):
   <div class="topbar-actions">
     <button type="button" class="chip" id="theme-toggle">Dark mode</button>
   </div>
+</div>"""
+
+
+_NAV_ITEMS = [
+    ("sec-price", "Price"),
+    ("sec-analyst", "Analyst"),
+    ("sec-relative", "Performance"),
+    ("sec-ownership", "Ownership"),
+    ("sec-financials", "Financials"),
+    ("sec-extras", "Dividends"),
+    ("sec-news", "News"),
+    ("sec-filings", "Filings"),
+]
+
+
+def section_nav(bundle):
+    """
+    A jump-to-section pill bar, primarily a mobile affordance (hidden on
+    wide desktop viewports where the eye can already scan the whole page --
+    see the min-width: 900px rule in CSS_STYLE) so a phone reader isn't
+    stuck scrolling through 9 sections to find the one they want.
+    """
+    links = "".join(f'<a href="#{anchor}">{esc(label)}</a>' for anchor, label in _NAV_ITEMS)
+    return f'<nav class="section-nav" aria-label="Jump to section">{links}</nav>'
+
+
+def section_hero(bundle, pipeline_result=None):
+    """
+    The one focal point the page leads with -- current price at true hero
+    size (dataviz skill spec: >=48px, same sans as everything else, exactly
+    one per view) plus its 20-day move, and the AI verdict badge if a full
+    (non-dry-run) run was made. Everything else (KPIs, at-a-glance, the 9
+    section cards) follows below -- this is what's visible before any
+    scrolling on a phone.
+    """
+    price = bundle.get("price", {}) or {}
+    current_price = price.get("current_price")
+    pct_20d = price.get("pct_change_20d")
+
+    rec_html = ""
+    if pipeline_result:
+        judge = pipeline_result.get("judge", {}) or {}
+        rec_key = (judge.get("recommendation") or "hold").lower()
+        rec_cls, rec_label = _REC_STYLE.get(rec_key, ("neutral", rec_key.upper()))
+        confidence = judge.get("confidence")
+        conf_html = f'<span class="hero-rec-conf">{esc(confidence)}% confidence</span>' if confidence is not None else ""
+        rec_html = f"""
+  <div class="hero-rec">
+    <span class="hero-rec-badge {rec_cls}">{esc(rec_label)}</span>
+    {conf_html}
+  </div>"""
+
+    return f"""
+<div class="hero">
+  <div class="hero-price-row">
+    <span class="hero-price">{fmt_price(current_price)}</span>
+    <span class="delta {delta_class(pct_20d)}">{fmt_pct(pct_20d)}<span class="hero-delta-label">20d</span></span>
+  </div>{rec_html}
 </div>"""
 
 
@@ -1405,7 +1626,7 @@ def section_price_technicals(bundle):
 </div>"""
 
     return f"""
-<div class="card">
+<div class="card" id="sec-price">
   <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
   {price_card}
@@ -1457,17 +1678,38 @@ def section_analyst(bundle):
         ])
     actions_table = data_table(["Date", "Firm", "Action", "Grade change", "Price target"], action_rows)
 
+    # Buy/Hold/Sell across periods is an ordered-scale share (a Likert-style
+    # distribution) -- the dataviz skill's recommended form is a diverging
+    # stacked bar centered on neutral, not a bare table. One small bar per
+    # period (small multiples, most recent first).
     rec_trend = (bundle.get("finnhub_signals", {}) or {}).get("recommendation_trend", []) or []
     rec_trend_html = ""
     if rec_trend:
+        periods = rec_trend[:6]
+        bars = []
+        for r in periods:
+            svg, _, _ = diverging_stacked_ordinal(
+                neg_segments=[("Sell", r.get("sell")), ("Strong sell", r.get("strong_sell"))],
+                mid_value=r.get("hold"),
+                pos_segments=[("Buy", r.get("buy")), ("Strong buy", r.get("strong_buy"))],
+                mid_label="Hold",
+                aria_label=f"analyst recommendation mix, {r.get('period') or 'period'}",
+            )
+            bars.append(
+                f'<div class="rec-trend-row"><div class="rec-trend-period">{esc(r.get("period") or "—")}</div>'
+                f'<div class="rec-trend-chart">{svg}</div></div>'
+            )
+        leg_html = legend([("Strong sell / Sell", "var(--diverge-neg)"), ("Hold", "var(--gridline)"), ("Buy / Strong buy", "var(--diverge-pos)")])
+
         rec_trend_rows = [
             [r.get("period") or "—", fmt_num(r.get("strong_buy")), fmt_num(r.get("buy")),
              fmt_num(r.get("hold")), fmt_num(r.get("sell")), fmt_num(r.get("strong_sell"))]
-            for r in rec_trend
+            for r in periods
         ]
         rec_trend_table = data_table(["Period", "Strong buy", "Buy", "Hold", "Sell", "Strong sell"], rec_trend_rows)
+
         rec_trend_html = f"""
-<div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Analyst recommendation trend {info_icon('recommendation_trend')}</span></div>{rec_trend_table}</div>"""
+<div style="margin-top:16px;">{viz_card("Analyst recommendation trend", "".join(bars), rec_trend_table, leg_html, info="recommendation_trend")}</div>"""
 
     surprises = earnings_est.get("earnings_surprise_history", []) or []
     surprise_items = [(s.get("quarter_end"), s.get("surprise_pct")) for s in surprises]
@@ -1491,7 +1733,7 @@ def section_analyst(bundle):
     trend_table = data_table(["Period", "90d ago", "30d ago", "7d ago", "Current est."], trend_rows)
 
     return f"""
-<div class="card full">
+<div class="card full" id="sec-analyst">
   <h2>Analyst Ratings & Estimates {info_icon('section_analyst')}</h2>
   <div class="card-sub">Recommendation: {esc(fundamentals.get('analyst_recommendation') or '—')} · last {analyst_ratings.get('lookback_days', 60)} days of rating actions</div>
   <div class="split-2col">
@@ -1543,7 +1785,7 @@ def section_relative_performance(bundle):
 </div>"""
 
     return f"""
-<div class="card full">
+<div class="card full" id="sec-relative">
   <h2>Relative Performance & Valuation {info_icon('section_relative')}</h2>
   <div class="card-sub">Returns and P/E vs. {esc(rp.get('benchmark','SPY'))} and sector ETF {esc(rp.get('sector_etf') or '—')} — two different questions, shown separately.</div>
   {perf_card}
@@ -1607,7 +1849,7 @@ def section_ownership(bundle):
     ben_table = data_table(["Filed", "Reporting person", "Schedule", "% of class", "Type"], ben_rows)
 
     return f"""
-<div class="card full">
+<div class="card full" id="sec-ownership">
   <h2>Ownership {info_icon('section_ownership')}</h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
   <div class="split-2col">
@@ -1663,7 +1905,7 @@ def section_financials(bundle):
         q_card = viz_card("Quarterly revenue & net income", "<svg></svg>", empty_state(), info="quarterly_financials")
 
     return f"""
-<div class="card full">
+<div class="card full" id="sec-financials">
   <h2>Financials {info_icon('section_financials')}</h2>
   {bs_tiles}
   {q_card}
@@ -1731,7 +1973,7 @@ def section_dividends_options_macro_social(bundle):
     ) or empty_state()
 
     return f"""
-<div class="card full">
+<div class="card full" id="sec-extras">
   <h2>Dividends, Buybacks, Options & Sentiment {info_icon('section_extras')}</h2>
   <div class="split-2col">
     <div>
@@ -1769,7 +2011,7 @@ def section_news(bundle):
     digest = bundle.get("news_digest")
     digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else ""
     return f"""
-<div class="card full">
+<div class="card full" id="sec-news">
   <h2>News</h2>
   {body}
   {digest_html}
@@ -1795,7 +2037,7 @@ def section_filings(bundle):
     digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else '<div class="viz-note" style="margin-top:10px;">Filings digest not generated (dry run or no API key).</div>'
 
     return f"""
-<div class="card full">
+<div class="card full" id="sec-filings">
   <h2>Filings & Proxy</h2>
   {''.join(rows)}
   {digest_html}
@@ -1842,7 +2084,11 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <style>{CSS_STYLE}</style>
 </head>
 <body>
+<div class="sticky-top">
 {section_header(bundle)}
+{section_nav(bundle)}
+</div>
+{section_hero(bundle, pipeline_result)}
 <div class="wrap">
   {ai_section}
   {section_at_a_glance(bundle)}

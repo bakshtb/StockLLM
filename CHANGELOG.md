@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.8.0
+
+- Dashboard UX/UI redesign, mobile-first. Four changes:
+  - **Mobile-safe tables**: every table cell now carries a `data-label`
+    attribute; on phones, tables render as stacked "label: value" cards
+    instead of a cramped table (previously the worst offender was the
+    `.split-2col` sections -- two dense tables side by side that became
+    unreadable once squeezed onto an iPhone). Pure CSS, no JS.
+  - **Analyst recommendation trend is now a chart, not a bare table**:
+    Strong Sell/Sell/Hold/Buy/Strong Buy per period is an ordered-scale
+    share, which the dataviz skill's guidance calls for as a diverging
+    stacked bar centered on neutral -- generalized the existing sentiment
+    chart (`diverging_stacked_sentiment`) into `diverging_stacked_ordinal`,
+    which supports any number of segments per side (graduated opacity,
+    not new hues, keeps it colorblind-safe) and renders one small-multiple
+    bar per period, most recent first. Raw numbers stay one click away via
+    the existing table-view toggle.
+  - **Hero block**: ticker's current price now renders at true hero size
+    right under the top bar, with its 20-day move and the AI
+    recommendation badge (when a full run was made) -- one clear focal
+    point before any scrolling, instead of the price being just one of
+    seven equal-weight KPI tiles.
+  - **Mobile section-jump nav**: a sticky pill bar under the top bar links
+    to each of the 8 major sections, so a phone reader can jump directly
+    instead of scrolling through the whole page.
+  - Color system, chart forms, and section function signatures are
+    unchanged -- this was a presentation-layer pass, not a data-layer one.
+  - Added test coverage for all of the above (`tests/test_charts.py`,
+    `tests/test_dashboard_build.py`): the new chart function's empty/
+    lopsided/end-label-sum cases, hero block presence and rec-badge
+    wiring, nav anchors resolving to real section ids, and data-label
+    presence on every table cell across every committed fixture.
+
 ## 0.7.1
 
 - Fix a real bug: insider transactions were labeled "buy" based only on
