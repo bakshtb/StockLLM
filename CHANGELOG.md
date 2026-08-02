@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.6
+
+- Fix: "Price vs. moving averages" (and the analyst target range chart)
+  could look like they weren't using the card's full width -- found from
+  a screenshot where AAPL's current price, close to its 52-week high,
+  suppressed the "$340.08" high-end label (0.8.4/0.8.5's collision fix),
+  leaving a big unexplained empty patch of track on the right with
+  nothing there to explain it. Flipped which label gives way: the Low/
+  High (or analyst target Low/High) corner labels now always render --
+  they're what visually anchors the reader's sense that the track spans
+  its full width -- and "Current" drops only its text label near an edge
+  (never its triangle marker), since the current price is already shown
+  prominently in the page's own hero number up top.
+
 ## 0.8.5
 
 - Fix two more real mobile bugs from a follow-up screenshot: the RSI

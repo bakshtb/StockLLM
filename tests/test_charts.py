@@ -152,6 +152,22 @@ class TestRangeMeter:
         svg, table = range_meter(low=100, mean=150, median=140, high=200, current=250)
         assert_svg_has_dimensions(svg)
 
+    def test_corner_labels_always_render_even_when_current_is_near_an_edge(self):
+        # Regression: suppressing the High corner label when Current sits
+        # near it (the original approach) left a big unexplained empty
+        # patch of track and read as "this chart doesn't fill its card"
+        # on a real screenshot. Corner labels must always show; Current's
+        # label is what gives way instead.
+        svg, table = range_meter(low=215, mean=320, median=325, high=400, current=393)
+        assert "Low $215.00" in svg
+        assert "High $400.00" in svg
+
+    def test_current_label_suppressed_near_edge_but_marker_kept(self):
+        svg, table = range_meter(low=215, mean=320, median=325, high=400, current=393)
+        assert ">Current<" not in svg  # text label dropped
+        assert 'data-tip="Current: $393.00"' in svg  # triangle marker + tooltip still present
+        assert "Current price" in table  # raw value still in the table view
+
 
 class TestRangePositionPlot:
     """Price-vs-moving-averages: a dot plot on a shared axis, replacing a
@@ -187,6 +203,28 @@ class TestRangePositionPlot:
         assert_svg_has_dimensions(svg)
         assert "Current" not in svg
         assert "Current" not in table
+
+    def test_corner_labels_always_render_even_when_current_is_near_the_high(self):
+        # Regression: this exact scenario (real AAPL data -- current price
+        # close to its 52-week high) suppressed the "$340.08" corner label
+        # on a real screenshot, leaving a big unexplained empty patch of
+        # track that read as "this chart doesn't fill its card." Corner
+        # labels must always show; Current's label is what gives way.
+        svg, table = range_position_plot(
+            201.58, 340.08, 333.43,
+            [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
+        )
+        assert "$201.58" in svg
+        assert "$340.08" in svg
+
+    def test_current_label_suppressed_near_edge_but_marker_kept(self):
+        svg, table = range_position_plot(
+            201.58, 340.08, 333.43,
+            [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
+        )
+        assert ">Current<" not in svg
+        assert 'data-tip="Current: $333.43"' in svg
+        assert "Current" in table  # raw value still in the table view
 
     def test_close_markers_are_staggered_not_overlapping(self):
         # MA50 and MA20 a few cents apart on an $8.98 range, and MA200 not

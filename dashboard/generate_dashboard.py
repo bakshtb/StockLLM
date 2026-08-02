@@ -1131,23 +1131,25 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     H = max(100, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
 
     # "Current" (above the track) can land right next to a Low/High corner
-    # label (below/at the same height) when today's price sits near either
-    # end of the analyst range -- common, not an edge case. Drop whichever
-    # corner label it would collide with rather than run them together;
-    # see range_position_plot's identical fix for the same reason
-    # (COLLISION_MARGIN sized for the mobile-boosted font, not desktop --
-    # "Low $215.00" is a longer string than range_position_plot's bare
-    # price, hence the bigger margin here).
+    # label when today's price sits near either end of the analyst range --
+    # common, not an edge case (a stock trading near its target ceiling or
+    # floor). Earlier this suppressed whichever corner label was in the
+    # way instead -- wrong call, found from a screenshot: hiding "High
+    # $400.00" left a big dead patch of empty track on that side with
+    # nothing to explain it, which reads as "this chart doesn't fill its
+    # card" even though it does. Corner labels anchor the reader's sense
+    # that the track spans its full width, so they always show; "Current"
+    # (secondary -- its value is already the page's own hero number) is
+    # what gives way, and only its text label, not its triangle marker.
     COLLISION_MARGIN = 235
     current_x = x_for(current) if current is not None else None
-    show_low_label = current_x is None or current_x > track_x0 + COLLISION_MARGIN
-    show_high_label = current_x is None or current_x < track_x1 - COLLISION_MARGIN
+    show_current_label = current_x is None or (
+        current_x > track_x0 + COLLISION_MARGIN and current_x < track_x1 - COLLISION_MARGIN
+    )
 
     parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="analyst target price range">']
-    if show_low_label:
-        parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">Low {label_fmt(low)}</text>')
-    if show_high_label:
-        parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">High {label_fmt(high)}</text>')
+    parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">Low {label_fmt(low)}</text>')
+    parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">High {label_fmt(high)}</text>')
     d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
     parts.append(f'<path d="{d}" fill="var(--gridline)"/>')
 
@@ -1161,7 +1163,8 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
         x = x_for(current)
         parts.append(f'<g class="mark" tabindex="0" data-tip="Current: {esc(label_fmt(current))}"><title>Current: {esc(label_fmt(current))}</title>'
                       f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
-        parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-size="12" font-weight="600" fill="var(--text-primary)">Current</text>')
+        if show_current_label:
+            parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-size="12" font-weight="600" fill="var(--text-primary)">Current</text>')
     parts.append("</svg>")
 
     rows = [["Low", label_fmt(low)], ["Mean", label_fmt(mean)], ["Median", label_fmt(median)],
@@ -1242,23 +1245,27 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     # "Current" sits above the track and is labeled the same way the Low/
     # High corner labels are (see below) -- when the current price is near
     # either end of the range (common: a stock at/near its 52-week high or
-    # low), those two labels land in the same spot. Drop whichever corner
-    # label Current's would collide with rather than let them run
-    # together; Current's own marker+label already conveys a near-
-    # identical value at that position. COLLISION_MARGIN is sized for the
-    # mobile-boosted font (~117 viewBox units for a "$340.08"-length
-    # label, ~96 for "Current") -- see _stagger_rows for why mobile
-    # sizing, not desktop, is what actually has to fit here.
+    # low), those two labels land in the same spot. Suppressing whichever
+    # corner label was in the way was tried and reverted -- found from a
+    # screenshot: hiding "High $340.08" left a big dead patch of empty
+    # track with nothing to explain it, reading as "this chart doesn't
+    # fill its card" even though it does. Corner labels anchor the
+    # reader's sense that the track spans its full width, so they always
+    # show; "Current" gives way instead (only its text, not its triangle
+    # marker) since its value is already the page's own hero number.
+    # COLLISION_MARGIN is sized for the mobile-boosted font (~117 viewBox
+    # units for a "$340.08"-length label, ~96 for "Current") -- see
+    # _stagger_rows for why mobile sizing, not desktop, is what actually
+    # has to fit here.
     COLLISION_MARGIN = 170
     current_x = x_for(current) if current is not None else None
-    show_low_label = current_x is None or current_x > track_x0 + COLLISION_MARGIN
-    show_high_label = current_x is None or current_x < track_x1 - COLLISION_MARGIN
+    show_current_label = current_x is None or (
+        current_x > track_x0 + COLLISION_MARGIN and current_x < track_x1 - COLLISION_MARGIN
+    )
 
     parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(aria_label)}">']
-    if show_low_label:
-        parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(low))}</text>')
-    if show_high_label:
-        parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(high))}</text>')
+    parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(low))}</text>')
+    parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(high))}</text>')
     d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
     parts.append(f'<path d="{d}" fill="var(--gridline)"/>')
 
@@ -1272,7 +1279,8 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
         x = x_for(current)
         parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(current_label)}: {esc(label_fmt(current))}"><title>{esc(current_label)}: {esc(label_fmt(current))}</title>'
                       f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
-        parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-weight="600" font-size="12" fill="var(--text-primary)">{esc(current_label)}</text>')
+        if show_current_label:
+            parts.append(f'<text x="{x}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-weight="600" font-size="12" fill="var(--text-primary)">{esc(current_label)}</text>')
     parts.append("</svg>")
 
     rows = [[label, label_fmt(v)] for label, v, _ in valid_markers]
