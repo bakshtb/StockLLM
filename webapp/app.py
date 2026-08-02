@@ -264,7 +264,19 @@ def output_file(filename):
 
 
 if __name__ == "__main__":
-    # debug=False deliberately -- Flask's debug mode ships an interactive
-    # in-browser debugger that can execute arbitrary code, not appropriate
-    # even behind HA's ingress proxy.
-    app.run(host="0.0.0.0", port=8099, debug=False)
+    # Flask's own app.run() is a development server, and neither it nor
+    # waitress (the production WSGI server used below) installs a SIGTERM
+    # handler on its own -- HA Supervisor's "stop" during every add-on
+    # update/restart killed the process via Python's default signal
+    # disposition (exit code 143), logging a warning every single time.
+    # Trap it explicitly: sys.exit(0) raises SystemExit, which interrupts
+    # waitress's blocking accept loop and propagates out cleanly (it's a
+    # BaseException, so it isn't accidentally swallowed by an `except
+    # Exception` somewhere in the request-handling loop).
+    import signal
+    import sys
+
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=8099)

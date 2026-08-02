@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.3
+
+- Fix: HA Supervisor logged a warning on every add-on update/restart --
+  "App StockLLM did not handle SIGTERM ... exit code 143" -- because
+  Flask's `app.run()` is a development server with no signal handling of
+  its own, so Supervisor's stop request killed it via Python's default
+  SIGTERM disposition instead of a clean shutdown. Switched to waitress
+  (a small pure-Python production WSGI server -- no new process-
+  supervision layer, still one plain process) and added an explicit
+  SIGTERM handler that exits 0. Verified live: sending SIGTERM to the
+  running process now exits 0 immediately instead of being killed with
+  code 143.
+
 ## 0.8.2
 
 - Fix two real mobile bugs found from iPhone screenshots:
