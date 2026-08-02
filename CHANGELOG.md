@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.8.2
+
+- Fix two real mobile bugs found from iPhone screenshots:
+  - **Illegible chart text.** Every chart shares one fixed 620-unit-wide
+    SVG viewBox; `width: 100%` scaled that down to fit a ~300px mobile
+    card, which shrank every label/value proportionally along with the
+    geometry -- 10.5-12px authored text was rendering at roughly 5-6px on
+    a phone, confirmed by measuring actual rendered SVG width (scale
+    0.485) in a headless browser. Charts now stay pinned to their native
+    size on mobile and scroll horizontally within their own card instead
+    (same trade-off already made for wide tables) -- verified the fix
+    brings the render scale back to 1.0 with zero page-level overflow.
+  - **The whole page could be dragged sideways**, revealing clipped
+    content. A desktop/Chromium layout check shows zero page overflow at
+    every phone width tested, which points at iOS Safari's known
+    subpixel-rounding quirk: overflow invisible to Chromium's rounding
+    can still be nonzero under WebKit's, and any nonzero page overflow
+    lets iOS elastically drag the *entire* page. Added the standard
+    safety net, `overflow-x: hidden` on html/body -- every intentional
+    inner scroll region (tables, the section nav, now charts too) already
+    sets its own `overflow-x`, so this doesn't clip anything real.
+
 ## 0.8.1
 
 - Fix a real chart-form problem in "Price & Technicals," found from a

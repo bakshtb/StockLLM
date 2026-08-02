@@ -121,6 +121,13 @@ html, body {
   background: var(--page-plane);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Safety net: a sub-pixel of overflow anywhere on the page is invisible
+     in a desktop layout check but still lets iOS Safari elastically drag
+     the entire page sideways (rounds differently than Chromium). Every
+     intentionally-scrollable region on this page (table-scroll, the
+     section-nav pills, the mobile chart-scroll) sets its own overflow-x
+     on an inner element, so this doesn't clip anything real. */
+  overflow-x: hidden;
 }
 body { padding: 0 0 64px 0; }
 
@@ -315,6 +322,10 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .viz-toggle:hover { background: var(--gridline); }
 .viz-card.is-table-view .viz-chart { display: none; }
 .viz-card:not(.is-table-view) .viz-table { display: none; }
+/* Contains the mobile chart-scroll override below (see the max-width:700px
+   block) so a chart pinned to its native size scrolls within its own card
+   instead of forcing the card -- and the page -- wider than the viewport. */
+.viz-chart, .rec-trend-chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .viz-svg { width: 100%; max-width: 100%; height: auto; display: block; }
 .viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
 .viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
@@ -418,6 +429,16 @@ footer.disclaimer {
     text-align: left; flex-shrink: 0; padding-right: 12px;
   }
   .table-scroll { overflow-x: visible; }
+
+  /* Charts share one fixed internal coordinate system (a 620-unit-wide
+     viewBox) across every chart function -- scaling that down to fit a
+     ~300px mobile card (as width:100% does by default) shrinks every
+     label/value proportionally too, past the point of being legible
+     (10.5-12px authored text was rendering at ~5-6px). Pin charts to
+     their native size instead and let them scroll horizontally within
+     their own card (.viz-chart/.rec-trend-chart above already contain
+     that scroll) -- same trade-off already made for wide tables. */
+  .viz-svg { width: auto; max-width: none; min-width: 620px; }
 }
 @media (max-width: 420px) {
   .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }

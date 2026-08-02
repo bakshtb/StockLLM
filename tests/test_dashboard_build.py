@@ -62,6 +62,28 @@ class TestBuildDashboardAgainstEveryFixture:
         assert "@media (max-width: 700px)" in html
         assert "min-width: 0" in html  # the CSS Grid blowout fix, HANDOFF.md #33
 
+    def test_page_overflow_hidden_safety_net_present(self, sample_bundle):
+        # A real bug found on an actual iPhone: the page could be dragged
+        # horizontally, revealing clipped content -- a sub-pixel of overflow
+        # that headless/desktop layout checks don't see, but iOS Safari
+        # still lets you elastically drag. overflow-x: hidden on html/body
+        # is the standard safety net; every intentional inner scroll
+        # (table-scroll, section-nav, viz-chart) sets its own overflow-x so
+        # this doesn't clip anything real.
+        html = build_dashboard(sample_bundle)
+        assert "overflow-x: hidden" in html
+
+    def test_mobile_chart_scroll_containers_present(self, sample_bundle):
+        # Charts share one fixed 620-unit viewBox; without a native-size
+        # override on mobile, width:100% shrinks every chart's text along
+        # with its geometry to the point of being illegible (found from a
+        # real iPhone screenshot: ~5-6px rendered text). Charts must be
+        # pinned to native size and made scrollable within their own card
+        # on narrow screens instead.
+        html = build_dashboard(sample_bundle)
+        assert "min-width: 620px" in html
+        assert ".viz-chart, .rec-trend-chart { overflow-x: auto" in html
+
     def test_no_ai_recommendation_section_without_pipeline_result(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")
