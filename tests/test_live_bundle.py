@@ -358,6 +358,14 @@ class TestInsiderTransactionsFields:
             assert txn["direction"] in {"buy", "sell", "unknown"}
             assert is_num_or_none(txn["shares"])
             assert is_num_or_none(txn["price_per_share"])
+            assert is_str_or_none(txn["transaction_code"])
+            assert isinstance(txn["transaction_nature"], str)
+            assert isinstance(txn["is_open_market"], bool)
+            # A real open-market purchase always has a price attached --
+            # this is the same "no price = not a real cash purchase" check
+            # a human reading the dashboard should make.
+            if txn["is_open_market"] and txn["direction"] == "buy":
+                assert txn["price_per_share"] is not None
 
 
 class TestInstitutionalOwnershipFields:

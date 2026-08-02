@@ -123,6 +123,12 @@ class TestFetchInsiderTransactions:
         assert isinstance(result["transactions"], list)
         for txn in result["transactions"]:
             assert txn["direction"] in {"buy", "sell", "unknown"}
+            assert isinstance(txn["is_open_market"], bool)
+            assert isinstance(txn["transaction_nature"], str)
+            # is_open_market must only ever be true for a real market
+            # purchase/sale code (P/S) -- never for a grant/award/exercise/etc.
+            if txn["is_open_market"]:
+                assert txn["transaction_code"] in {"P", "S"}
 
 
 class TestFetchInstitutionalOwnership:

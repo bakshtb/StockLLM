@@ -3,7 +3,22 @@ Deterministic insider transaction fetch. No LLM calls here.
 
 Pulls recent Form 4 filings (insider buy/sell disclosures) from SEC EDGAR --
 free, public, no API key. This is one of the more genuinely useful signals
-available: insiders buying with their own money is a real vote of confidence.
+available, PROVIDED it's read correctly: Form 4 XML carries two different
+codes that are easy to conflate (both use the letter "A" for something
+different, which doesn't help):
+  - transactionAcquiredDisposedCode: just "A" (holdings went up) or "D"
+    (holdings went down). Says nothing about WHY.
+  - transactionCoding/transactionCode: the actual reason -- "P" (open market
+    or private purchase, real cash changing hands), "S" (open market sale),
+    "A" (grant or award -- routine stock-based compensation, NOT a purchase),
+    "M" (option exercise), "F" (tax withholding), "G" (gift), etc.
+An earlier version of this module only read the first code, so a CEO's
+scheduled RSU vesting (millions of shares, no price, code "A") was
+indistinguishable from real conviction buying (code "P") -- both got labeled
+"buy". `is_open_market` below is the field that actually answers "did this
+insider spend their own money because they're bullish" -- true only for
+codes P/S; `direction` (buy/sell/unknown) is kept as-is since "did their
+holdings go up or down" is still a real, separate fact.
 """
 
 import xml.etree.ElementTree as ET
@@ -11,6 +26,28 @@ import xml.etree.ElementTree as ET
 from data.edgar_utils import get_cik_for_ticker, get_submissions, fetch_document
 
 MAX_FORM4_TO_PARSE = 8
+
+# SEC Table I/II transaction codes that actually matter for reading this
+# data correctly. Codes not listed here fall back to "other (<code>)" rather
+# than a guess -- see https://www.sec.gov/about/forms/form4data.pdf.
+_TRANSACTION_CODE_LABELS = {
+    "P": "open market purchase",
+    "S": "open market sale",
+    "A": "grant or award",
+    "M": "option exercise",
+    "F": "tax withholding",
+    "G": "gift",
+    "D": "disposition to issuer",
+    "C": "derivative conversion",
+    "J": "other acquisition/disposition",
+}
+_OPEN_MARKET_CODES = {"P", "S"}
+
+
+def _transaction_nature(code: str | None) -> str:
+    if not code:
+        return "unknown"
+    return _TRANSACTION_CODE_LABELS.get(code, f"other ({code})")
 
 
 def _parse_form4_xml(xml_text: str) -> list[dict]:
@@ -20,8 +57,6 @@ def _parse_form4_xml(xml_text: str) -> list[dict]:
         root = ET.fromstring(xml_text)
     except ET.ParseError:
         return transactions
-
-    ns = ""  # Form 4 XML typically has no namespace prefix
 
     owner_name_el = root.find(".//reportingOwner/reportingOwnerId/rptOwnerName")
     owner_name = owner_name_el.text if owner_name_el is not None else "unknown"
@@ -40,8 +75,7 @@ def _parse_form4_xml(xml_text: str) -> list[dict]:
 
     for txn in root.findall(".//nonDerivativeTransaction"):
         date = txn.findtext("./transactionDate/value")
-        code = txn.findtext("./transactionAmounts/transactionAcquiredDisposedCode/value") \
-            or txn.findtext("./transactionCoding/transactionCode")
+        transaction_code = txn.findtext("./transactionCoding/transactionCode")
         shares = txn.findtext("./transactionAmounts/transactionShares/value")
         price = txn.findtext("./transactionAmounts/transactionPricePerShare/value")
         acquired_disposed = txn.findtext("./transactionAmounts/transactionAcquiredDisposedCode/value")
@@ -51,6 +85,9 @@ def _parse_form4_xml(xml_text: str) -> list[dict]:
             "title": title or "unknown",
             "date": date,
             "direction": "buy" if acquired_disposed == "A" else "sell" if acquired_disposed == "D" else "unknown",
+            "transaction_code": transaction_code,
+            "transaction_nature": _transaction_nature(transaction_code),
+            "is_open_market": transaction_code in _OPEN_MARKET_CODES,
             "shares": float(shares) if shares else None,
             "price_per_share": float(price) if price else None,
         })

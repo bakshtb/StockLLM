@@ -475,7 +475,7 @@ GLOSSARY = {
     "pe_premium": "Compares this company's P/E ratio (see above) to the S&P 500's and to its own sector's. A positive number means investors are paying more per dollar of profit than they would for the average stock in that group — which isn't automatically good or bad, it can mean \"expensive\" or \"expected to grow faster,\" depending on why.",
     "ownership_breakdown": "Who owns the company's shares: big institutions (mutual funds, pension funds, etc.), company insiders (executives/directors), or everyone else (individual retail investors). This is a snapshot today, not a trend.",
     "top_holders": "The five largest institutional shareholders (mutual funds, index funds, etc.) and how many shares each owns.",
-    "insider_transactions": "Recent stock buys/sells by the company's own executives and directors, reported to regulators. An executive buying with their own money is often read as a vote of confidence; selling is common and often routine (e.g. diversifying, paying taxes on stock awards), so it's less automatically meaningful.",
+    "insider_transactions": "Recent stock activity by the company's own executives and directors, reported to regulators. The \"Nature\" column matters: an \"open market purchase\" is the executive spending their own cash, genuinely read as a vote of confidence. A \"grant or award\" or \"option exercise\" is routine stock-based pay — it also increases how many shares they hold, but it isn't a purchase decision and isn't a confidence signal. \"Open market sale\" is common and often routine (e.g. diversifying, paying taxes on stock awards), so it's less automatically meaningful either.",
     "form144": "Formal notices that a company insider *plans* to sell shares soon (filed before the sale happens). It's an early heads-up, not a confirmation the sale actually went through.",
     "beneficial_ownership": "Filings required when any single investor or firm owns more than 5% of the company. A \"13D\" filer says they may try to influence the company (e.g. an activist investor); a \"13G\" filer is just a passive, along-for-the-ride investor.",
     "balance_sheet": "The company's financial cushion: how much debt it owes, how much cash it has on hand, and whether it generates more cash than it spends (free cash flow). More cash and less debt generally means more room to survive a bad year.",
@@ -1297,15 +1297,22 @@ def section_at_a_glance(bundle):
         else:
             items.append(_glance_item("critical", "!", f"<b>Lost money</b> — net loss of {fmt_usd(abs(net_income))} over the last full year."))
 
-    # 6. Insider activity (net direction over what's shown)
+    # 6. Insider activity -- only genuine open-market purchases (real cash,
+    # their own choice) count as "buying" here. Stock grants/awards and
+    # option exercises also show up with direction == "buy" (their holdings
+    # went up), but that's routine compensation, not a vote of confidence --
+    # conflating the two was a real bug, see HANDOFF.md.
     txns = insider.get("transactions", []) or []
     if txns:
-        buys = sum(1 for t in txns if t.get("direction") == "buy")
-        sells = sum(1 for t in txns if t.get("direction") == "sell")
-        if buys and not sells:
-            items.append(_glance_item("good", "•", f"<b>Company insiders have been buying</b> — {buys} recent purchase(s) with their own money and no sales in this list, often read as a vote of confidence."))
-        elif buys and sells:
-            items.append(_glance_item("neutral", "•", f"<b>Mixed insider activity</b> — {buys} recent buy(s) and {sells} sale(s) by company insiders; sales are common and often routine, not necessarily a bad sign."))
+        open_market_buys = sum(1 for t in txns if t.get("direction") == "buy" and t.get("is_open_market"))
+        open_market_sells = sum(1 for t in txns if t.get("direction") == "sell" and t.get("is_open_market"))
+        grants_or_exercises = sum(1 for t in txns if t.get("direction") == "buy" and not t.get("is_open_market"))
+        if open_market_buys and not open_market_sells:
+            items.append(_glance_item("good", "•", f"<b>Company insiders have been buying</b> — {open_market_buys} recent open-market purchase(s) with their own money and no open-market sales in this list, often read as a vote of confidence."))
+        elif open_market_buys and open_market_sells:
+            items.append(_glance_item("neutral", "•", f"<b>Mixed insider activity</b> — {open_market_buys} recent open-market buy(s) and {open_market_sells} open-market sale(s) by company insiders; sales are common and often routine, not necessarily a bad sign."))
+        elif not open_market_buys and not open_market_sells and grants_or_exercises:
+            items.append(_glance_item("neutral", "•", f"<b>No open-market insider buying or selling</b> — the {grants_or_exercises} insider transaction(s) in this list are stock grants/awards or option exercises (routine compensation), not purchases with their own money, so they're not read as a confidence signal either way."))
 
     # 7. Social sentiment (only worth a mention with enough tagged posts to mean something)
     bull, bear = soc.get("bullish_count", 0), soc.get("bearish_count", 0)
@@ -1563,10 +1570,17 @@ def section_ownership(bundle):
     insiders = (bundle.get("insider_transactions", {}) or {}).get("transactions", []) or []
     insider_rows = []
     for t in insiders[:12]:
-        direction_badge = badge(t.get("direction") or "—", "good" if t.get("direction") == "buy" else "neutral")
+        # Only a genuine open-market buy is a real "vote of confidence" --
+        # a grant/award or option exercise also shows direction == "buy"
+        # (holdings went up) but isn't the insider choosing to spend their
+        # own money, so it doesn't get the same green badge.
+        is_real_buy = t.get("direction") == "buy" and t.get("is_open_market")
+        is_real_sell = t.get("direction") == "sell" and t.get("is_open_market")
+        direction_badge = badge(t.get("direction") or "—", "good" if is_real_buy else "critical" if is_real_sell else "neutral")
         insider_rows.append([t.get("date") or "—", t.get("owner") or "—", t.get("title") or "—",
-                              direction_badge, fmt_num(t.get("shares")), fmt_price(t.get("price_per_share")) if t.get("price_per_share") else "—"])
-    insider_table = data_table(["Date", "Owner", "Title", "Direction", "Shares", "Price"], insider_rows)
+                              direction_badge, t.get("transaction_nature") or "—",
+                              fmt_num(t.get("shares")), fmt_price(t.get("price_per_share")) if t.get("price_per_share") else "—"])
+    insider_table = data_table(["Date", "Owner", "Title", "Direction", "Nature", "Shares", "Price"], insider_rows)
 
     finnhub = bundle.get("finnhub_signals", {}) or {}
     mspr_html = ""

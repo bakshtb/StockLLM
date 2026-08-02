@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.1
+
+- Fix a real bug: insider transactions were labeled "buy" based only on
+  whether an insider's holdings went up, which conflated real open-market
+  purchases (their own cash, a genuine confidence signal) with routine
+  stock grants/awards and option exercises (compensation, not a purchase
+  decision). Found live on real data -- a CEO's scheduled RSU vesting
+  (millions of shares, no price) was showing on the dashboard as "insiders
+  have been buying... a vote of confidence," which wasn't true.
+  `data/fetch_insider.py` now reads SEC's actual transaction-reason code
+  (previously parsed but silently discarded) and adds `transaction_code`,
+  `transaction_nature`, and `is_open_market`. The dashboard's "At a Glance"
+  insider-buying claim and the transactions table now only treat genuine
+  open-market purchases as a confidence signal.
+
 ## 0.7.0
 
 - Decouple the filings digest's reading budget from what actually lands in

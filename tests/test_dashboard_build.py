@@ -281,6 +281,61 @@ class TestOptionalDataSources:
         assert_no_leaked_values(html)
 
 
+class TestInsiderActivityAtAGlance:
+    """The bug this fixes: 'insiders have been buying, a vote of
+    confidence' used to fire for ANY transaction that increased an
+    insider's holdings, including routine stock grants/awards and option
+    exercises -- not just real open-market purchases with their own cash.
+    See HANDOFF.md and data/fetch_insider.py's module docstring."""
+
+    def _bundle_with_transactions(self, transactions):
+        bundle = _minimal_bundle()
+        bundle["insider_transactions"] = {"transactions": transactions, "note": None}
+        return bundle
+
+    def test_real_open_market_buying_reads_as_confidence_signal(self):
+        txns = [
+            {"direction": "buy", "is_open_market": True, "transaction_nature": "open market purchase"},
+        ]
+        html = build_dashboard(self._bundle_with_transactions(txns))
+        assert "Company insiders have been buying" in html
+        assert "vote of confidence" in html
+
+    def test_grants_and_awards_do_not_read_as_confidence_signal(self):
+        # This is exactly the real-world case found live on MBLY: millions
+        # of shares via code "A" grants, no price attached.
+        txns = [
+            {"direction": "buy", "is_open_market": False, "transaction_nature": "grant or award"},
+            {"direction": "buy", "is_open_market": False, "transaction_nature": "grant or award"},
+        ]
+        html = build_dashboard(self._bundle_with_transactions(txns))
+        # "vote of confidence" still appears in the glossary tooltip text
+        # (which explains the distinction generically) -- what must NOT
+        # appear is the specific claim that these particular grants ARE one.
+        assert "Company insiders have been buying" not in html
+        assert "No open-market insider buying or selling" in html
+        assert "routine compensation" in html
+
+    def test_mix_of_real_buys_and_grants_only_counts_real_buys(self):
+        txns = [
+            {"direction": "buy", "is_open_market": True, "transaction_nature": "open market purchase"},
+            {"direction": "buy", "is_open_market": False, "transaction_nature": "grant or award"},
+        ]
+        html = build_dashboard(self._bundle_with_transactions(txns))
+        assert "1 recent open-market purchase" in html
+
+    def test_insider_table_shows_nature_column(self):
+        txns = [{
+            "date": "2026-07-10", "owner": "Test CEO", "title": "CEO", "direction": "buy",
+            "transaction_code": "A", "transaction_nature": "grant or award", "is_open_market": False,
+            "shares": 1000000.0, "price_per_share": None,
+        }]
+        html = build_dashboard(self._bundle_with_transactions(txns))
+        soup = BeautifulSoup(html, "html.parser")
+        assert "grant or award" in html
+        assert_no_leaked_values(html)
+
+
 def _minimal_bundle():
     """A deliberately thin bundle -- exercises the AI-recommendation path
     without depending on the shape of a specific committed fixture file."""
