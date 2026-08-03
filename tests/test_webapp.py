@@ -48,6 +48,33 @@ class TestIndexPage:
         resp = client.get("/")
         assert b"No runs yet" in resp.data
 
+    def test_ios_home_screen_meta_tags_present(self, client):
+        # PWA/"Add to Home Screen" support -- meaningful mainly via the
+        # add-on's direct port (config.yaml's `ports`), since an Ingress
+        # URL's token prefix isn't stable enough to bookmark.
+        html = client.get("/").get_data(as_text=True)
+        assert '<meta name="apple-mobile-web-app-capable" content="yes">' in html
+        assert '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' in html
+        assert '<meta name="apple-mobile-web-app-title" content="StockLLM">' in html
+        assert '<link rel="apple-touch-icon" href="assets/icon.png">' in html
+
+
+class TestStaticAssetsRoute:
+    """The index page isn't inside an OUTPUT_DIR run folder, so it can't
+    reuse dashboard/assets.ensure_vendored_assets() the way generated
+    dashboards do -- it needs a real route serving dashboard/assets/
+    directly instead, for its relative "assets/icon.png" reference to
+    resolve to anything."""
+
+    def test_icon_served_from_dashboard_assets_dir(self, client):
+        resp = client.get("/assets/icon.png")
+        assert resp.status_code == 200
+        assert resp.content_type == "image/png"
+
+    def test_unknown_asset_404s_not_500s(self, client):
+        resp = client.get("/assets/does-not-exist.js")
+        assert resp.status_code == 404
+
 
 class TestTickerValidation:
     """The ticker becomes part of an output filename -- this is the actual

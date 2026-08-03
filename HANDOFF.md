@@ -883,6 +883,61 @@ StockLLM/
       gauge's new semicircular form. Do both before fully trusting this on
       a real phone/browser.
 
+35. **Added direct port access (`config.yaml`'s `ports`) alongside Ingress,
+    plus iOS "Add to Home Screen" support** (0.9.6) — user's explicit ask.
+    Ingress and a direct port are NOT mutually exclusive for an add-on;
+    both are now enabled at once, for a real reason: Ingress URLs embed a
+    per-session token (`/api/hassio_ingress/<token>`) that can change
+    across HA restarts/logins, so a phone home-screen icon saved against
+    one goes stale. `ports: {8099/tcp: 8099}` (same internal port waitress
+    already binds to — this is a HOST-port mapping, not a second listener)
+    gives a stable URL for that specific use case; Ingress is still the
+    primary, recommended way to use it day-to-day (already behind HA's own
+    login). **Real security tradeoff, stated in both `config.yaml`'s own
+    comment and `DOCS.md`, not silently glossed over**: unlike Ingress, a
+    directly-exposed port has NO Home Assistant auth in front of it —
+    anyone who can reach the host on that port reaches the app. Fine on a
+    trusted LAN; explicitly do not port-forward it externally.
+    - **`apple-mobile-web-app-capable`/`-status-bar-style`/`-title` +
+      `apple-touch-icon`** added to both real HTML entry points a user
+      might bookmark: `webapp/app.py`'s `PAGE_HEAD` (the index/ticker-
+      entry form) and `dashboard/generate_dashboard.py`'s `build_dashboard()`
+      (the results page). Missing either would mean whichever one someone
+      actually saves to their home screen doesn't get standalone-mode
+      treatment.
+    - **New `dashboard/assets/icon.png`** (180x180, brand blue
+      `var(--series-1)` background, simple white chart-line glyph) — a
+      placeholder generated with Pillow, not commissioned art; swap it for
+      real branding whenever there's actual design input, same file path,
+      no other code changes needed. iOS masks it into the standard
+      rounded-square shape itself — don't pre-round the corners if it's
+      ever regenerated.
+    - **New `webapp/app.py` route, `/assets/<filename>`**, serving
+      `dashboard/assets/` directly — needed specifically because the index
+      page isn't inside an `OUTPUT_DIR` run folder the way a generated
+      dashboard is, so it can't reuse `ensure_vendored_assets()`'s
+      copy-next-to-the-HTML trick for its own `assets/icon.png` reference.
+      Works unprefixed under both direct-port and Ingress access without
+      any `_ingress_prefix()` involvement, same reasoning as every other
+      relative asset path in this app: Ingress strips its token prefix
+      before forwarding to the container, so Flask always sees the plain
+      `/assets/...` path server-side regardless of which URL the browser
+      used to get there.
+    - **`ensure_vendored_assets()` now distinguishes required from
+      optional assets** (`dashboard/assets.py`) — echarts.min.js/
+      dashboard.js stay hard-required (raise loudly if missing; there are
+      no charts at all without them), but icon.png is purely cosmetic (iOS
+      just falls back to a generic icon), so a missing or deleted icon
+      file must never be able to break every dashboard write the way a
+      missing required asset correctly still does. If a future asset is
+      added, decide which bucket it belongs in rather than defaulting to
+      one or the other.
+    - Verified: full pytest suite green including new coverage
+      (`tests/test_dashboard_assets.py`, plus new cases in
+      `test_webapp.py`/`test_dashboard_build.py`) for the meta tags, the
+      new route, and the required/optional asset split specifically
+      (including that a missing *required* asset still raises).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

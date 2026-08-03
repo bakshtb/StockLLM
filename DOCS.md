@@ -48,6 +48,16 @@ the same as a public repo from here on.
 3. **Start** the add-on.
 4. Open it from the Home Assistant sidebar (it appears there via Ingress — no separate port or login needed, it's already behind your HA login).
 
+### Installing it as an app on your phone (iOS/Android home screen)
+
+The sidebar/Ingress link isn't a stable URL — Home Assistant embeds a token in it that can change, so a home-screen icon pointing at it can go stale. Use the add-on's direct port instead:
+
+1. Find your HA host's local IP (Settings → System → Network) and this add-on's port (Info tab → **Network**, or `8099` if unchanged).
+2. On your phone, open `http://<HA-HOST-IP>:8099` in Safari (iOS) or Chrome (Android).
+3. iOS: tap Share → **Add to Home Screen**. Android/Chrome: menu → **Add to Home screen** / **Install app**.
+
+This opens the app in its own window (no browser bars) with its own icon. Note this bypasses HA's own login — reachable by anything on your network, on that port. Fine on a trusted home LAN; don't port-forward it to the public internet.
+
 ## 3. Using it
 
 - Enter a ticker, leave **Dry run** checked for a free data-only check, or uncheck it for the full 6-agent AI recommendation (costs a few cents, needs the three API keys from step 2).

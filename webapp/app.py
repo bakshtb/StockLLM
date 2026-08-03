@@ -81,6 +81,13 @@ PAGE_HEAD = f"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- iOS "Add to Home Screen" support -- only meaningful reached via the
+     add-on's direct port (config.yaml's `ports`), since an Ingress URL's
+     token prefix isn't stable enough to bookmark as a home-screen icon. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="StockLLM">
+<link rel="apple-touch-icon" href="assets/icon.png">
 <title>StockLLM</title>
 <script>
 (function () {{
@@ -263,6 +270,24 @@ def run_check():
 @app.route("/output/<path:filename>")
 def output_file(filename):
     return send_from_directory(OUTPUT_DIR, filename)
+
+
+# Serves dashboard/assets/ (echarts.min.js, dashboard.js, icon.png, ...)
+# directly for pages that aren't inside an OUTPUT_DIR run folder -- namely
+# the index/form page below, which references them via a plain relative
+# path ("assets/icon.png") exactly like every generated dashboard already
+# does. That works unprefixed under both direct port access and Ingress:
+# Ingress strips its dynamic token prefix before forwarding to this
+# container, so Flask always sees the plain "/assets/..." path either way
+# -- same reasoning as _ingress_prefix() below, just for a route that
+# happens to need no prefix-awareness at all since it's never prefixed at
+# the server side, only ever relative in the HTML.
+_ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dashboard", "assets")
+
+
+@app.route("/assets/<path:filename>")
+def static_assets(filename):
+    return send_from_directory(_ASSETS_DIR, filename)
 
 
 if __name__ == "__main__":

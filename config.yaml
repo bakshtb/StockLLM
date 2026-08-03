@@ -1,5 +1,5 @@
 name: StockLLM
-version: "0.9.5"
+version: "0.9.6"
 slug: stockllm
 description: "Multi-agent LLM stock research dashboard -- pick a ticker, get price/fundamentals/filings/news data and (optionally) a 6-agent AI recommendation."
 url: "https://github.com/bakshtb/StockLLM"
@@ -11,6 +11,22 @@ startup: application
 boot: auto
 ingress: true
 ingress_port: 8099
+# Direct port access, alongside Ingress -- added specifically so the web UI
+# can be installed to an iOS/Android home screen as a PWA. Ingress URLs
+# embed a per-session token in the path (e.g. /api/hassio_ingress/<token>),
+# which changes across HA restarts/logins, so a saved home-screen icon
+# pointing at one goes stale; a direct port has a stable URL that survives
+# that. Same internal port (8099) waitress already binds to in
+# webapp/app.py -- ports here only controls what HOST port that's mapped
+# to, defaulting to the same number. Note the real security tradeoff this
+# opens up: unlike Ingress, a directly-exposed port is NOT behind Home
+# Assistant's own login -- anyone who can reach this host on that port can
+# reach the app unauthenticated. Fine on a trusted LAN; do not port-forward
+# this through a router to the public internet.
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: "Web interface (direct access -- needed for iOS/Android 'Add to Home Screen' installs, since Ingress URLs aren't stable enough to bookmark)"
 panel_icon: mdi:chart-line
 panel_title: StockLLM
 options:

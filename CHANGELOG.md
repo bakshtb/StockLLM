@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.9.6
+
+- Add: direct port access (`config.yaml`'s `ports: {8099/tcp: 8099}`),
+  alongside Ingress (not instead of it), plus iOS/Android "Add to Home
+  Screen" support -- `apple-mobile-web-app-capable`/`-status-bar-style`/
+  `-title` and `apple-touch-icon` added to both real HTML entry points
+  (the index/ticker-entry form and the dashboard results page), with a
+  new placeholder `dashboard/assets/icon.png`. Ingress URLs embed a
+  per-session token that can change across HA restarts/logins, so a
+  saved home-screen icon pointing at one can go stale -- the direct port
+  gives a stable URL for that specific use case. Documented, real
+  security tradeoff: a directly-exposed port has no HA login in front of
+  it, unlike Ingress. See DOCS.md for setup steps and HANDOFF.md item 35
+  for the full design writeup, including a new required-vs-optional
+  split in `ensure_vendored_assets()` so a missing cosmetic icon can
+  never break a dashboard write the way a missing required chart asset
+  correctly still does.
+
 ## 0.9.5
 
 - Fix: the "High" corner label on the price-range track charts rendered

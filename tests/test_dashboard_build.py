@@ -94,6 +94,17 @@ class TestBuildDashboardAgainstEveryFixture:
         assert '<script src="assets/echarts.min.js"></script>' in html
         assert '<script src="assets/dashboard.js"></script>' in html
 
+    def test_ios_home_screen_meta_tags_present(self, sample_bundle):
+        # PWA/"Add to Home Screen" support -- this page (opened via the
+        # add-on's direct port, not just Ingress) is one of the two real
+        # entry points a user might actually bookmark to a phone home
+        # screen, alongside webapp.app's index page.
+        html = build_dashboard(sample_bundle)
+        assert '<meta name="apple-mobile-web-app-capable" content="yes">' in html
+        assert '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' in html
+        assert '<meta name="apple-mobile-web-app-title" content="StockLLM">' in html
+        assert '<link rel="apple-touch-icon" href="assets/icon.png">' in html
+
     def test_no_ai_recommendation_section_without_pipeline_result(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")

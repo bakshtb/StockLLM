@@ -2279,6 +2279,13 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- iOS "Add to Home Screen" support -- see webapp/app.py's PAGE_HEAD for
+     the same tags on the index page; both matter since either can be the
+     page a user actually bookmarks to their home screen. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="StockLLM">
+<link rel="apple-touch-icon" href="assets/icon.png">
 <title>{ticker} — StockLLM Research Dashboard</title>
 <script>{THEME_INIT_SCRIPT}</script>
 <style>{CSS_STYLE}</style>
