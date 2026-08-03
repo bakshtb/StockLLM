@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.8
+
+- Add: `RESEARCH.md` plus `research/` -- notes from cloning and reading the
+  source of 18 other stock-related open-source projects (LLM multi-agent
+  trading systems, backtesting libraries, RL frameworks, sentiment tools),
+  looking for concrete patterns worth adopting into StockLLM's own
+  `data`/`agents`/`dashboard` pipeline. Documentation only, no functional
+  changes to the add-on itself -- version bumped solely to satisfy this
+  repo's own pre-commit/CI convention that every commit touching tracked
+  files gets a version bump, not because anything the add-on does changed.
+
 ## 0.9.7
 
 - Add: password protection for the direct port added in 0.9.6. New
