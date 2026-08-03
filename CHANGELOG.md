@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.7
+
+- Add: password protection for the direct port added in 0.9.6. New
+  `web_password` option (`config.yaml`, `schema` type `password?`) gates
+  every route except `/login`/`/assets/*` behind a session-cookie login
+  form -- chosen over HTTP Basic Auth specifically because Basic Auth's
+  native browser prompt is known to be unreliable inside an iOS
+  "standalone" PWA launched from a home-screen icon, exactly last
+  release's use case. Ingress traffic is exempt (already behind HA's own
+  login, via the same `X-Ingress-Path` trust boundary `_ingress_prefix()`
+  already relies on elsewhere), so nothing changes for the primary,
+  recommended Ingress-based way of using this add-on. Leaving the password
+  blank still works (same "blank = feature off" convention as every other
+  optional credential), but the home page now shows a loud warning banner
+  in that specific combination (direct port reachable, no password set)
+  instead of silently treating it as fine. See HANDOFF.md item 36 for the
+  full design writeup, including the open-redirect guard on the
+  post-login `?next=` redirect and why the session secret is intentionally
+  not persisted across restarts.
+
 ## 0.9.6
 
 - Add: direct port access (`config.yaml`'s `ports: {8099/tcp: 8099}`),

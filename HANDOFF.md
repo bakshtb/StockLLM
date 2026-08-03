@@ -938,6 +938,65 @@ StockLLM/
       new route, and the required/optional asset split specifically
       (including that a missing *required* asset still raises).
 
+36. **Added a password gate for the direct port added in item 35** (0.9.7)
+    — user's explicit follow-up: opening a port with no Home Assistant auth
+    in front of it was flagged as a real tradeoff, not hypothetical, and
+    they asked for it closed. `WEB_PASSWORD` (`config.yaml`'s
+    `web_password`, `schema` type `password?` — the one place in this repo
+    that uses that type instead of `str?`, deliberately, since it's the one
+    option that's genuinely *only* a password, not an API key that happens
+    to also be sensitive) gates every route except `/login` and
+    `/assets/*` behind a login form, via `webapp/app.py`'s
+    `@app.before_request` hook `_gate_direct_access()`.
+    - **Exempt, not just protected differently: Ingress traffic.**
+      `_login_required()` returns `False` whenever `_ingress_prefix()` is
+      non-empty (i.e. `X-Ingress-Path` is set) — that header is only ever
+      set by HA's own proxy, never forgeable by a request that hits the
+      exposed port directly, so it's a real trust boundary, not
+      security-through-obscurity. Reusing it here means Ingress users (the
+      primary, recommended path — already behind HA's own login) are never
+      asked for a second password.
+    - **Blank means the gate is off, same convention as every other
+      optional credential in `config.py`** — but unlike a blank
+      `fmp_api_key` (a missing nice-to-have), a blank `web_password` on a
+      directly-reachable port is a real open door, so `_render_form()`
+      shows a loud in-page warning banner in exactly that combination
+      (direct access AND no password configured), rather than silently
+      matching the "blank = fine" pattern used everywhere else. Don't
+      "simplify" this into the same silent-blank treatment as the other
+      credentials — the whole point is that this one specific blank state
+      deserves to be visible.
+    - **Session, not HTTP Basic Auth** — chosen specifically because Basic
+      Auth's native browser prompt is known to be unreliable inside an iOS
+      "standalone" PWA launched from a home-screen icon (exactly item 35's
+      use case); some don't show the prompt at all. A cookie-based login
+      form works reliably there. `app.secret_key` is random per process
+      start, not persisted — the one real consequence is every add-on
+      restart/update invalidates existing sessions (one re-login, not a
+      lockout), traded deliberately for not needing to persist a secret
+      across restarts for what's a single-user app. Session cookie lives
+      30 days (`PERMANENT_SESSION_LIFETIME`).
+    - **`?next=` is validated against being an absolute/off-site URL**
+      (`_safe_next_path()`) before ever being used in a redirect — an
+      unvalidated `next` parameter turning a login page into an open
+      redirect (`?next=https://evil.example`) is a well-known, real class
+      of vulnerability, not a hypothetical concern invented for this repo.
+    - **Password compared with `secrets.compare_digest`, not `==`** — a
+      plain equality check short-circuits on the first mismatched byte,
+      leaking how many leading characters were correct via response
+      timing. Irrelevant against a random guesser, a real difference
+      against someone actually probing it.
+    - Verified: 10 new tests in `tests/test_webapp.py` covering both
+      directions of every exemption (blank password, Ingress header, valid
+      session) actually granting access, the login/logout round trip,
+      wrong-password rejection, and the open-redirect guard specifically;
+      full suite green (339 tests), no regressions to the pre-existing
+      ones. No real browser available in this environment to confirm the
+      warning banner renders acceptably or that a phone's standalone PWA
+      actually preserves the session cookie across app switches/restarts
+      the way Safari itself does — worth an explicit check on a real
+      device before fully trusting the "log in once" experience.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

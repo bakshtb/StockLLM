@@ -12,6 +12,14 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "")
 MONTHLY_SPEND_LIMIT_USD = float(os.getenv("MONTHLY_SPEND_LIMIT_USD", "50"))
 
+# Gates webapp/app.py's direct-port access (see config.yaml's `ports`) behind
+# a simple password -- Ingress traffic is exempt (already behind HA's own
+# login; see webapp/app.py's _login_required()). Empty by default, same
+# "blank means not configured" convention as every other optional credential
+# above/below -- webapp/app.py shows a loud in-page warning rather than
+# silently treating an unset password as secure.
+WEB_PASSWORD = os.getenv("WEB_PASSWORD", "")
+
 # FRED (Federal Reserve Bank of St. Louis) -- free, no paid tier exists at all.
 # Deepens macro_context beyond VIX/10Y with inflation, unemployment, the Fed
 # funds rate, and the 2s10s yield curve spread. Optional -- macro_context

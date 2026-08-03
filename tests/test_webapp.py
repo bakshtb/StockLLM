@@ -235,3 +235,88 @@ class TestIngressPathHandling:
         (webapp_output_dir / "AAPL_dashboard.html").write_text("<html></html>")
         resp = client.get("/", headers={"X-Ingress-Path": self.INGRESS_PREFIX})
         assert f'{self.INGRESS_PREFIX}/output/AAPL_dashboard.html'.encode() in resp.data
+
+
+class TestDirectAccessLogin:
+    """Gates config.yaml's directly-exposed port (ports: {8099/tcp: 8099})
+    behind a password -- Ingress traffic (already behind HA's own login) is
+    exempt, and so is every request when WEB_PASSWORD isn't configured at
+    all, matching this repo's "blank = feature not configured" convention
+    for every other optional credential (see config.py)."""
+
+    def test_no_password_configured_means_no_gate(self, client):
+        # WEB_PASSWORD defaults to "" -- every other test file in this repo
+        # relies on this exact default, so this is the baseline every other
+        # test implicitly already exercises; asserted explicitly here too.
+        resp = client.get("/")
+        assert resp.status_code == 200
+        assert b"StockLLM" in resp.data
+
+    def test_unprotected_warning_shown_when_no_password_and_no_ingress(self, client):
+        resp = client.get("/")
+        assert b"no password set" in resp.data
+
+    def test_unprotected_warning_absent_behind_ingress(self, client, monkeypatch):
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        resp = client.get("/", headers={"X-Ingress-Path": "/api/hassio_ingress/abc123"})
+        assert resp.status_code == 200
+        assert b"no password set" not in resp.data
+
+    def test_direct_access_redirected_to_login_when_password_set(self, client, monkeypatch):
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        resp = client.get("/")
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == "/login?next=/"
+
+    def test_ingress_access_exempt_even_with_password_set(self, client, monkeypatch):
+        # Already authenticated via HA's own login -- must not be asked
+        # again just because a direct-port password also happens to be set.
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        resp = client.get("/", headers={"X-Ingress-Path": "/api/hassio_ingress/abc123"})
+        assert resp.status_code == 200
+        assert b"StockLLM" in resp.data
+
+    def test_wrong_password_rejected(self, client, monkeypatch):
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        resp = client.post("/login", data={"password": "wrong", "next": "/"})
+        assert resp.status_code == 401
+        assert b"Incorrect password" in resp.data
+
+    def test_correct_password_grants_access_and_redirects_to_next(self, client, monkeypatch):
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        resp = client.post("/login", data={"password": "hunter2", "next": "/"})
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == "/"
+        # Session cookie now carries the login -- a follow-up request must
+        # not be redirected back to /login.
+        resp2 = client.get("/")
+        assert resp2.status_code == 200
+        assert b"StockLLM" in resp2.data
+
+    def test_open_redirect_via_next_param_rejected(self, client, monkeypatch):
+        # ?next=https://evil.example must never be honored -- would turn
+        # this app's own login page into a phishing redirector.
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        resp = client.post("/login", data={"password": "hunter2", "next": "https://evil.example/steal"})
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == "/"
+
+    def test_logout_clears_session_and_re_gates(self, client, monkeypatch):
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        client.post("/login", data={"password": "hunter2", "next": "/"})
+        assert client.get("/").status_code == 200  # confirms login took
+
+        resp = client.post("/logout")
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == "/login"
+
+        resp2 = client.get("/")
+        assert resp2.status_code == 302  # logged out -- gated again
+
+    def test_login_page_itself_and_assets_never_gated(self, client, monkeypatch):
+        # Otherwise the login page couldn't load at all: gating /login
+        # would redirect it to /login forever, and gating /assets/ would
+        # break its own icon reference before anyone could log in to see it.
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        assert client.get("/login").status_code == 200
+        assert client.get("/assets/icon.png").status_code == 200

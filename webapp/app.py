@@ -44,6 +44,7 @@ def _load_ha_options():
         "fred_api_key": "FRED_API_KEY",
         "fmp_api_key": "FMP_API_KEY",
         "monthly_spend_limit_usd": "MONTHLY_SPEND_LIMIT_USD",
+        "web_password": "WEB_PASSWORD",
     }
     for option_key, env_key in option_to_env.items():
         value = options.get(option_key)
@@ -55,19 +56,30 @@ _load_ha_options()
 
 import re
 import glob
+import secrets
 import datetime as dt
 
-from flask import Flask, request, redirect, send_from_directory
+from flask import Flask, request, redirect, send_from_directory, session
 
-from config import ANTHROPIC_API_KEY, QWEN_API_KEY, GEMINI_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR
+from config import ANTHROPIC_API_KEY, QWEN_API_KEY, GEMINI_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR, WEB_PASSWORD
 from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
 from storage.db import get_monthly_spend
-from dashboard.generate_dashboard import build_dashboard, CSS_STYLE
+from dashboard.generate_dashboard import build_dashboard, CSS_STYLE, esc
 from dashboard.assets import ensure_vendored_assets
 
 app = Flask(__name__)
+
+# Random per process start, not persisted -- signs the login session cookie.
+# The one real consequence: every add-on restart/update invalidates existing
+# sessions, so a user who was logged in has to enter the password again next
+# time they open the app. Acceptable for a personal tool (a one-time
+# password entry, not a lockout) and far simpler than persisting a stable
+# secret across restarts for a single-user app that isn't handling anyone
+# else's sessions.
+app.secret_key = secrets.token_bytes(32)
+app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(days=30)
 
 # Deliberately restrictive: tickers are short alphanumeric strings (a few
 # use '.' or '-', e.g. BRK.B). This also doubles as a security boundary --
@@ -143,6 +155,99 @@ def _ingress_prefix() -> str:
     return request.headers.get("X-Ingress-Path", "")
 
 
+# Paths reachable with no login: the login page/submit itself (obviously),
+# and the vendored assets (icon/CSS-adjacent JS) the login page's own head
+# needs to render -- gating those too would mean the login page can't even
+# load its own icon before you've logged in to see it.
+_LOGIN_EXEMPT_PATH_PREFIXES = ("/login", "/assets/")
+
+
+def _login_required() -> bool:
+    """
+    Whether the current request must be sent to the login gate before
+    proceeding. False (no gate) when: WEB_PASSWORD isn't configured
+    (matches this repo's "blank = feature not configured" convention for
+    every other optional credential -- see config.py); the request already
+    came through Home Assistant's own login via Ingress (a non-empty
+    X-Ingress-Path header is set only by HA's own proxy, never forgeable by
+    a request hitting this port directly -- same trust boundary
+    _ingress_prefix() already relies on); or this session already logged in
+    successfully.
+    """
+    if not WEB_PASSWORD:
+        return False
+    if _ingress_prefix():
+        return False
+    return not session.get("authed")
+
+
+def _safe_next_path(raw: str) -> str:
+    """Only accept an internal, relative path for post-login redirect --
+    guards against an open-redirect (?next=https://evil.example) being used
+    to phish from what looks like this app's own login page."""
+    if raw and raw.startswith("/") and not raw.startswith("//") and "://" not in raw:
+        return raw
+    return "/"
+
+
+@app.before_request
+def _gate_direct_access():
+    if request.path.startswith(_LOGIN_EXEMPT_PATH_PREFIXES) or not _login_required():
+        return None
+    # _login_required() already confirmed we're not behind Ingress in this
+    # branch, so the plain unprefixed path below is always correct here --
+    # unlike every other redirect in this file, no _ingress_prefix() call
+    # is needed (there's nothing to prefix with).
+    return redirect(f"/login?next={_safe_next_path(request.path)}")
+
+
+def _render_login(error=None, next_path="/"):
+    error_html = f'<div class="error-box">{error}</div>' if error else ""
+    return f"""{PAGE_HEAD}
+<div class="wrap">
+  <div class="card form-card">
+    <h2>StockLLM</h2>
+    <div class="card-sub">Enter the password to continue.</div>
+    {error_html}
+    <form method="post" action="/login">
+      <input type="hidden" name="next" value="{esc(_safe_next_path(next_path))}">
+      <div class="form-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autofocus>
+      </div>
+      <button type="submit" class="submit">Log in</button>
+    </form>
+  </div>
+</div>
+{PAGE_TAIL}"""
+
+
+@app.route("/login", methods=["GET"])
+def login_form():
+    return _render_login(next_path=request.args.get("next", "/"))
+
+
+@app.route("/login", methods=["POST"])
+def login_submit():
+    next_path = _safe_next_path(request.form.get("next", "/"))
+    password = request.form.get("password", "")
+    # secrets.compare_digest: a plain `==` short-circuits on the first
+    # mismatched byte, which leaks how many leading characters were
+    # correct via response timing -- irrelevant against a truly random
+    # guesser, but a real difference against someone actually probing it.
+    if not WEB_PASSWORD or not secrets.compare_digest(password, WEB_PASSWORD):
+        return _render_login(error="Incorrect password.", next_path=next_path), 401
+    session.permanent = True
+    session["authed"] = True
+    return redirect(next_path)
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.pop("authed", None)
+    return redirect("/login")
+
+
 def _recent_runs(limit=15):
     if not os.path.isdir(OUTPUT_DIR):
         return []
@@ -162,8 +267,31 @@ def _render_form(error=None):
         for name, mtime in recent
     ) or '<div class="empty">No runs yet.</div>'
     error_html = f'<div class="error-box">{error}</div>' if error else ""
+    # Only meaningful (and only shown) when this session actually went
+    # through the password gate -- an Ingress session was never asked for
+    # one, so a "Log out" link there would have nothing to do.
+    logout_html = (
+        '<form method="post" action="/logout" style="text-align:right;margin-bottom:8px;">'
+        '<button type="submit" style="background:none;border:none;color:var(--text-secondary);'
+        'font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Log out</button></form>'
+    ) if session.get("authed") else ""
+    # Loud, not silent: reachable on the direct port with no password set at
+    # all means _login_required() lets everything through unauthenticated
+    # (matching this repo's "blank = feature off" convention -- see
+    # config.py) -- but unlike a blank optional API key, that specific
+    # combination is a real open door, not just a missing nice-to-have.
+    unprotected_html = (
+        '<div class="error-box" style="background:rgba(250,178,25,0.14);'
+        'border-color:var(--status-warning);color:var(--status-warning);">'
+        "This add-on's direct port has no password set -- anyone who can reach this host on "
+        "this port can use it, unauthenticated. Set <b>web_password</b> in this add-on's "
+        "Configuration tab to protect it."
+        "</div>"
+    ) if not prefix and not WEB_PASSWORD else ""
     return f"""{PAGE_HEAD}
 <div class="wrap">
+  {logout_html}
+  {unprotected_html}
   <div class="card form-card">
     <h2>StockLLM</h2>
     <div class="card-sub">Pick a ticker to research. Not financial advice.</div>

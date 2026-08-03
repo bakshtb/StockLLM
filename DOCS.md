@@ -45,6 +45,7 @@ the same as a public repo from here on.
    - `fmp_api_key` — free tier (250 calls/day). Adds an independent DCF fair-value estimate and PEG ratio.
 
    - `monthly_spend_limit_usd` — default 50. Full runs cost a few cents each; this is a hard stop once the month's total (tracked in the add-on's own local database) reaches this.
+   - `web_password` — protects the direct port (see below) with a simple password. Leave blank only if you're not using the direct port, or fully trust everything on your network — the add-on shows a warning banner on its own home page if the direct port is reachable with no password set.
 3. **Start** the add-on.
 4. Open it from the Home Assistant sidebar (it appears there via Ingress — no separate port or login needed, it's already behind your HA login).
 
@@ -56,7 +57,7 @@ The sidebar/Ingress link isn't a stable URL — Home Assistant embeds a token in
 2. On your phone, open `http://<HA-HOST-IP>:8099` in Safari (iOS) or Chrome (Android).
 3. iOS: tap Share → **Add to Home Screen**. Android/Chrome: menu → **Add to Home screen** / **Install app**.
 
-This opens the app in its own window (no browser bars) with its own icon. Note this bypasses HA's own login — reachable by anything on your network, on that port. Fine on a trusted home LAN; don't port-forward it to the public internet.
+This opens the app in its own window (no browser bars) with its own icon. Note this bypasses HA's own login — reachable by anything on your network, on that port, unless you set `web_password` in step 2 above, in which case you'll get a one-time login screen (stays logged in for 30 days per device, or until the add-on restarts). Fine on a trusted home LAN either way; don't port-forward it to the public internet.
 
 ## 3. Using it
 

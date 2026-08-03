@@ -1,5 +1,5 @@
 name: StockLLM
-version: "0.9.6"
+version: "0.9.7"
 slug: stockllm
 description: "Multi-agent LLM stock research dashboard -- pick a ticker, get price/fundamentals/filings/news data and (optionally) a 6-agent AI recommendation."
 url: "https://github.com/bakshtb/StockLLM"
@@ -20,9 +20,15 @@ ingress_port: 8099
 # webapp/app.py -- ports here only controls what HOST port that's mapped
 # to, defaulting to the same number. Note the real security tradeoff this
 # opens up: unlike Ingress, a directly-exposed port is NOT behind Home
-# Assistant's own login -- anyone who can reach this host on that port can
-# reach the app unauthenticated. Fine on a trusted LAN; do not port-forward
-# this through a router to the public internet.
+# Assistant's own login. Set `web_password` below to gate direct-port
+# access behind a simple password (webapp/app.py's _login_required()) --
+# strongly recommended if this port is reachable by anything you don't
+# fully trust. Leaving it blank matches this repo's existing convention for
+# every other optional credential (blank = feature not configured), but
+# unlike those, the app shows a loud in-page warning rather than silently
+# treating that as safe. Even with a password set, still don't port-forward
+# this through a router to the public internet -- it's LAN-appropriate
+# protection, not internet-facing-grade.
 ports:
   8099/tcp: 8099
 ports_description:
@@ -38,6 +44,7 @@ options:
   fred_api_key: "8fd16ba15617a0914575c591d0922f51"
   fmp_api_key: "3PU9cCLm4C0WBJwCnGQ0gV3q7nTbljOI"
   monthly_spend_limit_usd: 50
+  web_password: ""
 schema:
   anthropic_api_key: str?
   qwen_api_key: str?
@@ -47,3 +54,4 @@ schema:
   fred_api_key: str?
   fmp_api_key: str?
   monthly_spend_limit_usd: float
+  web_password: password?
