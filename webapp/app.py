@@ -65,6 +65,7 @@ from agents.pipeline import run_pipeline
 from storage import db
 from storage.db import get_monthly_spend
 from dashboard.generate_dashboard import build_dashboard, CSS_STYLE
+from dashboard.assets import ensure_vendored_assets
 
 app = Flask(__name__)
 
@@ -254,6 +255,7 @@ def run_check():
     dashboard_name = f"{ticker}_dashboard.html"
     with open(os.path.join(OUTPUT_DIR, dashboard_name), "w", encoding="utf-8") as f:
         f.write(build_dashboard(bundle, pipeline_result))
+    ensure_vendored_assets(OUTPUT_DIR)
 
     return redirect(f"{_ingress_prefix()}/output/{dashboard_name}")
 

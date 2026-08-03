@@ -83,27 +83,16 @@ class TestBuildDashboardAgainstEveryFixture:
         html = build_dashboard(sample_bundle)
         assert "overflow-x: hidden" in html
 
-    def test_mobile_chart_text_size_override_present(self, sample_bundle):
-        # Charts share one fixed 620-unit viewBox scaled by width:100% to
-        # fit their card -- on a ~300px mobile card that shrinks the same
-        # 12-15px authored text to an illegible ~6-7px (found from a real
-        # iPhone screenshot). A pin-to-native-size + scroll fix was tried
-        # and reverted: it hid content (Current, MA20, the high-end label)
-        # off-screen by default with no visual hint to swipe, which is
-        # worse than small text. The real fix stays with width:100% (the
-        # whole chart always visible, no scrolling) and instead overrides
-        # each <text> element's font-size larger specifically on mobile --
-        # CSS font-size on SVG text still scales with the viewBox
-        # transform, so this brings the rendered size back up without any
-        # clipping. Three tiers (not one): a single blanket size clipped
-        # the RSI gauge's headline number against the viewBox top and
-        # overlapped adjacent rows in the plain bar-list charts, both
-        # confirmed via real screenshots -- see CSS_STYLE's own comment.
+    def test_echarts_registry_and_assets_wired_up(self, sample_bundle):
+        # Charts are now rendered client-side by the vendored ECharts
+        # runtime, not inline SVG -- responsive sizing/label collision/
+        # gauge geometry are ECharts' job now, not hand-tuned CSS tiers.
+        # Confirm the registry payload and both vendored <script> tags
+        # actually land in the page.
         html = build_dashboard(sample_bundle)
-        assert "text:not(.viz-headline):not(.viz-track-label) { font-size: 14px" in html
-        assert "text.viz-track-label { font-size: 30px" in html
-        assert "text.viz-headline { font-size: 34px" in html
-        assert ".viz-svg { width: 100%; max-width: 100%;" in html  # never pinned wider than its card
+        assert "window.__CHARTS__" in html
+        assert '<script src="assets/echarts.min.js"></script>' in html
+        assert '<script src="assets/dashboard.js"></script>' in html
 
     def test_no_ai_recommendation_section_without_pipeline_result(self, sample_bundle):
         html = build_dashboard(sample_bundle)
@@ -180,8 +169,10 @@ class TestBuildDashboardWithPipelineResult:
         rec_card = soup.find("div", class_="rec-card")
         assert "Fair value estimate" in rec_card.get_text()
         assert "Weighed bull/bear estimates" in rec_card.get_text()
-        # the range_meter chart itself: Low/High labels plus a Current marker
-        assert "Low $180.00" in html or "Low 180" in html
+        # the range_meter chart itself: Low/High labels made it into the
+        # registered ECharts option (chart data lives in window.__CHARTS__,
+        # not as literal text in the HTML body since charts render client-side)
+        assert '"fmt": "Low $180.00"' in html
         assert "$220.00" in html  # bull's fair_value_estimate surfaced in the thesis grid
 
     def test_fair_value_absent_does_not_crash_or_leak(self, mock_pipeline_result):

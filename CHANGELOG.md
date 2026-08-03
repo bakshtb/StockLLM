@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.9.0
+
+- **Replaced every hand-rolled inline-SVG chart with Apache ECharts**, vendored
+  locally at `dashboard/assets/echarts.min.js` (no CDN, no build step — this
+  add-on may run with no internet egress). A new `dashboard/assets/dashboard.js`
+  runtime reads a `window.__CHARTS__` registry (emitted by `build_dashboard()`)
+  and renders it client-side; `dashboard/assets.py`'s `ensure_vendored_assets()`
+  copies both files next to every generated dashboard HTML (wired into
+  `main.py`'s `dashboard` command and `webapp/app.py`'s `/run` handler).
+  Motivated by an entire prior session (0.8.1-0.8.8) spent chasing one
+  hand-rolled-SVG mobile/responsive bug after another (clipping, label
+  collision, diverging-bar overflow on skewed data, inconsistent internal
+  margins between neighboring charts) — every one of those bug classes is
+  something ECharts solves natively (native gauge geometry, bidirectional
+  self-centering stacking, built-in label-collision layout, real container-
+  size-aware responsive layout) instead of needing more hand-tuned pixel math.
+  The RSI gauge is a deliberate visual-form change (semicircular dial, not the
+  old horizontal zone strip) as a result.
+- Fixed three real "leaked `None`" bugs found auditing the migration (same bug
+  class `test_dashboard_build.py`'s `assert_no_leaked_values` already guards
+  against, but two of these three slipped past it — one because it wasn't a
+  `None`/`nan` leak at all, one because the `None` didn't land contiguous with
+  `><`): the EPS-surprise/quarterly-financials/buyback-spend cards passed a
+  literal `"<svg></svg>"` string for empty data instead of `None`, which
+  `viz_card()` treats as "there is a chart" — hid the "no data" table behind a
+  toggle button instead of showing it immediately; the analyst
+  recommendation-trend small-multiples loop and the AI recommendation's
+  fair-value-range block both interpolated a chart function's `None` return
+  (empty/invalid input) directly into an f-string with no guard, which would
+  render the literal text "None" on the page.
+- Everything else on the page (topbar, mobile nav, hero block, KPI tiles, data
+  tables, badges, glossary popovers, dark-mode toggle) is unchanged —
+  server-rendered exactly as before, was never the source of these bugs.
+
 ## 0.8.8
 
 - Fix: "Price vs. moving averages" and the analyst target range chart

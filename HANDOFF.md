@@ -70,8 +70,10 @@ StockLLM/
 │   ├── schema.sql                 # runs, research_bundles, agent_outputs, outcomes tables
 │   └── db.py                      # SQLite helpers
 ├── dashboard/
-│   └── generate_dashboard.py      # bundle JSON -> single self-contained HTML dashboard;
-│                                   #   pure rendering layer, no network calls, no deps beyond stdlib
+│   ├── generate_dashboard.py      # bundle JSON -> HTML dashboard; pure rendering layer,
+│   │                               #   no network calls, no deps beyond stdlib
+│   ├── assets.py                  # copies vendored chart assets next to a generated dashboard
+│   └── assets/                    # vendored echarts.min.js + hand-written dashboard.js runtime
 ├── config.py                      # model choices per agent, pricing table, spend limit
 ├── main.py                        # CLI entrypoint: `python main.py check TICKER [--dry-run] [--output PATH]`
 ├── backtest/                      # empty placeholder, not built yet
@@ -349,8 +351,9 @@ StockLLM/
 
 23. **`dashboard/generate_dashboard.py`**: a viewer, not a new data source —
     takes any bundle JSON (existing file or a fresh `--dry-run` fetch) and
-    renders it as a single offline HTML file (no CDN, no build step, no
-    server). Built following the project's dataviz skill (color-by-job,
+    renders it as an offline HTML dashboard (no CDN, no build step, no
+    server — see item 34 below for why it's no longer a *single* file as of
+    the ECharts migration). Built following the project's dataviz skill (color-by-job,
     validated reference palette used verbatim, table-view twin on every
     chart, hover+keyboard-focus tooltips). Two judgment calls worth knowing
     if you touch this file:
@@ -789,6 +792,96 @@ StockLLM/
       values) can't catch — only an actual rendered viewport can, which is
       exactly why the user's phone screenshots kept finding things a
       "does the HTML look reasonable" pass didn't.
+
+34. **Replaced every hand-rolled inline-SVG chart with Apache ECharts** (0.9.0)
+    — the direct payoff of the whole 0.8.1-0.8.8 stretch above: every one of
+    those bugs (clipping, label collision, diverging-bar overflow on skewed
+    data, inconsistent margins between neighboring charts) was hand-tuned
+    pixel geometry fighting a fundamentally manual approach, and each fix
+    only ever covered the specific case a screenshot happened to catch. User's
+    call to stop patching and move to a real charting framework, choice of
+    library delegated to Claude. Hybrid architecture, not a rewrite — Flask/
+    CLI still just call `build_dashboard(bundle, pipeline_result)` for one
+    HTML string; only the ~10 chart-generating functions changed internally.
+    - **Vendored, not CDN-loaded**: `dashboard/assets/echarts.min.js` (full
+      build, Apache-2.0) + a new hand-written `dashboard/assets/dashboard.js`
+      runtime, copied next to every generated dashboard by
+      `dashboard/assets.py`'s `ensure_vendored_assets(dest_dir)` — called
+      from every site that writes a dashboard HTML file (`webapp/app.py`'s
+      `/run` handler; `main.py`'s `dashboard` command, after all 3 of its
+      output-path branches resolve to one `output_path`), same reasoning as
+      item 28's Ingress work: this add-on may run with no internet egress at
+      request time, and a relative asset path resolves correctly under
+      Ingress, plain Flask, or a bare `file://` open with zero extra
+      routing/prefix logic.
+    - **Chart functions keep their exact signatures**, still do all data
+      shaping/formatting in Python (every datapoint gets a pre-formatted
+      `fmt` string via the existing `fmt_usd`/`fmt_pct`/`fmt_price`/
+      `fmt_compact` helpers — JS never re-derives display text from a raw
+      number) — only the return value changed, from an SVG string to
+      `(div_html_or_None, table[, legend])`. `register_chart(option,
+      height_px, aria_label)` allocates an id, stores the option in a
+      per-`build_dashboard()`-call registry, and returns the placeholder
+      div; the registry gets serialized once as `window.__CHARTS__` near the
+      end of the page.
+    - **Colors and formatters never travel through the option dict as real
+      values** — colors stay as literal `"var(--xxx)"` strings (the same CSS
+      custom property names used everywhere else) and formatters are one of
+      a small set of string tokens (`__tooltipFmt__`, `__labelFmt__`, etc.).
+      `dashboard.js`'s `hydrateOption()` is the one place that resolves both
+      into real values/functions, called fresh before every `setOption()` —
+      this is also what makes dark-mode re-theming trivial
+      (`reapplyTheme()`: re-run `hydrateOption` against the *original*
+      stored option, `setOption(..., true)` so nothing stale lingers) with
+      zero per-chart-type special-casing anywhere.
+    - **RSI gauge is a deliberate visual-form change**, not just a
+      re-implementation: native `type: "gauge"` (semicircular dial) instead
+      of the old horizontal zone-strip-with-a-dot. This is the idiomatic
+      ECharts way to render "single value + zones + a big number," and it's
+      what made the old headline-clipping-against-the-SVG-edge bug (item
+      30/32) structurally impossible rather than papered over with more
+      offset math.
+    - **Empty-state contract**: chart functions return `(None, empty_state())`
+      for no/invalid data (not an empty `"<svg></svg>"` string) —
+      `viz_card()` treats `chart_html=None` as "table only, no toggle
+      button, table visible immediately" (`.viz-table-only` CSS class).
+      **Three call sites were found still passing a literal `"<svg></svg>"`
+      for their empty-data branch** (EPS surprise history, quarterly
+      revenue/income, buyback spend) — fixed to pass `None`; before the fix,
+      a ticker with no data for one of these would show a blank chart pane
+      behind a live-but-pointless "View as table" toggle instead of the "No
+      data" message immediately. **Two more real bugs, same root cause, one
+      level up**: two call sites (the recommendation-trend small-multiples
+      loop in `section_analyst`, and the fair-value-range block in
+      `section_ai_recommendation`) interpolate a chart function's return
+      value directly into an f-string instead of going through `viz_card()`,
+      so they never got its `None` guard — a period with no analyst-
+      recommendation data, or a Judge response with an inverted/equal
+      `fair_value_low`/`fair_value_high` range (plausible LLM schema drift —
+      see "STILL NOT tested end-to-end" above), would leak the literal text
+      "None" onto the page. Both fixed (skip/fallback instead of leaking).
+      **Only partially caught by the existing `assert_no_leaked_values`
+      test** (`tests/test_dashboard_build.py`, regex-based, checks for
+      `>None<` among other patterns): the `<svg></svg>` bugs weren't a
+      `None`/`nan` leak at all so the regex never had a chance; the
+      fair-value one *is* a `None` leak but the interpolated `{fv_svg}` sits
+      on its own line between two `<div>` tags, not contiguous with `><`, so
+      even that regex missed it. If a future chart call site skips
+      `viz_card()` for a custom layout, guard its `None` return explicitly —
+      don't assume the leaked-value test will catch it.
+    - Verified: full `pytest` suite (306 tests) green; all 6 committed
+      `output/*.json` fixtures render with no leaked `None`/`nan`; the three
+      fixed empty-data paths and the two fixed `None`-leak paths all
+      re-verified directly with synthetic inputs after the fix; a real
+      `python main.py dashboard ... -o <arbitrary path>` run confirmed
+      `ensure_vendored_assets()` actually places both JS files next to an
+      explicit `-o` output path, not just the default `OUTPUT_DIR`.
+      **Still NOT verified** (no real browser available in the environment
+      this was fixed in, same gap noted throughout items 25-33): an actual
+      Playwright pass (console errors, real rendered chart size, dark-mode
+      re-coloring, the table/chart toggle) and a direct look at the RSI
+      gauge's new semicircular form. Do both before fully trusting this on
+      a real phone/browser.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

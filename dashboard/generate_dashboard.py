@@ -1,10 +1,19 @@
 """
-Generates a single self-contained, offline HTML dashboard from a StockLLM
-research bundle JSON file (the same JSON produced by `data/bundle.py`, or
-written to disk via `python main.py check TICKER --dry-run -o file.json`).
+Generates an offline HTML dashboard from a StockLLM research bundle JSON
+file (the same JSON produced by `data/bundle.py`, or written to disk via
+`python main.py check TICKER --dry-run -o file.json`).
 
-No external dependencies, no CDN, no build step -- the output is one .html
-file with embedded CSS/SVG/JS. Open it directly in a browser.
+No CDN, no build step, works with no internet access at request time -- but
+this is no longer a single self-contained file: charts render client-side
+via Apache ECharts, vendored at dashboard/assets/echarts.min.js and paired
+with dashboard/assets/dashboard.js (see that file's own comments for why --
+short version: hand-rolled SVG chart geometry was an endless source of
+mobile/responsive bugs; a real charting library solves that class of
+problem natively). Every function below that writes the generated HTML to
+disk must also call dashboard.assets.ensure_vendored_assets() on that same
+output directory, or the page will load with no charts (it degrades to
+table-only view automatically in that case -- see dashboard.js -- but
+that's a fallback, not the intended experience).
 
 Usage:
     python -m dashboard.generate_dashboard mobileye.json
@@ -19,6 +28,7 @@ import argparse
 import html
 import json
 import sys
+import threading
 
 # ============================================================================
 # Color roles -- verbatim from the dataviz skill's reference palette
@@ -296,12 +306,10 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
      allowed to be loud"). */
   box-shadow: 0 1px 2px rgba(11,11,11,0.03), 0 1px 10px rgba(11,11,11,0.025);
   /* Grid items default to min-width: auto, meaning a track won't shrink
-     below the largest intrinsic content size of anything inside it -- an
-     SVG chart with explicit width/height attributes (added for mobile
-     Safari's benefit, see .viz-svg below) can set exactly that floor,
+     below the largest intrinsic content size of anything inside it --
+     content with an explicit pixel width can set exactly that floor,
      silently forcing this card (and its whole grid track) wider than the
-     viewport regardless of any width:100% override further down. This is
-     what actually still overflowed on a phone after that fix. */
+     viewport regardless of any width:100% override further down. */
   min-width: 0;
 }
 .card.full { grid-column: 1 / -1; }
@@ -322,19 +330,19 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .viz-toggle:hover { background: var(--gridline); }
 .viz-card.is-table-view .viz-chart { display: none; }
 .viz-card:not(.is-table-view) .viz-table { display: none; }
+/* No chart at all (empty data) -- viz_card() renders the table with no
+   toggle button in that case; it must stay visible regardless of the
+   is-table-view class the card never gets. */
+.viz-card .viz-table.viz-table-only { display: block; }
 /* Defensive: charts always render at width:100% (never require scrolling
    to see the whole chart -- see the mobile text-size override below
    instead), but this catches anything unexpectedly wider than its card. */
 .viz-chart, .rec-trend-chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.viz-svg { width: 100%; max-width: 100%; height: auto; display: block; }
+.echarts-container { width: 100%; }
 .viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
 .viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
 .viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 .viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
-
-.mark { cursor: pointer; }
-.mark:hover, .mark.is-hover { filter: brightness(1.12); }
-.mark:focus { outline: 2px solid var(--text-secondary); outline-offset: 2px; }
 
 table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.data-table th, table.data-table td {
@@ -376,13 +384,6 @@ table.data-table tr:last-child td { border-bottom: none; }
 .notes-list li:last-child { border-bottom: none; }
 
 .empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
-
-.viz-tooltip {
-  position: fixed; display: none; z-index: 999; pointer-events: none;
-  background: var(--text-primary); color: var(--surface-1);
-  font-size: 12px; padding: 6px 10px; border-radius: 6px; max-width: 260px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-}
 
 footer.disclaimer {
   max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
@@ -439,43 +440,6 @@ footer.disclaimer {
     text-align: left; flex-shrink: 0; padding-right: 12px;
   }
   .table-scroll { overflow-x: visible; }
-
-  /* Charts share one fixed internal coordinate system (a 620-unit-wide
-     viewBox) scaled down by width:100% to fit whatever card holds it --
-     on a ~300px mobile card that's a ~0.485x scale, so the same 12-15px
-     authored text renders at an illegible ~6-7px. Pinning the chart to
-     its native (unscaled) width and scrolling horizontally was tried and
-     reverted: it hid content past the visible edge by default (Current,
-     MA20, the high-end label were all off-screen with no visual hint to
-     swipe) -- worse than small text. CSS font-size on an SVG <text>
-     element still scales with the viewBox transform even when it wins
-     the cascade over the inline attribute, so overriding it to a bigger
-     *unscaled* value here brings the on-screen result back up to a
-     legible size without any scrolling or clipping.
-
-     Three tiers, not one -- a single blanket size broke two different
-     ways when tried (each found from a real screenshot, not guessed):
-       - .viz-track-label / .viz-headline (range_meter, range_position_plot,
-         gauge_meter): these 3 functions' internal spacing (track_y, row_gap,
-         collision margins) was deliberately widened to fit a bigger font --
-         see their own comments. Safe up to ~30px / ~34px (measured via
-         real getBBox, not eyeballed em-heights).
-       - Every other chart (bar_chart_horizontal, diverging_bar_horizontal,
-         grouped_bar_horizontal, grouped_column_chart, the diverging-
-         stacked-bar family, etc.) packs labels far more tightly and
-         wasn't redesigned here -- grouped_column_chart alone can show up
-         to 8 quarters across a fixed 620-unit plot width, so its category
-         labels are the tightest constraint in the whole file. Tested
-         empirically (real getBBox overlap checks against real fixture
-         data rendered with real mobile-viewport emulation, not eyeballed
-         or checked only in a plain desktop-browser window -- font metrics
-         genuinely differ between the two, which cost a round of this
-         being miscalibrated) up through several candidate sizes before
-         landing on 14px as the largest one with zero collisions across
-         every chart in this tier. */
-  .viz-svg text:not(.viz-headline):not(.viz-track-label) { font-size: 14px !important; }
-  .viz-svg text.viz-track-label { font-size: 30px !important; }
-  .viz-svg text.viz-headline { font-size: 34px !important; }
 }
 @media (max-width: 420px) {
   .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
@@ -484,48 +448,17 @@ footer.disclaimer {
 
 JS_SCRIPT = """
 (function () {
-  var tip = document.createElement('div');
-  tip.className = 'viz-tooltip';
-  document.body.appendChild(tip);
-
-  function showTip(x, y, text) {
-    tip.textContent = text;
-    tip.style.display = 'block';
-    tip.style.left = (x + 14) + 'px';
-    tip.style.top = (y + 14) + 'px';
-  }
-  function hideTip() { tip.style.display = 'none'; }
-
-  document.addEventListener('mousemove', function (e) {
-    var t = e.target.closest && e.target.closest('.mark');
-    if (t && t.dataset.tip) {
-      showTip(e.clientX, e.clientY, t.dataset.tip);
-    } else {
-      hideTip();
-    }
-  });
-  document.addEventListener('mouseout', function (e) {
-    var t = e.target.closest && e.target.closest('.mark');
-    if (t) hideTip();
-  });
-  document.addEventListener('focusin', function (e) {
-    var t = e.target.closest && e.target.closest('.mark');
-    if (t && t.dataset.tip) {
-      var r = t.getBoundingClientRect();
-      showTip(r.left + r.width / 2, r.top, t.dataset.tip);
-    }
-  });
-  document.addEventListener('focusout', function (e) {
-    var t = e.target.closest && e.target.closest('.mark');
-    if (t) hideTip();
-  });
-
   document.querySelectorAll('.viz-toggle').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var card = btn.closest('.viz-card');
       var nowTable = card.classList.toggle('is-table-view');
       btn.textContent = nowTable ? 'View chart' : 'View as table';
       btn.setAttribute('aria-pressed', String(nowTable));
+      // A chart that was display:none (table view) sizes to 0 -- the
+      // ResizeObserver in dashboard.js already catches this, but call
+      // explicitly too as cheap insurance against ResizeObserver quirks in
+      // some embedded WebViews (this runs inside Home Assistant's own UI).
+      if (!nowTable && window.StockLLMCharts) window.StockLLMCharts.resizeWithin(card);
     });
   });
 
@@ -539,6 +472,7 @@ JS_SCRIPT = """
       root.setAttribute('data-theme', next);
       themeBtn.textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
       try { localStorage.setItem('stockllm-theme', next); } catch (e) {}
+      if (window.StockLLMCharts) window.StockLLMCharts.reapplyTheme();
     });
   }
 
@@ -738,71 +672,6 @@ def rsi_class(v):
 
 
 # ============================================================================
-# SVG primitives -- rounded "data end", square at the baseline (see
-# marks-and-anatomy.md). Built as explicit paths since a plain <rect rx>
-# rounds all four corners.
-# ============================================================================
-
-def _hbar_path(x0, y0, w, h, r=4):
-    """Horizontal bar growing rightward from baseline x0. Rounded right end,
-    square left end (the baseline). If w is negative, grows leftward with
-    the rounding mirrored (for diverging charts)."""
-    if w == 0:
-        return ""
-    r = min(r, abs(w), h / 2)
-    if w > 0:
-        x1 = x0 + w
-        return (
-            f"M {x0} {y0} H {x1-r} Q {x1} {y0} {x1} {y0+r} "
-            f"V {y0+h-r} Q {x1} {y0+h} {x1-r} {y0+h} H {x0} Z"
-        )
-    else:
-        x1 = x0 + w  # to the left
-        return (
-            f"M {x0} {y0} H {x1+r} Q {x1} {y0} {x1} {y0+r} "
-            f"V {y0+h-r} Q {x1} {y0+h} {x1+r} {y0+h} H {x0} Z"
-        )
-
-
-def _rect_path(x, y, w, h, rtl=0, rtr=0, rbr=0, rbl=0):
-    """Rectangle with independently controllable corner radii (top-left,
-    top-right, bottom-right, bottom-left) -- for stacked-bar segments, where
-    only the outermost corners of the whole stack should be rounded."""
-    x1, y1 = x + w, y + h
-    return (
-        f"M {x+rtl} {y} "
-        f"H {x1-rtr} " + (f"Q {x1} {y} {x1} {y+rtr} " if rtr else f"L {x1} {y} ") +
-        f"V {y1-rbr} " + (f"Q {x1} {y1} {x1-rbr} {y1} " if rbr else f"L {x1} {y1} ") +
-        f"H {x+rbl} " + (f"Q {x} {y1} {x} {y1-rbl} " if rbl else f"L {x} {y1} ") +
-        f"V {y+rtl} " + (f"Q {x} {y} {x+rtl} {y} " if rtl else f"L {x} {y} ") +
-        "Z"
-    )
-
-
-def _vbar_path(x0, y_base, w, h, r=4):
-    """Vertical column growing upward from baseline y_base. Rounded top,
-    square bottom."""
-    if h <= 0:
-        return ""
-    r = min(r, w / 2, h)
-    y0 = y_base - h
-    return (
-        f"M {x0} {y_base} V {y0+r} Q {x0} {y0} {x0+r} {y0} "
-        f"H {x0+w-r} Q {x0+w} {y0} {x0+w} {y0+r} V {y_base} Z"
-    )
-
-
-def _mark(path_d, color, tip, extra_class="", opacity=1.0):
-    tip_attr = esc(tip)
-    opacity_attr = f' opacity="{opacity:.2f}"' if opacity < 1.0 else ""
-    return (
-        f'<g class="mark {extra_class}" tabindex="0" data-tip="{tip_attr}">'
-        f'<title>{tip_attr}</title>'
-        f'<path d="{path_d}" fill="{color}"{opacity_attr}/></g>'
-    )
-
-
-# ============================================================================
 # Components
 # ============================================================================
 
@@ -851,16 +720,63 @@ def data_table(headers, rows):
     )
 
 
-def viz_card(title, chart_svg, table_html, legend_html="", note="", info=None):
+# ============================================================================
+# ECharts chart registry
+#
+# Every chart function below builds a plain-dict ECharts "option" (data only
+# -- colors are left as literal "var(--x)" strings, formatters as string
+# tokens; see dashboard/assets/dashboard.js's hydrateOption() for where those
+# get resolved into real values/functions client-side) and calls
+# register_chart() to get back an HTML placeholder div. build_dashboard()
+# drains the registry once per call and serializes it as a single
+# `window.__CHARTS__` <script> block near the end of the page.
+#
+# thread-local, not a plain module-level list: webapp/app.py serves via
+# waitress, which is multi-threaded by default -- a shared mutable list
+# would let two concurrent dashboard builds corrupt each other's charts.
+# ============================================================================
+
+_chart_state = threading.local()
+
+
+def _reset_chart_registry():
+    _chart_state.charts = []
+    _chart_state.counter = 0
+
+
+def register_chart(option: dict, height_px: int, aria_label: str = "chart") -> str:
+    if not hasattr(_chart_state, "charts"):
+        _reset_chart_registry()
+    _chart_state.counter += 1
+    chart_id = f"chart-{_chart_state.counter}"
+    _chart_state.charts.append((chart_id, option))
+    return (
+        f'<div id="{chart_id}" class="echarts-container" role="img" '
+        f'aria-label="{esc(aria_label)}" style="height:{height_px}px"></div>'
+    )
+
+
+def _drain_chart_registry():
+    charts = getattr(_chart_state, "charts", [])
+    _reset_chart_registry()
+    return dict(charts)
+
+
+def viz_card(title, chart_html, table_html, legend_html="", note="", info=None):
+    """chart_html: the HTML returned by register_chart(), or None for empty
+    data -- renders the table only, no chart pane, when None."""
     icon = info_icon(info) if info else ""
+    chart_block = f'<div class="viz-chart">{chart_html}{legend_html}</div>' if chart_html else ""
+    toggle = '<button type="button" class="viz-toggle" aria-pressed="false">View as table</button>' if chart_html else ""
+    table_class = "viz-table" if chart_html else "viz-table viz-table-only"
     return f"""
 <div class="viz-card">
   <div class="viz-card-head">
     <span class="viz-title">{esc(title)}{icon}</span>
-    <button type="button" class="viz-toggle" aria-pressed="false">View as table</button>
+    {toggle}
   </div>
-  <div class="viz-chart">{chart_svg}{legend_html}</div>
-  <div class="viz-table">{table_html}</div>
+  {chart_block}
+  <div class="{table_class}">{table_html}</div>
   {f'<div class="viz-note">{esc(note)}</div>' if note else ''}
 </div>"""
 
@@ -882,86 +798,85 @@ def bar_chart_horizontal(items, unit="", value_fmt=None):
     """items: list of (label, value). Single series, magnitude comparison."""
     items = [it for it in items if it[1] is not None]
     if not items:
-        return "<svg></svg>", empty_state()
+        return None, empty_state()
     value_fmt = value_fmt or (lambda v: fmt_num(v, 2))
-    max_v = max(abs(v) for _, v in items) or 1
     row_h, gap, pad = 22, 12, 16
-    label_w, tail_w = 150, 90
-    W = 620
-    bar_area = W - label_w - tail_w
     H = pad * 2 + len(items) * (row_h + gap) - gap
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(unit or "bar chart")}">']
-    y = pad
-    for label, v in items:
-        w = (abs(v) / max_v) * bar_area
-        d = _hbar_path(label_w, y, w, row_h)
-        tip = f"{label}: {value_fmt(v)}"
-        parts.append(f'<text x="{label_w-8}" y="{y+row_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-secondary)">{esc(label)}</text>')
-        parts.append(_mark(d, "var(--series-1)", tip))
-        parts.append(f'<text x="{label_w+w+8}" y="{y+row_h/2+4}" font-size="13.5" fill="var(--text-primary)">{esc(value_fmt(v))}</text>')
-        y += row_h + gap
-    parts.append("</svg>")
+    option = {
+        "grid": {"left": 8, "right": 80, "top": pad, "bottom": pad, "containLabel": True},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "xAxis": {"type": "value", "show": False},
+        "yAxis": {
+            "type": "category", "inverse": True, "data": [label for label, _ in items],
+            "axisLine": {"show": False}, "axisTick": {"show": False},
+            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 13},
+        },
+        "series": [{
+            "type": "bar", "barMaxWidth": row_h,
+            "itemStyle": {"color": "var(--series-1)", "borderRadius": [0, 4, 4, 0]},
+            "label": {"show": True, "position": "right", "color": "var(--text-primary)", "formatter": "__labelFmt__"},
+            "data": [{"value": v, "fmt": value_fmt(v)} for _, v in items],
+        }],
+    }
+    chart_html = register_chart(option, H, aria_label=unit or "bar chart")
 
     rows = [[label, value_fmt(v)] for label, v in items]
     table = data_table(["Metric", "Value"], rows)
-    return "".join(parts), table
+    return chart_html, table
 
 
-MIN_BAR_WIDTH_FOR_INSIDE_LABEL = 46
-
-
-def _diverging_value_label(center, w, is_positive, y, row_h, text, mark_color):
-    """Places a bar's value label just outside its tip -- UNLESS the bar is
-    long enough to approach the row-label column on its own side, in which
-    case the label goes inside the bar (light text on the fill) instead.
-    Fixes a real overlap: outside-only placement put a long negative bar's
-    label right on top of that row's own name label (observed live: MBLY's
-    -42.6% 1-year return)."""
-    long_enough = w >= MIN_BAR_WIDTH_FOR_INSIDE_LABEL
-    if is_positive:
-        x = (center + w - 6) if long_enough else (center + w + 6)
-        anchor = "end" if long_enough else "start"
-    else:
-        x = (center - w + 6) if long_enough else (center - w - 6)
-        anchor = "start" if long_enough else "end"
-    fill = "#fff" if long_enough else "var(--text-primary)"
-    return f'<text x="{x}" y="{y+row_h/2+4}" text-anchor="{anchor}" font-size="13.5" font-weight="{"600" if long_enough else "400"}" fill="{fill}">{esc(text)}</text>'
+INSIDE_LABEL_FRACTION = 0.2  # a bar this fraction of max_v or longer gets its value label inside (light text), not past its tip -- avoids a long negative bar's label landing on top of that row's own name label
 
 
 def diverging_bar_horizontal(items, value_fmt=None):
     """items: list of (label, value) where value can be +/-. Baseline at center."""
     items = [it for it in items if it[1] is not None]
     if not items:
-        return "<svg></svg>", empty_state(), ""
+        return None, empty_state(), ""
     value_fmt = value_fmt or (lambda v: fmt_pct(v))
     max_v = max(abs(v) for _, v in items) or 1
     row_h, gap, pad = 22, 12, 16
-    label_w = 110
-    W = 620
-    half = (W - label_w - 20) / 2
-    center = label_w + half
     H = pad * 2 + len(items) * (row_h + gap) - gap
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="values relative to baseline">']
-    parts.append(f'<line x1="{center}" y1="{pad-6}" x2="{center}" y2="{H-pad+6}" stroke="var(--baseline)" stroke-width="1"/>')
-    y = pad
+    data = []
     for label, v in items:
-        w = (abs(v) / max_v) * (half - 10)
-        color = "var(--diverge-pos)" if v >= 0 else "var(--diverge-neg)"
-        x0 = center if v >= 0 else center
-        d = _hbar_path(x0, y, w if v >= 0 else -w, row_h)
-        tip = f"{label}: {value_fmt(v)}"
-        parts.append(f'<text x="{label_w-8}" y="{y+row_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-secondary)">{esc(label)}</text>')
-        parts.append(_mark(d, color, tip))
-        parts.append(_diverging_value_label(center, w, v >= 0, y, row_h, value_fmt(v), color))
-        y += row_h + gap
-    parts.append("</svg>")
+        long_enough = (abs(v) / max_v) >= INSIDE_LABEL_FRACTION
+        is_pos = v >= 0
+        color = "var(--diverge-pos)" if is_pos else "var(--diverge-neg)"
+        position = ("insideRight" if is_pos else "insideLeft") if long_enough else ("right" if is_pos else "left")
+        data.append({
+            "value": v, "fmt": value_fmt(v),
+            "itemStyle": {"color": color},
+            "label": {
+                "position": position,
+                "color": "#fff" if long_enough else "var(--text-primary)",
+                "fontWeight": 600 if long_enough else 400,
+            },
+        })
+
+    option = {
+        "grid": {"left": 8, "right": 8, "top": pad, "bottom": pad, "containLabel": True},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "xAxis": {"type": "value", "min": -max_v, "max": max_v, "show": False, "splitLine": {"show": False}},
+        "yAxis": {
+            "type": "category", "inverse": True, "data": [label for label, _ in items],
+            "axisLine": {"show": False}, "axisTick": {"show": False},
+            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 13},
+        },
+        "series": [{
+            "type": "bar", "barMaxWidth": row_h,
+            "markLine": {"symbol": "none", "silent": True, "lineStyle": {"color": "var(--baseline)"}, "data": [{"xAxis": 0}]},
+            "label": {"show": True, "formatter": "__labelFmt__"},
+            "data": data,
+        }],
+    }
+    chart_html = register_chart(option, H, aria_label="values relative to baseline")
 
     rows = [[label, value_fmt(v)] for label, v in items]
     table = data_table(["Period", "Value"], rows)
     leg = legend([("Beat / above baseline", "var(--diverge-pos)"), ("Miss / below baseline", "var(--diverge-neg)")])
-    return "".join(parts), table, leg
+    return chart_html, table, leg
 
 
 def grouped_bar_horizontal(groups, value_fmt=None):
@@ -978,40 +893,53 @@ def grouped_bar_horizontal(groups, value_fmt=None):
     value_fmt = value_fmt or (lambda v: fmt_pct(v))
     all_vals = [v for _, items in groups for _, _, v in items if v is not None]
     if not all_vals:
-        return "<svg></svg>", empty_state(), ""
+        return None, empty_state(), ""
     max_abs = max(abs(v) for v in all_vals) or 1
 
-    row_h, gap, group_gap, header_h, pad = 20, 8, 22, 22, 16
-    label_w = 130
-    W = 620
-    half = (W - label_w - 20) / 2
-    center = label_w + half
-
-    H = pad
+    # Series identity (name + color) is defined by first occurrence, in
+    # order -- every group is expected to carry the same series names (e.g.
+    # Stock/S&P 500/Sector, once per time-window group). ECharts groups
+    # same-category series side by side natively -- category = each group
+    # (time window), one bar per series within it, colored by series
+    # identity, diverging from a shared zero baseline the axis itself
+    # provides (no manual centering math).
+    series_order, series_colors = [], {}
     for _, items in groups:
-        H += header_h + len(items) * (row_h + gap) - gap + group_gap
-    H = H - group_gap + pad
+        for name, color, _ in items:
+            if name not in series_colors:
+                series_order.append(name)
+                series_colors[name] = color
+    n_series = len(series_order) or 1
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="grouped comparison chart">']
-    parts.append(f'<line x1="{center}" y1="{pad}" x2="{center}" y2="{H-pad}" stroke="var(--baseline)" stroke-width="1"/>')
+    row_h, gap, group_gap, header_h, pad = 20, 8, 22, 22, 16
+    H = pad * 2 + len(groups) * (n_series * (row_h + gap) - gap + group_gap) - group_gap
 
-    y = pad
-    for group_title, items in groups:
-        parts.append(f'<text x="{label_w}" y="{y+12}" font-size="13.5" font-weight="600" fill="var(--text-primary)">{esc(group_title)}</text>')
-        y += header_h
-        for name, color, v in items:
-            if v is None:
-                y += row_h + gap
-                continue
-            w = (abs(v) / max_abs) * (half - 10)
-            d = _hbar_path(center, y, w if v >= 0 else -w, row_h)
-            tip = f"{name} — {group_title}: {value_fmt(v)}"
-            parts.append(f'<text x="{label_w-8}" y="{y+row_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-secondary)">{esc(name)}</text>')
-            parts.append(_mark(d, color, tip))
-            parts.append(_diverging_value_label(center, w, v >= 0, y, row_h, value_fmt(v), color))
-            y += row_h + gap
-        y += group_gap - gap
-    parts.append("</svg>")
+    series = []
+    for name in series_order:
+        data = []
+        for group_title, items in groups:
+            v = next((v for n2, _, v in items if n2 == name), None)
+            data.append({"value": v, "fmt": value_fmt(v), "name": f"{name} — {group_title}"} if v is not None else None)
+        series.append({
+            "name": name, "type": "bar",
+            "itemStyle": {"color": series_colors[name]},
+            "label": {"show": True, "formatter": "__labelFmt__", "color": "var(--text-primary)"},
+            "data": data,
+        })
+
+    option = {
+        "grid": {"left": 8, "right": 8, "top": header_h, "bottom": pad, "containLabel": True},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "legend": {"show": False},  # the HTML legend below is authoritative -- avoid rendering two
+        "xAxis": {"type": "value", "min": -max_abs, "max": max_abs, "show": False},
+        "yAxis": {
+            "type": "category", "inverse": True, "data": [g for g, _ in groups],
+            "axisLine": {"show": False}, "axisTick": {"show": False},
+            "axisLabel": {"color": "var(--text-primary)", "fontWeight": 600, "fontSize": 13.5},
+        },
+        "series": series,
+    }
+    chart_html = register_chart(option, H, aria_label="grouped comparison chart")
 
     rows = []
     for group_title, items in groups:
@@ -1020,86 +948,65 @@ def grouped_bar_horizontal(groups, value_fmt=None):
     table = data_table(["Period", "Series", "Value"], rows)
     leg_items = groups[0][1] if groups else []
     leg = legend([(name, color) for name, color, _ in leg_items])
-    return "".join(parts), table, leg
+    return chart_html, table, leg
 
 
 def grouped_column_chart(categories, series):
     """categories: list of str (x-axis). series: list of (name, color_var, [values])."""
     n_cat = len(categories)
     if n_cat == 0:
-        return "<svg></svg>", empty_state(), ""
+        return None, empty_state(), ""
     all_vals = [v for _, _, vals in series for v in vals if v is not None]
     if not all_vals:
-        return "<svg></svg>", empty_state(), ""
+        return None, empty_state(), ""
     max_v = max(all_vals)
     min_v = min(0, min(all_vals))
-    span = (max_v - min_v) or 1
+    H = 260
 
-    W, H = 620, 260
-    # pad_t has to leave room for the tallest bar's value label sitting
-    # just above it (see the mobile-boosted "general" text tier in
-    # CSS_STYLE) -- a real screenshot showed it clipped against the
-    # viewBox top when a bar landed at/near max_v. pad_l has the same
-    # problem sideways: the y-axis gridline labels (e.g. "$143.8B") are
-    # right-anchored at pad_l-6, growing leftward -- measured via getBBox
-    # at the mobile font size, a 6-7 char compact-currency string is
-    # ~50-58 units wide, wider than the original 46px pad_l gave it,
-    # clipping off the left edge of the canvas.
-    pad_l, pad_b, pad_t = 70, 30, 56
-    plot_w = W - pad_l - 16
-    plot_h = H - pad_b - pad_t
-    slot_w = plot_w / n_cat
-    n_series = len(series)
-    bar_gap = 2
-    bar_w = min(24, (slot_w - 16 - bar_gap * (n_series - 1)) / n_series)
-
-    def y_for(v):
-        return pad_t + plot_h - ((v - min_v) / span) * plot_h
-
-    baseline_y = y_for(0)
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="grouped column chart">']
-    # gridlines at 0, mid, max
-    for gv in [min_v, (min_v + max_v) / 2, max_v]:
-        gy = y_for(gv)
-        parts.append(f'<line x1="{pad_l}" y1="{gy}" x2="{W-16}" y2="{gy}" stroke="var(--gridline)" stroke-width="1"/>')
-        parts.append(f'<text x="{pad_l-6}" y="{gy+3}" text-anchor="end" font-size="12" fill="var(--text-muted)">{fmt_compact(gv,1)}</text>')
-
-    last_cat_labels = []  # (x_center, natural_y) for the stagger pass below
-    for ci, cat in enumerate(categories):
-        group_x0 = pad_l + ci * slot_w + (slot_w - (bar_w * n_series + bar_gap * (n_series - 1))) / 2
-        for si, (name, color, vals) in enumerate(series):
+    echarts_series = []
+    for name, color, vals in series:
+        data = []
+        for ci in range(n_cat):
             v = vals[ci] if ci < len(vals) else None
             if v is None:
+                data.append(None)
                 continue
-            x = group_x0 + si * (bar_w + bar_gap)
-            h = abs(y_for(v) - baseline_y)
-            y0 = min(y_for(v), baseline_y)
-            d = _vbar_path(x, y0 + h, bar_w, h)
-            tip = f"{cat} — {name}: {fmt_usd(v)}"
-            parts.append(_mark(d, color, tip))
+            point = {"value": v, "fmt": fmt_usd(v, 1), "name": f"{categories[ci]} — {name}"}
             if ci == n_cat - 1:  # direct label on the last/most-recent category only
-                last_cat_labels.append((x + bar_w / 2, y0 - 6, fmt_usd(v, 1)))
-        parts.append(f'<text x="{group_x0 + (bar_w*n_series+bar_gap*(n_series-1))/2}" y="{H-8}" text-anchor="middle" font-size="12.5" fill="var(--text-secondary)">{esc(cat)}</text>')
+                point["label"] = {"show": True, "position": "top", "color": "var(--text-primary)", "formatter": "__labelFmt__"}
+            data.append(point)
+        echarts_series.append({
+            "name": name, "type": "bar", "barMaxWidth": 24,
+            "itemStyle": {"color": color},
+            "data": data,
+        })
 
-    # Adjacent series' bars in the same (last) group sit only bar_gap apart
-    # -- their value labels, placed at each one's own natural height right
-    # above its bar, can end up close enough to overlap regardless of which
-    # bar is taller (found from real data: a shorter second bar can land
-    # its label almost exactly where the first bar's label already is).
-    # Anchor the bottom-most (shortest-bar) label at its natural position
-    # and push any label above it further up if it isn't already clear --
-    # never the other way, which would push a label down into its own bar.
-    MIN_LABEL_GAP = 20
-    last_cat_labels.sort(key=lambda item: -item[1])
-    for i in range(1, len(last_cat_labels)):
-        x, y, txt = last_cat_labels[i]
-        prev_y = last_cat_labels[i - 1][1]
-        if prev_y - y < MIN_LABEL_GAP:
-            last_cat_labels[i] = (x, prev_y - MIN_LABEL_GAP, txt)
-    for x, y, txt in last_cat_labels:
-        parts.append(f'<text x="{x}" y="{y}" text-anchor="middle" font-size="12" fill="var(--text-primary)">{txt}</text>')
-    parts.append(f'<line x1="{pad_l}" y1="{baseline_y}" x2="{W-16}" y2="{baseline_y}" stroke="var(--baseline)" stroke-width="1"/>')
-    parts.append("</svg>")
+    option = {
+        "grid": {"left": 8, "right": 16, "top": 40, "bottom": 30, "containLabel": True},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "legend": {"show": False},  # the HTML legend below is authoritative
+        # A real, working greedy stagger for the last category's value
+        # labels (see dashboard.js's makeVerticalBarLabelStagger) -- the
+        # declarative {"moveOverlap": "shiftY"} shorthand was tried first
+        # and does not reliably move labels that have an explicit position
+        # (confirmed by direct testing, not assumed).
+        "labelLayout": "__verticalBarLabelStagger__",
+        "xAxis": {
+            "type": "category", "data": categories,
+            "axisLine": {"lineStyle": {"color": "var(--baseline)"}},
+            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 12.5}, "axisTick": {"show": False},
+        },
+        "yAxis": {
+            # interval forces exactly 3 gridline ticks (min/mid/max), matching
+            # the old fixed 3-tick scheme instead of ECharts' default
+            # "nice number" auto-ticking, which could vary chart to chart.
+            "type": "value", "min": min_v, "max": max_v, "interval": (max_v - min_v) / 2 or 1,
+            "splitLine": {"lineStyle": {"color": "var(--gridline)"}},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 12, "formatter": "__compactAxis__"},
+        },
+        "series": echarts_series,
+    }
+    chart_html = register_chart(option, H, aria_label="grouped column chart")
 
     headers = ["Quarter"] + [name for name, _, _ in series]
     rows = []
@@ -1108,133 +1015,97 @@ def grouped_column_chart(categories, series):
         rows.append(row)
     table = data_table(headers, rows)
     leg = legend([(name, color) for name, color, _ in series])
-    return "".join(parts), table, leg
+    return chart_html, table, leg
+
+
+def _range_track_option(low, high, current, markers, current_label, label_fmt, corner_word_prefix=False):
+    """Shared ECharts option for range_meter and range_position_plot: a
+    value-axis track from low to high, named point markers (dots + labels),
+    and a distinct triangle "current" marker. markers: list of (name, value,
+    color_css_var). corner_word_prefix: range_meter's corner labels read
+    "Low $215.00" / "High $400.00"; range_position_plot's read just the bare
+    price ("$201.58") since its track already leads with a "Price vs..."
+    card title -- the word would be redundant there.
+
+    ECharts' labelLayout (set globally below) resolves label-vs-label
+    collisions automatically -- Mean/Median crowding together, or "Current"
+    crowding a Low/High corner label when the value sits near an edge (the
+    old SVG version needed a hand-rolled stagger pass and a "suppress
+    whichever label is in the way" compromise for exactly these two cases;
+    neither is needed here). Low/High still get an explicit align:"left"/
+    "right" -- labelLayout only resolves label-vs-label overlap, not
+    label-vs-canvas-edge clipping, so a point sitting exactly at low/high
+    still needs to know which way to grow.
+    """
+    def low_high_fmt(word, v):
+        return f"{word} {label_fmt(v)}" if corner_word_prefix else label_fmt(v)
+
+    def clamp(v):
+        # A marker (most commonly "current") can legitimately fall outside
+        # [low, high] -- e.g. today's price above its own 52-week high on a
+        # new-high day. The xAxis is fixed to [low, high], so an unclamped
+        # coordinate would render off-chart (or not at all); pin it visually
+        # to whichever edge it overshot instead of losing it.
+        return max(low, min(high, v))
+
+    scatter_data = [
+        {"value": [low, 0.5], "symbolSize": 0, "name": "Low", "fmt": low_high_fmt("Low", low),
+         "label": {"show": True, "position": [0, -20], "align": "left", "color": "var(--text-secondary)",
+                    "fontSize": 13.5, "formatter": "__labelFmt__"}},
+        {"value": [high, 0.5], "symbolSize": 0, "name": "High", "fmt": low_high_fmt("High", high),
+         "label": {"show": True, "position": [0, -20], "align": "right", "color": "var(--text-secondary)",
+                    "fontSize": 13.5, "formatter": "__labelFmt__"}},
+    ]
+    for name, v, color in markers:
+        scatter_data.append({
+            "value": [clamp(v), 0.5], "itemStyle": {"color": color}, "name": name, "fmt": label_fmt(v),
+            "label": {"show": True, "position": "bottom", "color": "var(--text-secondary)", "formatter": "__labelFmt__"},
+        })
+
+    track_series = {
+        "type": "line", "silent": True, "symbol": "none",
+        "lineStyle": {"width": 10, "color": "var(--gridline)", "cap": "round"},
+        "data": [[low, 0.5], [high, 0.5]],
+    }
+    if current is not None:
+        track_series["markPoint"] = {
+            "symbol": "path://M -6 -10 L 6 -10 L 0 0 Z", "symbolOffset": [0, -16],
+            "itemStyle": {"color": "var(--text-primary)"},
+            "label": {"show": True, "position": "top", "fontWeight": 600, "color": "var(--text-primary)", "formatter": "__labelFmt__"},
+            "data": [{"coord": [clamp(current), 0.5], "name": current_label, "fmt": label_fmt(current)}],
+        }
+
+    return {
+        "grid": {"left": 24, "right": 24, "top": 50, "bottom": 40},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        # A real, working greedy stagger (see dashboard.js's
+        # makeRangeTrackLabelLayout) -- the declarative
+        # {"moveOverlap": "shiftY"} shorthand was tried first and does not
+        # reliably move labels that have an explicit position (confirmed
+        # by direct testing, not assumed).
+        "labelLayout": "__rangeTrackLabelLayout__",
+        "xAxis": {"type": "value", "min": low, "max": high, "show": False},
+        "yAxis": {"type": "value", "min": 0, "max": 1, "show": False},
+        "series": [track_series, {"type": "scatter", "symbolSize": 12, "data": scatter_data}],
+    }
 
 
 def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     """Analyst target range: a track from low to high with mean/median/current markers."""
     if low is None or high is None or high <= low:
-        return "<svg></svg>", empty_state()
-    W = 620
-    # Same pad as gauge_meter's RSI track (20, not the far larger 60 this
-    # used before) -- found from a screenshot placed directly next to the
-    # RSI gauge on the same page: this track visibly stopped well short of
-    # the card's edges while RSI's ran nearly edge to edge, on the same
-    # card, at the same width. The corner labels don't need the extra
-    # room (text-anchor start/end already keeps them growing inward, not
-    # off the canvas) -- only a middle-anchored marker/Current label
-    # sitting right at an extreme could overflow, which _label_x_clamp
-    # below handles directly instead of padding the whole track.
-    pad = 20
-    track_x0, track_x1 = pad, W - pad
-    track_w = track_x1 - track_x0
-    # track_y (and the offsets below) are sized with real headroom for the
-    # mobile-boosted ".viz-track-label"/".viz-headline" font sizes, not
-    # just the desktop default -- measured empirically (getBBox in a real
-    # browser, not eyeballed em-heights) after a screenshot showed the
-    # original tighter spacing clipping/colliding once mobile made the
-    # text bigger.
-    track_y = 54
-
-    def x_for(v):
-        v = max(low, min(high, v))
-        return track_x0 + (v - low) / (high - low) * track_w
-
+        return None, empty_state()
     markers = []
     if mean is not None:
         markers.append(("Mean", mean, "var(--series-1)"))
     if median is not None and median != mean:
         markers.append(("Median", median, "var(--series-3)"))
-    # Mean and median are frequently close in real data -- without a
-    # stagger, their labels collide the same way MA20/MA50 did in
-    # range_position_plot, and worse once the mobile font override makes
-    # them ~70-95 viewBox units wide each.
-    marker_xs = [x_for(v) for _, v, _ in markers]
-    row_of, n_rows = _stagger_rows(marker_xs) if markers else ([], 0)
-    row_gap = 44  # >= a mobile-sized label's full glyph height (~38 units) so stacked rows don't touch
-    H = max(100, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
-
-    # "Current" (above the track) can land right next to a Low/High corner
-    # label when today's price sits near either end of the analyst range --
-    # common, not an edge case (a stock trading near its target ceiling or
-    # floor). Earlier this suppressed whichever corner label was in the
-    # way instead -- wrong call, found from a screenshot: hiding "High
-    # $400.00" left a big dead patch of empty track on that side with
-    # nothing to explain it, which reads as "this chart doesn't fill its
-    # card" even though it does. Corner labels anchor the reader's sense
-    # that the track spans its full width, so they always show; "Current"
-    # (secondary -- its value is already the page's own hero number) is
-    # what gives way, and only its text label, not its triangle marker.
-    COLLISION_MARGIN = 235
-    current_x = x_for(current) if current is not None else None
-    show_current_label = current_x is None or (
-        current_x > track_x0 + COLLISION_MARGIN and current_x < track_x1 - COLLISION_MARGIN
-    )
-
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="analyst target price range">']
-    parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">Low {label_fmt(low)}</text>')
-    parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">High {label_fmt(high)}</text>')
-    d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
-    parts.append(f'<path d="{d}" fill="var(--gridline)"/>')
-
-    for (name, v, color), x, row in zip(markers, marker_xs, row_of):
-        y_label = track_y + 26 + row_gap * row
-        parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(name)}: {esc(label_fmt(v))}"><title>{esc(name)}: {esc(label_fmt(v))}</title>'
-                      f'<circle cx="{x}" cy="{track_y}" r="6" fill="{color}" stroke="var(--surface-1)" stroke-width="2"/></g>')
-        parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(name)}</text>')
-
-    if current is not None:
-        x = x_for(current)
-        parts.append(f'<g class="mark" tabindex="0" data-tip="Current: {esc(label_fmt(current))}"><title>Current: {esc(label_fmt(current))}</title>'
-                      f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
-        if show_current_label:
-            parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-size="12" font-weight="600" fill="var(--text-primary)">Current</text>')
-    parts.append("</svg>")
+    option = _range_track_option(low, high, current, markers, "Current", label_fmt, corner_word_prefix=True)
+    chart_html = register_chart(option, 150, aria_label="analyst target price range")
 
     rows = [["Low", label_fmt(low)], ["Mean", label_fmt(mean)], ["Median", label_fmt(median)],
             ["High", label_fmt(high)], ["Current price", label_fmt(current)]]
     table = data_table(["Point", "Price"], rows)
-    return "".join(parts), table
-
-
-def _label_x_clamp(x, W, margin=50):
-    """Keeps a center-anchored label's x position at least `margin` in
-    from either edge of a W-wide viewBox, so a marker sitting right at an
-    extreme value (its dot can legitimately be at x=0 or x=W) doesn't
-    render its text half off the canvas. margin=50 covers half the widest
-    label measured in this file at the mobile font size (~95-100 units
-    for "MA200"/"Median"), with a small buffer. Only the label position
-    moves -- the marker dot itself stays at its true value position."""
-    return max(margin, min(W - margin, x))
-
-
-def _stagger_rows(xs, min_gap=100):
-    """Greedy row assignment for direct labels placed under evenly-spaced
-    points: sorted left-to-right, each label takes the first row whose
-    last-placed label is at least min_gap px away, else drops to a new row.
-    Prevents adjacent labels (e.g. MA50 and MA20 sitting a few dollars
-    apart) from rendering on top of each other. min_gap is sized for the
-    *mobile* rendering, not the desktop default: a 4-5 char label like
-    "MA200" measures ~65-80 viewBox units wide once the mobile media query
-    boosts font-size (see CSS_STYLE's ".viz-svg text" override) -- sizing
-    this for the smaller desktop font would leave real overlap on phones,
-    which is where this collision was actually found."""
-    order = sorted(range(len(xs)), key=lambda i: xs[i])
-    row_of = [0] * len(xs)
-    rows_last_x = []
-    for i in order:
-        x = xs[i]
-        placed = False
-        for r, last_x in enumerate(rows_last_x):
-            if x - last_x >= min_gap:
-                rows_last_x[r] = x
-                row_of[i] = r
-                placed = True
-                break
-        if not placed:
-            rows_last_x.append(x)
-            row_of[i] = len(rows_last_x) - 1
-    return row_of, len(rows_last_x)
+    return chart_html, table
 
 
 def range_position_plot(low, high, current, markers, aria_label="value range", current_label="Current", label_fmt=fmt_price):
@@ -1255,212 +1126,154 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     separately, above the track, so it never collides with the dots.
     """
     if low is None or high is None or high <= low:
-        return "<svg></svg>", empty_state()
-    W = 620
-    # See range_meter's identical comment: matches gauge_meter's RSI track
-    # (pad=20, not the far larger 60 this used before) -- a screenshot
-    # placed this chart directly above the RSI gauge on the same page and
-    # showed this track stopping well short of the card's edges while
-    # RSI's ran nearly edge to edge, on the same card, at the same width.
-    # _label_x_clamp (not extra padding) is what keeps a marker's label
-    # from overflowing the canvas if its value sits right at an extreme.
-    pad = 20
-    track_x0, track_x1 = pad, W - pad
-    track_w = track_x1 - track_x0
-    # See range_meter's identical comment: these offsets are sized with
-    # real headroom for the mobile-boosted ".viz-track-label" font size,
-    # measured empirically (getBBox in a real browser) after a screenshot
-    # showed the original tighter spacing colliding once mobile made the
-    # text bigger.
-    track_y = 54
-
-    def x_for(v):
-        v = max(low, min(high, v))
-        return track_x0 + (v - low) / (high - low) * track_w
-
+        return None, empty_state()
     valid_markers = [(l, v, c) for l, v, c in markers if v is not None]
-    marker_xs = [x_for(v) for _, v, _ in valid_markers]
-    row_of, n_rows = _stagger_rows(marker_xs) if valid_markers else ([], 0)
-    row_gap = 44  # >= a mobile-sized label's full glyph height (~38 units) so stacked rows don't touch
-    H = max(100, track_y + 26 + row_gap * max(n_rows - 1, 0) + 20)
-
-    # "Current" sits above the track and is labeled the same way the Low/
-    # High corner labels are (see below) -- when the current price is near
-    # either end of the range (common: a stock at/near its 52-week high or
-    # low), those two labels land in the same spot. Suppressing whichever
-    # corner label was in the way was tried and reverted -- found from a
-    # screenshot: hiding "High $340.08" left a big dead patch of empty
-    # track with nothing to explain it, reading as "this chart doesn't
-    # fill its card" even though it does. Corner labels anchor the
-    # reader's sense that the track spans its full width, so they always
-    # show; "Current" gives way instead (only its text, not its triangle
-    # marker) since its value is already the page's own hero number.
-    # COLLISION_MARGIN is sized for the mobile-boosted font (~117 viewBox
-    # units for a "$340.08"-length label, ~96 for "Current") -- see
-    # _stagger_rows for why mobile sizing, not desktop, is what actually
-    # has to fit here.
-    COLLISION_MARGIN = 170
-    current_x = x_for(current) if current is not None else None
-    show_current_label = current_x is None or (
-        current_x > track_x0 + COLLISION_MARGIN and current_x < track_x1 - COLLISION_MARGIN
-    )
-
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(aria_label)}">']
-    parts.append(f'<text x="{track_x0}" y="30" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(low))}</text>')
-    parts.append(f'<text x="{track_x1}" y="30" text-anchor="end" class="viz-track-label" font-size="13.5" fill="var(--text-secondary)">{esc(label_fmt(high))}</text>')
-    d = _hbar_path(track_x0, track_y - 5, track_w, 10, r=5)
-    parts.append(f'<path d="{d}" fill="var(--gridline)"/>')
-
-    for (label, v, color), x, row in zip(valid_markers, marker_xs, row_of):
-        y_label = track_y + 26 + row_gap * row
-        parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(label)}: {esc(label_fmt(v))}"><title>{esc(label)}: {esc(label_fmt(v))}</title>'
-                      f'<circle cx="{x}" cy="{track_y}" r="6" fill="{color}" stroke="var(--surface-1)" stroke-width="2"/></g>')
-        parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{y_label}" text-anchor="middle" class="viz-track-label" font-size="12" fill="var(--text-secondary)">{esc(label)}</text>')
-
-    if current is not None:
-        x = x_for(current)
-        parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(current_label)}: {esc(label_fmt(current))}"><title>{esc(current_label)}: {esc(label_fmt(current))}</title>'
-                      f'<path d="M {x-6} {track_y-16} L {x+6} {track_y-16} L {x} {track_y-6} Z" fill="var(--text-primary)"/></g>')
-        if show_current_label:
-            parts.append(f'<text x="{_label_x_clamp(x, W)}" y="{track_y-24}" text-anchor="middle" class="viz-track-label" font-weight="600" font-size="12" fill="var(--text-primary)">{esc(current_label)}</text>')
-    parts.append("</svg>")
+    option = _range_track_option(low, high, current, valid_markers, current_label, label_fmt)
+    chart_html = register_chart(option, 150, aria_label=aria_label)
 
     rows = [[label, label_fmt(v)] for label, v, _ in valid_markers]
     if current is not None:
         rows.append([current_label, label_fmt(current)])
     rows.append(["Range", f"{label_fmt(low)} – {label_fmt(high)}"])
     table = data_table(["Point", "Price"], rows)
-    return "".join(parts), table
+    return chart_html, table
 
 
 def gauge_meter(value, min_v, max_v, zones, label=""):
-    """zones: list of (threshold_upto, color_var, status_name) covering min_v..max_v in order."""
+    """zones: list of (threshold_upto, color_var, status_name) covering
+    min_v..max_v in order (e.g. RSI's oversold/neutral/overbought bands).
+
+    Native ECharts type:"gauge" -- a real, deliberate visual-form change
+    from the old horizontal zone-strip-with-a-dot to a semicircular dial
+    (see CHANGELOG for why: the old version needed hand-tracked track_y/
+    headline-offset math that clipped its own headline number against the
+    SVG edge more than once). This is the idiomatic, well-supported way to
+    render "single value + zones + a big number" -- a hand-built "linear
+    gauge" custom series would just be re-building bespoke geometry again."""
     if value is None:
-        return "<svg></svg>", empty_state()
-    W, H = 620, 100
-    pad = 20
-    track_x0, track_x1 = pad, W - pad
-    track_w = track_x1 - track_x0
-    track_y = 54
+        return None, empty_state()
+    span = (max_v - min_v) or 1
+    # ECharts zone stops are fractions of [min_v, max_v], not absolute values.
+    color_stops = [[(upto - min_v) / span, color] for upto, color, _ in zones]
 
-    def x_for(v):
-        v = max(min_v, min(max_v, v))
-        return track_x0 + (v - min_v) / (max_v - min_v) * track_w
-
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(label)} gauge">']
-    prev = min_v
-    for upto, color, _ in zones:
-        x0, x1 = x_for(prev), x_for(upto)
-        w = max(x1 - x0, 0)
-        if w > 0:
-            parts.append(f'<rect x="{x0}" y="{track_y-6}" width="{w}" height="12" fill="{color}" opacity="0.85"/>')
-        prev = upto
-    x = x_for(value)
-    parts.append(f'<g class="mark" tabindex="0" data-tip="{esc(label)}: {esc(fmt_num(value,1))}"><title>{esc(label)}: {esc(fmt_num(value,1))}</title>'
-                  f'<circle cx="{x}" cy="{track_y}" r="7" fill="var(--text-primary)" stroke="var(--surface-1)" stroke-width="2"/></g>')
-    # y offset from the track is deliberately generous (not the tighter
-    # spacing the other track charts use) -- this is the one headline-
-    # sized readout on the page (see .viz-headline's mobile font-size),
-    # and a real screenshot showed its ascender clipped against the top
-    # of the viewBox when the offset was tuned for the old, smaller size.
-    parts.append(f'<text x="{x}" y="{track_y-20}" text-anchor="middle" class="viz-headline" font-size="15" font-weight="650" fill="var(--text-primary)">{esc(fmt_num(value,1))}</text>')
-    parts.append(f'<text x="{track_x0}" y="{track_y+30}" class="viz-track-label" font-size="12.5" fill="var(--text-muted)">{esc(fmt_num(min_v))}</text>')
-    parts.append(f'<text x="{track_x1}" y="{track_y+30}" text-anchor="end" class="viz-track-label" font-size="12.5" fill="var(--text-muted)">{esc(fmt_num(max_v))}</text>')
-    parts.append("</svg>")
+    option = {
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "series": [{
+            "type": "gauge", "startAngle": 180, "endAngle": 0,
+            "min": min_v, "max": max_v,
+            "radius": "100%", "center": ["50%", "85%"],
+            "axisLine": {"lineStyle": {"width": 12, "color": color_stops}},
+            "pointer": {"show": False},
+            "anchor": {"show": False},
+            "axisTick": {"show": False}, "splitLine": {"show": False},
+            "axisLabel": {"distance": -30, "color": "var(--text-muted)", "fontSize": 12},
+            "detail": {
+                "valueAnimation": False, "formatter": "{value}",
+                "fontSize": 34, "fontWeight": 650, "offsetCenter": [0, "-30%"],
+                "color": "var(--text-primary)",
+            },
+            "data": [{"value": round(value, 1), "name": label, "fmt": fmt_num(value, 1)}],
+        }],
+    }
+    chart_html = register_chart(option, 170, aria_label=f"{label} gauge")
 
     table = data_table(["Metric", "Value"], [[label, fmt_num(value, 1)]])
-    return "".join(parts), table
+    return chart_html, table
 
 
 def stacked_bar_parts(parts_data, total=100.0):
     """parts_data: list of (label, value, color_var). Renders one horizontal stacked bar."""
     parts_data = [(l, v, c) for l, v, c in parts_data if v is not None and v > 0]
     if not parts_data:
-        return "<svg></svg>", empty_state(), ""
-    W, H = 620, 60
-    pad = 8
-    bar_y, bar_h = 20, 24
-    bar_w = W - pad * 2
-    gap = 2
-
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="ownership breakdown">']
-    x = pad
+        return None, empty_state(), ""
     n = len(parts_data)
     r = 4
+
+    echarts_series = []
     for i, (label, v, color) in enumerate(parts_data):
-        seg_w = max((v / total) * bar_w - (gap if i < n - 1 else 0), 0)
         is_first, is_last = i == 0, i == n - 1
-        d = _rect_path(
-            x, bar_y, seg_w, bar_h,
-            rtl=r if is_first else 0, rbl=r if is_first else 0,
-            rtr=r if is_last else 0, rbr=r if is_last else 0,
-        )
-        tip = f"{label}: {fmt_pct(v, signed=False)}"
-        parts.append(_mark(d, color, tip))
-        x += seg_w + gap
-    parts.append("</svg>")
+        # ECharts' 4-corner array ([top-left, top-right, bottom-right,
+        # bottom-left], CSS order) directly replaces the old manual
+        # rounded-rect path math: only the outermost edge of the first/
+        # last segment in the stack gets rounded.
+        echarts_series.append({
+            "name": label, "type": "bar", "stack": "total", "barWidth": 24,
+            "itemStyle": {
+                "color": color,
+                "borderRadius": [r if is_first else 0, r if is_last else 0, r if is_last else 0, r if is_first else 0],
+            },
+            "data": [{"value": v, "fmt": fmt_pct(v, signed=False), "name": label}],
+        })
+
+    option = {
+        "grid": {"left": 4, "right": 4, "top": 4, "bottom": 4},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "legend": {"show": False},  # the HTML legend below is authoritative
+        "xAxis": {"type": "value", "max": total, "show": False},
+        "yAxis": {"type": "category", "data": [""], "show": False},
+        "series": echarts_series,
+    }
+    chart_html = register_chart(option, 60, aria_label="ownership breakdown")
 
     rows = [[label, fmt_pct(v, signed=False)] for label, v, _ in parts_data]
     table = data_table(["Holder type", "% of shares"], rows)
     leg = legend([(label, color) for label, _, color in parts_data])
-    return "".join(parts), table, leg
+    return chart_html, table, leg
 
 
 def diverging_stacked_sentiment(bearish, untagged, bullish):
-    """Diverging stacked bar centered on the neutral/untagged middle segment."""
+    """Diverging stacked bar centered on the neutral/untagged middle segment.
+
+    ECharts' bar `stack` is bidirectional and self-centering by
+    construction -- each series is placed further from zero in its own
+    sign's direction, so a heavily skewed split (found live: 9 bullish vs.
+    4 bearish; worse, 18 vs. 1) simply produces a long bar on one side and
+    a short one on the other, never an overflow. No manual scale-factor
+    math needed at all, unlike the SVG version this replaces. The
+    "straddles zero" look comes from splitting the neutral segment into two
+    equal halves, one declared on each side of zero -- a real, working
+    layout trick, not a hack; each half still reports the true (not
+    halved) count on hover.
+    """
     total = (bearish or 0) + (untagged or 0) + (bullish or 0)
     if total == 0:
-        return "<svg></svg>", empty_state(), ""
-    W, H = 620, 70
-    bar_y, bar_h = 24, 26
-    center_x = W / 2
-    usable_w = W - 40
-    # The middle (untagged) segment is centered on center_x, then bearish
-    # and bullish each extend outward from its own edges by their own
-    # width -- which only stays within the canvas when bearish and
-    # bullish are roughly equal. Real sentiment data is rarely balanced
-    # (found live: 9 bullish vs. 4 bearish pushed the bullish bar and its
-    # count label past the right edge entirely). Scale every segment down
-    # together, preserving their proportions, so neither side's reach
-    # from center_x can exceed the available radius.
-    radius = usable_w / 2
-    mid_w_natural = (untagged / total) * usable_w
-    left_reach = mid_w_natural / 2 + (bearish / total) * usable_w
-    right_reach = mid_w_natural / 2 + (bullish / total) * usable_w
-    scale = min(1.0, radius / left_reach if left_reach > 0 else 1.0, radius / right_reach if right_reach > 0 else 1.0)
-    usable_w *= scale
+        return None, empty_state(), ""
+    half_untagged = (untagged or 0) / 2
+    bearish, bullish = bearish or 0, bullish or 0
 
-    mid_w = (untagged / total) * usable_w
-    left_w = (bearish / total) * usable_w
-    right_w = (bullish / total) * usable_w
+    def seg(value, color, name, count, end_label=None):
+        data = {"value": value, "fmt": f"{count} messages", "name": name}
+        if end_label and count > 0:
+            # A literal formatter string (not the shared "__labelFmt__"
+            # token): the end-label shows the bare count ("4"), the
+            # tooltip shows "4 messages" via the same datapoint's `fmt` --
+            # two different display strings for one point, so this one
+            # doesn't route through the generic fmt-reading formatter.
+            data["label"] = {"show": True, "position": end_label, "color": "var(--text-primary)", "formatter": str(count)}
+        return {"type": "bar", "stack": "s", "barWidth": 26, "itemStyle": {"color": color}, "data": [data]}
 
-    mid_x0 = center_x - mid_w / 2
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="social sentiment split">']
-    parts.append(f'<line x1="{center_x}" y1="{bar_y-6}" x2="{center_x}" y2="{bar_y+bar_h+6}" stroke="var(--baseline)" stroke-width="1"/>')
+    # Declaration order = innermost-to-outermost per side (stacking walks
+    # outward from zero in the order series are declared).
+    echarts_series = [
+        seg(-half_untagged, "var(--gridline)", "Untagged", untagged),
+        seg(-bearish, "var(--diverge-neg)", "Bearish", bearish, end_label="left"),
+        seg(half_untagged, "var(--gridline)", "Untagged", untagged),
+        seg(bullish, "var(--diverge-pos)", "Bullish", bullish, end_label="right"),
+    ]
 
-    if mid_w > 0:
-        d = _hbar_path(mid_x0, bar_y, mid_w, bar_h, r=0)
-        parts.append(_mark(d, "var(--gridline)", f"Untagged: {untagged} messages"))
-    if left_w > 0:
-        d = _hbar_path(mid_x0 - 2, bar_y, -left_w, bar_h)
-        parts.append(_mark(d, "var(--diverge-neg)", f"Bearish: {bearish} messages"))
-    if right_w > 0:
-        d = _hbar_path(mid_x0 + mid_w + 2, bar_y, right_w, bar_h)
-        parts.append(_mark(d, "var(--diverge-pos)", f"Bullish: {bullish} messages"))
-
-    # The scale factor above keeps the bars themselves on-canvas, but each
-    # end-label sits an extra 8-10 units further out still -- in an
-    # extreme split (found live: 18 bullish vs. 1 bearish) that extra
-    # offset alone was enough to push the label back off the edge even
-    # with the bar itself fitting. Clamp the label position directly
-    # rather than trying to fold a few more units into the scale math.
-    parts.append(f'<text x="{max(40, mid_x0-left_w-8)}" y="{bar_y+bar_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-primary)">{bearish}</text>')
-    parts.append(f'<text x="{min(W-40, mid_x0+mid_w+right_w+10)}" y="{bar_y+bar_h/2+4}" font-size="13.5" fill="var(--text-primary)">{bullish}</text>')
-    parts.append("</svg>")
+    option = {
+        "grid": {"left": 40, "right": 40, "top": 8, "bottom": 8},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "legend": {"show": False},  # the HTML legend below is authoritative
+        "xAxis": {"type": "value", "show": False},
+        "yAxis": {"type": "category", "data": [""], "show": False},
+        "series": echarts_series,
+    }
+    chart_html = register_chart(option, 70, aria_label="social sentiment split")
 
     table = data_table(["Sentiment", "Messages"], [["Bearish", bearish], ["Untagged", untagged], ["Bullish", bullish]])
     leg = legend([("Bearish", "var(--diverge-neg)"), ("Untagged", "var(--gridline)"), ("Bullish", "var(--diverge-pos)")])
-    return "".join(parts), table, leg
+    return chart_html, table, leg
 
 
 def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="Neutral", aria_label="distribution"):
@@ -1477,72 +1290,75 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
     graduated opacity (not a new hue) distinguishes "strong" from "regular"
     within a side, so this stays colorblind-safe -- only diverge-pos,
     diverge-neg, and gridline are ever used as actual hues.
+
+    Every segment's plotted value is that segment's percent of this call's
+    own total, not its raw count, and the x-axis is pinned to a fixed
+    [-100, 100] range on every call (not scaled to fit each instance's own
+    data) -- section_analyst() renders several of these as independent
+    small multiples, one per period, and periods need to stay visually
+    comparable regardless of how many analysts covered each one. This also
+    means, as a side effect of ECharts' bidirectional stacking (see
+    diverging_stacked_sentiment's docstring), that no skew can ever
+    overflow the fixed range -- the old SVG version's per-instance
+    overflow-prevention scale factor was a real, if secondary, source of
+    inconsistency between small multiples too: two periods with different
+    skew could end up scaled to different effective widths.
     """
     total = (mid_value or 0) + sum(v or 0 for _, v in neg_segments) + sum(v or 0 for _, v in pos_segments)
     if total == 0:
-        return "<svg></svg>", empty_state(), ""
+        return None, empty_state(), ""
 
-    W, H = 620, 70
-    bar_y, bar_h = 24, 26
-    center_x = W / 2
-    usable_w = W - 40
-    # Same fix as diverging_stacked_sentiment, same reason: the middle
-    # segment is centered on center_x and each side extends outward by
-    # its own total width, which only stays on-canvas when both sides are
-    # roughly equal. Scale every segment down together (proportions
-    # preserved) so neither side's reach from center_x can exceed the
-    # available radius, regardless of how skewed the distribution is.
-    radius = usable_w / 2
-    mid_w_natural = ((mid_value or 0) / total) * usable_w
-    neg_reach = mid_w_natural / 2 + sum(v or 0 for _, v in neg_segments) / total * usable_w
-    pos_reach = mid_w_natural / 2 + sum(v or 0 for _, v in pos_segments) / total * usable_w
-    scale = min(1.0, radius / neg_reach if neg_reach > 0 else 1.0, radius / pos_reach if pos_reach > 0 else 1.0)
-    usable_w *= scale
+    def pct(v):
+        return (v or 0) / total * 100
 
-    mid_w = ((mid_value or 0) / total) * usable_w
-    mid_x0 = center_x - mid_w / 2
+    def opacity_for(i, n):
+        return 0.55 + 0.45 * ((i + 1) / n)
 
-    parts = [f'<svg viewBox="0 0 {W} {H}" width="{W}" height="{H}" class="viz-svg" role="img" aria-label="{esc(aria_label)}">']
-    parts.append(f'<line x1="{center_x}" y1="{bar_y-6}" x2="{center_x}" y2="{bar_y+bar_h+6}" stroke="var(--baseline)" stroke-width="1"/>')
+    half_mid = pct(mid_value) / 2
+    neg_active = [seg for seg in neg_segments if seg[1]]
+    pos_active = [seg for seg in pos_segments if seg[1]]
 
-    if mid_w > 0:
-        d = _hbar_path(mid_x0, bar_y, mid_w, bar_h, r=0)
-        parts.append(_mark(d, "var(--gridline)", f"{mid_label}: {fmt_num(mid_value)}"))
+    # Declaration order = innermost-to-outermost per side (stacking walks
+    # outward from zero in the order series are declared).
+    echarts_series = [
+        {"type": "bar", "stack": "s", "barWidth": 26, "itemStyle": {"color": "var(--gridline)"},
+         "data": [{"value": -half_mid, "fmt": fmt_num(mid_value), "name": mid_label}]},
+    ]
+    for i, (label, v) in enumerate(neg_active):
+        data = {"value": -pct(v), "fmt": fmt_num(v), "name": label}
+        if i == len(neg_active) - 1:  # outermost negative segment: running total, direct-labeled
+            data["label"] = {"show": True, "position": "left", "color": "var(--text-primary)",
+                              "formatter": fmt_num(sum(v2 for _, v2 in neg_active))}
+        echarts_series.append({
+            "type": "bar", "stack": "s", "barWidth": 26,
+            "itemStyle": {"color": "var(--diverge-neg)", "opacity": opacity_for(i, len(neg_active))},
+            "data": [data],
+        })
 
-    # Direct-label selectively (skill guidance: the endpoint/extreme, not
-    # every segment) -- each side's outer edge gets its running total,
-    # matching diverging_stacked_sentiment's convention above.
-    n_neg = len([1 for _, v in neg_segments if v])
-    x = mid_x0 - 2
-    neg_total = 0
-    for i, (label, v) in enumerate(seg for seg in neg_segments if seg[1]):
-        seg_w = (v / total) * usable_w
-        opacity = 0.55 + 0.45 * ((i + 1) / n_neg)
-        d = _hbar_path(x, bar_y, -seg_w, bar_h)
-        parts.append(_mark(d, "var(--diverge-neg)", f"{label}: {fmt_num(v)}", opacity=opacity))
-        x -= seg_w + 2
-        neg_total += v
-    if neg_total:
-        # Clamped the same way as diverging_stacked_sentiment's end-labels
-        # -- the scale factor above keeps the bars on-canvas, but each
-        # label's own extra offset can still push it back off the edge in
-        # an extreme split.
-        parts.append(f'<text x="{max(40, x+2-6)}" y="{bar_y+bar_h/2+4}" text-anchor="end" font-size="13.5" fill="var(--text-primary)">{fmt_num(neg_total)}</text>')
+    echarts_series.append({
+        "type": "bar", "stack": "s", "barWidth": 26, "itemStyle": {"color": "var(--gridline)"},
+        "data": [{"value": half_mid, "fmt": fmt_num(mid_value), "name": mid_label}],
+    })
+    for i, (label, v) in enumerate(pos_active):
+        data = {"value": pct(v), "fmt": fmt_num(v), "name": label}
+        if i == len(pos_active) - 1:  # outermost positive segment: running total, direct-labeled
+            data["label"] = {"show": True, "position": "right", "color": "var(--text-primary)",
+                              "formatter": fmt_num(sum(v2 for _, v2 in pos_active))}
+        echarts_series.append({
+            "type": "bar", "stack": "s", "barWidth": 26,
+            "itemStyle": {"color": "var(--diverge-pos)", "opacity": opacity_for(i, len(pos_active))},
+            "data": [data],
+        })
 
-    n_pos = len([1 for _, v in pos_segments if v])
-    x = mid_x0 + mid_w + 2
-    pos_total = 0
-    for i, (label, v) in enumerate(seg for seg in pos_segments if seg[1]):
-        seg_w = (v / total) * usable_w
-        opacity = 0.55 + 0.45 * ((i + 1) / n_pos)
-        d = _hbar_path(x, bar_y, seg_w, bar_h)
-        parts.append(_mark(d, "var(--diverge-pos)", f"{label}: {fmt_num(v)}", opacity=opacity))
-        x += seg_w + 2
-        pos_total += v
-    if pos_total:
-        parts.append(f'<text x="{min(W-40, x-2+8)}" y="{bar_y+bar_h/2+4}" font-size="13.5" fill="var(--text-primary)">{fmt_num(pos_total)}</text>')
-
-    parts.append("</svg>")
+    option = {
+        "grid": {"left": 40, "right": 40, "top": 8, "bottom": 8},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "legend": {"show": False},  # the HTML legend below is authoritative
+        "xAxis": {"type": "value", "min": -100, "max": 100, "show": False},
+        "yAxis": {"type": "category", "data": [""], "show": False},
+        "series": echarts_series,
+    }
+    chart_html = register_chart(option, 70, aria_label=aria_label)
 
     rows = (
         [[label, fmt_num(v)] for label, v in reversed(neg_segments)]
@@ -1556,7 +1372,7 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
         + [(label, "var(--diverge-pos)") for label, _ in pos_segments]
     )
     leg = legend(leg_items)
-    return "".join(parts), table, leg
+    return chart_html, table, leg
 
 
 # ============================================================================
@@ -1673,7 +1489,8 @@ def section_ai_recommendation(bundle, pipeline_result):
     if fv_low is not None and fv_high is not None:
         current_price = (bundle.get("price") or {}).get("current_price")
         fv_svg, fv_table = range_meter(fv_low, None, None, fv_high, current_price)
-        fv_html = f"""
+        if fv_svg:
+            fv_html = f"""
   <div class="rec-fair-value" style="margin-top:14px;">
     <div style="font-size:13px;margin-bottom:4px;"><b>Fair value estimate (today, not a price forecast)</b> {info_icon('fair_value')}</div>
     {fv_svg}
@@ -2006,7 +1823,7 @@ def section_analyst(bundle):
             )
             bars.append(
                 f'<div class="rec-trend-row"><div class="rec-trend-period">{esc(r.get("period") or "—")}</div>'
-                f'<div class="rec-trend-chart">{svg}</div></div>'
+                f'<div class="rec-trend-chart">{svg or empty_state("No data for this period.")}</div></div>'
             )
         leg_html = legend([("Strong sell / Sell", "var(--diverge-neg)"), ("Hold", "var(--gridline)"), ("Buy / Strong buy", "var(--diverge-pos)")])
 
@@ -2026,7 +1843,7 @@ def section_analyst(bundle):
         s_svg, s_table, s_legend = diverging_bar_horizontal(surprise_items, value_fmt=lambda v: fmt_pct(v))
         surprise_card = viz_card("EPS surprise history (actual vs. estimate)", s_svg, s_table, s_legend, info="eps_surprise")
     else:
-        surprise_card = viz_card("EPS surprise history", "<svg></svg>", empty_state(), info="eps_surprise")
+        surprise_card = viz_card("EPS surprise history", None, empty_state(), info="eps_surprise")
 
     trend = earnings_est.get("eps_estimate_trend", {}) or {}
     trend_rows = []
@@ -2211,7 +2028,7 @@ def section_financials(bundle):
         q_svg, q_table, q_legend = grouped_column_chart(cats, series)
         q_card = viz_card("Quarterly revenue & net income", q_svg, q_table, q_legend, info="quarterly_financials")
     else:
-        q_card = viz_card("Quarterly revenue & net income", "<svg></svg>", empty_state(), info="quarterly_financials")
+        q_card = viz_card("Quarterly revenue & net income", None, empty_state(), info="quarterly_financials")
 
     return f"""
 <div class="card full" id="sec-financials">
@@ -2239,7 +2056,7 @@ def section_dividends_options_macro_social(bundle):
         bb_svg, bb_table = bar_chart_horizontal(bb_items, value_fmt=fmt_usd)
         bb_card = viz_card("Quarterly buyback spend", bb_svg, bb_table, info="buybacks")
     else:
-        bb_card = viz_card("Quarterly buyback spend", "<svg></svg>", empty_state("No buyback activity found."), info="buybacks")
+        bb_card = viz_card("Quarterly buyback spend", None, empty_state("No buyback activity found."), info="buybacks")
 
     opt_reliable = opt.get("put_call_volume_ratio") is not None
     opt_html = f"""
@@ -2370,6 +2187,7 @@ def section_data_notes(bundle):
 # ============================================================================
 
 def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
+    _reset_chart_registry()  # must run before any section/chart function below
     ticker = esc(bundle.get("ticker", "Ticker"))
     sections = [
         section_price_technicals(bundle),
@@ -2383,6 +2201,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
         section_data_notes(bundle),
     ]
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
+    charts_json = json.dumps(_drain_chart_registry())
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2417,6 +2236,9 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
   automated opinion informed by the data below, not as fact. Everything else on this page is
   unmodified data, not re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
 </footer>
+<script>window.__CHARTS__ = {charts_json};</script>
+<script src="assets/echarts.min.js"></script>
+<script src="assets/dashboard.js"></script>
 <script>{JS_SCRIPT}</script>
 </body>
 </html>"""
@@ -2439,6 +2261,7 @@ def main():
     html_out = build_dashboard(bundle)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_out)
+    ensure_vendored_assets(os.path.dirname(output_path) or ".")
 
     print(f"Dashboard written to: {output_path}")
 

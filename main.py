@@ -245,6 +245,7 @@ def main():
 
     elif args.command == "dashboard":
         from dashboard.generate_dashboard import build_dashboard
+        from dashboard.assets import ensure_vendored_assets
 
         source = args.source
         if source.lower().endswith(".json"):
@@ -273,6 +274,7 @@ def main():
         os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(build_dashboard(bundle))
+        ensure_vendored_assets(os.path.dirname(output_path) or ".")
         print(f"Dashboard written to: {output_path}")
 
     elif args.command == "performance":
