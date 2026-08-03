@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.9
+
+- Update: revise `RESEARCH.md`'s build priority list based on follow-up
+  research -- dropped FinBERT and the RL "voice" from the active list
+  (reasoning preserved in "Follow-up findings"), dropped GitHub Actions/
+  Telegram in favor of Home Assistant's own automations/notifications, and
+  expanded each remaining item with real benchmark/cost info where it
+  exists (e.g. confirmed our Gemini client has no prompt-caching, so an
+  extra Bull/Bear debate round would roughly double that portion of a
+  run's cost). Documentation only, no functional changes -- version
+  bumped solely to satisfy this repo's pre-commit/CI convention.
+
 ## 0.9.8
 
 - Add: `RESEARCH.md` plus `research/` -- notes from cloning and reading the
