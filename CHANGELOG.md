@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.4
+
+- Fix: "Price vs. moving averages" and "Analyst target price range" marker
+  dots were painted UNDER the track, not on top of it -- 0.9.3's size fix
+  addressed the wrong cause. Confirmed live by reading the actual rendered
+  SVG's element order: ECharts does not paint cartesian series strictly in
+  the order they're listed in `option.series` -- the scatter (marker) series
+  painted before the line (track) series regardless of its later array
+  position, so the opaque 10px track drew right over most of every dot.
+  Fixed with explicit `z` on both series (z controls paint order; array
+  position does not) -- track z:1, markers z:2, markers always on top.
+- Fix, same charts: "Low"/"High" had no dot marker at all (`symbolSize: 0`),
+  relying only on the track's own rounded end-caps to imply an endpoint.
+  Given a real dot now, same size/border as every other marker, in a
+  neutral color since Low/High aren't a categorical series the way
+  MA20/Mean/etc. are.
+
 ## 0.9.3
 
 - Fix: "Price vs. moving averages" and "Analyst target price range" marker

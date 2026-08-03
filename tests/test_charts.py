@@ -240,6 +240,18 @@ class TestRangeMeter:
         mean_point = next(d for d in option["series"][1]["data"] if d["name"] == "Mean")
         assert mean_point["itemStyle"]["borderWidth"] > 0
 
+    def test_low_high_visible_and_painted_above_track(self):
+        # Both flagged directly by the user on this exact chart ("Analyst
+        # target price range"): Low/High had no dot at all (symbolSize: 0),
+        # and every marker's dot was painted UNDER the opaque track instead
+        # of on top of it. Shared root cause with range_position_plot,
+        # fixed in the shared _range_track_option() both call.
+        chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=160)
+        option = get_chart_option(chart)
+        low_point, high_point = option["series"][1]["data"][0], option["series"][1]["data"][1]
+        assert low_point["symbolSize"] > 0 and high_point["symbolSize"] > 0
+        assert option["series"][1]["z"] > option["series"][0]["z"]
+
     def test_current_outside_range_is_clamped_not_crashed_on(self):
         # Current price can legitimately fall outside the analyst range
         # (e.g. today's price above every analyst's target). The xAxis is
@@ -370,6 +382,35 @@ class TestRangePositionPlot:
         )
         assert "MA200" in legend and "MA50" in legend and "MA20" in legend
         assert "var(--series-3)" in legend and "var(--series-2)" in legend and "var(--series-1)" in legend
+
+    def test_track_paints_below_markers_not_above(self):
+        # Regression: ECharts does NOT paint cartesian series strictly in
+        # array order -- confirmed live by reading the actual rendered
+        # SVG's element order, the scatter series painted BEFORE the line
+        # regardless of its later position in this option's series list, so
+        # the opaque 10px track drew right on top of every marker dot,
+        # hiding most of each one (found live: "the circles are still
+        # behind the bar"). Explicit z is what actually controls paint
+        # order; the track must stay below every marker.
+        chart, table, legend = range_position_plot(
+            100, 200, 150, [("MA20", 150, "var(--series-1)")],
+        )
+        option = get_chart_option(chart)
+        track_z = option["series"][0]["z"]
+        marker_z = option["series"][1]["z"]
+        assert marker_z > track_z
+
+    def test_low_high_have_visible_marker_dots(self):
+        # Low/High used to be symbolSize: 0 (invisible) -- given a real dot
+        # here too, matching every other marker on the track, after a user
+        # asked for one directly ("the low key ... need a circle too").
+        chart, table, legend = range_position_plot(
+            100, 200, 150, [("MA20", 150, "var(--series-1)")],
+        )
+        option = get_chart_option(chart)
+        low_point, high_point = option["series"][1]["data"][0], option["series"][1]["data"][1]
+        assert low_point["symbolSize"] > 0
+        assert high_point["symbolSize"] > 0
 
     def test_no_markers_means_no_legend(self):
         chart, table, legend = range_position_plot(100, 200, 150, [])

@@ -1048,11 +1048,22 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         # to whichever edge it overshot instead of losing it.
         return max(low, min(high, v))
 
+    # Low/High used to be symbolSize: 0 (invisible, relying on the track's
+    # own rounded end-caps to imply an endpoint) -- given an explicit dot
+    # here too, same size/border as every other marker, for visual
+    # consistency across the whole track (found live: a user expected
+    # every labeled point to carry the same dot the named markers do).
+    # var(--text-secondary) keeps them visually neutral, since Low/High
+    # aren't a categorical series the way MA20/Mean/etc. are.
     scatter_data = [
-        {"value": [low, 0.5], "symbolSize": 0, "name": "Low", "fmt": low_high_fmt("Low", low),
+        {"value": [low, 0.5], "symbolSize": 18,
+         "itemStyle": {"color": "var(--text-secondary)", "borderColor": "var(--surface-1)", "borderWidth": 2},
+         "name": "Low", "fmt": low_high_fmt("Low", low),
          "label": {"show": True, "position": [0, -20], "align": "left", "color": "var(--text-secondary)",
                     "fontSize": 13.5, "formatter": "__labelFmt__"}},
-        {"value": [high, 0.5], "symbolSize": 0, "name": "High", "fmt": low_high_fmt("High", high),
+        {"value": [high, 0.5], "symbolSize": 18,
+         "itemStyle": {"color": "var(--text-secondary)", "borderColor": "var(--surface-1)", "borderWidth": 2},
+         "name": "High", "fmt": low_high_fmt("High", high),
          "label": {"show": True, "position": [0, -20], "align": "right", "color": "var(--text-secondary)",
                     "fontSize": 13.5, "formatter": "__labelFmt__"}},
     ]
@@ -1071,7 +1082,16 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         })
 
     track_series = {
-        "type": "line", "silent": True, "symbol": "none",
+        # z: 1 -- ECharts does NOT paint cartesian series strictly in this
+        # list's order (confirmed live by reading the actual rendered SVG's
+        # element order): the scatter series below was painted BEFORE this
+        # line regardless of array position, so the opaque 10px-thick track
+        # drew right on top of every marker dot, hiding most of each one --
+        # found live from a real screenshot ("the circles are still behind
+        # the bar"). Explicit z (not array order) is what actually controls
+        # paint order; the scatter series is given z: 2 to guarantee it
+        # always paints above this track regardless of type-based defaults.
+        "type": "line", "silent": True, "symbol": "none", "z": 1,
         "lineStyle": {"width": 10, "color": "var(--gridline)", "cap": "round"},
         "data": [[low, 0.5], [high, 0.5]],
     }
@@ -1105,7 +1125,7 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         # colored sliver peeking out from behind it rather than a distinct
         # dot on top of it (found live from a screenshot -- 12 was only 1px
         # bigger than the track per side, effectively invisible).
-        "series": [track_series, {"type": "scatter", "symbolSize": 18, "data": scatter_data}],
+        "series": [track_series, {"type": "scatter", "z": 2, "symbolSize": 18, "data": scatter_data}],
     }
 
 
