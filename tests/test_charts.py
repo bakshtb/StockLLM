@@ -225,6 +225,21 @@ class TestRangeMeter:
         names = [d["name"] for d in option["series"][1]["data"]]
         assert names == ["Low", "High", "Mean", "Median"]
 
+    def test_marker_dots_are_visibly_bigger_than_the_track(self):
+        # Regression: symbolSize 12 on a 10px-thick track left only 1px of
+        # dot poking out per side -- read as an invisible sliver, not a
+        # marker (found live from a screenshot). Must stay clearly bigger
+        # than the track's own lineStyle width, with a border so it reads
+        # as a distinct dot even when its fill color is close to the
+        # track's var(--gridline).
+        chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=160)
+        option = get_chart_option(chart)
+        track_width = option["series"][0]["lineStyle"]["width"]
+        marker_size = option["series"][1]["symbolSize"]
+        assert marker_size > track_width + 4
+        mean_point = next(d for d in option["series"][1]["data"] if d["name"] == "Mean")
+        assert mean_point["itemStyle"]["borderWidth"] > 0
+
     def test_current_outside_range_is_clamped_not_crashed_on(self):
         # Current price can legitimately fall outside the analyst range
         # (e.g. today's price above every analyst's target). The xAxis is

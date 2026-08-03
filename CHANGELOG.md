@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.3
+
+- Fix: "Price vs. moving averages" and "Analyst target price range" marker
+  dots (MA20/MA50/MA200, Mean/Median) were nearly invisible -- `symbolSize`
+  was 12 against a 10px-thick track, leaving only 1px of colored dot
+  poking out on each side, effectively a hidden sliver rather than a
+  visible marker. Bumped to 18 and added a light border ring so each dot
+  reads as a distinct circle sitting on the track regardless of how close
+  its own color is to the track's neutral gray.
+
 ## 0.9.2
 
 - Fix: the RSI gauge had no value indicator at all -- a static colored

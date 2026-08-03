@@ -1058,7 +1058,15 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
     ]
     for name, v, color in markers:
         scatter_data.append({
-            "value": [clamp(v), 0.5], "itemStyle": {"color": color}, "name": name, "fmt": label_fmt(v),
+            # borderColor/borderWidth: at the series-level symbolSize (18,
+            # below) a flat-colored dot still read as a thin sliver barely
+            # poking above the 10px-thick track it sits on (found live from
+            # a screenshot) -- a light ring gives every marker a crisp,
+            # consistent edge against the track regardless of how close its
+            # own color is to var(--gridline).
+            "value": [clamp(v), 0.5],
+            "itemStyle": {"color": color, "borderColor": "var(--surface-1)", "borderWidth": 2},
+            "name": name, "fmt": label_fmt(v),
             "label": {"show": True, "position": "bottom", "color": "var(--text-secondary)", "formatter": "__labelFmt__"},
         })
 
@@ -1092,7 +1100,12 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         "labelLayout": "__rangeTrackLabelLayout__",
         "xAxis": {"type": "value", "min": low, "max": high, "show": False},
         "yAxis": {"type": "value", "min": 0, "max": 1, "show": False},
-        "series": [track_series, {"type": "scatter", "symbolSize": 12, "data": scatter_data}],
+        # symbolSize 18 vs. the track's own 10px width: markers must be
+        # clearly larger than the line they sit on, or they read as a thin
+        # colored sliver peeking out from behind it rather than a distinct
+        # dot on top of it (found live from a screenshot -- 12 was only 1px
+        # bigger than the track per side, effectively invisible).
+        "series": [track_series, {"type": "scatter", "symbolSize": 18, "data": scatter_data}],
     }
 
 
