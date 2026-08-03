@@ -568,6 +568,7 @@ GLOSSARY = {
     "peg_ratio": "P/E ratio adjusted for the company's growth rate. A P/E of 30 looks expensive on its own, but if earnings are growing 30%/year, a PEG near 1.0 suggests that growth may justify the price. Below 1.0 is traditionally read as potentially undervalued relative to growth; above 2.0 as potentially overvalued. Only shown if a free FMP API key is configured.",
     "insider_sentiment_mspr": "Finnhub's own monthly score for whether company insiders (executives, directors) were net buying or net selling their own stock recently — positive means more buying, negative means more selling. A different, summarized view on top of the individual insider trades listed below. Only shown if the same Finnhub key used for news is configured.",
     "recommendation_trend": "How many analysts rated this stock Strong Buy/Buy/Hold/Sell/Strong Sell in recent months, and whether that mix is improving or deteriorating over time — a trend, not just a single snapshot. A different view than the individual rating actions listed elsewhere. Only shown if a Finnhub key is configured.",
+    "section_backtests": "A \"backtest\" mechanically replays a fixed, well-known trading rule (e.g. \"buy when RSI is oversold\") against this stock's own past prices to see what would actually have happened -- no AI, no opinion, just a rule applied to real history. Past results never guarantee future ones, but they're real evidence instead of a guess. A small 0.1% trading cost is assumed per trade so results aren't overstated.",
 }
 
 
@@ -1469,6 +1470,7 @@ def section_header(bundle):
 _NAV_ITEMS = [
     ("sec-price", "Price"),
     ("sec-analyst", "Analyst"),
+    ("sec-backtests", "Backtests"),
     ("sec-relative", "Performance"),
     ("sec-ownership", "Ownership"),
     ("sec-financials", "Financials"),
@@ -1945,6 +1947,60 @@ def section_analyst(bundle):
 </div>"""
 
 
+def _backtest_result_badge(strat):
+    if not strat.get("num_trades"):
+        return badge("No trades", "neutral")
+    if strat.get("beat_buy_hold") is True:
+        return badge("Beat Buy & Hold", "good")
+    if strat.get("beat_buy_hold") is False:
+        return badge("Underperformed", "critical")
+    return badge("—", "neutral")
+
+
+def section_backtests(bundle):
+    backtests = bundle.get("backtests", {}) or {}
+    strategies = backtests.get("strategies", []) or []
+
+    if not strategies:
+        return f"""
+<div class="card full" id="sec-backtests">
+  <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
+  {empty_state(backtests.get("note") or "Not enough price history to run a backtest for this ticker.")}
+</div>"""
+
+    rows = []
+    for s in strategies:
+        rows.append([
+            s.get("name") or "—",
+            s.get("explanation") or "—",
+            s.get("category") or "—",
+            fmt_pct(s.get("return_pct")),
+            fmt_pct(s.get("buy_hold_return_pct")),
+            fmt_pct(s.get("win_rate_pct"), signed=False) if s.get("win_rate_pct") is not None else "—",
+            fmt_num(s.get("num_trades")) if s.get("num_trades") is not None else "—",
+            _backtest_result_badge(s),
+        ])
+    table = data_table(
+        ["Strategy", "What it tests", "Style", "Return", "Buy & Hold", "Win Rate", "Trades", "Result"],
+        rows,
+    )
+
+    years = backtests.get("years_tested")
+    period_note = (
+        f"Tested over {years} years of this stock's actual price history "
+        f"({backtests.get('history_start')} to {backtests.get('history_end')}), assuming a "
+        f"0.1% trading cost per trade. Not a prediction of the future -- just what these "
+        f"specific, well-known rules would actually have done."
+    ) if years else ""
+
+    return f"""
+<div class="card full" id="sec-backtests">
+  <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
+  <div class="card-sub">{esc(period_note)}</div>
+  {viz_card("Well-known trading rules vs. this stock's actual history", None, table)}
+</div>"""
+
+
 def section_relative_performance(bundle):
     rp = bundle.get("relative_performance", {}) or {}
     fundamentals = bundle.get("fundamentals", {}) or {}
@@ -2264,6 +2320,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     sections = [
         section_price_technicals(bundle),
         section_analyst(bundle),
+        section_backtests(bundle),
         section_relative_performance(bundle),
         section_financials(bundle),
         section_ownership(bundle),

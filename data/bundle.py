@@ -8,8 +8,9 @@ balance sheet health, income statement, insider transactions (Form 4), Form
 144 sale notices, beneficial ownership (13D/13G), institutional ownership,
 raw filing text (incl. 8-K earnings exhibits), raw proxy text, raw news
 article text, optional FMP DCF valuation + PEG ratio, optional Finnhub
-insider sentiment + analyst recommendation trend, filings digest, and news
-digest into a single structured "research bundle".
+insider sentiment + analyst recommendation trend, a fixed set of well-known
+technical-strategy backtests against the ticker's own price history, filings
+digest, and news digest into a single structured "research bundle".
 This bundle is the ONLY source of truth the LLM reasoning agents
 (bull/bear/skeptic/judge) are allowed to reason from -- see
 agents/prompts/*.md for the grounding instructions.
@@ -52,6 +53,7 @@ from data.fetch_beneficial_ownership import fetch_beneficial_ownership
 from data.fetch_proxy import fetch_proxy_raw
 from data.fetch_fmp_valuation import fetch_fmp_valuation
 from data.fetch_finnhub_signals import fetch_finnhub_signals
+from backtest.engine import run_backtests
 
 
 def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, list[dict]]:
@@ -88,6 +90,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
     proxy_raw = fetch_proxy_raw(ticker)
     fmp_valuation = fetch_fmp_valuation(ticker)  # DCF + PEG, optional (FMP_API_KEY)
     finnhub_signals = fetch_finnhub_signals(ticker)  # insider sentiment + rec trend, optional (FINNHUB_API_KEY)
+    backtests = run_backtests(ticker)  # fixed well-known strategies vs. own price history, no LLM
 
     # --- Stage 2: digests, only when run_digests=True (costs money, needs API key) ---
     filings_digest = {"digest": None, "note": "Skipped (dry run)."}
@@ -145,6 +148,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "proxy_raw": proxy_raw,                    # raw DEF 14A text (comp/governance), no LLM
         "fmp_valuation": fmp_valuation,             # DCF fair value + PEG ratio, optional, no LLM
         "finnhub_signals": finnhub_signals,         # insider sentiment (MSPR) + analyst rec trend, optional, no LLM
+        "backtests": backtests,                     # fixed well-known strategies vs. real price history, no LLM
         "news_digest": news_digest.get("digest"),
         "filings_digest": filings_digest.get("digest"),
         "data_notes": [
@@ -155,7 +159,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
                 social_sentiment.get("note"), income_statement.get("note"),
                 *[f.get("note") for f in filings_raw.values()],
                 form144.get("note"), beneficial_ownership.get("note"), proxy_raw.get("note"),
-                fmp_valuation.get("note"), finnhub_signals.get("note"),
+                fmp_valuation.get("note"), finnhub_signals.get("note"), backtests.get("note"),
                 filings_digest.get("note"), news_digest.get("note"),
             ] if n
         ],

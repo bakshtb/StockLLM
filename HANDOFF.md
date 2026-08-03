@@ -997,6 +997,93 @@ StockLLM/
       the way Safari itself does — worth an explicit check on a real
       device before fully trusting the "log in once" experience.
 
+37. **Added real backtesting: 7 well-known technical strategies vs. each
+    ticker's own price history** (0.9.10) — closes the "Backtesting"
+    item that was explicitly listed as NOT built in the README/spec.
+    Preceded by a research pass (`research/02-backtesting-and-screening-tools.md`)
+    that identified `kernc/backtesting.py` as a well-scoped dependency (its
+    `Backtest` class expects exactly the `Open`/`High`/`Low`/`Close` +
+    `DatetimeIndex` shape `yfinance` already returns) and, separately, a
+    long back-and-forth with the user about *how* to embed it — landed on a
+    fixed, deterministic panel (same "Python computes, LLM narrates" split
+    every other data field follows, reinforced by FinRobot's writeup in
+    `research/01-llm-multi-agent-projects.md`), not an LLM-callable tool —
+    the tool-calling alternative was explicitly considered and rejected for
+    now: none of this repo's agent clients support tool-calling at all
+    today, and letting an LLM invent/test its own strategy hypotheses risks
+    exactly the backtest-overfitting trap documented in this file's RL
+    research (test enough ideas and one looks good by chance). The 7
+    strategies were deliberately chosen to be a small, well-known, named
+    set spanning opposite philosophies (mean-reversion vs. trend-following
+    vs. relative-strength) rather than variations on one idea.
+    - **`backtest/strategies.py`** — the 7 `Strategy` subclasses (RSI
+      mean-reversion, MACD crossover, moving-average crossover/"golden
+      cross", Bollinger Band reversion, 20-day breakout/Donchian channel, a
+      trend-filtered dip buy combining the RSI and 200-day-MA ideas, and
+      relative strength vs. SPY) plus a `STRATEGIES` registry list (name,
+      category, plain-English explanation, the class, whether it needs the
+      benchmark column) that both `backtest/engine.py` and the dashboard
+      iterate over. All long-only (buy to open, close to exit) — no
+      shorting, matching how a retail investor would actually use a signal
+      like this and avoiding margin/short-borrow mechanics with no other
+      reason to exist here. Indicators (RSI/MACD/Bollinger/Donchian/SMA)
+      are computed fresh inside `backtesting.py`'s `self.I()` from the raw
+      OHLCV it's given, not reused from `data/fetch_prices.py`'s summarized
+      stats — deliberate, since a real backtest needs the full price
+      series, not the single-point-in-time values the dashboard's
+      technicals panel keeps.
+    - **`backtest/engine.py`** — `run_backtests(ticker)` fetches 6 years of
+      daily history (`HISTORY_PERIOD`, long enough for the 200-day-MA
+      strategies to actually warm up and fire a few trades, not just the
+      1-year window `fetch_price_summary` uses for the dashboard's
+      technicals), runs each strategy through `Backtest(...).run()` with a
+      0.1% per-trade commission assumption (so results aren't overstated by
+      pretending trading is free), and extracts a compact stats dict per
+      strategy (return %, buy & hold return % for comparison, win rate,
+      trade count, max drawdown, Sharpe). Follows every other
+      `data/fetch_*.py` module's convention exactly: never raises, returns
+      an empty result + a `note` string instead (too little history, fetch
+      failure, or — for the one benchmark-needing strategy specifically — a
+      failed SPY fetch that doesn't take down the other 6 strategies with
+      it). `os.environ.setdefault("TQDM_DISABLE", "1")` before importing
+      `backtesting` — the library prints a `tqdm` progress bar per
+      `.run()` call by default, harmless but noisy on every CLI/webapp run;
+      caught during manual end-to-end testing (`python main.py dashboard
+      AAPL`), not from reading the library's docs.
+    - **`data/bundle.py`** — new `backtests` key, wired the same way as
+      every other section (`run_backtests(ticker)` call, `note` folded into
+      `data_notes`).
+    - **`dashboard/generate_dashboard.py`** — new `section_backtests()`
+      (nav pill "Backtests", between Analyst and Performance) rendering one
+      table: strategy name, its explanation in plain English (shown
+      directly in the row, not hidden behind an info-icon click, since the
+      user explicitly asked for the explanation to be visible), category,
+      return %, buy & hold %, win rate, trade count, and a result badge
+      ("Beat Buy & Hold" / "Underperformed" / "No trades" for the rules
+      that never actually fired). Uses `viz_card(..., None, table)` for a
+      clean table-only card (no chart pane, no toggle button — both
+      already gracefully handled by `viz_card` when `chart_html` is
+      `None`).
+    - Verified end-to-end against real data, not just synthetic: installed
+      `backtesting` in a scratch venv, ran `python -m backtest.engine AAPL`
+      directly (real numbers, all 7 strategies — AAPL's 2020-2026 run was
+      big enough that every rule actually underperformed plain buy & hold,
+      a realistic and honest result, not a manufactured win), then the
+      full `python main.py dashboard AAPL` CLI path and grepped the output
+      HTML for the new section/badges. 23 new tests in
+      `tests/test_backtest.py` (synthetic-data strategy runs, long-only
+      invariant checked at the source level via `inspect.getsource`,
+      insufficient-history/fetch-failure/benchmark-failure branches, and
+      the dashboard section's badge/empty-state/no-leaked-None rendering)
+      plus one `@pytest.mark.live` test against real AAPL data; full
+      non-live suite green (364 passed, up from 339 before this change),
+      and the new live test passes on its own (`pytest tests/test_backtest.py
+      -m live`) — no regressions to the pre-existing fixture-based
+      dashboard tests (old committed `output/*.json` bundles predate this
+      field entirely — `bundle.get("backtests", {})` falls through to the
+      section's empty-state branch for them, exercised directly by the
+      existing `test_dashboard_build.py` fixture sweep).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

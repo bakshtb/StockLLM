@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.10
+
+- Add: real backtesting. A new `backtest/` package runs 7 well-known
+  technical trading rules (RSI mean-reversion, MACD crossover,
+  moving-average crossover, Bollinger Band reversion, 20-day breakout, a
+  trend-filtered dip buy, and relative strength vs. the S&P 500) against
+  each ticker's own 6-year price history via the `backtesting` library --
+  deterministic, no LLM involved. Closes the "Backtesting" item that was
+  explicitly listed as not built yet. New "Strategy Backtests" dashboard
+  section shows each rule's name, plain-English explanation, return vs.
+  buy & hold, win rate, trade count, and a result badge. Runs on every
+  full and dry run alike (it's free/local). See HANDOFF.md item 37 and
+  `research/02-backtesting-and-screening-tools.md` for the full reasoning,
+  including why this is a fixed deterministic panel rather than an
+  LLM-callable tool.
+
 ## 0.9.9
 
 - Update: revise `RESEARCH.md`'s build priority list based on follow-up

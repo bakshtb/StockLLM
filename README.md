@@ -66,6 +66,8 @@ an explicit path elsewhere is respected as given).
 - Balance sheet health (debt, cash, free cash flow) — free
 - Insider transactions (SEC Form 4 filings) — free
 - Institutional ownership snapshot (top holders) — free
+- Backtests of 7 well-known trading rules against the ticker's own multi-year
+  price history (win rate, return vs. buy & hold, max drawdown per rule) — free
 - **Filings digest**: latest 10-Q/10-K/8-K summarized by a cheap model — small cost
 - **News digest**: recent articles (full text where fetchable) summarized by a cheap
   model — small cost
@@ -170,13 +172,20 @@ is printed after each run and stored in the database.
 - `main.py` — the CLI entrypoint.
 - `repository.yaml`, `config.yaml`, `Dockerfile`, `run.sh` — Home Assistant
   add-on packaging (see "Home Assistant add-on" above and `DOCS.md`).
-- `backtest/` — placeholder for later; not built in v1.
+- `backtest/` — runs a fixed set of well-known technical trading rules (RSI
+  mean-reversion, MACD crossover, moving-average crossover, Bollinger Band
+  reversion, 20-day breakout, a trend-filtered dip buy, and relative strength
+  vs. the S&P 500) against a ticker's own multi-year price history, using the
+  `backtesting` library. Deterministic, no LLM involved -- see
+  `backtest/strategies.py` for the rule definitions and
+  `research/02-backtesting-and-screening-tools.md` for why these specific
+  ones were picked. Results show up in the dashboard's "Strategy Backtests"
+  section for every run (full or dry-run).
 
 ## What's deliberately NOT built yet
 
 - Telegram notifications
 - Watchlist automation / scheduling
-- Backtesting
 
 These are documented in the original project spec and can be added once you've
 run the CLI on real tickers for a while and are comfortable with how it reasons.

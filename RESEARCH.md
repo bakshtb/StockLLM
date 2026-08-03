@@ -152,7 +152,12 @@ discount and would roughly double just the Bull+Bear portion of a run's cost.
 round, and consider adding caching to the Gemini client at the same time to blunt
 the added cost.
 
-### 6. Correlation check between watchlist tickers
+### 6. Correlation check between watchlist tickers — NOT FOR NOW
+
+**Deferred, not scheduled.** This only makes sense once StockLLM has some kind of
+watchlist/checklist feature (tracking more than one ticker at a time), which
+doesn't exist yet. Revisit this item once that feature is built — until then it's
+just notes, not something to pick up.
 
 Modeled on `franklinjtan/Portfolio-Diversification-...`'s approach: daily
 `.pct_change()` on price history, then pandas' `.corr()` for a full pairwise
