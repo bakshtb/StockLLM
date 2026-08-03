@@ -1032,10 +1032,14 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
     crowding a Low/High corner label when the value sits near an edge (the
     old SVG version needed a hand-rolled stagger pass and a "suppress
     whichever label is in the way" compromise for exactly these two cases;
-    neither is needed here). Low/High still get an explicit align:"left"/
-    "right" -- labelLayout only resolves label-vs-label overlap, not
-    label-vs-canvas-edge clipping, so a point sitting exactly at low/high
-    still needs to know which way to grow.
+    neither is needed here). Low/High labels are centered on their own dot
+    (no align override), same as every other marker -- an explicit
+    align:"left"/"right" was tried first specifically to avoid clipping
+    past the plot's edge, but a user reading the rendered page expected
+    every dot to carry its own label directly above it the same way
+    MA20/Mean/etc. do, not off to one side. The grid's left/right margin is
+    widened instead (see below) to give a centered label room to clip
+    against the SVG edge, without needing the label to land off to one side.
     """
     def low_high_fmt(word, v):
         return f"{word} {label_fmt(v)}" if corner_word_prefix else label_fmt(v)
@@ -1059,12 +1063,12 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         {"value": [low, 0.5], "symbolSize": 18,
          "itemStyle": {"color": "var(--text-secondary)", "borderColor": "var(--surface-1)", "borderWidth": 2},
          "name": "Low", "fmt": low_high_fmt("Low", low),
-         "label": {"show": True, "position": [0, -20], "align": "left", "color": "var(--text-secondary)",
+         "label": {"show": True, "position": "top", "distance": 20, "color": "var(--text-secondary)",
                     "fontSize": 13.5, "formatter": "__labelFmt__"}},
         {"value": [high, 0.5], "symbolSize": 18,
          "itemStyle": {"color": "var(--text-secondary)", "borderColor": "var(--surface-1)", "borderWidth": 2},
          "name": "High", "fmt": low_high_fmt("High", high),
-         "label": {"show": True, "position": [0, -20], "align": "right", "color": "var(--text-secondary)",
+         "label": {"show": True, "position": "top", "distance": 20, "color": "var(--text-secondary)",
                     "fontSize": 13.5, "formatter": "__labelFmt__"}},
     ]
     for name, v, color in markers:
@@ -1110,7 +1114,11 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         }
 
     return {
-        "grid": {"left": 24, "right": 24, "top": 50, "bottom": 40},
+        # left/right: wide enough that a centered Low/High label (up to
+        # "High $400.00" -- range_meter's corner_word_prefix form, the
+        # longest case) doesn't clip past the SVG edge now that it's
+        # centered on its own dot instead of right/left-aligned inward.
+        "grid": {"left": 55, "right": 55, "top": 50, "bottom": 40},
         "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
         # A real, working greedy stagger (see dashboard.js's
         # makeRangeTrackLabelLayout) -- the declarative

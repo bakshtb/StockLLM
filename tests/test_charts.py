@@ -366,6 +366,26 @@ class TestRangePositionPlot:
         assert low_label["fmt"] == "$201.58" and low_label["label"]["show"] is True
         assert high_label["fmt"] == "$340.08" and high_label["label"]["show"] is True
 
+    def test_low_high_labels_use_a_keyword_position_not_a_raw_offset(self):
+        # Regression: array-form position [dx, dy] is measured from the
+        # symbol's TOP-LEFT corner, not its center -- with align:"center"
+        # (tried first) that put the label's anchor a half-symbol-width
+        # left of the dot's true center, visibly shifting it off the dot
+        # (found live: a user asked for the High label to render directly
+        # on its own dot, and it rendered noticeably left of it instead).
+        # A string keyword ("top", matching how the marker group already
+        # correctly uses "bottom") centers on the symbol correctly; confirmed
+        # by reading the actual rendered SVG label coordinates against the
+        # track's real pixel positions, not assumed from ECharts' docs.
+        chart, table, legend = range_position_plot(
+            100, 200, 150, [("MA20", 150, "var(--series-1)")],
+        )
+        option = get_chart_option(chart)
+        low_label, high_label = option["series"][1]["data"][0]["label"], option["series"][1]["data"][1]["label"]
+        assert low_label["position"] == "top"
+        assert high_label["position"] == "top"
+        assert "align" not in low_label and "align" not in high_label
+
     def test_table_lists_every_marker_and_range(self):
         chart, table, legend = range_position_plot(100, 200, 150, [("MA20", 130, "var(--series-1)")])
         assert "MA20" in table

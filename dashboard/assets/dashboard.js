@@ -131,9 +131,22 @@
       }
       seen[key] = true;
       var r = params.labelRect;
-      var y = r.y;
+      // dy, not an absolute {x, y} -- a previous version returned
+      // {x: r.x, y: y}, silently assuming every label here is left-aligned
+      // (r.x, a labelRect's convention, is the LEFT edge of the label's
+      // natural bounding box). That was self-consistent back when Low/High
+      // used align:"left"/"right", where the left edge genuinely is the
+      // correct anchor -- but broke the moment Low/High switched to
+      // align:"center" (found live: a user asked for the label to sit
+      // directly on its own dot, and it rendered visibly shifted left
+      // instead, by roughly half its own width). Returning only a
+      // relative `dy` leaves x untouched, so whatever alignment a label
+      // was actually authored with -- left, right, or center -- keeps
+      // rendering correctly; this callback only ever needs to move labels
+      // vertically to resolve a collision anyway.
+      var dy = 0;
       var moved = true;
-      // Hard cap: each resolution provably converges (y moves strictly
+      // Hard cap: each resolution provably converges (dy moves strictly
       // one direction, so it must clear a finite placed list eventually)
       // under normal conditions, but this guarantees a single mis-sized
       // rect or an ECharts edge case this wasn't tested against can never
@@ -145,16 +158,17 @@
         guard++;
         for (var i = 0; i < placed.length; i++) {
           var p = placed[i];
+          var y = r.y + dy;
           var overlapX = r.x < p.x + p.width && r.x + r.width > p.x;
           var overlapY = y < p.y + p.height && y + r.height > p.y;
           if (overlapX && overlapY) {
-            y = isAbove ? p.y - r.height - 2 : p.y + p.height + 2;
+            dy = (isAbove ? p.y - r.height - 2 : p.y + p.height + 2) - r.y;
             moved = true;
           }
         }
       }
-      placed.push({ x: r.x, y: y, width: r.width, height: r.height });
-      return { x: r.x, y: y };
+      placed.push({ x: r.x, y: r.y + dy, width: r.width, height: r.height });
+      return { dy: dy };
     };
   }
 

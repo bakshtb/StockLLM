@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.9.5
+
+- Fix: the "High" corner label on the price-range track charts rendered
+  visibly to the left of its own dot instead of centered on it, flagged
+  directly by the user. Root cause was two layered bugs, both fixed:
+  1. `dashboard/assets/dashboard.js`'s shared label-collision callback
+     (`makeRangeTrackLabelLayout`) always returned an absolute `{x: r.x,
+     y}` -- `r.x` is a labelRect's LEFT edge, which only happens to be the
+     correct anchor for left-aligned text. That was fine while Low/High
+     used explicit align:"left"/"right", but broke the moment they were
+     centered (below). Rewritten to return only a relative `dy`, leaving
+     x untouched so whatever alignment a label actually uses renders
+     correctly -- this callback only ever needs to move labels vertically
+     to resolve a collision anyway.
+  2. Low/High's label used an array-form `position: [0, -20]`, which
+     ECharts measures from the symbol's TOP-LEFT corner, not its center --
+     at symbolSize 18 that's a 9px horizontal error on its own, silently
+     added to whatever alignment was set. Switched to the keyword form
+     `position: "top"` (matching how the marker group already correctly
+     uses `"bottom"`), which centers on the symbol properly. Confirmed by
+     reading the actual rendered SVG label coordinates against the
+     track's real pixel positions, not assumed from ECharts' docs.
+  Also gave Low/High room to render fully centered without clipping past
+  the SVG edge (grid margin 24 -> 55).
+
 ## 0.9.4
 
 - Fix: "Price vs. moving averages" and "Analyst target price range" marker
