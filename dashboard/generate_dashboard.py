@@ -1069,7 +1069,13 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
     }
     if current is not None:
         track_series["markPoint"] = {
-            "symbol": "path://M -6 -10 L 6 -10 L 0 0 Z", "symbolOffset": [0, -16],
+            # symbolSize must be set explicitly -- a path symbol with no
+            # size renders at ECharts' default 50x50, ~4-5x this path's own
+            # 12x10-unit coordinate space, oversized enough to visually
+            # cover the High corner label whenever "current" sits close to
+            # it (found live: a triangle wide enough to hide "$340.08"
+            # entirely). [12, 10] renders the path at its own native size.
+            "symbol": "path://M -6 -10 L 6 -10 L 0 0 Z", "symbolSize": [12, 10], "symbolOffset": [0, -16],
             "itemStyle": {"color": "var(--text-primary)"},
             "label": {"show": True, "position": "top", "fontWeight": 600, "color": "var(--text-primary)", "formatter": "__labelFmt__"},
             "data": [{"coord": [clamp(current), 0.5], "name": current_label, "fmt": label_fmt(current)}],

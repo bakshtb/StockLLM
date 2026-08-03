@@ -99,16 +99,37 @@
   function makeRangeTrackLabelLayout() {
     var placedAbove = [];
     var placedBelow = [];
+    var seenAbove = {};
+    var seenBelow = {};
     return function (params) {
       var isAbove = params.seriesIndex === 0 || params.dataIndex < 2;
       var placed = isAbove ? placedAbove : placedBelow;
+      var seen = isAbove ? seenAbove : seenBelow;
       // Defensive reset: ECharts can call labelLayout more than once per
-      // render (e.g. a relayout pass) -- dataIndex 0 reliably means "a
-      // fresh pass over this series just started", so treat that as a
-      // signal to forget whatever was placed in a previous pass rather
-      // than letting stale positions from an earlier pass keep
-      // accumulating and influencing this one indefinitely.
-      if (params.dataIndex === 0) placed.length = 0;
+      // render (e.g. a relayout pass), and stale rects from a previous
+      // pass must not keep influencing this one. This used to key off
+      // "dataIndex === 0 means a fresh pass just started" -- correct for
+      // the "above" group (Low genuinely is dataIndex 0) but silently
+      // never true for the "below" group, whose markers start at
+      // dataIndex 2 (Low/High occupy 0/1 in the SAME series) -- so
+      // placedBelow was never reset at all, and stale entries from every
+      // earlier pass kept accumulating, each subsequent pass's labels
+      // colliding against their own previous-pass ghosts and getting
+      // pushed down again. Found live: 3 markers landing at
+      // y=100.2/109.4/118.6, each offset from the last by exactly one
+      // pass's push distance -- a monotonic drift, not a one-time
+      // stagger. Track identity instead of a magic index: seeing the
+      // same (seriesIndex, dataIndex) pair again can only mean a new
+      // pass has started, regardless of which dataIndex that group
+      // happens to begin at.
+      var key = params.seriesIndex + ":" + params.dataIndex;
+      if (Object.prototype.hasOwnProperty.call(seen, key)) {
+        placed.length = 0;
+        for (var k in seen) {
+          if (Object.prototype.hasOwnProperty.call(seen, k)) delete seen[k];
+        }
+      }
+      seen[key] = true;
       var r = params.labelRect;
       var y = r.y;
       var moved = true;

@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.9.1
+
+- Fix: "Price vs. moving averages" markers (MA20/MA50/MA200) could drift
+  progressively further apart or crowd together unpredictably, found live
+  from a real screenshot after 0.9.0 shipped. Root cause in
+  `dashboard/assets/dashboard.js`'s label-collision stagger
+  (`makeRangeTrackLabelLayout`): its "forget the previous render pass"
+  reset only fired on `dataIndex === 0`, true for the corner (Low/High/
+  Current) label group but never true for the marker group, whose points
+  start at `dataIndex 2` in the same series -- so stale rects from earlier
+  passes never got cleared, and each subsequent pass's labels collided
+  against their own leftover ghosts, pushing them further down every
+  pass. Fixed by keying the reset off each label's own
+  `seriesIndex:dataIndex` identity (resets when a pair is seen again,
+  regardless of which index a group happens to start at) instead of a
+  fixed magic index.
+- Fix, same chart, second bug: the "Current" price triangle marker had no
+  `symbolSize`, so it rendered at ECharts' default 50x50 -- 4-5x its own
+  path's native 12x10-unit size -- large enough to physically cover the
+  neighboring "High" corner label whenever the current price sat close to
+  the 52-week high. Fixed by setting `symbolSize: [12, 10]` explicitly.
+- Both verified by reconstructing the exact reported scenario, reading
+  real rendered SVG label coordinates out of the DOM (not just eyeballing
+  a screenshot), confirming the fix converges to a single clean stagger
+  pass, and re-screenshotting.
+
 ## 0.9.0
 
 - **Replaced every hand-rolled inline-SVG chart with Apache ECharts**, vendored
