@@ -58,14 +58,14 @@ def _clean_stat(value):
     return round(value, 2)
 
 
-def _run_one(meta: dict, data: pd.DataFrame) -> dict:
+def _run_one(meta: dict, data: pd.DataFrame, shared_buy_hold_pct: float) -> dict:
     result = {
         "key": meta["key"],
         "name": meta["name"],
         "category": meta["category"],
         "explanation": meta["explanation"],
         "return_pct": None,
-        "buy_hold_return_pct": None,
+        "buy_hold_return_pct": shared_buy_hold_pct,
         "win_rate_pct": None,
         "num_trades": None,
         "max_drawdown_pct": None,
@@ -82,13 +82,20 @@ def _run_one(meta: dict, data: pd.DataFrame) -> dict:
         num_trades = int(stats["# Trades"])
         result["num_trades"] = num_trades
         result["return_pct"] = _clean_stat(stats["Return [%]"])
-        result["buy_hold_return_pct"] = _clean_stat(stats["Buy & Hold Return [%]"])
+        # Deliberately NOT using backtesting.py's own "Buy & Hold Return [%]"
+        # here -- it's computed from each strategy's own indicator-warmup
+        # point (e.g. day 14 for RSI vs. day 200 for a 200-day moving
+        # average), not from the same starting day for every strategy, so
+        # strategies would silently get compared against different Buy &
+        # Hold baselines. `shared_buy_hold_pct` (passed in, computed once
+        # from the full raw price series) is the same number for every row,
+        # so the "beat Buy & Hold" comparison is actually apples-to-apples.
         result["max_drawdown_pct"] = _clean_stat(stats["Max. Drawdown [%]"])
         result["sharpe_ratio"] = _clean_stat(stats.get("Sharpe Ratio"))
         if num_trades > 0:
             result["win_rate_pct"] = _clean_stat(stats.get("Win Rate [%]"))
-            if result["return_pct"] is not None and result["buy_hold_return_pct"] is not None:
-                result["beat_buy_hold"] = result["return_pct"] > result["buy_hold_return_pct"]
+            if result["return_pct"] is not None and shared_buy_hold_pct is not None:
+                result["beat_buy_hold"] = result["return_pct"] > shared_buy_hold_pct
         else:
             result["note"] = "This rule never actually triggered a trade over the tested period."
     except Exception as e:
@@ -135,6 +142,13 @@ def run_backtests(ticker: str) -> dict:
     result["history_end"] = data.index[-1].strftime("%Y-%m-%d")
     result["years_tested"] = round(len(data) / 252, 1)  # ~252 trading days/year
 
+    # One shared "if you'd just bought on day 1 and held" baseline, from the
+    # full raw price series -- computed once here (not per-strategy) so
+    # every row in the dashboard is compared against the exact same number.
+    first_close = float(data["Close"].iloc[0])
+    last_close = float(data["Close"].iloc[-1])
+    shared_buy_hold_pct = round((last_close - first_close) / first_close * 100, 2)
+
     needs_benchmark = any(m.get("needs_benchmark") for m in STRATEGIES)
     benchmark_data = None
     benchmark_note = None
@@ -153,14 +167,14 @@ def run_backtests(ticker: str) -> dict:
                 result["strategies"].append({
                     "key": meta["key"], "name": meta["name"], "category": meta["category"],
                     "explanation": meta["explanation"], "return_pct": None,
-                    "buy_hold_return_pct": None, "win_rate_pct": None, "num_trades": None,
+                    "buy_hold_return_pct": shared_buy_hold_pct, "win_rate_pct": None, "num_trades": None,
                     "max_drawdown_pct": None, "sharpe_ratio": None, "beat_buy_hold": None,
                     "note": benchmark_note or "Benchmark data unavailable.",
                 })
                 continue
-            result["strategies"].append(_run_one(meta, benchmark_data))
+            result["strategies"].append(_run_one(meta, benchmark_data, shared_buy_hold_pct))
         else:
-            result["strategies"].append(_run_one(meta, data))
+            result["strategies"].append(_run_one(meta, data, shared_buy_hold_pct))
 
     return result
 

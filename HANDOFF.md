@@ -1084,6 +1084,31 @@ StockLLM/
       section's empty-state branch for them, exercised directly by the
       existing `test_dashboard_build.py` fixture sweep).
 
+38. **Fixed a real bug in item 37's Buy & Hold column, spotted by the user
+    from the live dashboard** (0.9.11) — every strategy row showed a
+    *different* "Buy & Hold" number for the same ticker, which shouldn't be
+    possible for what's conceptually one fixed baseline. Root-caused by
+    reading `backtesting.py`'s own source
+    (`backtesting/_stats.py:117`): `Buy & Hold Return [%]` is computed as
+    `(close[-1] - close[first_trading_bar]) / close[first_trading_bar]`,
+    where `first_trading_bar = _indicator_warmup_nbars(strategy_instance)`
+    — i.e. it starts counting from whenever *that specific strategy's*
+    indicators first become valid (day ~14 for RSI, day ~200 for a 200-day
+    moving average), not from the same starting day across strategies. The
+    equity curve itself and the reported `Start`/`End` stat fields
+    misleadingly show the full data range regardless, which is what made
+    this easy to miss — confirmed by printing `stats['_equity_curve']`
+    before finding the real cause in `_stats.py`, not by guessing. Fixed by
+    computing one shared Buy & Hold % in `backtest/engine.py`'s
+    `run_backtests()` (first close to last close of the full raw price
+    series, once), passing it into `_run_one()` as `shared_buy_hold_pct`,
+    and using it for every strategy's row and its `beat_buy_hold`
+    comparison instead of trusting the library's own per-strategy stat.
+    Added `test_buy_hold_return_is_identical_across_every_strategy` as a
+    regression test. Verified against real AAPL data before and after: all
+    7 rows now correctly show 185.76% instead of six different numbers
+    ranging 133–186%.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

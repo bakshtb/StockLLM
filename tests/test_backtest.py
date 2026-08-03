@@ -48,14 +48,17 @@ class TestStrategies:
     @pytest.mark.parametrize("meta", STRATEGIES, ids=[m["key"] for m in STRATEGIES])
     def test_strategy_runs_without_raising(self, meta):
         data = _synthetic_ohlcv(with_benchmark=meta["needs_benchmark"])
-        result = _run_one(meta, data)
+        result = _run_one(meta, data, shared_buy_hold_pct=12.34)
         assert result["key"] == meta["key"]
         assert result["name"] == meta["name"]
+        # The Buy & Hold baseline is always the shared value passed in --
+        # never recomputed per-strategy (see test_buy_hold_is_identical_
+        # across_strategies_with_different_warmups for why that matters).
+        assert result["buy_hold_return_pct"] == 12.34
         # Either it produced real numbers, or it cleanly explained why not --
         # never left half-populated or silently wrong.
         if result["num_trades"]:
             assert result["return_pct"] is not None
-            assert result["buy_hold_return_pct"] is not None
             assert isinstance(result["beat_buy_hold"], bool)
         else:
             assert result["note"]
@@ -137,6 +140,31 @@ class TestRunBacktests:
         assert result["years_tested"] is not None
         assert len(result["strategies"]) == len(STRATEGIES)
         assert {s["key"] for s in result["strategies"]} == {m["key"] for m in STRATEGIES}
+
+    def test_buy_hold_return_is_identical_across_every_strategy(self, monkeypatch):
+        """Regression test for a real bug: backtesting.py's own built-in
+        "Buy & Hold Return [%]" stat is computed from each strategy's own
+        indicator-warmup point (day ~14 for RSI, day 200 for a 200-day
+        moving average), not from the same starting day -- so strategies
+        were silently being compared against different Buy & Hold
+        baselines. Every strategy must report the exact same
+        buy_hold_return_pct, computed once from the full raw price series."""
+        import backtest.engine as engine_module
+
+        data = _synthetic_ohlcv(n=800)
+        bench = _synthetic_ohlcv(n=800, seed=1)
+
+        def _fake_fetch(ticker):
+            return bench[["Open", "High", "Low", "Close", "Volume"]] if ticker == BENCHMARK_TICKER else data
+
+        monkeypatch.setattr(engine_module, "_fetch_history", _fake_fetch)
+
+        result = run_backtests("FAKE")
+        buy_hold_values = {s["buy_hold_return_pct"] for s in result["strategies"]}
+        assert len(buy_hold_values) == 1, f"expected one shared value, got {buy_hold_values}"
+
+        expected = round((data["Close"].iloc[-1] - data["Close"].iloc[0]) / data["Close"].iloc[0] * 100, 2)
+        assert buy_hold_values.pop() == expected
 
     def test_benchmark_fetch_failure_only_affects_relative_strength(self, monkeypatch):
         import backtest.engine as engine_module

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.11
+
+- Fix: the "Buy & Hold" column in the Strategy Backtests dashboard section
+  was showing a different number per strategy row, for the same ticker.
+  Root cause: `backtesting.py`'s own `Buy & Hold Return [%]` stat is
+  computed from each strategy's own indicator-warmup point (day ~14 for
+  RSI, day ~200 for a 200-day moving average), not from the same starting
+  day for every strategy -- so each row was silently comparing itself
+  against a different baseline. Now computed once, from the full raw price
+  history, and reused as the same shared number across every strategy's
+  row -- an honest apples-to-apples comparison. Added a regression test
+  (`test_buy_hold_return_is_identical_across_every_strategy`) so this can't
+  silently reappear.
+
 ## 0.9.10
 
 - Add: real backtesting. A new `backtest/` package runs 7 well-known
