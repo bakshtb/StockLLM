@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.9.2
+
+- Fix: the RSI gauge had no value indicator at all -- a static colored
+  band and a big number below it, with nothing showing where on the band
+  that number actually falls. Flagged directly by the user from a real
+  screenshot ("where is it in the red, the green, or the gray?"). The
+  pointer had been explicitly turned off (`show: False`) during the
+  ECharts migration. Added it back as a dot sitting directly on the band
+  rather than the default needle-from-center -- a needle this short would
+  cross straight through the headline number occupying the same central
+  area. `icon: "circle"` pointers turned out to center at *half* of
+  `length` (confirmed by reading the actual rendered SVG transform, not
+  assumed from docs); `length: "186%"` lands the dot at 93% of the
+  gauge's radius, the middle of the band, and stays correct at any
+  container width since it's a percentage, not a fixed pixel offset.
+- Fix: "Price vs. moving averages" and "Analyst target price range" both
+  render colored marker dots (MA20/MA50/MA200, or Mean/Median) with only
+  a bare price label -- no name anywhere tying a color to what it means.
+  Flagged directly by the user ("it's just a table"). `range_meter()` and
+  `range_position_plot()` now both return a legend naming each marker's
+  color, wired into their `viz_card()` calls the same way every other
+  chart on the page already does it. Low/High/Current aren't in the
+  legend -- Low/High are self-evident track endpoints and Current already
+  carries its own explicit price label.
+
 ## 0.9.1
 
 - Fix: "Price vs. moving averages" markers (MA20/MA50/MA200) could drift

@@ -1099,7 +1099,7 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
 def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     """Analyst target range: a track from low to high with mean/median/current markers."""
     if low is None or high is None or high <= low:
-        return None, empty_state()
+        return None, empty_state(), ""
     markers = []
     if mean is not None:
         markers.append(("Mean", mean, "var(--series-1)"))
@@ -1111,7 +1111,13 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     rows = [["Low", label_fmt(low)], ["Mean", label_fmt(mean)], ["Median", label_fmt(median)],
             ["High", label_fmt(high)], ["Current price", label_fmt(current)]]
     table = data_table(["Point", "Price"], rows)
-    return chart_html, table
+    # The colored marker dots (Mean/Median) carry a bare price with no name
+    # attached in the chart itself -- found live, a user couldn't tell
+    # which dot was which. Low/High/Current aren't included here: Low/High
+    # are self-evident track endpoints, and Current already carries its own
+    # explicit "$X" label directly above the track.
+    leg = legend([(name, color) for name, _, color in markers]) if markers else ""
+    return chart_html, table, leg
 
 
 def range_position_plot(low, high, current, markers, aria_label="value range", current_label="Current", label_fmt=fmt_price):
@@ -1132,7 +1138,7 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     separately, above the track, so it never collides with the dots.
     """
     if low is None or high is None or high <= low:
-        return None, empty_state()
+        return None, empty_state(), ""
     valid_markers = [(l, v, c) for l, v, c in markers if v is not None]
     option = _range_track_option(low, high, current, valid_markers, current_label, label_fmt)
     chart_html = register_chart(option, 150, aria_label=aria_label)
@@ -1142,7 +1148,11 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
         rows.append([current_label, label_fmt(current)])
     rows.append(["Range", f"{label_fmt(low)} – {label_fmt(high)}"])
     table = data_table(["Point", "Price"], rows)
-    return chart_html, table
+    # Same gap as range_meter above: bare-price marker dots with no name
+    # attached in the chart itself, found live from a user screenshot of
+    # this exact chart (MA20/MA50/MA200 were impossible to tell apart).
+    leg = legend([(name, color) for name, _, color in valid_markers]) if valid_markers else ""
+    return chart_html, table, leg
 
 
 def gauge_meter(value, min_v, max_v, zones, label=""):
@@ -1169,7 +1179,22 @@ def gauge_meter(value, min_v, max_v, zones, label=""):
             "min": min_v, "max": max_v,
             "radius": "100%", "center": ["50%", "85%"],
             "axisLine": {"lineStyle": {"width": 12, "color": color_stops}},
-            "pointer": {"show": False},
+            # A "you are here" dot exactly on the colored band, not the
+            # default needle from the pivot -- was `show: False` entirely
+            # until a real user screenshot pointed out there was no visual
+            # link at all between the big number and the band it's meant to
+            # sit within. For icon:"circle", ECharts centers the dot at
+            # HALF of `length` (confirmed empirically by reading the
+            # rendered SVG's actual transform, not assumed from docs) --
+            # 186% here lands the dot at 93% of the gauge's own radius,
+            # i.e. the middle of the band (band spans ~86%-100% of radius
+            # at width:12), and being a percentage (not a fixed px length)
+            # it stays correctly on the band across every container width
+            # this responsive chart can render at.
+            "pointer": {
+                "show": True, "icon": "circle", "length": "186%", "width": 16,
+                "itemStyle": {"color": "var(--surface-1)", "borderColor": "var(--text-primary)", "borderWidth": 3},
+            },
             "anchor": {"show": False},
             "axisTick": {"show": False}, "splitLine": {"show": False},
             "axisLabel": {"distance": -30, "color": "var(--text-muted)", "fontSize": 12},
@@ -1494,7 +1519,7 @@ def section_ai_recommendation(bundle, pipeline_result):
     fv_html = ""
     if fv_low is not None and fv_high is not None:
         current_price = (bundle.get("price") or {}).get("current_price")
-        fv_svg, fv_table = range_meter(fv_low, None, None, fv_high, current_price)
+        fv_svg, fv_table, _fv_legend = range_meter(fv_low, None, None, fv_high, current_price)
         if fv_svg:
             fv_html = f"""
   <div class="rec-fair-value" style="margin-top:14px;">
@@ -1732,11 +1757,11 @@ def section_price_technicals(bundle):
         ("MA50", price.get("ma50"), "var(--series-2)"),
         ("MA20", price.get("ma20"), "var(--series-1)"),
     ]
-    svg, table = range_position_plot(
+    svg, table, ma_legend = range_position_plot(
         low_52w, high_52w, price.get("current_price"), ma_markers,
         aria_label="price vs. 52-week range and moving averages",
     )
-    price_card = viz_card("Price vs. moving averages", svg, table, info="price_vs_ma")
+    price_card = viz_card("Price vs. moving averages", svg, table, ma_legend, info="price_vs_ma")
 
     rsi_svg, rsi_table = gauge_meter(
         price.get("rsi_14"), 0, 100,
@@ -1779,14 +1804,14 @@ def section_analyst(bundle):
     earnings_est = bundle.get("earnings_estimates", {}) or {}
     fmp = bundle.get("fmp_valuation", {}) or {}
 
-    range_svg, range_table = range_meter(
+    range_svg, range_table, range_legend = range_meter(
         fundamentals.get("target_low_price"), fundamentals.get("target_mean_price"),
         fundamentals.get("target_median_price"), fundamentals.get("target_high_price"),
         bundle.get("price", {}).get("current_price"),
     )
     range_card = viz_card(
         f"Analyst target price range ({fundamentals.get('number_of_analyst_opinions') or 0} analysts)",
-        range_svg, range_table, info="analyst_target_range",
+        range_svg, range_table, range_legend, info="analyst_target_range",
     )
 
     dcf_html = ""

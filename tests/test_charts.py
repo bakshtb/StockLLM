@@ -213,11 +213,11 @@ class TestGroupedColumnChart:
 
 class TestRangeMeter:
     def test_missing_low_high_returns_empty_state(self):
-        chart, table = range_meter(None, 10, 10, None, 5)
+        chart, table, legend = range_meter(None, 10, 10, None, 5)
         assert chart is None
 
     def test_real_range_has_dimensions_and_right_series_types(self):
-        chart, table = range_meter(low=100, mean=150, median=140, high=200, current=160)
+        chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=160)
         assert_chart_has_dimensions(chart)
         option = get_chart_option(chart)
         assert option["series"][0]["type"] == "line"  # the track
@@ -231,7 +231,7 @@ class TestRangeMeter:
         # fixed to [low, high], so the marker must be visually clamped to
         # whichever edge it overshot -- while still showing its real,
         # unclamped value in the label/tooltip.
-        chart, table = range_meter(low=100, mean=150, median=140, high=200, current=250)
+        chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=250)
         option = get_chart_option(chart)
         mark_point = option["series"][0]["markPoint"]["data"][0]
         assert mark_point["coord"][0] == 200  # clamped to the high edge
@@ -246,15 +246,31 @@ class TestRangeMeter:
         # (confirmed via direct browser testing, not assumed) -- a real
         # working greedy stagger lives in dashboard.js instead
         # (makeRangeTrackLabelLayout), referenced here by name.
-        chart, table = range_meter(low=215, mean=320, median=325, high=400, current=393)
+        chart, table, legend = range_meter(low=215, mean=320, median=325, high=400, current=393)
         option = get_chart_option(chart)
         assert option["labelLayout"] == "__rangeTrackLabelLayout__"
 
     def test_current_marker_present_with_real_value_when_near_an_edge(self):
-        chart, table = range_meter(low=215, mean=320, median=325, high=400, current=393)
+        chart, table, legend = range_meter(low=215, mean=320, median=325, high=400, current=393)
         option = get_chart_option(chart)
         assert option["series"][0]["markPoint"]["data"][0]["fmt"] == "$393.00"
         assert "Current price" in table  # raw value still in the table view
+
+    def test_legend_names_the_marker_colors(self):
+        # Regression: Mean/Median render as bare-price dots with no name in
+        # the chart itself -- a user couldn't tell which colored dot was
+        # which (found live, same gap as range_position_plot below).
+        chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=160)
+        assert "Mean" in legend and "Median" in legend
+        assert "var(--series-1)" in legend  # Mean's color
+        assert "var(--series-3)" in legend  # Median's color
+
+    def test_no_markers_means_no_legend(self):
+        # The AI fair-value block calls range_meter with mean=median=None
+        # (just a Low/High/Current track) -- no ambiguous dots exist, so no
+        # legend should render (an empty one would just be dead markup).
+        chart, table, legend = range_meter(low=200, mean=None, median=None, high=250, current=220)
+        assert legend == ""
 
 
 class TestRangePositionPlot:
@@ -264,11 +280,11 @@ class TestRangePositionPlot:
     (found from a real dashboard screenshot -- see HANDOFF.md)."""
 
     def test_missing_low_high_returns_empty_state(self):
-        chart, table = range_position_plot(None, 340, 300, [("MA20", 320, "var(--series-1)")])
+        chart, table, legend = range_position_plot(None, 340, 300, [("MA20", 320, "var(--series-1)")])
         assert chart is None
 
     def test_real_data_has_dimensions_and_every_marker_present(self):
-        chart, table = range_position_plot(
+        chart, table, legend = range_position_plot(
             201.58, 340.08, 333.43,
             [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
         )
@@ -279,14 +295,14 @@ class TestRangePositionPlot:
         assert option["series"][0]["markPoint"]["data"][0]["name"] == "Current"
 
     def test_current_outside_range_is_clamped_not_crashed_on(self):
-        chart, table = range_position_plot(100, 200, 250, [("MA20", 150, "var(--series-1)")])
+        chart, table, legend = range_position_plot(100, 200, 250, [("MA20", 150, "var(--series-1)")])
         option = get_chart_option(chart)
         mark_point = option["series"][0]["markPoint"]["data"][0]
         assert mark_point["coord"][0] == 200
         assert mark_point["fmt"] == "$250.00"
 
     def test_missing_current_omits_current_marker(self):
-        chart, table = range_position_plot(100, 200, None, [("MA20", 150, "var(--series-1)")])
+        chart, table, legend = range_position_plot(100, 200, None, [("MA20", 150, "var(--series-1)")])
         assert_chart_has_dimensions(chart)
         option = get_chart_option(chart)
         assert "markPoint" not in option["series"][0]
@@ -302,7 +318,7 @@ class TestRangePositionPlot:
         # now share the exact same xAxis min/max = low/high approach (no
         # separate internal pixel padding at all), so there's no longer a
         # pad constant to drift out of sync between the two chart types.
-        chart, table = range_position_plot(100, 200, 150, [("MA20", 150, "var(--series-1)")])
+        chart, table, legend = range_position_plot(100, 200, 150, [("MA20", 150, "var(--series-1)")])
         option = get_chart_option(chart)
         assert option["xAxis"]["min"] == 100
         assert option["xAxis"]["max"] == 200
@@ -314,7 +330,7 @@ class TestRangePositionPlot:
         # a real screenshot. Corner labels must always render; ECharts'
         # labelLayout (not a Python-side suppression decision) is what
         # keeps Current's own label legible if it crowds one.
-        chart, table = range_position_plot(
+        chart, table, legend = range_position_plot(
             201.58, 340.08, 333.43,
             [("MA200", 277.35, "var(--series-3)"), ("MA50", 309.30, "var(--series-2)"), ("MA20", 324.35, "var(--series-1)")],
         )
@@ -324,10 +340,25 @@ class TestRangePositionPlot:
         assert high_label["fmt"] == "$340.08" and high_label["label"]["show"] is True
 
     def test_table_lists_every_marker_and_range(self):
-        chart, table = range_position_plot(100, 200, 150, [("MA20", 130, "var(--series-1)")])
+        chart, table, legend = range_position_plot(100, 200, 150, [("MA20", 130, "var(--series-1)")])
         assert "MA20" in table
         assert "Current" in table
         assert "Range" in table
+
+    def test_legend_names_every_marker_color(self):
+        # Regression: MA20/MA50/MA200 render as bare-price dots with no name
+        # anywhere in the chart -- found live from a real screenshot, a user
+        # had no way to tell which colored marker was which moving average.
+        chart, table, legend = range_position_plot(
+            201.58, 340.08, 308.91,
+            [("MA200", 277.66, "var(--series-3)"), ("MA50", 309.50, "var(--series-2)"), ("MA20", 324.37, "var(--series-1)")],
+        )
+        assert "MA200" in legend and "MA50" in legend and "MA20" in legend
+        assert "var(--series-3)" in legend and "var(--series-2)" in legend and "var(--series-1)" in legend
+
+    def test_no_markers_means_no_legend(self):
+        chart, table, legend = range_position_plot(100, 200, 150, [])
+        assert legend == ""
 
 
 class TestGaugeMeter:
@@ -362,6 +393,19 @@ class TestGaugeMeter:
         option = get_chart_option(chart)
         assert option["series"][0]["data"][0]["value"] == 45.1
         assert option["series"][0]["data"][0]["fmt"] == "45.1"
+
+    def test_pointer_is_shown_as_a_dot_on_the_band(self):
+        # Regression: the pointer was `show: False` -- a big number sitting
+        # next to a static colored band with no visual link between them,
+        # found live from a real screenshot ("where is it in the red/green/
+        # gray?"). It must be a dot, not the default needle from the pivot
+        # (a needle this short would cross straight through the headline
+        # number sitting in the same central area).
+        chart, table = gauge_meter(45.1, 0, 100, zones=[(100, "var(--gridline)", "x")], label="RSI")
+        option = get_chart_option(chart)
+        pointer = option["series"][0]["pointer"]
+        assert pointer["show"] is True
+        assert pointer["icon"] == "circle"
 
 
 class TestStackedBarParts:
