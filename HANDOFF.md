@@ -1513,13 +1513,79 @@ StockLLM/
       (now check `webui/src/styles/*.css` source instead of the minified
       `dist/` output, since the minifier legitimately reformats/collapses
       shorthand in ways unrelated to whether a rule is correct).
-    - **Not done here (Phase 2, separate future work)**: async `/run` +
-      a real progress/skeleton screen covering the actual pipeline wait;
-      the "SPA feel" ask is only partially addressed (existing in-page
-      interactions like chart range buttons already update without a
-      reload — that was true before this change too — but switching
-      tickers still requires a full backend run, which can't become a
-      snappy client-side interaction without Phase 2's async job queue).
+    - **Not done here (Phase 2, separate future work — see item 44)**:
+      async `/run` + a real progress/skeleton screen covering the actual
+      pipeline wait; the "SPA feel" ask is only partially addressed
+      (existing in-page interactions like chart range buttons already
+      update without a reload — that was true before this change too —
+      but switching tickers still requires a full backend run, which
+      can't become a snappy client-side interaction without Phase 2's
+      async job queue).
+
+44. **UI/UX overhaul Phase 2: async `/run` + a real progress page covering
+    the actual pipeline wait** (0.9.21) — the follow-up promised in item
+    43. `/run` (`webapp/app.py`) used to block the whole request for the
+    entire research pipeline (data fetch, backtests, and — with the AI
+    recommendation on — several sequential LLM calls), often 10s+ seconds
+    with nothing rendered but the browser's own spinner. Now it does its
+    fast synchronous pre-checks only (ticker format, API key presence,
+    monthly spend limit — the ones that can be known immediately and are
+    worth failing fast on) and then hands the real work to a background
+    thread, redirecting to `/progress/<job_id>`.
+    - **In-memory job registry** (`_jobs`, guarded by `_jobs_lock` in
+      `webapp/app.py`), not persisted to `storage/db.py`: deliberate,
+      matching this add-on's existing single-process/single-worker
+      posture (same reasoning as `app.secret_key`) — a job lost on a
+      mid-run restart is a rare, low-stakes inconvenience (re-submit the
+      ticker), not worth a persistence layer. Pruned opportunistically on
+      each new job creation (`_prune_old_jobs`, 1-hour max age for
+      finished jobs) rather than a separate reaper thread, since job
+      volume here is normally a handful at a time.
+    - **`_run_job()`** runs the same sequence `run_check()` used to run
+      synchronously, on a background thread with no Flask `request`/
+      `session` context (everything it needs is resolved and passed in
+      first) — the only behavioral addition is `set_stage()` calls at
+      each real stage boundary ("Fetching market data…", "Summarizing
+      filings & news…", "Running AI recommendation…", "Finalizing
+      dashboard…"), so the progress page shows honest, non-fabricated
+      progress rather than a static spinner or a timer-based fake one.
+    - **`data/bundle.py`'s `build_research_bundle()`** gained an optional
+      `on_stage` no-arg callback, fired once as it crosses from Stage 1
+      into the digest-summarization stage (only meaningful when
+      `run_digests=True`) — CLI callers pass nothing, `_run_job` uses it
+      to report the real transition instead of guessing at timing.
+    - **`/progress/<job_id>`** renders a page sketching the eventual
+      dashboard's layout (hero/KPI tiles/cards) using the same
+      `.skeleton-block`/`.echarts-container` shimmer CSS from Phase 1
+      (generalized in `webui/src/styles/skeleton.css` to cover both), then
+      polls `/progress/<job_id>/status` (JSON: `status`/`stage`/
+      `dashboard_name`/`error`) every ~900ms and redirects to the finished
+      dashboard once `status: "done"`, or surfaces `error` in place if the
+      job failed — a ticker that doesn't exist, or a pipeline failure,
+      genuinely can't be known until the real work has started, so those
+      surface here rather than as a form error.
+    - **Two real bugs found and fixed while verifying, not assumed
+      correct from the diff**: (1) a test-isolation bug in the new
+      `tests/test_webapp.py` — `import threading as real_threading`
+      doesn't snapshot the `Thread` class, since it's the same live module
+      object, so mocking `threading.Thread` elsewhere mid-test silently
+      redirected `real_threading.Thread` too; fixed by capturing the real
+      class once (`_REAL_THREAD_CLASS`) before any patching, and by making
+      a test wait for its background thread to finish before the test
+      ends, since it had been racing a later test's `clear_jobs` fixture.
+      (2) `PAGE_HEAD`'s CSS/icon links, already fixed to be Ingress-safe
+      absolute paths for `/` and `/login` — `/progress/<job_id>` has an
+      extra path segment those two routes don't, so a *relative* link
+      would've resolved to `/progress/assets/...` and rendered the
+      progress page completely unstyled; caught by loading it for real
+      rather than assuming the existing absolute-path fix already covered
+      every route.
+    - **Verified for real**: full non-live pytest suite green (480
+      passed); a real end-to-end run against a live server (headless
+      Chromium) confirmed the progress page's shimmer renders, the status
+      poll drives the stage text through real transitions, CSS resolves
+      correctly (200, real content, not the wrong-path 404), and the page
+      redirects to the finished dashboard on completion.
 
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)

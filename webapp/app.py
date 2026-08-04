@@ -58,8 +58,10 @@ import re
 import glob
 import secrets
 import datetime as dt
+import threading
+import time
 
-from flask import Flask, request, redirect, send_from_directory, session
+from flask import Flask, request, redirect, send_from_directory, session, jsonify
 
 from config import ANTHROPIC_API_KEY, QWEN_API_KEY, GEMINI_API_KEY, MONTHLY_SPEND_LIMIT_USD, OUTPUT_DIR, WEB_PASSWORD
 from data.bundle import build_research_bundle
@@ -88,6 +90,90 @@ app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(days=30)
 # reason about path-traversal in the filename construction.
 TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 
+# In-memory job registry backing the async /run flow (see run_check()/
+# _run_job() below): a "run" (data fetch + optional multi-agent LLM pass)
+# used to block the /run request for its entire duration -- often 10s of
+# seconds with the AI recommendation on -- with nothing rendered but the
+# browser's own spinner the whole time. /run now returns almost
+# immediately and redirects to /progress/<job_id>, which polls
+# /progress/<job_id>/status while the real work runs in a background
+# thread.
+#
+# Deliberately in-memory, not persisted to storage/db.py: this is a
+# single-process, single-worker personal add-on (see app.secret_key above
+# for the same reasoning applied to sessions) -- a job lost on a mid-run
+# restart is a rare, low-stakes inconvenience (re-submit the ticker), and
+# not worth a persistence layer. Guarded by _jobs_lock since the
+# background thread and request-handling threads both touch it.
+_jobs = {}
+_jobs_lock = threading.Lock()
+_JOB_MAX_AGE_SECONDS = 3600  # prune finished jobs older than this, opportunistically (see _prune_old_jobs)
+
+
+def _prune_old_jobs():
+    """Called each time a new job is created -- keeps _jobs from growing
+    without bound over a long add-on uptime, with no separate reaper thread
+    needed for what's normally a handful of jobs at a time."""
+    cutoff = time.time() - _JOB_MAX_AGE_SECONDS
+    for jid in [j for j, v in _jobs.items() if v["status"] != "running" and v.get("finished_at", 0) < cutoff]:
+        del _jobs[jid]
+
+
+def _run_job(job_id: str, ticker: str, dry_run: bool) -> None:
+    """Runs entirely on a background thread -- no Flask request/session
+    context here (this function must not touch `request` or `session`),
+    only what run_check() below already resolved and passed in. Mirrors
+    the exact same sequence run_check() used to run synchronously; the
+    only behavioral addition is the set_stage() calls at each real stage
+    boundary, so the progress page can show honest, non-fabricated
+    progress instead of a static spinner."""
+    def set_stage(stage: str) -> None:
+        with _jobs_lock:
+            _jobs[job_id]["stage"] = stage
+
+    try:
+        set_stage("Fetching market data, filings, news & running backtests…")
+        bundle, digest_calls = build_research_bundle(
+            ticker, run_digests=not dry_run,
+            on_stage=(lambda: set_stage("Summarizing filings & news…")) if not dry_run else None,
+        )
+
+        pipeline_result = None
+        if not dry_run:
+            # db.init_db() already ran synchronously in run_check() before
+            # this job was even created -- see the pre-check block there.
+            run_id = db.create_run(ticker)
+            db.save_bundle(run_id, bundle)
+
+            digest_cost = 0.0
+            for dc in digest_calls:
+                db.save_agent_output(
+                    run_id, dc["name"], dc.get("model", "unknown"),
+                    dc["input_tokens"], dc["output_tokens"], 0, dc["cost_usd"], {},
+                )
+                digest_cost += dc["cost_usd"]
+
+            set_stage("Running AI recommendation (Bull/Bear/Skeptics/Judge)…")
+            pipeline_result = run_pipeline(run_id, ticker, bundle, starting_cost_usd=digest_cost)
+            db.create_outcome(run_id, bundle["price"]["current_price"])
+
+        set_stage("Finalizing dashboard…")
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        bundle_path = os.path.join(OUTPUT_DIR, f"{ticker}.json")
+        with open(bundle_path, "w", encoding="utf-8") as f:
+            json.dump(bundle, f, indent=2)
+
+        dashboard_name = f"{ticker}_dashboard.html"
+        with open(os.path.join(OUTPUT_DIR, dashboard_name), "w", encoding="utf-8") as f:
+            f.write(build_dashboard(bundle, pipeline_result))
+        ensure_vendored_assets(OUTPUT_DIR)
+
+        with _jobs_lock:
+            _jobs[job_id].update(status="done", dashboard_name=dashboard_name, finished_at=time.time())
+    except Exception as e:
+        with _jobs_lock:
+            _jobs[job_id].update(status="error", error=str(e), finished_at=time.time())
+
 # Read once at process start (same lifetime as PAGE_HEAD itself, which this
 # feeds into) -- see dashboard.generate_dashboard.load_built_assets() for
 # why a missing/unbuilt webui/ raises loudly here rather than rendering a
@@ -105,7 +191,7 @@ PAGE_HEAD = f"""<!DOCTYPE html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="StockLLM">
-<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="apple-touch-icon" href="/assets/icon.png">
 <title>StockLLM</title>
 <script>
 (function () {{
@@ -115,7 +201,14 @@ PAGE_HEAD = f"""<!DOCTYPE html>
   }} catch (e) {{}}
 }})();
 </script>
-<link rel="stylesheet" href="assets/dist/{_built['css']}">
+<!-- Absolute, not relative: PAGE_HEAD is shared by routes at different
+     path depths ("/", "/login", "/progress/<job_id>") -- a relative
+     "assets/..." resolves against each page's own URL, so it'd only
+     happen to reach the real /assets/ route from a single-segment path.
+     An absolute /assets/... path is safe under Ingress too: Ingress
+     strips its own dynamic prefix before forwarding, so Flask always sees
+     the plain /assets/... path either way (see static_assets() below). -->
+<link rel="stylesheet" href="/assets/dist/{_built['css']}">
 <style>
 .form-card {{ max-width: 480px; margin: 60px auto 24px auto; }}
 .form-row {{ margin-bottom: 14px; }}
@@ -336,14 +429,14 @@ def run_check():
     if not TICKER_RE.match(ticker):
         return _render_form(error="Enter a valid ticker symbol (letters/numbers, up to 10 characters)."), 400
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    try:
-        bundle, digest_calls = build_research_bundle(ticker, run_digests=not dry_run)
-    except ValueError as e:
-        return _render_form(error=str(e)), 400
-
-    pipeline_result = None
+    # Everything here is a fast, synchronous pre-check -- deliberately kept
+    # in front of the async job below (not folded into _run_job) so a
+    # missing API key or an already-exhausted spend limit is reported
+    # immediately as a form error, not after the user has waited through a
+    # whole data-fetch cycle only to learn the run couldn't have completed
+    # anyway. Ticket-doesn't-exist and pipeline failures, by contrast,
+    # genuinely can't be known until the real work has started -- those
+    # surface as a job error on the progress page instead.
     if not dry_run:
         if not ANTHROPIC_API_KEY:
             return _render_form(
@@ -365,41 +458,101 @@ def run_check():
                       "API key)."
             ), 400
 
-        try:
-            db.init_db()
-            spent = get_monthly_spend()
-            if spent >= MONTHLY_SPEND_LIMIT_USD:
-                return _render_form(
-                    error=f"Monthly spend limit reached (${spent:.2f} / ${MONTHLY_SPEND_LIMIT_USD:.2f}). "
-                          "Raise it in this add-on's Configuration tab, or use Dry run."
-                ), 400
+        db.init_db()
+        spent = get_monthly_spend()
+        if spent >= MONTHLY_SPEND_LIMIT_USD:
+            return _render_form(
+                error=f"Monthly spend limit reached (${spent:.2f} / ${MONTHLY_SPEND_LIMIT_USD:.2f}). "
+                      "Raise it in this add-on's Configuration tab, or use Dry run."
+            ), 400
 
-            run_id = db.create_run(ticker)
-            db.save_bundle(run_id, bundle)
+    with _jobs_lock:
+        _prune_old_jobs()
+        job_id = secrets.token_urlsafe(12)
+        _jobs[job_id] = {
+            "status": "running", "stage": "Starting…", "ticker": ticker,
+            "dry_run": dry_run, "dashboard_name": None, "error": None, "finished_at": None,
+        }
 
-            digest_cost = 0.0
-            for dc in digest_calls:
-                db.save_agent_output(
-                    run_id, dc["name"], dc.get("model", "unknown"),
-                    dc["input_tokens"], dc["output_tokens"], 0, dc["cost_usd"], {},
-                )
-                digest_cost += dc["cost_usd"]
+    threading.Thread(target=_run_job, args=(job_id, ticker, dry_run), daemon=True).start()
+    return redirect(f"{_ingress_prefix()}/progress/{job_id}")
 
-            pipeline_result = run_pipeline(run_id, ticker, bundle, starting_cost_usd=digest_cost)
-            db.create_outcome(run_id, bundle["price"]["current_price"])
-        except RuntimeError as e:
-            return _render_form(error=str(e)), 500
 
-    bundle_path = os.path.join(OUTPUT_DIR, f"{ticker}.json")
-    with open(bundle_path, "w", encoding="utf-8") as f:
-        json.dump(bundle, f, indent=2)
+def _render_progress(job_id: str, ticker: str):
+    prefix = _ingress_prefix()
+    return f"""{PAGE_HEAD}
+<div class="sticky-top">
+  <div class="topbar">
+    <div>
+      <h1>{esc(ticker)} — Researching…</h1>
+      <div class="meta" id="progress-stage">Starting…</div>
+    </div>
+  </div>
+</div>
+<div class="wrap">
+  <div class="hero">
+    <div class="skeleton-block" style="height:44px;width:220px;border-radius:8px;"></div>
+    <div class="skeleton-block" style="height:20px;width:140px;border-radius:6px;margin-top:12px;"></div>
+  </div>
+  <div class="kpi-row cols-4">
+    <div class="stat-tile"><div class="skeleton-block" style="height:12px;width:60%;border-radius:4px;"></div><div class="skeleton-block" style="height:24px;width:75%;border-radius:4px;margin-top:8px;"></div></div>
+    <div class="stat-tile"><div class="skeleton-block" style="height:12px;width:60%;border-radius:4px;"></div><div class="skeleton-block" style="height:24px;width:75%;border-radius:4px;margin-top:8px;"></div></div>
+    <div class="stat-tile"><div class="skeleton-block" style="height:12px;width:60%;border-radius:4px;"></div><div class="skeleton-block" style="height:24px;width:75%;border-radius:4px;margin-top:8px;"></div></div>
+    <div class="stat-tile"><div class="skeleton-block" style="height:12px;width:60%;border-radius:4px;"></div><div class="skeleton-block" style="height:24px;width:75%;border-radius:4px;margin-top:8px;"></div></div>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="skeleton-block" style="height:16px;width:35%;border-radius:4px;margin-bottom:14px;"></div><div class="skeleton-block" style="height:160px;width:100%;border-radius:8px;"></div></div>
+    <div class="card"><div class="skeleton-block" style="height:16px;width:45%;border-radius:4px;margin-bottom:14px;"></div><div class="skeleton-block" style="height:160px;width:100%;border-radius:8px;"></div></div>
+    <div class="card full"><div class="skeleton-block" style="height:16px;width:25%;border-radius:4px;margin-bottom:14px;"></div><div class="skeleton-block" style="height:120px;width:100%;border-radius:8px;"></div></div>
+  </div>
+  <div id="progress-error" class="error-box" style="display:none;"></div>
+</div>
+<script>
+(function () {{
+  var statusUrl = "{prefix}/progress/{job_id}/status";
+  var stageEl = document.getElementById('progress-stage');
+  var errEl = document.getElementById('progress-error');
+  function poll() {{
+    fetch(statusUrl).then(function (r) {{ return r.json(); }}).then(function (data) {{
+      if (data.status === 'done') {{
+        window.location = "{prefix}/output/" + data.dashboard_name;
+        return;
+      }}
+      if (data.status === 'error') {{
+        stageEl.textContent = 'Something went wrong.';
+        errEl.textContent = data.error;
+        errEl.style.display = 'block';
+        return;
+      }}
+      stageEl.textContent = data.stage;
+      setTimeout(poll, 900);
+    }}).catch(function () {{ setTimeout(poll, 1500); }});
+  }}
+  poll();
+}})();
+</script>
+{PAGE_TAIL}"""
 
-    dashboard_name = f"{ticker}_dashboard.html"
-    with open(os.path.join(OUTPUT_DIR, dashboard_name), "w", encoding="utf-8") as f:
-        f.write(build_dashboard(bundle, pipeline_result))
-    ensure_vendored_assets(OUTPUT_DIR)
 
-    return redirect(f"{_ingress_prefix()}/output/{dashboard_name}")
+@app.route("/progress/<job_id>")
+def progress_page(job_id):
+    with _jobs_lock:
+        job = _jobs.get(job_id)
+    if not job:
+        return _render_form(error="That run wasn't found (it may have finished a while ago, or the add-on restarted)."), 404
+    return _render_progress(job_id, job["ticker"])
+
+
+@app.route("/progress/<job_id>/status")
+def progress_status(job_id):
+    with _jobs_lock:
+        job = _jobs.get(job_id)
+    if not job:
+        return jsonify({"status": "error", "error": "Run not found."}), 404
+    return jsonify({
+        "status": job["status"], "stage": job["stage"],
+        "dashboard_name": job["dashboard_name"], "error": job["error"],
+    })
 
 
 @app.route("/output/<path:filename>")

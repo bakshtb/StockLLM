@@ -1,13 +1,22 @@
-/* Chart skeleton/shimmer: register_chart() already sets an explicit
-   height:{n}px on every .echarts-container div (see generate_dashboard.py),
-   so this has real box dimensions to shimmer in before ECharts has
-   hydrated anything into it -- genuinely visible on a slow connection
-   (echarts.min.js is ~1MB, and Home Assistant Ingress adds a proxy hop),
-   not just decorative. dashboard.js's initOne() adds `is-hydrated` right
-   after its setOption() call succeeds, which is what actually turns this
-   off -- not a timer, so it never lingers past the real wait or flashes on
-   a fast one. */
-.echarts-container {
+/* Shared shimmer, used two places:
+   - .echarts-container: register_chart() already sets an explicit
+     height:{n}px (see generate_dashboard.py), so this has real box
+     dimensions to shimmer in before ECharts has hydrated anything into
+     it -- genuinely visible on a slow connection (echarts.min.js is
+     ~1MB, and Home Assistant Ingress adds a proxy hop), not just
+     decorative. hydrate.js's initOne() adds `is-hydrated` right after
+     its setOption() call succeeds, which is what actually turns this
+     off -- not a timer, so it never lingers past the real wait or
+     flashes on a fast one.
+   - .skeleton-block: a generic placeholder shape (webapp/app.py's
+     /progress/<job_id> page uses this to sketch the eventual dashboard's
+     layout -- hero/KPI tiles/cards -- while the real research pipeline
+     runs on a background thread). Static for the page's whole lifetime;
+     the page navigates away entirely once the real dashboard is ready,
+     so there's no "hydrated" state to turn it off.
+*/
+.echarts-container,
+.skeleton-block {
   position: relative;
   border-radius: 8px;
   background: linear-gradient(90deg, var(--gridline) 25%, var(--page-plane) 37%, var(--gridline) 63%);
@@ -23,5 +32,5 @@
   100% { background-position: 0 50%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .echarts-container { animation: none; }
+  .echarts-container, .skeleton-block { animation: none; }
 }

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.21
+
+- Add: UI/UX overhaul Phase 2 -- `/run` no longer blocks the request for
+  the whole research pipeline (data fetch, backtests, and the sequential
+  AI recommendation calls). It now returns almost immediately and
+  redirects to a `/progress/<job_id>` page that polls a JSON status
+  endpoint and shows real, non-fabricated pipeline stages (via a
+  background thread + in-memory job registry) using the Phase 1 shimmer
+  skeleton to sketch the eventual dashboard layout. See HANDOFF.md item
+  44 for the full breakdown, including two real bugs found and fixed
+  while verifying (a test-isolation bug from re-importing `threading`,
+  and an unstyled progress page caused by a relative asset path at an
+  extra URL depth).
+
 ## 0.9.20
 
 - Add: UI/UX overhaul Phase 1 -- CSS/JS moved out of Python string

@@ -56,11 +56,17 @@ from data.fetch_finnhub_signals import fetch_finnhub_signals
 from backtest.engine import run_backtests
 
 
-def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, list[dict]]:
+def build_research_bundle(ticker: str, run_digests: bool = True, on_stage=None) -> tuple[dict, list[dict]]:
     """
     Returns (bundle, digest_calls) where digest_calls is a list of dicts with
     keys: name, cost_usd, input_tokens, output_tokens -- for cost logging by
     the caller. Empty list if run_digests=False.
+
+    on_stage: optional no-arg callback, called once as this function crosses
+    from Stage 1 into Stage 2 below (only when run_digests -- Stage 2 is a
+    no-op otherwise, so there's nothing worth announcing). Exists for
+    webapp/app.py's async progress page to report a real, honest stage
+    transition instead of a fake/timed one; CLI callers just pass nothing.
     """
     ticker = ticker.upper().strip()
     digest_calls = []
@@ -97,6 +103,8 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
     news_digest = {"digest": None, "note": "Skipped (dry run)."}
 
     if run_digests:
+        if on_stage:
+            on_stage()
         filings_digest = summarize_filing(filings_raw)
         if filings_digest.get("cost_usd"):
             digest_calls.append({

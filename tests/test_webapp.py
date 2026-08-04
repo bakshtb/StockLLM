@@ -7,16 +7,37 @@ webapp.app.build_research_bundle / webapp.app.run_pipeline, not the
 original module's copy -- patching the original wouldn't reach the name
 webapp.app actually calls).
 
+/run is async (see HANDOFF.md item 44): it starts a background thread and
+redirects to /progress/<job_id> almost immediately, rather than blocking
+for the whole pipeline duration. The `sync_background_jobs` autouse
+fixture below makes that thread run synchronously within the request
+itself, so most tests here can still assert on the *outcome* (dashboard
+written, job status "done"/"error") without any real waiting or polling --
+except TestAsyncBackgroundExecution, which deliberately restores real
+threading to prove the async behavior itself (not just its result) works.
+
 Two of these classes directly codify real bugs from this session (see
 HANDOFF.md): the Ingress path-prefix bug (#28) and the ticker-validation
 security boundary that was manually fuzzed by hand throughout the session.
 """
 
-import os
+import re
+import threading as real_threading
+import time
 
 import pytest
 
 import webapp.app as wa
+
+# Captured once, here, before any fixture/test can monkeypatch
+# wa.threading.Thread (see sync_background_jobs below): `real_threading` is
+# the exact same module object as `wa.threading` (import threading is a
+# process-wide singleton, not a copy), so `real_threading.Thread` would
+# otherwise be a *live* attribute lookup that reads back whatever the
+# module's Thread currently is -- including an already-patched fake -- not
+# a snapshot of the original class. Binding the class itself to a plain
+# name here is what actually survives later mutation.
+_REAL_THREAD_CLASS = real_threading.Thread
 
 
 @pytest.fixture(autouse=True)
@@ -28,6 +49,36 @@ def webapp_output_dir(monkeypatch, tmp_path):
     return tmp_path
 
 
+@pytest.fixture(autouse=True)
+def sync_background_jobs(monkeypatch):
+    """Runs _run_job() synchronously, inline within the /run request that
+    starts it, instead of on a real background thread -- keeps every test
+    in this file deterministic (no polling/timing needed) while still
+    exercising the exact same job-registry code path production uses.
+    TestAsyncBackgroundExecution below explicitly restores real threading
+    to verify the async behavior itself, not just its eventual result."""
+    class ImmediateThread:
+        def __init__(self, target=None, args=(), kwargs=None, daemon=None):
+            self._target = target
+            self._args = args
+            self._kwargs = kwargs or {}
+
+        def start(self):
+            self._target(*self._args, **self._kwargs)
+
+    monkeypatch.setattr(wa.threading, "Thread", ImmediateThread)
+
+
+@pytest.fixture(autouse=True)
+def clear_jobs():
+    """_jobs is a module-level dict shared across the whole test session --
+    clear it before each test so one test's job_id/state can never leak
+    into another's assertions."""
+    wa._jobs.clear()
+    yield
+    wa._jobs.clear()
+
+
 @pytest.fixture
 def client():
     wa.app.config.update(TESTING=True)
@@ -36,6 +87,20 @@ def client():
 
 def _fake_bundle(ticker="AAPL"):
     return {"ticker": ticker, "fetched_at": "2026-01-01T00:00:00Z", "price": {"current_price": 180.0}}, []
+
+
+def _run_and_get_status(client, data, headers=None):
+    """POSTs /run (job runs synchronously under the sync_background_jobs
+    fixture), follows the redirect to /progress/<job_id>/status, and
+    returns (run_response, status_json). Asserts the redirect actually
+    points at /progress/, not the old direct-to-dashboard redirect."""
+    resp = client.post("/run", data=data, headers=headers or {})
+    assert resp.status_code == 302
+    location = resp.headers["Location"]
+    assert "/progress/" in location
+    status_resp = client.get(f"{location}/status")
+    assert status_resp.status_code == 200
+    return resp, status_resp.get_json()
 
 
 class TestIndexPage:
@@ -56,7 +121,7 @@ class TestIndexPage:
         assert '<meta name="apple-mobile-web-app-capable" content="yes">' in html
         assert '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' in html
         assert '<meta name="apple-mobile-web-app-title" content="StockLLM">' in html
-        assert '<link rel="apple-touch-icon" href="assets/icon.png">' in html
+        assert '<link rel="apple-touch-icon" href="/assets/icon.png">' in html
 
 
 class TestStaticAssetsRoute:
@@ -96,46 +161,51 @@ class TestTickerValidation:
     def test_valid_ticker_with_dot_accepted(self, monkeypatch, client):
         # e.g. BRK.B -- must not be rejected by the same regex that blocks
         # path traversal.
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         resp = client.post("/run", data={"ticker": "BRK.B", "dry_run": "on"})
         assert resp.status_code == 302
 
 
 class TestDryRun:
     def test_successful_dry_run_redirects_to_dashboard(self, monkeypatch, client):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
-        resp = client.post("/run", data={"ticker": "AAPL", "dry_run": "on"})
-        assert resp.status_code == 302
-        assert resp.headers["Location"] == "/output/AAPL_dashboard.html"
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
+        _, status = _run_and_get_status(client, {"ticker": "AAPL", "dry_run": "on"})
+        assert status["status"] == "done"
+        assert status["dashboard_name"] == "AAPL_dashboard.html"
 
     def test_dry_run_never_calls_run_pipeline(self, monkeypatch, client):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
 
         def _fail_if_called(*a, **kw):
             raise AssertionError("run_pipeline should not be called on a dry run")
         monkeypatch.setattr(wa, "run_pipeline", _fail_if_called)
 
-        resp = client.post("/run", data={"ticker": "AAPL", "dry_run": "on"})
-        assert resp.status_code == 302
+        _, status = _run_and_get_status(client, {"ticker": "AAPL", "dry_run": "on"})
+        assert status["status"] == "done"  # would be "error" if run_pipeline had actually been called
 
     def test_dashboard_file_actually_written(self, monkeypatch, client, webapp_output_dir):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         client.post("/run", data={"ticker": "AAPL", "dry_run": "on"})
         assert (webapp_output_dir / "AAPL_dashboard.html").exists()
         assert (webapp_output_dir / "AAPL.json").exists()
 
     def test_invalid_ticker_symbol_from_fetch_layer(self, monkeypatch, client):
-        def _raise_value_error(ticker, run_digests):
+        # Unlike a malformed ticker (rejected synchronously by TICKER_RE
+        # before a job even exists), "no such ticker" can only be
+        # discovered by actually trying to fetch it -- that happens inside
+        # the background job, so it surfaces as a job error, not a
+        # synchronous 400.
+        def _raise_value_error(ticker, run_digests, on_stage=None):
             raise ValueError(f"No price history found for ticker '{ticker}'.")
         monkeypatch.setattr(wa, "build_research_bundle", _raise_value_error)
-        resp = client.post("/run", data={"ticker": "ZZZZZ", "dry_run": "on"})
-        assert resp.status_code == 400
-        assert b"No price history" in resp.data
+        _, status = _run_and_get_status(client, {"ticker": "ZZZZZ", "dry_run": "on"})
+        assert status["status"] == "error"
+        assert "No price history" in status["error"]
 
 
 class TestFullRun:
     def test_blocked_without_anthropic_api_key(self, monkeypatch, client):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
         resp = client.post("/run", data={"ticker": "AAPL"})  # dry_run omitted = full run
@@ -143,7 +213,7 @@ class TestFullRun:
         assert b"ANTHROPIC_API_KEY" in resp.data
 
     def test_blocked_without_qwen_api_key(self, monkeypatch, client):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "")
         monkeypatch.setattr(wa, "GEMINI_API_KEY", "sk-gemini-test-key")
@@ -152,7 +222,7 @@ class TestFullRun:
         assert b"QWEN_API_KEY" in resp.data
 
     def test_blocked_without_gemini_api_key(self, monkeypatch, client):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
         monkeypatch.setattr(wa, "GEMINI_API_KEY", "")
@@ -161,7 +231,7 @@ class TestFullRun:
         assert b"GEMINI_API_KEY" in resp.data
 
     def test_succeeds_with_mocked_pipeline(self, monkeypatch, client, temp_db):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
         monkeypatch.setattr(wa, "GEMINI_API_KEY", "sk-gemini-test-key")
@@ -179,11 +249,12 @@ class TestFullRun:
         }
         monkeypatch.setattr(wa, "run_pipeline", lambda run_id, ticker, bundle, starting_cost_usd: fake_result)
 
-        resp = client.post("/run", data={"ticker": "AAPL"})
-        assert resp.status_code == 302
+        _, status = _run_and_get_status(client, {"ticker": "AAPL"})
+        assert status["status"] == "done", status.get("error")
+        assert status["dashboard_name"] == "AAPL_dashboard.html"
 
     def test_blocked_when_over_spend_limit(self, monkeypatch, client, temp_db):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         monkeypatch.setattr(wa, "ANTHROPIC_API_KEY", "sk-ant-test-key")
         monkeypatch.setattr(wa, "QWEN_API_KEY", "sk-qwen-test-key")
         monkeypatch.setattr(wa, "GEMINI_API_KEY", "sk-gemini-test-key")
@@ -193,6 +264,91 @@ class TestFullRun:
         resp = client.post("/run", data={"ticker": "AAPL"})
         assert resp.status_code == 400
         assert b"spend limit" in resp.data
+
+
+class TestProgressPage:
+    def test_progress_page_renders_with_skeleton_and_stage(self, monkeypatch, client):
+        # A slow-ish fake so the page itself (not its polled status) can be
+        # inspected mid-flight -- real threading here, not the sync fixture.
+        monkeypatch.setattr(wa.threading, "Thread", _REAL_THREAD_CLASS)
+
+        def _slow_bundle(ticker, run_digests, on_stage=None):
+            time.sleep(0.2)
+            return _fake_bundle(ticker)
+        monkeypatch.setattr(wa, "build_research_bundle", _slow_bundle)
+
+        resp = client.post("/run", data={"ticker": "AAPL", "dry_run": "on"})
+        location = resp.headers["Location"]
+        page = client.get(location)
+        assert page.status_code == 200
+        html = page.get_data(as_text=True)
+        assert "skeleton-block" in html
+        assert "AAPL" in html
+        assert "/status" in html  # the polling script's fetch target
+
+        # Wait for the real background thread to actually finish before
+        # this test returns -- otherwise it's still running when the next
+        # test's clear_jobs fixture wipes wa._jobs out from under it.
+        deadline = time.time() + 5
+        status = {"status": "running"}
+        while time.time() < deadline and status["status"] == "running":
+            status = client.get(f"{location}/status").get_json()
+            time.sleep(0.02)
+        assert status["status"] == "done"
+
+    def test_unknown_job_id_404s(self, client):
+        assert client.get("/progress/does-not-exist").status_code == 404
+        assert client.get("/progress/does-not-exist/status").status_code == 404
+
+
+class TestAsyncBackgroundExecution:
+    """Every other class in this file runs _run_job() synchronously (see
+    sync_background_jobs) so assertions don't need to poll -- this class
+    deliberately restores real threading to prove /run itself returns
+    before the work is done, not just that the eventual result is
+    correct."""
+
+    def test_run_returns_before_job_finishes_then_status_transitions_to_done(self, monkeypatch, client):
+        monkeypatch.setattr(wa.threading, "Thread", _REAL_THREAD_CLASS)
+
+        release = real_threading.Event()
+
+        def _blocking_bundle(ticker, run_digests, on_stage=None):
+            release.wait(timeout=5)
+            return _fake_bundle(ticker)
+        monkeypatch.setattr(wa, "build_research_bundle", _blocking_bundle)
+
+        resp = client.post("/run", data={"ticker": "AAPL", "dry_run": "on"})
+        location = resp.headers["Location"]
+
+        # The job must still be running immediately after /run returns --
+        # if this were "in progress" instead of a real assertion, a
+        # regression back to synchronous /run would slip through
+        # unnoticed, so this ordering is the actual point of the test.
+        status = client.get(f"{location}/status").get_json()
+        assert status["status"] == "running"
+
+        release.set()
+        deadline = time.time() + 5
+        while time.time() < deadline:
+            status = client.get(f"{location}/status").get_json()
+            if status["status"] != "running":
+                break
+            time.sleep(0.05)
+        assert status["status"] == "done"
+        assert status["dashboard_name"] == "AAPL_dashboard.html"
+
+
+class TestJobPruning:
+    def test_prune_removes_only_old_finished_jobs(self):
+        now = time.time()
+        wa._jobs.update({
+            "old-done": {"status": "done", "finished_at": now - wa._JOB_MAX_AGE_SECONDS - 10},
+            "recent-done": {"status": "done", "finished_at": now},
+            "still-running": {"status": "running", "finished_at": None},
+        })
+        wa._prune_old_jobs()
+        assert set(wa._jobs.keys()) == {"recent-done", "still-running"}
 
 
 class TestOutputFileServing:
@@ -223,13 +379,13 @@ class TestIngressPathHandling:
         assert f'action="{self.INGRESS_PREFIX}/run"'.encode() in resp.data
 
     def test_redirect_prefixed_with_ingress_header(self, monkeypatch, client):
-        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests: _fake_bundle(ticker))
+        monkeypatch.setattr(wa, "build_research_bundle", lambda ticker, run_digests, on_stage=None: _fake_bundle(ticker))
         resp = client.post(
             "/run", data={"ticker": "AAPL", "dry_run": "on"},
             headers={"X-Ingress-Path": self.INGRESS_PREFIX},
         )
         assert resp.status_code == 302
-        assert resp.headers["Location"] == f"{self.INGRESS_PREFIX}/output/AAPL_dashboard.html"
+        assert re.match(rf"^{re.escape(self.INGRESS_PREFIX)}/progress/[\w-]+$", resp.headers["Location"])
 
     def test_recent_runs_links_prefixed_with_ingress_header(self, client, webapp_output_dir):
         (webapp_output_dir / "AAPL_dashboard.html").write_text("<html></html>")
@@ -320,3 +476,12 @@ class TestDirectAccessLogin:
         monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
         assert client.get("/login").status_code == 200
         assert client.get("/assets/icon.png").status_code == 200
+
+    def test_progress_route_gated_like_run(self, client, monkeypatch):
+        # /progress/ isn't in _LOGIN_EXEMPT_PATH_PREFIXES -- must stay
+        # behind the same gate /run already sits behind, not accidentally
+        # left open when this route was added.
+        monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
+        resp = client.get("/progress/some-job-id")
+        assert resp.status_code == 302
+        assert resp.headers["Location"].startswith("/login")
