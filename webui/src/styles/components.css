@@ -30,12 +30,19 @@
 .split-2col > div { min-width: 0; } /* same grid-item auto-min-width fix, its direct children wrap SVG charts too */
 .stat-tile {
   min-width: 0; /* same grid-item auto-min-width fix as .card, see there */
-  padding: 4px 0;
-  /* Deliberately no border/shadow/hover-lift -- a bare number is typography,
+  padding: 4px 0 12px 0;
+  /* Deliberately no box/shadow/hover-lift -- a bare number is typography,
      not a distinct object (see Google Finance's Overview/Earnings KPI rows:
      zero chrome around individual stats, chrome reserved for genuinely
-     grouped panels -- .card/.viz-card/.strategy-card keep their elevation). */
+     grouped panels -- .card/.viz-card/.strategy-card keep their elevation).
+     A bottom-only divider (same convention as .news-item/.filing-row/
+     .notes-list li below) still separates one stat from the next -- without
+     it, a single-column mobile kpi-row (every .kpi-row collapses to 1
+     column under 420px, see responsive.css) reads as one run-on paragraph
+     instead of a list of distinct stats, confirmed on a real phone. */
+  border-bottom: 1px solid var(--gridline);
 }
+.stat-tile:last-child { border-bottom: none; }
 .stat-tile .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
 .stat-tile .value { font-size: 24px; font-weight: 650; margin-top: 4px; line-height: 1.15; letter-spacing: -0.2px; }
 .stat-tile .value.good { color: var(--status-good); }

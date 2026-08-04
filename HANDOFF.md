@@ -1638,6 +1638,27 @@ StockLLM/
       and no console errors beyond the browser's own automatic (and
       irrelevant) `favicon.ico` 404.
 
+46. **Fixed a real regression from item 45's `.stat-tile` flattening: no
+    visual separation between stacked KPIs on mobile** (0.9.23) — user
+    caught it on the live deployed site (a phone screenshot of
+    stocks.baksht.org), not something my own mobile verification pass in
+    item 45 surfaced (that pass screenshotted the hero/At-a-Glance area
+    but didn't scroll far enough to see the KPI row itself stacked to 1
+    column). Every `.kpi-row` collapses to a single column under 420px
+    (see responsive.css); with zero border/shadow left on `.stat-tile`
+    after item 45, six consecutive stats (label/value/sub, 3 lines each)
+    ran together into one unbroken block of text with no way to tell
+    where one stat ended and the next began. Fixed by adding a
+    bottom-only divider to `.stat-tile` (`border-bottom: 1px solid
+    var(--gridline)`, removed on `:last-child`) — the same convention
+    already used by `.news-item`/`.filing-row`/`.notes-list li` elsewhere
+    in this file, so it stays flat (no reintroduced box/shadow) while
+    restoring clear separation in both the stacked-mobile and
+    side-by-side-desktop layouts. Verified for real: rebuilt, regenerated
+    a live AAPL dashboard, screenshotted the exact 390px stacked-KPI view
+    that showed the problem (confirmed fixed) and desktop (confirmed
+    unchanged/still clean), full pytest suite green (480 passed).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

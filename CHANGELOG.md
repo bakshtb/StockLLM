@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.23
+
+- Fix: real regression from 0.9.22's KPI-tile flattening -- on mobile,
+  every `.kpi-row` collapses to a single column, and with no border/
+  shadow left on `.stat-tile`, six stacked stats ran together into one
+  unbroken block of text (caught by the user on the live site, a phone
+  screenshot of stocks.baksht.org). Added a bottom-only divider, the
+  same convention already used by `.news-item`/`.filing-row` elsewhere
+  on the page -- stays flat, restores clear separation. See HANDOFF.md
+  item 46.
+
 ## 0.9.22
 
 - Add: UI/UX overhaul Phase 3 -- redesigned against a real screenshot
