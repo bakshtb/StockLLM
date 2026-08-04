@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.13
+
+- Update: restyle each strategy's "what would this rule do right now"
+  readout in the Strategy Backtests section from a plain text line into a
+  proper styled box -- a shaded panel with a holding/not-holding badge, the
+  current reading and its trigger as two clear stat tiles, and a short
+  caption explaining when it fires.
+
 ## 0.9.12
 
 - Add: each strategy in the Strategy Backtests dashboard section now shows

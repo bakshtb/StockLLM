@@ -226,6 +226,17 @@ button.chip:hover { background: var(--gridline); }
 .delta.good { color: var(--success-text); }
 .delta.critical { color: var(--status-critical); }
 .delta.neutral { color: var(--text-secondary); }
+.status-box {
+  margin-top: 12px; padding: 14px 16px;
+  background: var(--gridline); border-radius: 12px;
+}
+.status-box-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 12.5px; font-weight: 650; color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.status-box .kpi-row .stat-tile { box-shadow: none; } /* the outer box already has its own depth cue */
+.status-box-caption { margin-top: 10px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
 
 /* Info icon + popover: a plain-language explainer on every metric */
 .info-ic {
@@ -2034,15 +2045,21 @@ def _holding_badge(status):
     return badge("Holding" if status["holding"] else "Not Holding", "info" if status["holding"] else "neutral")
 
 
-def _backtest_status_line(status):
-    """"What would this rule tell me to do right now" as one short,
-    plain-English line -- deliberately not a full narrative sentence, since
-    the underlying trigger can be a raw price, an RSI reading, or a percent
-    (see strategies.py's "_status functions" block), and forcing all three
-    into identical grammar reads worse than a consistent
-    "label: value. Verb trigger: value (what it means)." pattern."""
+def _backtest_status_box(status):
+    """A small styled panel: "what would this rule tell me to do right
+    now" -- the current reading and its trigger shown as two stat tiles
+    (not one narrative sentence, since the underlying trigger can be a raw
+    price, an RSI reading, or a percent -- see strategies.py's "_status
+    functions" block, and forcing all three into identical grammar read
+    worse than a consistent label/value pair), plus a short plain-English
+    caption for when it actually fires."""
     if not status:
-        return None
+        return f"""
+<div class="status-box">
+  <div class="status-box-head">{_holding_badge(None)}</div>
+  <div class="status-box-caption">Not enough data to show a current reading for this rule.</div>
+</div>"""
+
     verb = "Sell" if status["next_action"] == "sell" else "Buy"
     if status["unit"] == "$":
         fmt = fmt_price
@@ -2051,14 +2068,19 @@ def _backtest_status_line(status):
     else:
         fmt = lambda v: fmt_num(v, 1)
     move_phrase = "rises above" if status["direction"] == "above" else "drops below"
-    line = (
-        f"{status['current_label']}: {fmt(status['current_value'])}. {verb} trigger: "
-        f"{fmt(status['trigger_value'])} ({status['trigger_label']}) — fires when this "
-        f"{move_phrase} that level."
-    )
+    caption = f"Fires when this {move_phrase} that level."
     if status.get("extra_note"):
-        line += " " + status["extra_note"]
-    return line
+        caption += " " + status["extra_note"]
+
+    return f"""
+<div class="status-box">
+  <div class="status-box-head">{_holding_badge(status)} What would this rule do right now?</div>
+  <div class="kpi-row cols-2">
+    {stat_tile(status['current_label'], fmt(status['current_value']))}
+    {stat_tile(f"{verb} trigger", fmt(status['trigger_value']), sub=status['trigger_label'])}
+  </div>
+  <div class="status-box-caption">{esc(caption)}</div>
+</div>"""
 
 
 def section_backtests(bundle):
@@ -2092,9 +2114,7 @@ def section_backtests(bundle):
 </div>"""
 
         status = s.get("current_status")
-        status_line = _backtest_status_line(status)
-        status_html = f"""
-<div class="viz-note" style="margin-top:10px;">{_holding_badge(status)} {esc(status_line) if status_line else "Not enough data to show a current reading for this rule."}</div>"""
+        status_html = _backtest_status_box(status)
 
         trades = s.get("trades", []) or []
         chart_html = (

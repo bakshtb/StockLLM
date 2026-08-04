@@ -18,7 +18,7 @@ from backtest.engine import (
     MIN_TRADING_DAYS, _clean_stat, _extract_current_status, _extract_trades, _run_one, run_backtests,
 )
 from backtest.strategies import STRATEGIES, BENCHMARK_TICKER
-from dashboard.generate_dashboard import section_backtests, strategy_trade_chart, _backtest_status_line
+from dashboard.generate_dashboard import section_backtests, strategy_trade_chart, _backtest_status_box
 
 
 def _synthetic_ohlcv(n=800, seed=0, with_benchmark=False):
@@ -203,7 +203,7 @@ class TestStrategyTradeChart:
         assert "echarts-container" in html
 
 
-class TestBacktestStatusLine:
+class TestBacktestStatusBox:
     def _status(self, **overrides):
         base = {
             "holding": False, "next_action": "buy", "trigger_kind": "reading",
@@ -213,31 +213,37 @@ class TestBacktestStatusLine:
         base.update(overrides)
         return base
 
-    def test_none_status_returns_none(self):
-        assert _backtest_status_line(None) is None
+    def test_none_status_renders_fallback_box_not_crash(self):
+        html = _backtest_status_box(None)
+        assert "status-box" in html
+        assert "Not enough data to show a current reading" in html
 
-    def test_reading_kind_line_mentions_current_and_trigger(self):
-        line = _backtest_status_line(self._status())
-        assert "Current RSI: 45.2" in line
-        assert "Buy trigger: 30.0" in line
-        assert "drops below" in line
+    def test_reading_kind_box_mentions_current_and_trigger(self):
+        html = _backtest_status_box(self._status())
+        assert "Current RSI" in html
+        assert "45.2" in html
+        assert "Buy trigger" in html
+        assert "30.0" in html
+        assert "RSI oversold threshold" in html
+        assert "drops below" in html
 
     def test_price_kind_uses_dollar_formatting(self):
-        line = _backtest_status_line(self._status(
+        html = _backtest_status_box(self._status(
             trigger_kind="price", unit="$", current_label="Current price",
             current_value=303.42, trigger_value=302.26, trigger_label="Lower Bollinger Band",
             direction="below",
         ))
-        assert "$303.42" in line
-        assert "$302.26" in line
+        assert "$303.42" in html
+        assert "$302.26" in html
 
     def test_sell_action_uses_sell_verb(self):
-        line = _backtest_status_line(self._status(holding=True, next_action="sell", direction="above"))
-        assert line.startswith("Current RSI") and "Sell trigger" in line
+        html = _backtest_status_box(self._status(holding=True, next_action="sell", direction="above"))
+        assert "Sell trigger" in html
+        assert ">Holding<" in html
 
-    def test_extra_note_gets_appended(self):
-        line = _backtest_status_line(self._status(extra_note="Also needs X."))
-        assert line.endswith("Also needs X.")
+    def test_extra_note_gets_appended_to_caption(self):
+        html = _backtest_status_box(self._status(extra_note="Also needs X."))
+        assert "Also needs X." in html
 
 
 class TestCleanStat:
@@ -420,12 +426,15 @@ class TestSectionBacktestsDashboard:
         assert "Not enough data to show a current reading" in html
         assert ">None<" not in html
 
-    def test_status_line_and_trigger_value_appear(self):
+    def test_status_box_shows_current_and_trigger_as_stat_tiles(self):
         html = section_backtests(self._bundle_with([
             self._strategy(current_status=self._status(current_value=43.5, trigger_value=30.0)),
         ]))
-        assert "Current RSI: 43.5" in html
-        assert "Buy trigger: 30.0" in html
+        assert "status-box" in html
+        assert "Current RSI" in html
+        assert "43.5" in html
+        assert "Buy trigger" in html
+        assert "30.0" in html
 
     def test_extra_note_appears_in_rendered_status(self):
         html = section_backtests(self._bundle_with([
