@@ -58,6 +58,46 @@ def _clean_stat(value):
     return round(value, 2)
 
 
+def _extract_trades(stats) -> list:
+    """Every completed buy->sell round-trip this strategy actually made,
+    for plotting as markers on a price chart. `finalize_trades=True` (set
+    on the Backtest() call below) means a position still open at the very
+    end of the tested period shows up here too, closed at the last price --
+    otherwise it would silently vanish from both the trade list and the
+    stats that are derived from it."""
+    trades_df = stats["_trades"]
+    trades = []
+    for _, row in trades_df.iterrows():
+        trades.append({
+            "entry_date": row["EntryTime"].strftime("%Y-%m-%d"),
+            "entry_price": round(float(row["EntryPrice"]), 2),
+            "exit_date": row["ExitTime"].strftime("%Y-%m-%d"),
+            "exit_price": round(float(row["ExitPrice"]), 2),
+            "return_pct": round(float(row["ReturnPct"]) * 100, 2),
+        })
+    return trades
+
+
+def _extract_current_status(meta: dict, stats) -> dict | None:
+    """"What would this rule tell me to do right now" -- see the
+    "_status functions" block in strategies.py for what each field means
+    and why RSI/MACD/moving-average/relative-strength report a reading
+    vs. threshold instead of an exact price. Never raises: a strategy
+    whose indicators ended on NaN (e.g. genuinely insufficient data) just
+    means no status to show, not a broken run."""
+    try:
+        status = meta["status_fn"](stats._strategy)
+        current = status.get("current_value")
+        trigger = status.get("trigger_value")
+        if current is None or current != current or trigger is None or trigger != trigger:
+            return None  # NaN in, no honest status to report
+        status["current_value"] = round(float(current), 2)
+        status["trigger_value"] = round(float(trigger), 2)
+        return status
+    except Exception:
+        return None
+
+
 def _run_one(meta: dict, data: pd.DataFrame, shared_buy_hold_pct: float) -> dict:
     result = {
         "key": meta["key"],
@@ -71,6 +111,8 @@ def _run_one(meta: dict, data: pd.DataFrame, shared_buy_hold_pct: float) -> dict
         "max_drawdown_pct": None,
         "sharpe_ratio": None,
         "beat_buy_hold": None,
+        "current_status": None,
+        "trades": [],
         "note": None,
     }
     try:
@@ -92,6 +134,8 @@ def _run_one(meta: dict, data: pd.DataFrame, shared_buy_hold_pct: float) -> dict
         # so the "beat Buy & Hold" comparison is actually apples-to-apples.
         result["max_drawdown_pct"] = _clean_stat(stats["Max. Drawdown [%]"])
         result["sharpe_ratio"] = _clean_stat(stats.get("Sharpe Ratio"))
+        result["trades"] = _extract_trades(stats)
+        result["current_status"] = _extract_current_status(meta, stats)
         if num_trades > 0:
             result["win_rate_pct"] = _clean_stat(stats.get("Win Rate [%]"))
             if result["return_pct"] is not None and shared_buy_hold_pct is not None:
@@ -103,6 +147,16 @@ def _run_one(meta: dict, data: pd.DataFrame, shared_buy_hold_pct: float) -> dict
     return result
 
 
+def _build_price_series(data: pd.DataFrame) -> list:
+    """The shared price line every strategy's chart draws on top of --
+    built once here from the same `data` every strategy already runs
+    against, not re-fetched per strategy or per chart."""
+    return [
+        {"date": idx.strftime("%Y-%m-%d"), "close": round(float(close), 2)}
+        for idx, close in zip(data.index, data["Close"])
+    ]
+
+
 def run_backtests(ticker: str) -> dict:
     """
     Returns:
@@ -110,9 +164,17 @@ def run_backtests(ticker: str) -> dict:
         "years_tested": float | None,
         "history_start": str | None,
         "history_end": str | None,
+        "price_series": [ {date, close}, ... ],  # shared across every
+            strategy's chart -- fetched once, not duplicated per strategy
         "strategies": [ {key, name, category, explanation, return_pct,
                           buy_hold_return_pct, win_rate_pct, num_trades,
-                          max_drawdown_pct, sharpe_ratio, beat_buy_hold, note}, ... ],
+                          max_drawdown_pct, sharpe_ratio, beat_buy_hold,
+                          current_status: {holding, next_action, trigger_kind,
+                                            trigger_label, trigger_value,
+                                            current_label, current_value, unit} | None,
+                          trades: [{entry_date, entry_price, exit_date,
+                                     exit_price, return_pct}, ...],
+                          note}, ... ],
         "note": str | None,
       }
     Every dollar/percent figure here comes straight from running real
@@ -121,7 +183,7 @@ def run_backtests(ticker: str) -> dict:
     """
     result = {
         "years_tested": None, "history_start": None, "history_end": None,
-        "strategies": [], "note": None,
+        "price_series": [], "strategies": [], "note": None,
     }
 
     try:
@@ -141,6 +203,7 @@ def run_backtests(ticker: str) -> dict:
     result["history_start"] = data.index[0].strftime("%Y-%m-%d")
     result["history_end"] = data.index[-1].strftime("%Y-%m-%d")
     result["years_tested"] = round(len(data) / 252, 1)  # ~252 trading days/year
+    result["price_series"] = _build_price_series(data)
 
     # One shared "if you'd just bought on day 1 and held" baseline, from the
     # full raw price series -- computed once here (not per-strategy) so
@@ -169,6 +232,7 @@ def run_backtests(ticker: str) -> dict:
                     "explanation": meta["explanation"], "return_pct": None,
                     "buy_hold_return_pct": shared_buy_hold_pct, "win_rate_pct": None, "num_trades": None,
                     "max_drawdown_pct": None, "sharpe_ratio": None, "beat_buy_hold": None,
+                    "current_status": None, "trades": [],
                     "note": benchmark_note or "Benchmark data unavailable.",
                 })
                 continue

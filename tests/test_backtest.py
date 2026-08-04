@@ -14,9 +14,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from backtest.engine import MIN_TRADING_DAYS, _clean_stat, _run_one, run_backtests
+from backtest.engine import (
+    MIN_TRADING_DAYS, _clean_stat, _extract_current_status, _extract_trades, _run_one, run_backtests,
+)
 from backtest.strategies import STRATEGIES, BENCHMARK_TICKER
-from dashboard.generate_dashboard import section_backtests
+from dashboard.generate_dashboard import section_backtests, strategy_trade_chart, _backtest_status_line
 
 
 def _synthetic_ohlcv(n=800, seed=0, with_benchmark=False):
@@ -60,8 +62,15 @@ class TestStrategies:
         if result["num_trades"]:
             assert result["return_pct"] is not None
             assert isinstance(result["beat_buy_hold"], bool)
+            assert isinstance(result["trades"], list) and len(result["trades"]) == result["num_trades"]
         else:
             assert result["note"]
+        # current_status is computed regardless of trade count -- it's about
+        # "right now," not historical performance -- unless the underlying
+        # indicator genuinely ended on NaN.
+        if result["current_status"] is not None:
+            assert result["current_status"]["next_action"] in ("buy", "sell")
+            assert result["current_status"]["direction"] in ("above", "below")
 
     def test_all_strategies_are_long_only_no_shorting(self):
         """Every strategy's next() should only ever call self.buy()/close(),
@@ -86,6 +95,149 @@ class TestStrategies:
     def test_strategy_keys_are_unique(self):
         keys = [m["key"] for m in STRATEGIES]
         assert len(keys) == len(set(keys))
+
+
+class TestExtractTradesAndStatus:
+    """backtest/engine.py's per-run enrichment: the trade list (for chart
+    markers) and the "what would this rule tell me to do right now" status,
+    both derived from a real completed Backtest run -- no extra fetches."""
+
+    def _run(self, meta, data):
+        import os
+        os.environ.setdefault("TQDM_DISABLE", "1")
+        from backtesting import Backtest
+        bt = Backtest(data, meta["strategy_class"], cash=10_000, commission=0.001,
+                      exclusive_orders=True, finalize_trades=True)
+        return bt.run()
+
+    def test_trades_have_expected_fields(self):
+        meta = next(m for m in STRATEGIES if m["key"] == "rsi_mean_reversion")
+        data = _synthetic_ohlcv()
+        stats = self._run(meta, data)
+        trades = _extract_trades(stats)
+        assert int(stats["# Trades"]) == len(trades)
+        if trades:
+            t = trades[0]
+            assert set(t.keys()) == {"entry_date", "entry_price", "exit_date", "exit_price", "return_pct"}
+            assert t["entry_date"] < t["exit_date"]
+
+    def test_price_kind_status_has_a_real_price_target(self):
+        meta = next(m for m in STRATEGIES if m["key"] == "bollinger_band_reversion")
+        data = _synthetic_ohlcv()
+        stats = self._run(meta, data)
+        status = _extract_current_status(meta, stats)
+        assert status["trigger_kind"] == "price"
+        assert status["unit"] == "$"
+        assert status["trigger_label"] in ("Upper Bollinger Band", "Lower Bollinger Band")
+
+    def test_reading_kind_status_has_no_price_unit(self):
+        meta = next(m for m in STRATEGIES if m["key"] == "rsi_mean_reversion")
+        data = _synthetic_ohlcv()
+        stats = self._run(meta, data)
+        status = _extract_current_status(meta, stats)
+        assert status["trigger_kind"] == "reading"
+        assert status["unit"] == ""
+        assert status["trigger_value"] in (30, 70)  # oversold or overbought threshold
+
+    def test_status_fn_exception_returns_none_not_crash(self):
+        meta = {"status_fn": lambda instance: (_ for _ in ()).throw(AttributeError("boom"))}
+        data = _synthetic_ohlcv()
+        stats = self._run({**next(m for m in STRATEGIES if m["key"] == "rsi_mean_reversion"), **meta}, data)
+        assert _extract_current_status(meta, stats) is None
+
+    def test_status_with_nan_current_value_returns_none(self):
+        meta = {"status_fn": lambda instance: {
+            "holding": False, "next_action": "buy", "trigger_kind": "reading",
+            "trigger_label": "x", "trigger_value": 30.0, "current_label": "y",
+            "current_value": float("nan"), "unit": "", "direction": "below",
+        }}
+        data = _synthetic_ohlcv()
+        stats = self._run(next(m for m in STRATEGIES if m["key"] == "rsi_mean_reversion"), data)
+        assert _extract_current_status(meta, stats) is None
+
+    def test_trend_filtered_dip_flags_trend_filter_as_the_real_blocker(self):
+        """Regression case: TrendFilteredDip needs RSI oversold AND price
+        above its 200-day average. A naive status readout that only shows
+        the RSI half would be actively misleading whenever RSI looks ready
+        to fire but the trend filter is the real, silent blocker -- craft
+        exactly that: a long decline (price well below its 200-day average)
+        that also leaves RSI oversold at the end."""
+        n = 800
+        t = np.arange(n)
+        # steady decline, mostly monotonic -- keeps price under its own
+        # 200-day trailing average right up to the last bar, and the final
+        # stretch trending down keeps RSI low too.
+        close = 200 - 0.15 * t + np.sin(t / 15)
+        close = np.maximum(close, 1)
+        dates = pd.bdate_range("2020-01-02", periods=n)
+        data = pd.DataFrame({
+            "Open": close, "High": close + 0.5, "Low": close - 0.5, "Close": close,
+            "Volume": np.full(n, 1_000_000),
+        }, index=dates)
+
+        meta = next(m for m in STRATEGIES if m["key"] == "trend_filtered_dip")
+        stats = self._run(meta, data)
+        status = _extract_current_status(meta, stats)
+        assert status is not None
+        if not status["holding"]:
+            # Only meaningful to assert the extra_note when the trend
+            # filter is actually the blocker -- guard rather than assume,
+            # since this is real (not mocked) indicator math.
+            price_now = float(data["Close"].iloc[-1])
+            trend_ma_now = float(pd.Series(data["Close"]).rolling(200).mean().iloc[-1])
+            if price_now <= trend_ma_now:
+                assert "extra_note" in status
+                assert "200-day average" in status["extra_note"]
+
+
+class TestStrategyTradeChart:
+    def test_returns_none_for_empty_price_series(self):
+        assert strategy_trade_chart([], []) is None
+
+    def test_builds_chart_html_with_price_series_and_trades(self):
+        price_series = [{"date": "2024-01-02", "close": 100.0}, {"date": "2024-01-03", "close": 101.0}]
+        trades = [{"entry_date": "2024-01-02", "entry_price": 100.0, "exit_date": "2024-01-03",
+                   "exit_price": 101.0, "return_pct": 1.0}]
+        html = strategy_trade_chart(price_series, trades)
+        assert html is not None
+        assert "echarts-container" in html
+
+
+class TestBacktestStatusLine:
+    def _status(self, **overrides):
+        base = {
+            "holding": False, "next_action": "buy", "trigger_kind": "reading",
+            "trigger_label": "RSI oversold threshold", "trigger_value": 30.0,
+            "current_label": "Current RSI", "current_value": 45.2, "unit": "", "direction": "below",
+        }
+        base.update(overrides)
+        return base
+
+    def test_none_status_returns_none(self):
+        assert _backtest_status_line(None) is None
+
+    def test_reading_kind_line_mentions_current_and_trigger(self):
+        line = _backtest_status_line(self._status())
+        assert "Current RSI: 45.2" in line
+        assert "Buy trigger: 30.0" in line
+        assert "drops below" in line
+
+    def test_price_kind_uses_dollar_formatting(self):
+        line = _backtest_status_line(self._status(
+            trigger_kind="price", unit="$", current_label="Current price",
+            current_value=303.42, trigger_value=302.26, trigger_label="Lower Bollinger Band",
+            direction="below",
+        ))
+        assert "$303.42" in line
+        assert "$302.26" in line
+
+    def test_sell_action_uses_sell_verb(self):
+        line = _backtest_status_line(self._status(holding=True, next_action="sell", direction="above"))
+        assert line.startswith("Current RSI") and "Sell trigger" in line
+
+    def test_extra_note_gets_appended(self):
+        line = _backtest_status_line(self._status(extra_note="Also needs X."))
+        assert line.endswith("Also needs X.")
 
 
 class TestCleanStat:
@@ -191,20 +343,29 @@ class TestSectionBacktestsDashboard:
     synthetic bundle shapes -- see test_dashboard_build.py for the
     full-fixture leaked-None/nan sweep this feature also has to pass."""
 
-    def _bundle_with(self, strategies, note=None):
+    def _bundle_with(self, strategies, note=None, price_series=None):
         return {
             "backtests": {
                 "years_tested": 6.0, "history_start": "2020-08-01", "history_end": "2026-08-01",
-                "strategies": strategies, "note": note,
+                "price_series": price_series or [], "strategies": strategies, "note": note,
             },
         }
+
+    def _status(self, **overrides):
+        base = {
+            "holding": False, "next_action": "buy", "trigger_kind": "reading",
+            "trigger_label": "RSI oversold threshold", "trigger_value": 30.0,
+            "current_label": "Current RSI", "current_value": 45.2, "unit": "", "direction": "below",
+        }
+        base.update(overrides)
+        return base
 
     def _strategy(self, **overrides):
         base = {
             "key": "rsi_mean_reversion", "name": "RSI Mean-Reversion", "category": "Mean-reversion",
             "explanation": "Buys when oversold.", "return_pct": 34.2, "buy_hold_return_pct": 51.0,
             "win_rate_pct": 62.5, "num_trades": 8, "max_drawdown_pct": -18.3, "sharpe_ratio": 0.71,
-            "beat_buy_hold": False, "note": None,
+            "beat_buy_hold": False, "current_status": self._status(), "trades": [], "note": None,
         }
         base.update(overrides)
         return base
@@ -237,11 +398,71 @@ class TestSectionBacktestsDashboard:
         html = section_backtests(self._bundle_with([
             self._strategy(return_pct=None, buy_hold_return_pct=None, win_rate_pct=None,
                             num_trades=0, max_drawdown_pct=None, sharpe_ratio=None,
-                            beat_buy_hold=None, note="This rule never actually triggered a trade."),
+                            beat_buy_hold=None, current_status=self._status(),
+                            note="This rule never actually triggered a trade."),
         ]))
         assert "No trades" in html
         assert ">None<" not in html
         assert "$None" not in html
+
+    def test_holding_shows_holding_badge(self):
+        html = section_backtests(self._bundle_with([
+            self._strategy(current_status=self._status(holding=True, next_action="sell", direction="above")),
+        ]))
+        assert ">Holding<" in html
+
+    def test_not_holding_shows_not_holding_badge(self):
+        html = section_backtests(self._bundle_with([self._strategy(current_status=self._status(holding=False))]))
+        assert "Not Holding" in html
+
+    def test_missing_current_status_shows_fallback_not_crash(self):
+        html = section_backtests(self._bundle_with([self._strategy(current_status=None)]))
+        assert "Not enough data to show a current reading" in html
+        assert ">None<" not in html
+
+    def test_status_line_and_trigger_value_appear(self):
+        html = section_backtests(self._bundle_with([
+            self._strategy(current_status=self._status(current_value=43.5, trigger_value=30.0)),
+        ]))
+        assert "Current RSI: 43.5" in html
+        assert "Buy trigger: 30.0" in html
+
+    def test_extra_note_appears_in_rendered_status(self):
+        html = section_backtests(self._bundle_with([
+            self._strategy(current_status=self._status(extra_note="Also needs the trend filter.")),
+        ]))
+        assert "Also needs the trend filter." in html
+
+    def test_no_trades_means_no_chart_disclosure(self):
+        html = section_backtests(self._bundle_with(
+            [self._strategy(trades=[])],
+            price_series=[{"date": "2024-01-02", "close": 100.0}],
+        ))
+        assert "chart-disclosure" not in html
+
+    def test_trades_and_price_series_render_chart_disclosure(self):
+        html = section_backtests(self._bundle_with(
+            [self._strategy(trades=[
+                {"entry_date": "2024-01-02", "entry_price": 100.0, "exit_date": "2024-01-03",
+                 "exit_price": 101.0, "return_pct": 1.0},
+            ])],
+            price_series=[{"date": "2024-01-02", "close": 100.0}, {"date": "2024-01-03", "close": 101.0}],
+        ))
+        assert "chart-disclosure" in html
+        assert "Show chart" in html
+        assert "echarts-container" in html
+
+    def test_trades_but_no_price_series_means_no_chart(self):
+        """Belt-and-suspenders: a chart with markers but no price line
+        underneath it would be meaningless -- both must be present."""
+        html = section_backtests(self._bundle_with(
+            [self._strategy(trades=[
+                {"entry_date": "2024-01-02", "entry_price": 100.0, "exit_date": "2024-01-03",
+                 "exit_price": 101.0, "return_pct": 1.0},
+            ])],
+            price_series=[],
+        ))
+        assert "chart-disclosure" not in html
 
     def test_no_leaked_none_across_all_strategies(self):
         """One of each real strategy shape, including the relative-strength
@@ -253,6 +474,7 @@ class TestSectionBacktestsDashboard:
             key="relative_strength", name="Relative Strength vs. S&P 500", category="Trend-following",
             explanation="...", return_pct=None, buy_hold_return_pct=None, win_rate_pct=None,
             num_trades=None, max_drawdown_pct=None, sharpe_ratio=None, beat_buy_hold=None,
+            current_status=None, trades=[],  # matches engine.py's real benchmark-unavailable shape
             note="Benchmark data unavailable.",
         ))
         html = section_backtests(self._bundle_with(strategies))
@@ -269,6 +491,11 @@ class TestRunBacktestsLive:
     def test_aapl_produces_every_strategy(self):
         result = run_backtests("AAPL")
         assert result["years_tested"] is not None
+        assert len(result["price_series"]) > 0
         assert len(result["strategies"]) == len(STRATEGIES)
         for s in result["strategies"]:
             assert s["num_trades"] is None or s["num_trades"] >= 0
+            if s["num_trades"]:
+                assert len(s["trades"]) == s["num_trades"]
+            if s["current_status"] is not None:
+                assert s["current_status"]["next_action"] in ("buy", "sell")

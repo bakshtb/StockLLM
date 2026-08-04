@@ -227,6 +227,140 @@ class RelativeStrength(Strategy):
 
 
 # ============================================================================
+# "Current status" functions -- given a strategy instance right after
+# bt.run() finishes (still holding its final indicator readings and
+# position), return "what would this rule tell me to do right now."
+#
+# Two shapes, on purpose: "price" strategies (Bollinger, breakout) have a
+# trigger that already IS a literal price level, so that price is shown
+# directly. The others (RSI, MACD, moving averages, relative strength)
+# trigger off a computed indicator reading, not a raw price -- showing an
+# exact "target price" for those would mean algebraically inverting each
+# indicator's formula (solvable, but real per-indicator math with its own
+# edge cases); showing "current reading vs. its threshold" instead is
+# honest, simpler, and answers the same practical question ("how close is
+# this to firing"). dashboard/generate_dashboard.py formats the sentence;
+# these functions only return raw numbers.
+# ============================================================================
+
+def _rsi_status(instance, oversold, overbought):
+    rsi_now = float(instance.rsi[-1])
+    holding = bool(instance.position)
+    return {
+        "holding": holding,
+        "next_action": "sell" if holding else "buy",
+        "trigger_kind": "reading",
+        "trigger_label": "RSI overbought threshold" if holding else "RSI oversold threshold",
+        "trigger_value": overbought if holding else oversold,
+        "current_label": "Current RSI",
+        "current_value": rsi_now,
+        "unit": "",
+        "direction": "above" if holding else "below",
+    }
+
+
+def _rsi_mean_reversion_status(instance):
+    return _rsi_status(instance, instance.oversold, instance.overbought)
+
+
+def _macd_crossover_status(instance):
+    holding = bool(instance.position)
+    return {
+        "holding": holding,
+        "next_action": "sell" if holding else "buy",
+        "trigger_kind": "reading",
+        "trigger_label": "Signal line",
+        "trigger_value": float(instance.signal[-1]),
+        "current_label": "Current MACD",
+        "current_value": float(instance.macd[-1]),
+        "unit": "",
+        "direction": "below" if holding else "above",
+    }
+
+
+def _ma_crossover_status(instance):
+    holding = bool(instance.position)
+    return {
+        "holding": holding,
+        "next_action": "sell" if holding else "buy",
+        "trigger_kind": "reading",
+        "trigger_label": "200-day average",
+        "trigger_value": float(instance.slow[-1]),
+        "current_label": "Current 50-day average",
+        "current_value": float(instance.fast[-1]),
+        "unit": "$",
+        "direction": "below" if holding else "above",
+    }
+
+
+def _bollinger_status(instance):
+    holding = bool(instance.position)
+    price_now = float(instance.data.Close[-1])
+    return {
+        "holding": holding,
+        "next_action": "sell" if holding else "buy",
+        "trigger_kind": "price",
+        "trigger_label": "Upper Bollinger Band" if holding else "Lower Bollinger Band",
+        "trigger_value": float(instance.upper[-1]) if holding else float(instance.lower[-1]),
+        "current_label": "Current price",
+        "current_value": price_now,
+        "unit": "$",
+        "direction": "above" if holding else "below",
+    }
+
+
+def _breakout_status(instance):
+    holding = bool(instance.position)
+    price_now = float(instance.data.Close[-1])
+    return {
+        "holding": holding,
+        "next_action": "sell" if holding else "buy",
+        "trigger_kind": "price",
+        "trigger_label": "20-day low" if holding else "20-day high",
+        "trigger_value": float(instance.lower[-1]) if holding else float(instance.upper[-1]),
+        "current_label": "Current price",
+        "current_value": price_now,
+        "unit": "$",
+        "direction": "below" if holding else "above",
+    }
+
+
+def _trend_filtered_dip_status(instance):
+    """This rule's buy condition is compound (RSI oversold AND price above
+    its own 200-day average) -- unlike plain RsiMeanReversion, showing only
+    the RSI half can be actively misleading (RSI can look like it should
+    fire while the trend filter is the real, silent blocker). When not
+    holding and the trend filter is what's actually blocking a buy, say so
+    explicitly rather than implying RSI alone controls the trigger."""
+    status = _rsi_status(instance, instance.oversold, instance.overbought)
+    if not status["holding"]:
+        price_now = float(instance.data.Close[-1])
+        trend_ma_now = float(instance.trend_ma[-1])
+        if trend_ma_now == trend_ma_now and price_now <= trend_ma_now:  # NaN-safe
+            status["extra_note"] = (
+                f"Also requires the price (currently ${price_now:.2f}) to be above its "
+                f"200-day average (currently ${trend_ma_now:.2f}) -- not the case right now, "
+                f"so this won't buy even if RSI drops further."
+            )
+    return status
+
+
+def _relative_strength_status(instance):
+    holding = bool(instance.position)
+    return {
+        "holding": holding,
+        "next_action": "sell" if holding else "buy",
+        "trigger_kind": "reading",
+        "trigger_label": "Break-even vs. the S&P 500",
+        "trigger_value": 0.0,
+        "current_label": "Current 3-month outperformance",
+        "current_value": float(instance.rel[-1]) * 100,
+        "unit": "%",
+        "direction": "below" if holding else "above",
+    }
+
+
+# ============================================================================
 # Registry -- metadata + the Strategy class to run, in the order they should
 # be displayed. backtest/engine.py iterates this list; dashboard rendering
 # uses "name"/"category"/"explanation" as-is.
@@ -243,6 +377,7 @@ STRATEGIES = [
                         "sharp short-term drops tend to bounce back.",
         "strategy_class": RsiMeanReversion,
         "needs_benchmark": False,
+        "status_fn": _rsi_mean_reversion_status,
     },
     {
         "key": "macd_crossover",
@@ -254,6 +389,7 @@ STRATEGIES = [
                         "new upward trend, once started, keeps going for a while.",
         "strategy_class": MacdCrossover,
         "needs_benchmark": False,
+        "status_fn": _macd_crossover_status,
     },
     {
         "key": "moving_average_crossover",
@@ -264,6 +400,7 @@ STRATEGIES = [
                         "signal), sells when it crosses back below.",
         "strategy_class": MovingAverageCrossover,
         "needs_benchmark": False,
+        "status_fn": _ma_crossover_status,
     },
     {
         "key": "bollinger_band_reversion",
@@ -275,6 +412,7 @@ STRATEGIES = [
                         "above the top of that range.",
         "strategy_class": BollingerBandReversion,
         "needs_benchmark": False,
+        "status_fn": _bollinger_status,
     },
     {
         "key": "breakout_channel",
@@ -286,6 +424,7 @@ STRATEGIES = [
                         "opposite belief from the mean-reversion rules above.",
         "strategy_class": BreakoutChannel,
         "needs_benchmark": False,
+        "status_fn": _breakout_status,
     },
     {
         "key": "trend_filtered_dip",
@@ -297,6 +436,7 @@ STRATEGIES = [
                         "200-day average.",
         "strategy_class": TrendFilteredDip,
         "needs_benchmark": False,
+        "status_fn": _trend_filtered_dip_status,
     },
     {
         "key": "relative_strength",
@@ -308,5 +448,6 @@ STRATEGIES = [
                         "persist for a while.",
         "strategy_class": RelativeStrength,
         "needs_benchmark": True,
+        "status_fn": _relative_strength_status,
     },
 ]

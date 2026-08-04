@@ -1109,6 +1109,84 @@ StockLLM/
     7 rows now correctly show 185.76% instead of six different numbers
     ranging 133–186%.
 
+39. **Added "what would this rule tell me to do right now" plus a buy/sell
+    marker chart to the Strategy Backtests section** (0.9.12) — user's
+    follow-up ask after item 37: not just how each rule performed
+    historically, but its current live status, and a visual of where it
+    actually bought/sold. Explicit user constraint going in: don't
+    re-download price history per feature — verified this was already true
+    (`run_backtests()` fetches once, reuses across all 7 strategies) and,
+    better, neither addition needed any new fetch at all — both are derived
+    from data a completed `bt.run()` already produces internally that was
+    previously just discarded after pulling a few summary stats out of it.
+    - **Current status** (`backtest/strategies.py`, a `status_fn` per
+      strategy in the `STRATEGIES` registry): given the actual `Strategy`
+      instance right after `bt.run()` finishes,
+      `bool(instance.position)` says whether the rule is holding right now
+      — free, no extra computation. Two deliberately different shapes for
+      the trigger itself: Bollinger Band and Breakout Channel have a
+      trigger that already IS a literal price (`instance.upper[-1]`/
+      `instance.lower[-1]`), so an exact target price is shown. RSI, MACD,
+      moving-average crossover, and relative-strength trigger off a
+      computed indicator reading, not a raw price — showing an exact
+      target price for those would mean algebraically inverting each
+      indicator's formula (solvable, but real per-indicator math); shows
+      "current reading vs. threshold" instead, which answers the same
+      practical question ("how close is this to firing") without the
+      fragility. A `direction` field (`"above"`/`"below"`) on every status
+      dict lets the dashboard layer build one consistent sentence template
+      regardless of which shape it is, rather than needing per-strategy
+      formatting logic.
+      - **Caught and fixed a real accuracy gap during manual review, not
+        from a test failing**: `TrendFilteredDip`'s buy condition is
+        compound (RSI oversold AND price above its 200-day average), but
+        the first version of its status only reflected the RSI half —
+        actively misleading on a real MBLY dashboard check, where RSI
+        looked ready to fire (29.7, oversold) while the real blocker (price
+        well below its 200-day average after a 72% decline) was invisible.
+        Fixed with an `extra_note` field, only populated when the trend
+        filter is the actual blocker, appended to the rendered sentence.
+    - **Trade markers** (`backtest/engine.py`'s `_extract_trades()`): every
+      completed round-trip is already sitting in `stats["_trades"]`
+      (`EntryTime`/`EntryPrice`/`ExitTime`/`ExitPrice`/`ReturnPct` columns,
+      confirmed by inspecting a real run, not assumed) — just extracted
+      into a plain list, no new computation.
+    - **Shared price line** (`engine.py`'s `_build_price_series()`): built
+      *once* per `run_backtests()` call from the same `data` DataFrame
+      every strategy already runs against, stored once at the top level of
+      the result (not duplicated per strategy) — each of the 7 charts reads
+      from this same array at render time.
+    - **`dashboard/generate_dashboard.py`**: new `strategy_trade_chart()`
+      (an ECharts line + two scatter series — green triangles for buys, red
+      diamonds for sells, using the existing `var(--diverge-pos)`/
+      `var(--diverge-neg)` tokens already used for buy/sell semantics
+      elsewhere on this dashboard) inside a native `<details>`/`<summary>`
+      disclosure per strategy card, collapsed by default so 7 stacked price
+      charts don't bloat the page — chosen over custom JS show/hide
+      specifically because the existing `ResizeObserver`-based chart-sizing
+      system (`dashboard.js`) already handles a chart going from
+      `display:none` to visible generically; only a small explicit
+      `resizeWithin()` call on the native `toggle` event was added, as the
+      same "cheap insurance against WebView ResizeObserver quirks" the
+      existing `.viz-toggle` handler already does for the chart/table swap.
+      `section_backtests()` itself changed from one flat table to one card
+      per strategy (name, category badge, explanation, stat tiles, holding
+      badge + status line, collapsible chart) — the added content (a full
+      status sentence, a chart) didn't fit cleanly in table cells anymore.
+    - Verified end-to-end against real AAPL (all 7 strategies currently
+      "Not Holding," consistent with AAPL's current RSI/MACD/etc. readings)
+      and MBLY (RSI Mean-Reversion showing "Holding" with a real open
+      position, confirming the holding-state branch actually exercises,
+      not just the not-holding one) by grepping the generated HTML and
+      inspecting the real `window.__CHARTS__` JSON payload (7 new
+      Price/Buy/Sell chart series, correct point counts matching the trade
+      list). 26 new/updated tests in `tests/test_backtest.py` (trade/status
+      extraction shape, NaN/exception guards, the `TrendFilteredDip`
+      extra-note regression case with a hand-crafted declining synthetic
+      series, chart-html generation, status-sentence formatting for both
+      trigger shapes, and dashboard card rendering); full non-live suite
+      green (386 passed, up from 365).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

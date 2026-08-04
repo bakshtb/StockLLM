@@ -328,6 +328,13 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
   transition: background-color 0.15s ease;
 }
 .viz-toggle:hover { background: var(--gridline); }
+.chart-disclosure summary {
+  cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  list-style: none; display: inline-block; border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px; transition: background-color 0.15s ease;
+}
+.chart-disclosure summary::-webkit-details-marker { display: none; }
+.chart-disclosure summary:hover { background: var(--gridline); }
 .viz-card.is-table-view .viz-chart { display: none; }
 .viz-card:not(.is-table-view) .viz-table { display: none; }
 /* No chart at all (empty data) -- viz_card() renders the table with no
@@ -459,6 +466,17 @@ JS_SCRIPT = """
       // explicitly too as cheap insurance against ResizeObserver quirks in
       // some embedded WebViews (this runs inside Home Assistant's own UI).
       if (!nowTable && window.StockLLMCharts) window.StockLLMCharts.resizeWithin(card);
+    });
+  });
+
+  // <details class="chart-disclosure"> starts collapsed (chart div at
+  // 0x0) -- the ResizeObserver in dashboard.js already catches most size
+  // changes, but explicitly resizing on the native `toggle` event too is
+  // the same cheap insurance as the .viz-toggle handler above, for the
+  // same reason (WebView ResizeObserver quirks inside Home Assistant's UI).
+  document.querySelectorAll('.chart-disclosure').forEach(function (details) {
+    details.addEventListener('toggle', function () {
+      if (details.open && window.StockLLMCharts) window.StockLLMCharts.resizeWithin(details);
     });
   });
 
@@ -1448,6 +1466,59 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
     return chart_html, table, leg
 
 
+def strategy_trade_chart(price_series, trades, aria_label="strategy trades over time"):
+    """Line chart of a stock's own price over the tested period, with a
+    green triangle at each real buy and a red diamond at each real sell --
+    built entirely from price_series and trades already computed once by
+    backtest/engine.py (see run_backtests()), no new data fetch or
+    re-computation here."""
+    if not price_series:
+        return None
+    dates = [p["date"] for p in price_series]
+    price_data = [
+        {"value": [p["date"], p["close"]], "fmt": fmt_price(p["close"])}
+        for p in price_series
+    ]
+    buy_data = [
+        {"value": [t["entry_date"], t["entry_price"]], "fmt": f"Buy — {fmt_price(t['entry_price'])}"}
+        for t in trades
+    ]
+    sell_data = [
+        {"value": [t["exit_date"], t["exit_price"]], "fmt": f"Sell — {fmt_price(t['exit_price'])}"}
+        for t in trades
+    ]
+    option = {
+        "grid": {"left": 8, "right": 16, "top": 24, "bottom": 26, "containLabel": True},
+        "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
+        "legend": {"show": False},  # the HTML legend below is authoritative
+        "xAxis": {
+            "type": "category", "data": dates, "boundaryGap": False,
+            "axisLine": {"lineStyle": {"color": "var(--baseline)"}},
+            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 11, "showMaxLabel": True},
+        },
+        "yAxis": {
+            "type": "value", "scale": True,
+            "splitLine": {"lineStyle": {"color": "var(--gridline)"}},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 11, "formatter": "${value}"},
+        },
+        "series": [
+            {
+                "type": "line", "name": "Price", "data": price_data,
+                "showSymbol": False, "lineStyle": {"color": "var(--text-secondary)", "width": 1.25}, "z": 1,
+            },
+            {
+                "type": "scatter", "name": "Buy", "data": buy_data,
+                "symbol": "triangle", "symbolSize": 11, "itemStyle": {"color": "var(--diverge-pos)"}, "z": 2,
+            },
+            {
+                "type": "scatter", "name": "Sell", "data": sell_data,
+                "symbol": "diamond", "symbolSize": 10, "itemStyle": {"color": "var(--diverge-neg)"}, "z": 2,
+            },
+        ],
+    }
+    return register_chart(option, height_px=260, aria_label=aria_label)
+
+
 # ============================================================================
 # Sections
 # ============================================================================
@@ -1957,6 +2028,39 @@ def _backtest_result_badge(strat):
     return badge("—", "neutral")
 
 
+def _holding_badge(status):
+    if not status:
+        return badge("Unknown", "neutral")
+    return badge("Holding" if status["holding"] else "Not Holding", "info" if status["holding"] else "neutral")
+
+
+def _backtest_status_line(status):
+    """"What would this rule tell me to do right now" as one short,
+    plain-English line -- deliberately not a full narrative sentence, since
+    the underlying trigger can be a raw price, an RSI reading, or a percent
+    (see strategies.py's "_status functions" block), and forcing all three
+    into identical grammar reads worse than a consistent
+    "label: value. Verb trigger: value (what it means)." pattern."""
+    if not status:
+        return None
+    verb = "Sell" if status["next_action"] == "sell" else "Buy"
+    if status["unit"] == "$":
+        fmt = fmt_price
+    elif status["unit"] == "%":
+        fmt = lambda v: fmt_pct(v, signed=False)
+    else:
+        fmt = lambda v: fmt_num(v, 1)
+    move_phrase = "rises above" if status["direction"] == "above" else "drops below"
+    line = (
+        f"{status['current_label']}: {fmt(status['current_value'])}. {verb} trigger: "
+        f"{fmt(status['trigger_value'])} ({status['trigger_label']}) — fires when this "
+        f"{move_phrase} that level."
+    )
+    if status.get("extra_note"):
+        line += " " + status["extra_note"]
+    return line
+
+
 def section_backtests(bundle):
     backtests = bundle.get("backtests", {}) or {}
     strategies = backtests.get("strategies", []) or []
@@ -1968,23 +2072,7 @@ def section_backtests(bundle):
   {empty_state(backtests.get("note") or "Not enough price history to run a backtest for this ticker.")}
 </div>"""
 
-    rows = []
-    for s in strategies:
-        rows.append([
-            s.get("name") or "—",
-            s.get("explanation") or "—",
-            s.get("category") or "—",
-            fmt_pct(s.get("return_pct")),
-            fmt_pct(s.get("buy_hold_return_pct")),
-            fmt_pct(s.get("win_rate_pct"), signed=False) if s.get("win_rate_pct") is not None else "—",
-            fmt_num(s.get("num_trades")) if s.get("num_trades") is not None else "—",
-            _backtest_result_badge(s),
-        ])
-    table = data_table(
-        ["Strategy", "What it tests", "Style", "Return", "Buy & Hold", "Win Rate", "Trades", "Result"],
-        rows,
-    )
-
+    price_series = backtests.get("price_series", []) or []
     years = backtests.get("years_tested")
     period_note = (
         f"Tested over {years} years of this stock's actual price history "
@@ -1993,11 +2081,49 @@ def section_backtests(bundle):
         f"specific, well-known rules would actually have done."
     ) if years else ""
 
+    cards = []
+    for s in strategies:
+        stats_row = f"""
+<div class="kpi-row cols-4" style="margin-top:10px;">
+  {stat_tile("Return", fmt_pct(s.get("return_pct")) if s.get("return_pct") is not None else "—")}
+  {stat_tile("Buy & Hold", fmt_pct(s.get("buy_hold_return_pct")) if s.get("buy_hold_return_pct") is not None else "—")}
+  {stat_tile("Win Rate", fmt_pct(s.get("win_rate_pct"), signed=False) if s.get("win_rate_pct") is not None else "—")}
+  {stat_tile("Trades", fmt_num(s.get("num_trades")) if s.get("num_trades") is not None else "—")}
+</div>"""
+
+        status = s.get("current_status")
+        status_line = _backtest_status_line(status)
+        status_html = f"""
+<div class="viz-note" style="margin-top:10px;">{_holding_badge(status)} {esc(status_line) if status_line else "Not enough data to show a current reading for this rule."}</div>"""
+
+        trades = s.get("trades", []) or []
+        chart_html = (
+            strategy_trade_chart(price_series, trades, aria_label=f"{s.get('name')} buy/sell markers")
+            if trades and price_series else None
+        )
+        chart_block = f"""
+<details class="chart-disclosure" style="margin-top:10px;">
+  <summary>Show chart (buy/sell markers on price)</summary>
+  <div style="margin-top:10px;">{chart_html}</div>
+</details>""" if chart_html else ""
+
+        cards.append(f"""
+<div class="viz-card" style="margin-top:16px;">
+  <div class="viz-card-head">
+    <span class="viz-title">{esc(s.get('name') or '—')} {badge(s.get('category') or '—', 'neutral')}</span>
+    {_backtest_result_badge(s)}
+  </div>
+  <div class="card-sub">{esc(s.get('explanation') or '')}</div>
+  {stats_row}
+  {status_html}
+  {chart_block}
+</div>""")
+
     return f"""
 <div class="card full" id="sec-backtests">
   <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
   <div class="card-sub">{esc(period_note)}</div>
-  {viz_card("Well-known trading rules vs. this stock's actual history", None, table)}
+  {''.join(cards)}
 </div>"""
 
 

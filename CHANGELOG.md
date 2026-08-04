@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.12
+
+- Add: each strategy in the Strategy Backtests dashboard section now shows
+  its current live status (holding or not, and what price/reading would
+  trigger the next buy or sell) plus a collapsible chart marking every real
+  historical buy (green triangle) and sell (red diamond) on the price line.
+  Both additions reuse data a backtest run already produces internally --
+  no extra price-history downloads. Fixed a real accuracy gap found during
+  manual review: the Trend-Filtered Dip strategy's status only reflected
+  its RSI condition, silently omitting that its 200-day trend filter was
+  the actual blocker on a real MBLY check -- now flagged explicitly when
+  that's the case. See HANDOFF.md item 39.
+
 ## 0.9.11
 
 - Fix: the "Buy & Hold" column in the Strategy Backtests dashboard section
