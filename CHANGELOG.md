@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.15
+
+- Update: add an "i" info tooltip to the Win Rate stat in each Strategy
+  Backtests card, explaining in plain English what it means and -- since a
+  low win rate doesn't automatically mean a bad strategy (a trend-following
+  rule can lose most of its trades and still come out far ahead on the rare
+  big winners) -- explicitly pointing readers to check Return alongside it
+  rather than judging a strategy on win rate alone.
+
 ## 0.9.14
 
 - Update: Strategy Backtests UI polish. Each strategy now sits in its own

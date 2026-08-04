@@ -628,6 +628,7 @@ GLOSSARY = {
     "insider_sentiment_mspr": "Finnhub's own monthly score for whether company insiders (executives, directors) were net buying or net selling their own stock recently — positive means more buying, negative means more selling. A different, summarized view on top of the individual insider trades listed below. Only shown if the same Finnhub key used for news is configured.",
     "recommendation_trend": "How many analysts rated this stock Strong Buy/Buy/Hold/Sell/Strong Sell in recent months, and whether that mix is improving or deteriorating over time — a trend, not just a single snapshot. A different view than the individual rating actions listed elsewhere. Only shown if a Finnhub key is configured.",
     "section_backtests": "A \"backtest\" mechanically replays a fixed, well-known trading rule (e.g. \"buy when RSI is oversold\") against this stock's own past prices to see what would actually have happened -- no AI, no opinion, just a rule applied to real history. Past results never guarantee future ones, but they're real evidence instead of a guess. A small 0.1% trading cost is assumed per trade so results aren't overstated.",
+    "backtest_win_rate": "Out of every trade this rule made, the percentage that ended in a profit. A low number here doesn't automatically mean a bad strategy: some rules (especially ones that ride a trend for as long as it lasts) lose money on most of their trades but make so much more on the rare big winners than they lose on the frequent small losers that they still come out far ahead overall -- check the Return above, not just this number alone, before judging a rule as good or bad.",
 }
 
 
@@ -2142,7 +2143,7 @@ def section_backtests(bundle):
               value_cls=delta_class(return_pct) if return_pct is not None else None)}
   {stat_tile("Buy & Hold", fmt_pct(buy_hold_pct) if buy_hold_pct is not None else "—",
               value_cls=delta_class(buy_hold_pct) if buy_hold_pct is not None else None)}
-  {stat_tile("Win Rate", fmt_pct(s.get("win_rate_pct"), signed=False) if s.get("win_rate_pct") is not None else "—")}
+  {stat_tile("Win Rate", fmt_pct(s.get("win_rate_pct"), signed=False) if s.get("win_rate_pct") is not None else "—", info="backtest_win_rate")}
   {stat_tile("Trades", fmt_num(s.get("num_trades")) if s.get("num_trades") is not None else "—")}
 </div>"""
 
