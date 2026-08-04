@@ -3,17 +3,18 @@ Generates an offline HTML dashboard from a StockLLM research bundle JSON
 file (the same JSON produced by `data/bundle.py`, or written to disk via
 `python main.py check TICKER --dry-run -o file.json`).
 
-No CDN, no build step, works with no internet access at request time -- but
-this is no longer a single self-contained file: charts render client-side
-via Apache ECharts, vendored at dashboard/assets/echarts.min.js and paired
-with dashboard/assets/dashboard.js (see that file's own comments for why --
-short version: hand-rolled SVG chart geometry was an endless source of
-mobile/responsive bugs; a real charting library solves that class of
-problem natively). Every function below that writes the generated HTML to
-disk must also call dashboard.assets.ensure_vendored_assets() on that same
-output directory, or the page will load with no charts (it degrades to
-table-only view automatically in that case -- see dashboard.js -- but
-that's a fallback, not the intended experience).
+No CDN at request time, works with no internet access once built -- but this
+is no longer a single self-contained file: charts render client-side via
+Apache ECharts, and CSS/JS live in webui/ (a Vite project -- see
+webui/src/js/hydrate.js for the ECharts hydration logic and that file's own
+comments for why a real charting library replaced hand-rolled SVG chart
+geometry). load_built_assets() below reads webui's build output
+(dashboard/assets/dist/, produced by `npm run build`); every function that
+writes the generated HTML to disk must also call
+dashboard.assets.ensure_vendored_assets() on that same output directory, or
+the page will load with no charts (it degrades to table-only view
+automatically in that case -- see hydrate.js -- but that's a fallback, not
+the intended experience).
 
 Usage:
     python -m dashboard.generate_dashboard mobileye.json
@@ -28,596 +29,49 @@ import argparse
 import base64
 import html
 import json
+import os
 import sys
 import threading
 
+from dashboard.assets import ensure_vendored_assets
 from dashboard.llm_export import build_llm_export_markdown
 
 # ============================================================================
-# Color roles -- verbatim from the dataviz skill's reference palette
-# (bundled-skills/.../dataviz/references/palette.md). Do not hand-tune a hex
-# here; if the brand palette ever changes, swap the values in CSS_STYLE only.
+# CSS/JS used to live here as CSS_STYLE/JS_SCRIPT string constants, inlined
+# directly into every generated page. They now live as real files under
+# webui/ (a Vite project -- see webui/vite.config.js), built into
+# dashboard/assets/dist/ by `npm run build` (or the Docker image's builder
+# stage; see Dockerfile). load_built_assets() below reads Vite's own
+# manifest.json to find the current hashed filenames and link them instead.
+# Color roles specifically: verbatim from the dataviz skill's reference
+# palette (bundled-skills/.../dataviz/references/palette.md) -- do not
+# hand-tune a hex anywhere; if the brand palette ever changes, swap the
+# values in webui/src/styles/tokens.css only.
 # ============================================================================
 
-CSS_STYLE = """
-:root, .viz-root {
-  color-scheme: light;
-  --surface-1:      #fcfcfb;
-  --page-plane:     #f9f9f7;
-  --text-primary:   #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted:     #898781;
-  --gridline:       #e1e0d9;
-  --baseline:       #c3c2b7;
-  --border:         rgba(11,11,11,0.10);
-  --success-text:   #006300;
+_DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "dist")
+_MANIFEST_PATH = os.path.join(_DIST_DIR, ".vite", "manifest.json")
 
-  --series-1: #2a78d6; /* blue */
-  --series-2: #eb6834; /* orange */
-  --series-3: #1baf7a; /* aqua */
-  --series-4: #eda100; /* yellow */
-  --series-5: #e87ba4; /* magenta */
-  --series-6: #008300; /* green */
-  --series-7: #4a3aa7; /* violet */
-  --series-8: #e34948; /* red */
 
-  /* Diverging pairs here mean "good news vs. bad news" (beat/miss, bullish/
-     bearish), not neutral polarity/identity -- so they intentionally reuse
-     the status colors (green/red) rather than the dataviz skill's default
-     blue/red diverging pair, per explicit request for a green/red = good/bad
-     convention throughout this dashboard. */
-  --diverge-pos: #0ca30c;
-  --diverge-neg: #d03b3b;
-  --diverge-mid: #f0efec;
+def load_built_assets() -> dict:
+    """Returns {"css": "assets/main-XXXX.css", "js": "assets/main-XXXX.js"}
+    (paths relative to dashboard/assets/dist/) by reading webui's Vite build
+    manifest. Raises loudly if it's missing/unreadable rather than silently
+    shipping a dashboard with no styling or interactivity -- unlike a
+    vendored asset (icon.png), there's no sensible fallback for a missing JS
+    bundle, so this must fail at generation time, not render time."""
+    try:
+        with open(_MANIFEST_PATH, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+        entry = manifest["src/main.js"]
+        return {"css": entry["css"][0], "js": entry["file"]}
+    except (OSError, KeyError, IndexError, json.JSONDecodeError) as e:
+        raise RuntimeError(
+            f"webui build output not found or invalid at {_MANIFEST_PATH} -- "
+            "run `npm ci && npm run build` inside webui/ before generating a "
+            "dashboard (see webui/package.json)."
+        ) from e
 
-  --status-good:     #0ca30c;
-  --status-warning:  #fab219;
-  --status-serious:  #ec835a;
-  --status-critical: #d03b3b;
-}
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-    --surface-1:      #1a1a19;
-    --page-plane:     #0d0d0d;
-    --text-primary:   #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted:     #898781;
-    --gridline:       #2c2c2a;
-    --baseline:       #383835;
-    --border:         rgba(255,255,255,0.10);
-    --success-text:   #0ca30c;
-
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --series-4: #c98500;
-    --series-5: #d55181;
-    --series-6: #008300;
-    --series-7: #9085e9;
-    --series-8: #e66767;
-
-    --diverge-pos: #0ca30c;
-    --diverge-neg: #e66767;
-    --diverge-mid: #383835;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --surface-1:      #1a1a19;
-  --page-plane:     #0d0d0d;
-  --text-primary:   #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted:     #898781;
-  --gridline:       #2c2c2a;
-  --baseline:       #383835;
-  --border:         rgba(255,255,255,0.10);
-  --success-text:   #0ca30c;
-
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --series-5: #d55181;
-  --series-6: #008300;
-  --series-7: #9085e9;
-  --series-8: #e66767;
-
-  --diverge-pos: #0ca30c;
-  --diverge-neg: #e66767;
-  --diverge-mid: #383835;
-}
-
-* { box-sizing: border-box; }
-html, body {
-  margin: 0; padding: 0;
-  background: var(--page-plane);
-  color: var(--text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* Safety net: a sub-pixel of overflow anywhere on the page is invisible
-     in a desktop layout check but still lets iOS Safari elastically drag
-     the entire page sideways (rounds differently than Chromium). Every
-     intentionally-scrollable region on this page (table-scroll, the
-     section-nav pills, the mobile chart-scroll) sets its own overflow-x
-     on an inner element, so this doesn't clip anything real. */
-  overflow-x: hidden;
-}
-body { padding: 0 0 64px 0; }
-
-/* Topbar and the section nav below it stick together as one unit -- see
-   .sticky-top, the wrapper that actually holds position: sticky (putting
-   sticky on each separately would need the nav to know the topbar's exact
-   rendered height, which varies with content/wrapping). */
-.sticky-top { position: sticky; top: 0; z-index: 20; }
-.topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; padding: 16px 24px;
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--border);
-}
-.topbar h1 { font-size: 20px; margin: 0; font-weight: 600; }
-.topbar .meta { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
-
-.section-nav {
-  display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-  padding: 8px 24px; background: var(--surface-1); border-bottom: 1px solid var(--border);
-  scrollbar-width: none;
-}
-.section-nav::-webkit-scrollbar { display: none; }
-.section-nav a {
-  flex-shrink: 0; font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
-  text-decoration: none; background: var(--page-plane); border: 1px solid var(--border);
-  border-radius: 999px; padding: 6px 13px; white-space: nowrap;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.section-nav a:hover, .section-nav a:focus { color: var(--text-primary); border-color: var(--text-secondary); outline: none; }
-@media (min-width: 900px) { .section-nav { display: none; } }
-.topbar-actions { display: flex; align-items: center; gap: 10px; }
-button.chip {
-  font: inherit; font-size: 13px; cursor: pointer;
-  background: var(--surface-1); color: var(--text-primary);
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 7px 12px;
-  transition: background-color 0.15s ease;
-}
-button.chip:hover { background: var(--gridline); }
-
-.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 24px; }
-
-/* Hero: the one focal point the page leads with, before any scrolling --
-   see dataviz skill's figure spec (>=48px, same sans, exactly one per view). */
-.hero { max-width: 1180px; margin: 0 auto; padding: 22px 24px 6px 24px; }
-.hero-price-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.hero-price { font-size: 48px; font-weight: 650; line-height: 1; letter-spacing: -0.5px; }
-.hero-price-row .delta { font-size: 17px; }
-.hero-delta-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-left: 4px; }
-.hero-rec { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.hero-rec-badge { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; padding: 5px 14px; border-radius: 8px; }
-.hero-rec-badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
-.hero-rec-badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
-.hero-rec-badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
-.hero-rec-badge.neutral { background: var(--gridline); color: var(--text-secondary); }
-.hero-rec-conf { font-size: 13px; color: var(--text-secondary); }
-
-.kpi-row {
-  display: grid; gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  margin-bottom: 20px;
-}
-/* Fixed-column-count variants (used where auto-fit's column count would
-   otherwise vary awkwardly, e.g. a 3-tile MACD row). Named classes instead
-   of inline styles so the mobile media query below can collapse them. */
-.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
-.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
-.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
-/* Two sub-panels side by side within one section (distinct from the
-   page-level .grid below, which arranges whole section cards). */
-.split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-.split-2col > div { min-width: 0; } /* same grid-item auto-min-width fix, its direct children wrap SVG charts too */
-.stat-tile {
-  min-width: 0; /* same grid-item auto-min-width fix as .card, see there */
-  background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px 16px;
-  box-shadow: 0 1px 2px rgba(11,11,11,0.03);
-}
-.stat-tile .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
-.stat-tile .value { font-size: 24px; font-weight: 650; margin-top: 4px; line-height: 1.15; letter-spacing: -0.2px; }
-.stat-tile .value.good { color: var(--status-good); }
-.stat-tile .value.critical { color: var(--status-critical); }
-.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.delta { font-weight: 600; }
-.delta.good { color: var(--success-text); }
-.delta.critical { color: var(--status-critical); }
-.delta.neutral { color: var(--text-secondary); }
-.status-box {
-  margin-top: 14px; padding: 14px 16px;
-  background: var(--gridline); border-radius: 12px;
-}
-.status-box-head {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: 12.5px; font-weight: 650; color: var(--text-secondary);
-  margin-bottom: 10px;
-}
-.status-box .stat-tile { box-shadow: none; } /* the outer box already has its own depth cue */
-.status-box-caption { margin-top: 10px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
-
-/* One self-contained box per backtest strategy -- recessed against its
-   parent .card's surface (var(--page-plane), the same token the mobile
-   data-table row style already uses for the identical "nested box" look),
-   not just a bare list of items. Deliberately its own class rather than
-   reusing .viz-card: a strategy card is a real sub-section (heading, prose,
-   a stat grid, a status panel, an optional chart), not a single chart's
-   wrapper. */
-.strategy-card-list { display: grid; gap: 16px; margin-top: 14px; }
-.strategy-card {
-  background: var(--page-plane); border: 1px solid var(--border);
-  border-radius: 14px; padding: 18px 20px;
-  box-shadow: 0 1px 2px rgba(11,11,11,0.03), 0 1px 8px rgba(11,11,11,0.02);
-}
-.strategy-card-head {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
-}
-.strategy-card-title-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.strategy-card-title { font-size: 15px; font-weight: 650; color: var(--text-primary); letter-spacing: -0.1px; }
-.strategy-card .card-sub { margin-bottom: 0; }
-/* Always exactly 2 columns, at every screen width -- the generic .kpi-row's
-   own mobile breakpoints collapse to 1 column on narrow phones, which for
-   only 4 short numbers (Return/Buy & Hold/Win Rate/Trades) means 4 stacked
-   full-width tiles eating a lot of vertical space for very little content
-   each. A dedicated, non-collapsing class here fixes that specifically for
-   this section without touching every other .kpi-row site-wide. */
-.backtest-stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
-.chart-disclosure { margin-top: 14px; }
-.chart-disclosure > div { margin-top: 10px; }
-
-.price-chart-wrap { margin-top: 6px; }
-.chart-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-.range-btn {
-  font-size: 12px; font-weight: 600; color: var(--text-secondary);
-  background: none; border: 1px solid var(--border); border-radius: 6px;
-  padding: 4px 10px; cursor: pointer; transition: background-color 0.15s ease;
-}
-.range-btn:hover { background: var(--gridline); }
-.range-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
-
-/* Info icon + popover: a plain-language explainer on every metric */
-.info-ic {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; height: 15px; border-radius: 50%;
-  background: var(--gridline); color: var(--text-secondary);
-  font-size: 10px; font-weight: 700; font-style: normal;
-  border: none; cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
-  position: relative; transition: background-color 0.15s ease, color 0.15s ease;
-}
-.info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
-.info-pop {
-  display: none; position: absolute; z-index: 100; left: 0; top: 22px;
-  width: 240px; max-width: min(240px, calc(100vw - 32px)); background: var(--text-primary); color: var(--surface-1);
-  font-size: 12px; font-weight: 400; line-height: 1.5; padding: 10px 12px;
-  border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); text-align: left;
-  white-space: normal;
-}
-.info-ic.is-open .info-pop { display: block; }
-h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
-
-/* At-a-glance plain-language summary */
-.glance-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0 0; padding: 0; list-style: none; }
-.glance-item {
-  display: flex; align-items: flex-start; gap: 12px;
-  padding: 12px 14px; border-radius: 10px; background: var(--page-plane);
-  border: 1px solid var(--border); font-size: 13.5px; line-height: 1.5;
-}
-.glance-icon {
-  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700;
-}
-.glance-icon.good { background: rgba(12,163,12,0.16); color: var(--status-good); }
-.glance-icon.critical { background: rgba(208,59,59,0.16); color: var(--status-critical); }
-.glance-icon.neutral { background: var(--gridline); color: var(--text-secondary); }
-.glance-item b { font-weight: 700; }
-
-.rec-card {
-  background: var(--surface-1); border: 2px solid var(--border);
-  border-radius: 14px; padding: 20px 22px; margin-bottom: 20px;
-}
-.rec-card.rec-good { border-color: var(--status-good); }
-.rec-card.rec-critical { border-color: var(--status-critical); }
-.rec-card.rec-warning { border-color: var(--status-warning); }
-.rec-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-.rec-badge-big { font-size: 28px; font-weight: 700; letter-spacing: 0.3px; }
-.rec-badge-big.good { color: var(--status-good); }
-.rec-badge-big.critical { color: var(--status-critical); }
-.rec-badge-big.warning { color: #7a5200; }
-.rec-badge-big.neutral { color: var(--text-secondary); }
-.rec-meta { font-size: 12px; color: var(--text-muted); }
-.rec-body { margin-top: 14px; font-size: 14px; line-height: 1.6; }
-.rec-risks { margin: 10px 0 0 0; padding-left: 20px; }
-.rec-risks li { margin-bottom: 4px; }
-.rec-thesis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
-.rec-thesis { min-width: 0; background: var(--page-plane); border-radius: 10px; padding: 12px 14px; font-size: 13px; }
-.rec-thesis .who { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
-.rec-thesis.bull .who { color: var(--status-good); }
-.rec-thesis.bear .who { color: var(--status-critical); }
-.rec-skeptic { margin-top: 14px; font-size: 13px; }
-
-.rec-trend-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.rec-trend-row:last-child { margin-bottom: 0; }
-.rec-trend-period { width: 76px; flex-shrink: 0; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-.rec-trend-chart { flex: 1; min-width: 0; }
-
-.grid {
-  display: grid; gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-  align-items: start;
-}
-.card {
-  background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 14px; padding: 20px 22px;
-  /* A quiet, considered look -- a near-invisible shadow for depth, not a
-     heavy drop shadow (see dataviz skill: "the data is the only thing
-     allowed to be loud"). */
-  box-shadow: 0 1px 2px rgba(11,11,11,0.03), 0 1px 10px rgba(11,11,11,0.025);
-  /* Grid items default to min-width: auto, meaning a track won't shrink
-     below the largest intrinsic content size of anything inside it --
-     content with an explicit pixel width can set exactly that floor,
-     silently forcing this card (and its whole grid track) wider than the
-     viewport regardless of any width:100% override further down. */
-  min-width: 0;
-}
-.card.full { grid-column: 1 / -1; }
-.card h2 { font-size: 16px; margin: 0 0 4px 0; font-weight: 650; letter-spacing: -0.1px; }
-.card .card-sub { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; }
-
-.viz-card { margin-top: 6px; }
-.viz-card-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 6px;
-}
-.viz-card-head .viz-title { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
-.viz-toggle {
-  font-size: 11px; color: var(--text-secondary); background: none;
-  border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-.viz-toggle:hover { background: var(--gridline); }
-.chart-disclosure summary {
-  cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary);
-  list-style: none; display: inline-block; border: 1px solid var(--border);
-  border-radius: 6px; padding: 3px 8px; transition: background-color 0.15s ease;
-}
-.chart-disclosure summary::-webkit-details-marker { display: none; }
-.chart-disclosure summary:hover { background: var(--gridline); }
-.viz-card.is-table-view .viz-chart { display: none; }
-.viz-card:not(.is-table-view) .viz-table { display: none; }
-/* No chart at all (empty data) -- viz_card() renders the table with no
-   toggle button in that case; it must stay visible regardless of the
-   is-table-view class the card never gets. */
-.viz-card .viz-table.viz-table-only { display: block; }
-/* Defensive: charts always render at width:100% (never require scrolling
-   to see the whole chart -- see the mobile text-size override below
-   instead), but this catches anything unexpectedly wider than its card. */
-.viz-chart, .rec-trend-chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.echarts-container { width: 100%; }
-.viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
-.viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
-.viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
-
-table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.data-table th, table.data-table td {
-  text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline);
-  font-variant-numeric: tabular-nums;
-}
-table.data-table th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
-table.data-table tr:last-child td { border-bottom: none; }
-.table-scroll { overflow-x: auto; }
-
-.badge {
-  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
-  border-radius: 999px; white-space: nowrap;
-}
-.badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
-.badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
-.badge.serious { background: rgba(236,131,90,0.18); color: #8a3311; }
-.badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
-.badge.neutral { background: var(--gridline); color: var(--text-secondary); }
-.badge.info { background: rgba(42,120,214,0.14); color: var(--series-1); }
-:root[data-theme="dark"] .badge.warning,
-@media (prefers-color-scheme: dark) { .badge.warning { color: #fab219; } .badge.serious { color: #ec835a; } }
-
-.news-item { padding: 10px 0; border-bottom: 1px solid var(--gridline); }
-.news-item:last-child { border-bottom: none; }
-.news-item .headline { font-weight: 600; font-size: 13.5px; }
-.news-item .meta { font-size: 12px; color: var(--text-muted); margin: 2px 0 4px 0; }
-.news-item .snippet { font-size: 13px; color: var(--text-secondary); }
-.news-item a { color: var(--series-1); text-decoration: none; }
-.news-item a:hover { text-decoration: underline; }
-
-.filing-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); }
-.filing-row:last-child { border-bottom: none; }
-.filing-row .name { width: 130px; font-weight: 600; font-size: 13px; }
-.filing-row .info { font-size: 12.5px; color: var(--text-secondary); }
-
-.notes-list { margin: 0; padding: 0; list-style: none; }
-.notes-list li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); font-size: 13px; color: var(--text-secondary); }
-.notes-list li:last-child { border-bottom: none; }
-
-.empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
-
-footer.disclaimer {
-  max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
-  font-size: 12px; color: var(--text-muted); line-height: 1.6;
-}
-
-/* Phones: every fixed-column grid on this page was sized for desktop --
-   the page-level .grid's 460px column floor in particular forces the
-   whole page to scroll horizontally on any phone screen (observed live on
-   an iPhone: page rendered wider than the viewport, content clipped on
-   the right). Collapse all of them well before that point. */
-@media (max-width: 700px) {
-  /* Every mobile screenshot in this pass showed the same thing once the
-     chart-content fixes above landed: real, visible margin between the
-     screen edge and where the card border starts, doubled up again
-     between the card border and where content (the chart, its labels)
-     actually begins -- .wrap's page-level gutter plus .card's own
-     padding, stacked. Desktop can afford both; a 375px phone can't --
-     the two together were eating ~19% of total screen width before any
-     content started. Tighten both, not just one, since fixing only the
-     outer gutter would leave the inner one just as wide. */
-  .wrap { padding: 10px 10px; }
-  .card { padding: 16px 14px; }
-  .topbar { padding: 12px 10px; flex-wrap: wrap; }
-  .hero { padding: 16px 10px 4px 10px; }
-  .hero-price { font-size: 36px; }
-  .grid { grid-template-columns: 1fr !important; }
-  .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
-  .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
-  .split-2col, .rec-thesis-grid { grid-template-columns: 1fr !important; }
-  .rec-top { flex-direction: column; align-items: flex-start; }
-
-  /* Dense multi-column tables (5-7 columns is common here -- rating
-     actions, insider transactions, institutional holders) are cramped or
-     horizontal-scrolling on a phone even full-width. Turn each row into a
-     small stacked card instead: no JS, data_table() already emits a
-     data-label on every <td> for exactly this. */
-  table.data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
-  table.data-table, table.data-table tbody, table.data-table tr, table.data-table td { display: block; width: 100%; }
-  table.data-table tr {
-    border: 1px solid var(--border); border-radius: 10px;
-    padding: 4px 12px; margin-bottom: 10px; background: var(--page-plane);
-  }
-  table.data-table tr:last-child { margin-bottom: 0; }
-  table.data-table td {
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gridline);
-    text-align: right; white-space: normal;
-  }
-  table.data-table td:last-child { border-bottom: none; }
-  table.data-table td::before {
-    content: attr(data-label);
-    font-size: 11.5px; font-weight: 600; color: var(--text-secondary);
-    text-align: left; flex-shrink: 0; padding-right: 12px;
-  }
-  .table-scroll { overflow-x: visible; }
-}
-@media (max-width: 420px) {
-  .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
-}
-"""
-
-JS_SCRIPT = """
-(function () {
-  document.querySelectorAll('.viz-toggle').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var card = btn.closest('.viz-card');
-      var nowTable = card.classList.toggle('is-table-view');
-      btn.textContent = nowTable ? 'View chart' : 'View as table';
-      btn.setAttribute('aria-pressed', String(nowTable));
-      // A chart that was display:none (table view) sizes to 0 -- the
-      // ResizeObserver in dashboard.js already catches this, but call
-      // explicitly too as cheap insurance against ResizeObserver quirks in
-      // some embedded WebViews (this runs inside Home Assistant's own UI).
-      if (!nowTable && window.StockLLMCharts) window.StockLLMCharts.resizeWithin(card);
-    });
-  });
-
-  // <details class="chart-disclosure"> starts collapsed (chart div at
-  // 0x0) -- the ResizeObserver in dashboard.js already catches most size
-  // changes, but explicitly resizing on the native `toggle` event too is
-  // the same cheap insurance as the .viz-toggle handler above, for the
-  // same reason (WebView ResizeObserver quirks inside Home Assistant's UI).
-  document.querySelectorAll('.chart-disclosure').forEach(function (details) {
-    details.addEventListener('toggle', function () {
-      if (details.open && window.StockLLMCharts) window.StockLLMCharts.resizeWithin(details);
-    });
-  });
-
-  // Price chart range-preset buttons (1M/3M/6M/1Y/2Y/All): each button's
-  // data-days becomes a percentage of the chart's own total data length
-  // (not a fixed date -- the chart's total history varies by ticker, e.g.
-  // a recent IPO has less than 6 years) and is applied as a dataZoom
-  // action directly via the real echarts instance, found the same way the
-  // standalone verification harness confirmed works (see
-  // price_history_chart()'s docstring in generate_dashboard.py).
-  document.querySelectorAll('.chart-toolbar').forEach(function (toolbar) {
-    var chartEl = toolbar.parentElement && toolbar.parentElement.querySelector('.echarts-container');
-    if (!chartEl || !window.echarts) return;
-    var buttons = toolbar.querySelectorAll('.range-btn');
-    buttons.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var inst = echarts.getInstanceByDom(chartEl);
-        if (!inst) return;
-        var total = inst.getOption().series[0].data.length;
-        var days = parseInt(btn.getAttribute('data-days'), 10);
-        var startPct = days === 0 ? 0 : Math.max(0, (1 - days / total) * 100);
-        inst.dispatchAction({ type: 'dataZoom', start: startPct, end: 100 });
-        buttons.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
-      });
-    });
-  });
-
-  // "Download for AI Chat": decodes the base64 Markdown export embedded
-  // in #llm-export-data (see build_dashboard()'s comment on why base64,
-  // not raw/escaped text) and triggers a real file download via a
-  // Blob + temporary <a download>, entirely client-side -- no server
-  // round-trip, works the same whether this page came from the CLI or
-  // the webapp.
-  var exportBtn = document.getElementById('llm-export-btn');
-  if (exportBtn) {
-    exportBtn.addEventListener('click', function () {
-      var dataEl = document.getElementById('llm-export-data');
-      if (!dataEl) return;
-      var bytes = Uint8Array.from(atob(dataEl.textContent), function (c) { return c.charCodeAt(0); });
-      var text = new TextDecoder('utf-8').decode(bytes);
-      var blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = (exportBtn.getAttribute('data-ticker') || 'stockllm') + '-research-export.md';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-  }
-
-  var themeBtn = document.getElementById('theme-toggle');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', function () {
-      var root = document.documentElement;
-      var current = root.getAttribute('data-theme') ||
-        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      var next = current === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      themeBtn.textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
-      try { localStorage.setItem('stockllm-theme', next); } catch (e) {}
-      if (window.StockLLMCharts) window.StockLLMCharts.reapplyTheme();
-    });
-  }
-
-  // Info-icon popovers: click/Enter to toggle, click outside or Escape to close,
-  // only one open at a time so they never stack up on a long page.
-  function closeAllInfo(except) {
-    document.querySelectorAll('.info-ic.is-open').forEach(function (el) {
-      if (el !== except) el.classList.remove('is-open');
-    });
-  }
-  document.querySelectorAll('.info-ic').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var wasOpen = btn.classList.contains('is-open');
-      closeAllInfo(btn);
-      btn.classList.toggle('is-open', !wasOpen);
-    });
-  });
-  document.addEventListener('click', function () { closeAllInfo(null); });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeAllInfo(null);
-  });
-})();
-"""
 
 THEME_INIT_SCRIPT = """
 (function () {
@@ -825,7 +279,7 @@ def data_table(headers, rows):
     carries a data-label attribute (its column header), which a mobile media
     query uses to render each row as a small stacked "label: value" card
     instead of a cramped horizontally-scrolling table -- see .data-table's
-    max-width: 640px rule in CSS_STYLE. No JS, pure CSS.
+    max-width: 640px rule in webui/src/styles/responsive.css. No JS, pure CSS.
     """
     if not rows:
         return empty_state()
@@ -848,7 +302,7 @@ def data_table(headers, rows):
 #
 # Every chart function below builds a plain-dict ECharts "option" (data only
 # -- colors are left as literal "var(--x)" strings, formatters as string
-# tokens; see dashboard/assets/dashboard.js's hydrateOption() for where those
+# tokens; see webui/src/js/hydrate.js's hydrateOption() for where those
 # get resolved into real values/functions client-side) and calls
 # register_chart() to get back an HTML placeholder div. build_dashboard()
 # drains the registry once per call and serializes it as a single
@@ -1109,7 +563,7 @@ def grouped_column_chart(categories, series):
         "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
         "legend": {"show": False},  # the HTML legend below is authoritative
         # A real, working greedy stagger for the last category's value
-        # labels (see dashboard.js's makeVerticalBarLabelStagger) -- the
+        # labels (see webui/src/js/hydrate.js's makeVerticalBarLabelStagger) -- the
         # declarative {"moveOverlap": "shiftY"} shorthand was tried first
         # and does not reliably move labels that have an explicit position
         # (confirmed by direct testing, not assumed).
@@ -1243,7 +697,7 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         # centered on its own dot instead of right/left-aligned inward.
         "grid": {"left": 55, "right": 55, "top": 50, "bottom": 40},
         "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
-        # A real, working greedy stagger (see dashboard.js's
+        # A real, working greedy stagger (see webui/src/js/hydrate.js's
         # makeRangeTrackLabelLayout) -- the declarative
         # {"moveOverlap": "shiftY"} shorthand was tried first and does not
         # reliably move labels that have an explicit position (confirmed
@@ -1772,8 +1226,12 @@ def section_header(bundle):
     <div class="meta">Bundle fetched {esc(fetched_at)} · StockLLM (research/decision-support only, not financial advice)</div>
   </div>
   <div class="topbar-actions">
-    <button type="button" class="chip" id="llm-export-btn" data-ticker="{esc(ticker)}"
+    <button type="button" class="chip chip-accent" id="llm-export-btn" data-ticker="{esc(ticker)}"
             title="Download a Markdown file with all this data plus instructions, to paste/upload into a free AI chat (Claude, ChatGPT, etc.) for an independent analysis">
+      <svg class="chip-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>
+      </svg>
       Download for AI Chat
     </button>
     <button type="button" class="chip" id="theme-toggle">Dark mode</button>
@@ -1798,7 +1256,7 @@ def section_nav(bundle):
     """
     A jump-to-section pill bar, primarily a mobile affordance (hidden on
     wide desktop viewports where the eye can already scan the whole page --
-    see the min-width: 900px rule in CSS_STYLE) so a phone reader isn't
+    see the min-width: 900px rule in webui/src/styles/base.css) so a phone reader isn't
     stuck scrolling through 9 sections to find the one they want.
     """
     links = "".join(f'<a href="#{anchor}">{esc(label)}</a>' for anchor, label in _NAV_ITEMS)
@@ -2744,8 +2202,9 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     # that (or any other HTML-special character), so this is safe against
     # arbitrary bundle content (filing text, tickers, anything) without
     # needing to HTML-escape it. Decoded back to text client-side in
-    # JS_SCRIPT's "Download for AI Chat" button handler.
+    # webui/src/js/llm-export.js's "Download for AI Chat" button handler.
     llm_export_b64 = base64.b64encode(build_llm_export_markdown(bundle).encode("utf-8")).decode("ascii")
+    built = load_built_assets()
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2760,7 +2219,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <link rel="apple-touch-icon" href="assets/icon.png">
 <title>{ticker} — StockLLM Research Dashboard</title>
 <script>{THEME_INIT_SCRIPT}</script>
-<style>{CSS_STYLE}</style>
+<link rel="stylesheet" href="assets/dist/{built['css']}">
 </head>
 <body>
 <div class="sticky-top">
@@ -2789,9 +2248,8 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 </footer>
 <script>window.__CHARTS__ = {charts_json};</script>
 <script type="text/plain" id="llm-export-data">{llm_export_b64}</script>
-<script src="assets/echarts.min.js"></script>
-<script src="assets/dashboard.js"></script>
-<script>{JS_SCRIPT}</script>
+<script src="assets/dist/echarts.min.js"></script>
+<script type="module" src="assets/dist/{built['js']}"></script>
 </body>
 </html>"""
 

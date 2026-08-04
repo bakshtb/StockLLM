@@ -1,0 +1,54 @@
+/* Phones: every fixed-column grid on this page was sized for desktop --
+   the page-level .grid's 460px column floor in particular forces the
+   whole page to scroll horizontally on any phone screen (observed live on
+   an iPhone: page rendered wider than the viewport, content clipped on
+   the right). Collapse all of them well before that point. */
+@media (max-width: 700px) {
+  /* Every mobile screenshot in this pass showed the same thing once the
+     chart-content fixes above landed: real, visible margin between the
+     screen edge and where the card border starts, doubled up again
+     between the card border and where content (the chart, its labels)
+     actually begins -- .wrap's page-level gutter plus .card's own
+     padding, stacked. Desktop can afford both; a 375px phone can't --
+     the two together were eating ~19% of total screen width before any
+     content started. Tighten both, not just one, since fixing only the
+     outer gutter would leave the inner one just as wide. */
+  .wrap { padding: 10px 10px; }
+  .card { padding: 16px 14px; }
+  .topbar { padding: 12px 10px; flex-wrap: wrap; }
+  .hero { padding: 16px 10px 4px 10px; }
+  .hero-price { font-size: 36px; }
+  .grid { grid-template-columns: 1fr !important; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .split-2col, .rec-thesis-grid { grid-template-columns: 1fr !important; }
+  .rec-top { flex-direction: column; align-items: flex-start; }
+
+  /* Dense multi-column tables (5-7 columns is common here -- rating
+     actions, insider transactions, institutional holders) are cramped or
+     horizontal-scrolling on a phone even full-width. Turn each row into a
+     small stacked card instead: no JS, data_table() already emits a
+     data-label on every <td> for exactly this. */
+  table.data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  table.data-table, table.data-table tbody, table.data-table tr, table.data-table td { display: block; width: 100%; }
+  table.data-table tr {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 4px 12px; margin-bottom: 10px; background: var(--page-plane);
+  }
+  table.data-table tr:last-child { margin-bottom: 0; }
+  table.data-table td {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gridline);
+    text-align: right; white-space: normal;
+  }
+  table.data-table td:last-child { border-bottom: none; }
+  table.data-table td::before {
+    content: attr(data-label);
+    font-size: 11.5px; font-weight: 600; color: var(--text-secondary);
+    text-align: left; flex-shrink: 0; padding-right: 12px;
+  }
+  .table-scroll { overflow-x: visible; }
+}
+@media (max-width: 420px) {
+  .kpi-row, .kpi-row.cols-2, .kpi-row.cols-3, .kpi-row.cols-4 { grid-template-columns: 1fr !important; }
+}

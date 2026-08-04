@@ -1,0 +1,112 @@
+/* Color roles -- verbatim from the dataviz skill's reference palette
+   (bundled-skills/.../dataviz/references/palette.md). Do not hand-tune a
+   hex here; if the brand palette ever changes, swap the values in this
+   file only. */
+:root, .viz-root {
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --page-plane:     #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --gridline:       #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --success-text:   #006300;
+
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #eda100; /* yellow */
+  --series-5: #e87ba4; /* magenta */
+  --series-6: #008300; /* green */
+  --series-7: #4a3aa7; /* violet */
+  --series-8: #e34948; /* red */
+
+  /* Diverging pairs here mean "good news vs. bad news" (beat/miss, bullish/
+     bearish), not neutral polarity/identity -- so they intentionally reuse
+     the status colors (green/red) rather than the dataviz skill's default
+     blue/red diverging pair, per explicit request for a green/red = good/bad
+     convention throughout this dashboard. */
+  --diverge-pos: #0ca30c;
+  --diverge-neg: #d03b3b;
+  --diverge-mid: #f0efec;
+
+  --status-good:     #0ca30c;
+  --status-warning:  #fab219;
+  --status-serious:  #ec835a;
+  --status-critical: #d03b3b;
+
+  /* Material elevation scale -- a light, near-invisible shadow at rest
+     (level 1, same weight the original .card shadow already used) rising
+     to a slightly more present shadow on hover/focus (level 2) and for
+     genuinely "floating above the page" elements like a FAB (level 3).
+     Kept subtle on purpose: dataviz skill's rule ("the data is the only
+     thing allowed to be loud") still applies -- these are depth cues, not
+     decoration. */
+  --elevation-1: 0 1px 2px rgba(11,11,11,0.03), 0 1px 10px rgba(11,11,11,0.025);
+  --elevation-2: 0 2px 4px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);
+  --elevation-3: 0 4px 8px rgba(11,11,11,0.08), 0 8px 28px rgba(11,11,11,0.10);
+  --motion-fast: 0.15s ease;
+  --motion-lift: 0.18s cubic-bezier(0.2, 0, 0, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:     #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --success-text:   #0ca30c;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+
+    --diverge-pos: #0ca30c;
+    --diverge-neg: #e66767;
+    --diverge-mid: #383835;
+
+    --elevation-1: 0 1px 2px rgba(0,0,0,0.16), 0 1px 10px rgba(0,0,0,0.14);
+    --elevation-2: 0 2px 4px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.24);
+    --elevation-3: 0 4px 8px rgba(0,0,0,0.30), 0 8px 28px rgba(0,0,0,0.34);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1:      #1a1a19;
+  --page-plane:     #0d0d0d;
+  --text-primary:   #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted:     #898781;
+  --gridline:       #2c2c2a;
+  --baseline:       #383835;
+  --border:         rgba(255,255,255,0.10);
+  --success-text:   #0ca30c;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+
+  --diverge-pos: #0ca30c;
+  --diverge-neg: #e66767;
+  --diverge-mid: #383835;
+
+  --elevation-1: 0 1px 2px rgba(0,0,0,0.16), 0 1px 10px rgba(0,0,0,0.14);
+  --elevation-2: 0 2px 4px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.24);
+  --elevation-3: 0 4px 8px rgba(0,0,0,0.30), 0 8px 28px rgba(0,0,0,0.34);
+}

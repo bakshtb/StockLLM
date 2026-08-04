@@ -12,14 +12,37 @@ counts, mobile CSS presence) -- see HANDOFF.md for the running list of
 bugs those checks caught.
 """
 
+import os
 import re
 
 import pytest
 from bs4 import BeautifulSoup
 
-from dashboard.generate_dashboard import build_dashboard
+from dashboard.generate_dashboard import build_dashboard, load_built_assets
 
 LEAK_PATTERNS = [r">None<", r"None%", r"\$None", r">nan<", r"nan%", r"\$nan"]
+
+_WEBUI_STYLES_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "webui", "src", "styles"
+)
+
+
+def _css_source_text() -> str:
+    """Concatenates webui/src/styles/*.css. CSS used to be inlined verbatim
+    into every generated page (CSS_STYLE); it now lives in real files,
+    linked via a hashed, minified build (see load_built_assets()). Tests
+    that check "does this CSS rule exist" read the *source* here rather
+    than the minified dist/ output -- the minifier legitimately reformats
+    and collapses shorthand (e.g. `padding: 10px 10px` -> `padding: 10px`),
+    which would make exact-substring assertions against the built file
+    fragile for reasons that have nothing to do with whether the rule
+    itself is correct."""
+    parts = []
+    for name in sorted(os.listdir(_WEBUI_STYLES_DIR)):
+        if name.endswith(".css"):
+            with open(os.path.join(_WEBUI_STYLES_DIR, name), encoding="utf-8") as f:
+                parts.append(f.read())
+    return "\n".join(parts)
 
 
 def assert_no_leaked_values(html: str):
@@ -58,9 +81,10 @@ class TestBuildDashboardAgainstEveryFixture:
             assert svg.get("height"), f"svg missing height attribute: {svg}"
 
     def test_mobile_responsive_css_present(self, sample_bundle):
-        html = build_dashboard(sample_bundle)
-        assert "@media (max-width: 700px)" in html
-        assert "min-width: 0" in html  # the CSS Grid blowout fix, HANDOFF.md #33
+        build_dashboard(sample_bundle)  # still exercises a real build, just not for its CSS
+        css = _css_source_text()
+        assert "@media (max-width: 700px)" in css
+        assert "min-width: 0" in css  # the CSS Grid blowout fix, HANDOFF.md #33
 
     def test_mobile_margins_are_tightened_not_stacked(self, sample_bundle):
         # Regression: found from a screenshot -- .wrap's page-level gutter
@@ -68,9 +92,10 @@ class TestBuildDashboardAgainstEveryFixture:
         # (the card padding was never reduced at all), eating ~19% of a
         # 375px screen's width before any content starts. Both must be
         # tightened together, not just the outer one.
-        html = build_dashboard(sample_bundle)
-        assert ".wrap { padding: 10px 10px; }" in html
-        assert ".card { padding: 16px 14px; }" in html
+        build_dashboard(sample_bundle)
+        css = _css_source_text()
+        assert ".wrap { padding: 10px 10px; }" in css
+        assert ".card { padding: 16px 14px; }" in css
 
     def test_page_overflow_hidden_safety_net_present(self, sample_bundle):
         # A real bug found on an actual iPhone: the page could be dragged
@@ -80,19 +105,20 @@ class TestBuildDashboardAgainstEveryFixture:
         # is the standard safety net; every intentional inner scroll
         # (table-scroll, section-nav, viz-chart) sets its own overflow-x so
         # this doesn't clip anything real.
-        html = build_dashboard(sample_bundle)
-        assert "overflow-x: hidden" in html
+        build_dashboard(sample_bundle)
+        assert "overflow-x: hidden" in _css_source_text()
 
     def test_echarts_registry_and_assets_wired_up(self, sample_bundle):
         # Charts are now rendered client-side by the vendored ECharts
         # runtime, not inline SVG -- responsive sizing/label collision/
         # gauge geometry are ECharts' job now, not hand-tuned CSS tiers.
-        # Confirm the registry payload and both vendored <script> tags
-        # actually land in the page.
+        # Confirm the registry payload and both the vendored echarts script
+        # and the built module bundle (webui/) actually land in the page.
         html = build_dashboard(sample_bundle)
+        built = load_built_assets()
         assert "window.__CHARTS__" in html
-        assert '<script src="assets/echarts.min.js"></script>' in html
-        assert '<script src="assets/dashboard.js"></script>' in html
+        assert '<script src="assets/dist/echarts.min.js"></script>' in html
+        assert f'<script type="module" src="assets/dist/{built["js"]}"></script>' in html
 
     def test_ios_home_screen_meta_tags_present(self, sample_bundle):
         # PWA/"Add to Home Screen" support -- this page (opened via the
@@ -469,8 +495,8 @@ class TestMobileSafeTables:
         assert checked_any_row
 
     def test_mobile_card_list_css_present(self, sample_bundle):
-        html = build_dashboard(sample_bundle)
-        assert "content: attr(data-label)" in html
+        build_dashboard(sample_bundle)
+        assert "content: attr(data-label)" in _css_source_text()
 
 
 def _minimal_bundle():

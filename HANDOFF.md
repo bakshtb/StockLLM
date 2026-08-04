@@ -1408,6 +1408,119 @@ StockLLM/
       fallbacks, and the market-cap correction's >10% threshold); full
       non-live suite green (475 passed, up from 460).
 
+43. **UI/UX overhaul Phase 1: moved CSS/JS out of Python strings into a
+    real `webui/` Vite project, added a Material Design visual layer**
+    (0.9.20) — user asked for a "100 steps forward" polish pass toward a
+    Google-Finance-like feel, explicitly requested Vite despite the
+    pushback below, and split the work into two phases (Phase 2 —
+    async `/run` + real progress/skeleton screens covering the actual
+    pipeline wait — is separate future work, not done here).
+    - **Pushed back on scope first, in writing, before touching code**:
+      pointed out that `/run` (`webapp/app.py`) is a single blocking POST
+      that already does the real, multi-second wait (data fetch +
+      optional multi-agent LLM calls) with zero feedback — skeleton
+      screens on the *dashboard page itself* only cover ECharts'
+      sub-second hydration, not that actual wait. User agreed to do
+      Phase 1 (visual layer, no backend change) now and Phase 2 later.
+    - **`CSS_STYLE`/`JS_SCRIPT`** (two ~500-line Python triple-quoted
+      string constants in `generate_dashboard.py`, previously f-string-
+      inlined into every page) **deleted entirely.** Mechanically split
+      into real files under `webui/src/styles/*.css` (tokens/base/
+      components/responsive/ripple/skeleton) and `webui/src/js/*.js`
+      (`hydrate.js` = the old `dashboard/assets/dashboard.js` verbatim,
+      as an ES module; `viz-toggle.js`/`chart-toolbar.js`/`llm-export.js`/
+      `theme-toggle.js`/`info-popovers.js` = the old `JS_SCRIPT`, split by
+      feature, each importing what it needs from `hydrate.js` directly
+      instead of going through the old `window.StockLLMCharts` global).
+      `dashboard/assets/echarts.min.js` and `dashboard/assets/dashboard.js`
+      (the old checked-in vendored copies) deleted — superseded by
+      `webui/public/echarts.min.js` (copied through by Vite's `publicDir`,
+      not bundled — still not run through Rollup, same reasoning as
+      before) and `hydrate.js`.
+    - **Vite chosen over "no build tool"** at the user's explicit
+      instruction (I'd recommended against it, since this add-on's Docker
+      image is built by HA Supervisor **on the device itself** — this
+      session's own environment confirmed to be HAOS on a Raspberry Pi via
+      its kernel string — and a Node build stage adds real time/RAM to
+      every image rebuild on that hardware). Mitigated with a **multi-stage
+      Dockerfile**: `node:22-slim` runs `npm ci && npm run build` in a
+      throwaway stage; the final `python:3.12-slim` stage only
+      `COPY --from=webui-builder`s the built `dist/` — no Node in the
+      shipped runtime image. `dashboard/generate_dashboard.py`'s new
+      `load_built_assets()` reads Vite's `dist/.vite/manifest.json` to
+      link the current hashed CSS/JS filenames; raises a clear
+      `RuntimeError` (not a broken page) if `dist/` doesn't exist yet.
+      `.github/workflows/tests.yml` now runs `npm ci && npm run build` in
+      `webui/` before `pytest`, since the whole dashboard-generation path
+      (and `webapp.app`'s module-level import) now depends on it.
+    - **`dashboard/assets.py`** rewritten: `ensure_vendored_assets()` now
+      copies the whole `dist/` tree (not fixed-name files) plus `icon.png`,
+      staleness-checked against `dist/.vite/manifest.json`'s own mtime
+      (individual output filenames are content-hashed by Vite, so a
+      per-file mtime check like the old one can't detect "the build
+      changed" the way it could for a fixed filename).
+    - **New Material layer**, scoped to stay additive (existing class
+      names/selectors untouched, so none of the ~40 section-rendering
+      functions in `generate_dashboard.py` needed markup changes): an
+      elevation token scale (`--elevation-1/2/3`, light+dark variants)
+      applied to `.card`/`.stat-tile`/`.strategy-card` with a hover lift;
+      a ~20-line dependency-free ripple effect (`webui/src/js/ripple.js`)
+      on `button.chip`/`.range-btn`/`.viz-toggle`/`.chart-disclosure
+      summary`; a shimmer skeleton on `.echarts-container` (real height
+      already set inline by `register_chart()`), turned off by
+      `hydrate.js`'s `initOne()` right after its `setOption()` call
+      succeeds — driven by the actual hydration completing, not a timer,
+      so it can't linger past a real wait or flash on a fast one; the
+      "Download for AI Chat" button restyled as a filled Material button
+      (`chip-accent` class + inline download-icon SVG) per the explicit
+      "prominent, styled action button" ask.
+    - **Two real bugs found while verifying, both pre-dating or introduced
+      by this change, fixed rather than routed around**: (1) `npm run
+      build` failed outright on `:root[data-theme="dark"]
+      .badge.warning,` immediately followed by `@media (...)` — invalid
+      CSS (a selector list can't end in an at-rule); browsers silently
+      dropped it, lightningcss correctly rejected it; rewritten as two
+      explicit selectors. (2) `generate_dashboard.py`'s CLI `main()` has
+      called `ensure_vendored_assets()` without ever importing it since
+      the function was first added (confirmed via `git log -p`) — never
+      caught because no test exercises `main()` directly, only
+      `build_dashboard()`; found while generating a real dashboard via the
+      CLI to verify this change, fixed with the missing import. (3) The
+      new `button.chip-accent` rule initially had lower CSS specificity
+      than the pre-existing `button.chip` (`.chip-accent` alone is (0,1,0)
+      vs. `button.chip`'s (0,1,1)) and silently never applied — caught by
+      checking the button's real computed `background-color` in headless
+      Chromium (it read back as `var(--surface-1)`, not the intended
+      accent blue), not assumed correct from the CSS alone; fixed by
+      qualifying the selector as `button.chip-accent`.
+    - **Verified for real, not assumed**: `npm run build` (Node 22
+      installed into this session's own sandbox specifically to run it,
+      since shipping unverified Vite config would be worse than the
+      config not existing) produces a working `manifest.json` + hashed
+      bundle; a real dashboard generated via the CLI (`python -m
+      dashboard.generate_dashboard`) and loaded in headless Chromium
+      confirmed all 9 charts hydrate to real SVG, the shimmer→hydrated
+      transition fires for every one, `.card`'s computed `box-shadow`
+      matches the new elevation token, the accent button's computed
+      background matches `--series-1` (after the specificity fix above),
+      clicking it spawns a real `.ripple-effect` element, and the theme
+      toggle correctly flips `data-theme` + re-applies chart theming with
+      zero JS console errors; `webapp.app`'s form/login page (which reads
+      `load_built_assets()` at import time) confirmed to render and link
+      the built CSS correctly via Flask's test client. Full non-live
+      pytest suite green (475 passed) after updating the handful of tests
+      that asserted CSS text was inlined directly into the HTML string
+      (now check `webui/src/styles/*.css` source instead of the minified
+      `dist/` output, since the minifier legitimately reformats/collapses
+      shorthand in ways unrelated to whether a rule is correct).
+    - **Not done here (Phase 2, separate future work)**: async `/run` +
+      a real progress/skeleton screen covering the actual pipeline wait;
+      the "SPA feel" ask is only partially addressed (existing in-page
+      interactions like chart range buttons already update without a
+      reload — that was true before this change too — but switching
+      tickers still requires a full backend run, which can't become a
+      snappy client-side interaction without Phase 2's async job queue).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

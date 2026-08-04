@@ -1,0 +1,283 @@
+/* Hero: the one focal point the page leads with, before any scrolling --
+   see dataviz skill's figure spec (>=48px, same sans, exactly one per view). */
+.hero { max-width: 1180px; margin: 0 auto; padding: 22px 24px 6px 24px; }
+.hero-price-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.hero-price { font-size: 48px; font-weight: 650; line-height: 1; letter-spacing: -0.5px; }
+.hero-price-row .delta { font-size: 17px; }
+.hero-delta-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-left: 4px; }
+.hero-rec { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.hero-rec-badge { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; padding: 5px 14px; border-radius: 8px; }
+.hero-rec-badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
+.hero-rec-badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
+.hero-rec-badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
+.hero-rec-badge.neutral { background: var(--gridline); color: var(--text-secondary); }
+.hero-rec-conf { font-size: 13px; color: var(--text-secondary); }
+
+.kpi-row {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 20px;
+}
+/* Fixed-column-count variants (used where auto-fit's column count would
+   otherwise vary awkwardly, e.g. a 3-tile MACD row). Named classes instead
+   of inline styles so the mobile media query below can collapse them. */
+.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+/* Two sub-panels side by side within one section (distinct from the
+   page-level .grid below, which arranges whole section cards). */
+.split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.split-2col > div { min-width: 0; } /* same grid-item auto-min-width fix, its direct children wrap SVG charts too */
+.stat-tile {
+  min-width: 0; /* same grid-item auto-min-width fix as .card, see there */
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+  box-shadow: var(--elevation-1);
+  transition: box-shadow var(--motion-lift), transform var(--motion-lift);
+}
+.stat-tile:hover { box-shadow: var(--elevation-2); transform: translateY(-1px); }
+.stat-tile .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+.stat-tile .value { font-size: 24px; font-weight: 650; margin-top: 4px; line-height: 1.15; letter-spacing: -0.2px; }
+.stat-tile .value.good { color: var(--status-good); }
+.stat-tile .value.critical { color: var(--status-critical); }
+.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.delta { font-weight: 600; }
+.delta.good { color: var(--success-text); }
+.delta.critical { color: var(--status-critical); }
+.delta.neutral { color: var(--text-secondary); }
+.status-box {
+  margin-top: 14px; padding: 14px 16px;
+  background: var(--gridline); border-radius: 12px;
+}
+.status-box-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 12.5px; font-weight: 650; color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.status-box .stat-tile { box-shadow: none; } /* the outer box already has its own depth cue */
+.status-box .stat-tile:hover { box-shadow: none; transform: none; }
+.status-box-caption { margin-top: 10px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+
+/* One self-contained box per backtest strategy -- recessed against its
+   parent .card's surface (var(--page-plane), the same token the mobile
+   data-table row style already uses for the identical "nested box" look),
+   not just a bare list of items. Deliberately its own class rather than
+   reusing .viz-card: a strategy card is a real sub-section (heading, prose,
+   a stat grid, a status panel, an optional chart), not a single chart's
+   wrapper. */
+.strategy-card-list { display: grid; gap: 16px; margin-top: 14px; }
+.strategy-card {
+  background: var(--page-plane); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px;
+  box-shadow: var(--elevation-1);
+  transition: box-shadow var(--motion-lift);
+}
+.strategy-card:hover { box-shadow: var(--elevation-2); }
+.strategy-card-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.strategy-card-title-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.strategy-card-title { font-size: 15px; font-weight: 650; color: var(--text-primary); letter-spacing: -0.1px; }
+.strategy-card .card-sub { margin-bottom: 0; }
+/* Always exactly 2 columns, at every screen width -- the generic .kpi-row's
+   own mobile breakpoints collapse to 1 column on narrow phones, which for
+   only 4 short numbers (Return/Buy & Hold/Win Rate/Trades) means 4 stacked
+   full-width tiles eating a lot of vertical space for very little content
+   each. A dedicated, non-collapsing class here fixes that specifically for
+   this section without touching every other .kpi-row site-wide. */
+.backtest-stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.chart-disclosure { margin-top: 14px; }
+.chart-disclosure > div { margin-top: 10px; }
+
+.price-chart-wrap { margin-top: 6px; }
+.chart-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.range-btn {
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; cursor: pointer; transition: background-color 0.15s ease;
+  position: relative; overflow: hidden;
+}
+.range-btn:hover { background: var(--gridline); }
+.range-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+
+/* Info icon + popover: a plain-language explainer on every metric */
+.info-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--gridline); color: var(--text-secondary);
+  font-size: 10px; font-weight: 700; font-style: normal;
+  border: none; cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
+  position: relative; transition: background-color 0.15s ease, color 0.15s ease;
+  overflow: visible; /* .info-pop is an absolutely-positioned child that must escape this box */
+}
+.info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
+.info-pop {
+  display: none; position: absolute; z-index: 100; left: 0; top: 22px;
+  width: 240px; max-width: min(240px, calc(100vw - 32px)); background: var(--text-primary); color: var(--surface-1);
+  font-size: 12px; font-weight: 400; line-height: 1.5; padding: 10px 12px;
+  border-radius: 8px; box-shadow: var(--elevation-3); text-align: left;
+  white-space: normal;
+}
+.info-ic.is-open .info-pop { display: block; }
+h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
+
+/* At-a-glance plain-language summary */
+.glance-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0 0; padding: 0; list-style: none; }
+.glance-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; border-radius: 10px; background: var(--page-plane);
+  border: 1px solid var(--border); font-size: 13.5px; line-height: 1.5;
+}
+.glance-icon {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.glance-icon.good { background: rgba(12,163,12,0.16); color: var(--status-good); }
+.glance-icon.critical { background: rgba(208,59,59,0.16); color: var(--status-critical); }
+.glance-icon.neutral { background: var(--gridline); color: var(--text-secondary); }
+.glance-item b { font-weight: 700; }
+
+.rec-card {
+  background: var(--surface-1); border: 2px solid var(--border);
+  border-radius: 14px; padding: 20px 22px; margin-bottom: 20px;
+}
+.rec-card.rec-good { border-color: var(--status-good); }
+.rec-card.rec-critical { border-color: var(--status-critical); }
+.rec-card.rec-warning { border-color: var(--status-warning); }
+.rec-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.rec-badge-big { font-size: 28px; font-weight: 700; letter-spacing: 0.3px; }
+.rec-badge-big.good { color: var(--status-good); }
+.rec-badge-big.critical { color: var(--status-critical); }
+.rec-badge-big.warning { color: #7a5200; }
+.rec-badge-big.neutral { color: var(--text-secondary); }
+.rec-meta { font-size: 12px; color: var(--text-muted); }
+.rec-body { margin-top: 14px; font-size: 14px; line-height: 1.6; }
+.rec-risks { margin: 10px 0 0 0; padding-left: 20px; }
+.rec-risks li { margin-bottom: 4px; }
+.rec-thesis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+.rec-thesis { min-width: 0; background: var(--page-plane); border-radius: 10px; padding: 12px 14px; font-size: 13px; }
+.rec-thesis .who { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+.rec-thesis.bull .who { color: var(--status-good); }
+.rec-thesis.bear .who { color: var(--status-critical); }
+.rec-skeptic { margin-top: 14px; font-size: 13px; }
+
+.rec-trend-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.rec-trend-row:last-child { margin-bottom: 0; }
+.rec-trend-period { width: 76px; flex-shrink: 0; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.rec-trend-chart { flex: 1; min-width: 0; }
+
+.grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+  align-items: start;
+}
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 22px;
+  /* A quiet, considered look -- a near-invisible shadow for depth, not a
+     heavy drop shadow (see dataviz skill: "the data is the only thing
+     allowed to be loud"). */
+  box-shadow: var(--elevation-1);
+  transition: box-shadow var(--motion-lift);
+  /* Grid items default to min-width: auto, meaning a track won't shrink
+     below the largest intrinsic content size of anything inside it --
+     content with an explicit pixel width can set exactly that floor,
+     silently forcing this card (and its whole grid track) wider than the
+     viewport regardless of any width:100% override further down. */
+  min-width: 0;
+}
+.card:hover { box-shadow: var(--elevation-2); }
+.card.full { grid-column: 1 / -1; }
+.card h2 { font-size: 16px; margin: 0 0 4px 0; font-weight: 650; letter-spacing: -0.1px; }
+.card .card-sub { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; }
+
+.viz-card { margin-top: 6px; }
+.viz-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.viz-card-head .viz-title { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+.viz-toggle {
+  font-size: 11px; color: var(--text-secondary); background: none;
+  border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer;
+  transition: background-color 0.15s ease;
+  position: relative; overflow: hidden;
+}
+.viz-toggle:hover { background: var(--gridline); }
+.chart-disclosure summary {
+  cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  list-style: none; display: inline-block; border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px; transition: background-color 0.15s ease;
+  position: relative; overflow: hidden;
+}
+.chart-disclosure summary::-webkit-details-marker { display: none; }
+.chart-disclosure summary:hover { background: var(--gridline); }
+.viz-card.is-table-view .viz-chart { display: none; }
+.viz-card:not(.is-table-view) .viz-table { display: none; }
+/* No chart at all (empty data) -- viz_card() renders the table with no
+   toggle button in that case; it must stay visible regardless of the
+   is-table-view class the card never gets. */
+.viz-card .viz-table.viz-table-only { display: block; }
+/* Defensive: charts always render at width:100% (never require scrolling
+   to see the whole chart -- see the mobile text-size override below
+   instead), but this catches anything unexpectedly wider than its card. */
+.viz-chart, .rec-trend-chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.echarts-container { width: 100%; }
+.viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
+.viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data-table th, table.data-table td {
+  text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline);
+  font-variant-numeric: tabular-nums;
+}
+table.data-table th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+table.data-table tr:last-child td { border-bottom: none; }
+table.data-table tbody tr { transition: background-color var(--motion-fast); }
+table.data-table tbody tr:hover { background: var(--page-plane); }
+.table-scroll { overflow-x: auto; }
+
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 999px; white-space: nowrap;
+}
+.badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
+.badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
+.badge.serious { background: rgba(236,131,90,0.18); color: #8a3311; }
+.badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
+.badge.neutral { background: var(--gridline); color: var(--text-secondary); }
+.badge.info { background: rgba(42,120,214,0.14); color: var(--series-1); }
+:root[data-theme="dark"] .badge.warning { color: #fab219; }
+:root[data-theme="dark"] .badge.serious { color: #ec835a; }
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .badge.warning { color: #fab219; }
+  :root:where(:not([data-theme="light"])) .badge.serious { color: #ec835a; }
+}
+
+.news-item { padding: 10px 0; border-bottom: 1px solid var(--gridline); }
+.news-item:last-child { border-bottom: none; }
+.news-item .headline { font-weight: 600; font-size: 13.5px; }
+.news-item .meta { font-size: 12px; color: var(--text-muted); margin: 2px 0 4px 0; }
+.news-item .snippet { font-size: 13px; color: var(--text-secondary); }
+.news-item a { color: var(--series-1); text-decoration: none; }
+.news-item a:hover { text-decoration: underline; }
+
+.filing-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); }
+.filing-row:last-child { border-bottom: none; }
+.filing-row .name { width: 130px; font-weight: 600; font-size: 13px; }
+.filing-row .info { font-size: 12.5px; color: var(--text-secondary); }
+
+.notes-list { margin: 0; padding: 0; list-style: none; }
+.notes-list li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); font-size: 13px; color: var(--text-secondary); }
+.notes-list li:last-child { border-bottom: none; }
+
+.empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
+
+footer.disclaimer {
+  max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
+  font-size: 12px; color: var(--text-muted); line-height: 1.6;
+}

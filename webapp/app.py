@@ -66,7 +66,7 @@ from data.bundle import build_research_bundle
 from agents.pipeline import run_pipeline
 from storage import db
 from storage.db import get_monthly_spend
-from dashboard.generate_dashboard import build_dashboard, CSS_STYLE, esc
+from dashboard.generate_dashboard import build_dashboard, load_built_assets, esc
 from dashboard.assets import ensure_vendored_assets
 
 app = Flask(__name__)
@@ -87,6 +87,12 @@ app.config["PERMANENT_SESSION_LIFETIME"] = dt.timedelta(days=30)
 # anything with a path separator or '..' up front avoids ever needing to
 # reason about path-traversal in the filename construction.
 TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
+
+# Read once at process start (same lifetime as PAGE_HEAD itself, which this
+# feeds into) -- see dashboard.generate_dashboard.load_built_assets() for
+# why a missing/unbuilt webui/ raises loudly here rather than rendering a
+# page with no styling.
+_built = load_built_assets()
 
 PAGE_HEAD = f"""<!DOCTYPE html>
 <html lang="en">
@@ -109,7 +115,8 @@ PAGE_HEAD = f"""<!DOCTYPE html>
   }} catch (e) {{}}
 }})();
 </script>
-<style>{CSS_STYLE}
+<link rel="stylesheet" href="assets/dist/{_built['css']}">
+<style>
 .form-card {{ max-width: 480px; margin: 60px auto 24px auto; }}
 .form-row {{ margin-bottom: 14px; }}
 .form-row label {{ display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }}
@@ -400,8 +407,8 @@ def output_file(filename):
     return send_from_directory(OUTPUT_DIR, filename)
 
 
-# Serves dashboard/assets/ (echarts.min.js, dashboard.js, icon.png, ...)
-# directly for pages that aren't inside an OUTPUT_DIR run folder -- namely
+# Serves dashboard/assets/ (dist/, icon.png, ...) directly for pages that
+# aren't inside an OUTPUT_DIR run folder -- namely
 # the index/form page below, which references them via a plain relative
 # path ("assets/icon.png") exactly like every generated dashboard already
 # does. That works unprefixed under both direct port access and Ingress:

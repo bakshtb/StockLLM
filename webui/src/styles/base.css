@@ -1,0 +1,74 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--page-plane);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Safety net: a sub-pixel of overflow anywhere on the page is invisible
+     in a desktop layout check but still lets iOS Safari elastically drag
+     the entire page sideways (rounds differently than Chromium). Every
+     intentionally-scrollable region on this page (table-scroll, the
+     section-nav pills, the mobile chart-scroll) sets its own overflow-x
+     on an inner element, so this doesn't clip anything real. */
+  overflow-x: hidden;
+}
+body { padding: 0 0 64px 0; }
+
+/* Topbar and the section nav below it stick together as one unit -- see
+   .sticky-top, the wrapper that actually holds position: sticky (putting
+   sticky on each separately would need the nav to know the topbar's exact
+   rendered height, which varies with content/wrapping). */
+.sticky-top { position: sticky; top: 0; z-index: 20; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 16px 24px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 { font-size: 20px; margin: 0; font-weight: 600; }
+.topbar .meta { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+
+.section-nav {
+  display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  padding: 8px 24px; background: var(--surface-1); border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.section-nav::-webkit-scrollbar { display: none; }
+.section-nav a {
+  flex-shrink: 0; font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+  text-decoration: none; background: var(--page-plane); border: 1px solid var(--border);
+  border-radius: 999px; padding: 6px 13px; white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.section-nav a:hover, .section-nav a:focus { color: var(--text-primary); border-color: var(--text-secondary); outline: none; }
+@media (min-width: 900px) { .section-nav { display: none; } }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+button.chip {
+  font: inherit; font-size: 13px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface-1); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 12px;
+  transition: background-color 0.15s ease, box-shadow var(--motion-fast);
+  position: relative; overflow: hidden;
+}
+button.chip:hover { background: var(--gridline); box-shadow: var(--elevation-1); }
+
+/* The one filled/prominent action button on the page ("Download for AI
+   Chat") -- a Material "filled button" treatment (solid fill, its own
+   elevation, lifts further on hover) to stand out from the plain outlined
+   .chip buttons around it, per explicit request to make this a prominent
+   styled action rather than just another chip. */
+/* button.chip-accent, not .chip-accent: a bare class selector here has
+   lower specificity than "button.chip" above (0,1,0 vs 0,1,1) and loses to
+   it regardless of source order, silently keeping the default chip
+   background -- confirmed live via headless Chromium (computed
+   background-color stayed var(--surface-1)) before this fix. */
+button.chip-accent {
+  background: var(--series-1); color: #fff; border-color: var(--series-1);
+  box-shadow: var(--elevation-1);
+}
+button.chip-accent:hover { background: var(--series-1); filter: brightness(1.08); box-shadow: var(--elevation-2); }
+.chip-accent .chip-icon { flex-shrink: 0; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 20px 24px; }

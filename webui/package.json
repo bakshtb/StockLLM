@@ -1,0 +1,14 @@
+{
+  "name": "stockllm-webui",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Build-time-only front-end assets for the StockLLM dashboard. Output is plain static JS/CSS -- nothing here runs at request time (see dashboard/generate_dashboard.py, which links the built files by reading dist/.vite/manifest.json).",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "devDependencies": {
+    "vite": "^8.2.0"
+  }
+}

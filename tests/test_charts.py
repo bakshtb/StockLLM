@@ -202,7 +202,7 @@ class TestGroupedColumnChart:
         # declarative labelLayout ({"moveOverlap": "shiftY"}) was tried
         # first and does NOT reliably move labels with an explicit position
         # (confirmed via direct browser testing, not assumed) -- a real
-        # working greedy stagger lives in dashboard.js instead
+        # working greedy stagger lives in webui/src/js/hydrate.js instead
         # (makeVerticalBarLabelStagger), referenced here by name.
         chart, table, legend = grouped_column_chart(
             ["Q1", "Q2"], [("Revenue", "var(--series-1)", [100, 119.8]), ("Net income", "var(--series-2)", [90, 112.2])]
@@ -271,7 +271,7 @@ class TestRangeMeter:
         # declarative labelLayout ({"moveOverlap": "shiftY"}) was tried
         # first and does NOT reliably move labels with an explicit position
         # (confirmed via direct browser testing, not assumed) -- a real
-        # working greedy stagger lives in dashboard.js instead
+        # working greedy stagger lives in webui/src/js/hydrate.js instead
         # (makeRangeTrackLabelLayout), referenced here by name.
         chart, table, legend = range_meter(low=215, mean=320, median=325, high=400, current=393)
         option = get_chart_option(chart)

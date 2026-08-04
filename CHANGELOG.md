@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.20
+
+- Add: UI/UX overhaul Phase 1 -- CSS/JS moved out of Python string
+  constants into a real `webui/` Vite project (multi-stage Dockerfile,
+  Node only in a throwaway build stage, no Node in the shipped image), plus
+  a Material Design visual layer: card elevation, a dependency-free ripple
+  effect, a chart-loading shimmer skeleton, and a restyled "Download for AI
+  Chat" button. No section markup or dashboard behavior changed -- see
+  HANDOFF.md item 43 for the full breakdown, including two real bugs found
+  and fixed while verifying (an invalid CSS selector that broke the new
+  build, and a pre-existing missing import in the CLI's `main()`).
+
 ## 0.9.19
 
 - Add: `CLAUDE.md` behavioral guidelines (from multica-ai/andrej-karpathy-

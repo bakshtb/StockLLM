@@ -3,3 +3,9 @@ __pycache__/
 .env
 storage/*.db
 .claude/settings.local.json
+
+# webui/ is a Vite project (see webui/vite.config.js) -- built output goes
+# to dashboard/assets/dist/, produced by `npm ci && npm run build` (or the
+# Docker image's builder stage; see Dockerfile). Neither is checked in.
+webui/node_modules/
+dashboard/assets/dist/
