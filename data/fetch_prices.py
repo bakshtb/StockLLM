@@ -66,7 +66,19 @@ def fetch_price_summary(ticker: str) -> dict:
         raise ValueError(f"No usable price history found for ticker '{ticker}' (all rows had missing close data).")
 
     closes = hist["Close"]
+    # `.history()`'s last daily bar can genuinely lag a live/most-recent
+    # quote by up to a full session -- confirmed directly on a real ticker
+    # (MBLY): history's last close was $7.94 while the live quote was
+    # already $8.08. Prefer the live quote (fast_info, a lighter/faster
+    # call than the full .info) when it's available; fall back to the
+    # historical close only if fast_info is missing/broken for this ticker.
     current_price = round(float(closes.iloc[-1]), 2)
+    try:
+        live_price = tk.fast_info.get("lastPrice")
+        if live_price:
+            current_price = round(float(live_price), 2)
+    except Exception:
+        pass
     ma20 = round(float(closes.tail(20).mean()), 2) if len(closes) >= 20 else None
     ma50 = round(float(closes.tail(50).mean()), 2) if len(closes) >= 50 else None
     ma200 = round(float(closes.tail(200).mean()), 2) if len(closes) >= 200 else None

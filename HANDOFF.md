@@ -1347,6 +1347,67 @@ StockLLM/
       `tests/test_llm_export.py`; full non-live suite green (460 passed,
       up from 396).
 
+42. **Fixed two real, user-reported data-accuracy bugs on MBLY: a stale
+    price and a market cap understated by ~3.4x** (0.9.18) — user
+    reported the dashboard showing $7.94/$2.04B while the real numbers
+    (market closed) were $8.08/$6.87B. Root-caused both directly against
+    live data before writing any fix, not guessed:
+    - **Stale price**: `data/fetch_prices.py`'s `current_price` came only
+      from `.history()`'s last daily bar, which can lag a live quote by up
+      to a session — confirmed directly (`.history()`'s last close was
+      $7.94, yfinance's own live quote field was already $8.08 at the same
+      moment). Fixed by preferring `tk.fast_info.get("lastPrice")`
+      (a lighter/faster call than full `.info`) when available, falling
+      back to the historical close only if `fast_info` is missing/broken
+      for that ticker. **The exact same bug existed independently a
+      second time** in `backtest/engine.py`'s own separate `_fetch_history()`
+      (used for the Strategy Backtests section's "current status"
+      readouts) — caught by noticing $7.94 still appearing there after
+      the first fix, not assumed to be covered by it. Fixed the same way,
+      patching only the last bar's Close so past backtested trades are
+      unaffected.
+    - **Market cap understated ~3.4x**: read the actual MBLY 10-Q filing
+      text directly (not guessed) and found Mobileye has a **dual-class
+      share structure** — 252,419,583 Class A shares (publicly traded,
+      all yfinance's `sharesOutstanding`/`marketCap` fields ever reflect)
+      plus 597,768,015 Class B shares, held entirely by Intel and never
+      traded. yfinance isn't exactly wrong, it's just silently blind to
+      the untraded class. New `data/fetch_shares_outstanding.py`:
+      `fetch_true_shares_outstanding(ticker)` fetches the most recent
+      10-Q/10-K from SEC EDGAR (reusing `data/edgar_utils.py`'s existing
+      CIK-lookup/rate-limiting helpers) and regex-matches the balance
+      sheet's `"Class X common stock: ... shares issued and outstanding:
+      N"` lines (standard boilerplate phrasing across filings) — sums
+      them only when **at least two distinct classes** are found;
+      returns `None` (meaning "trust yfinance's own figure, it's already
+      complete") for the single-class majority case, never guessing from
+      one ambiguous match. `data/fetch_fundamentals.py` now takes an
+      optional `current_price` param (passed from `data/bundle.py`, which
+      already fetches price first) and recomputes `market_cap` as
+      `true_shares × current_price` only when the filing-derived total is
+      genuinely larger (>10%) than yfinance's own count — a small
+      date-mismatch between two data sources isn't treated as a real gap.
+      Surfaces a `data_notes` entry explaining exactly what was corrected
+      and why, rather than silently changing the number.
+    - **Found and fixed an unrelated, pre-existing bug while running the
+      full live test suite to verify** (not something introduced by this
+      change): `tests/test_live_bundle.py`'s `EXPECTED_TOP_LEVEL_KEYS`
+      constant was missing `"backtests"`, left stale since that bundle
+      key was added in item 37 — live tests aren't run automatically, so
+      this had been silently broken since then. Fixed.
+    - Verified against real MBLY data end-to-end: both the dashboard's
+      top-level KPI tiles and the Strategy Backtests section's own
+      "current status" price references now consistently show $8.08 (not
+      $7.94) and $6.79B (not $2.04B, ~1% off the user's reported $6.87B —
+      the small remaining gap is because the balance sheet's Class A count
+      is dated a few weeks earlier than the cover page's, a defensible,
+      disclosed tradeoff, not an error). 15 new tests in
+      `tests/test_price_and_market_cap_accuracy.py` (fast_info preference/
+      fallback, the share-class regex against real filing text, multi-
+      class detection and its single-class/no-filing/network-failure
+      fallbacks, and the market-cap correction's >10% threshold); full
+      non-live suite green (475 passed, up from 460).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

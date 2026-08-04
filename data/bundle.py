@@ -67,7 +67,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
 
     # --- Stage 1: raw data, always runs, no LLM calls ---
     price = fetch_price_summary(ticker)  # raises ValueError if ticker invalid -- do this first, fail fast
-    fundamentals = fetch_fundamentals(ticker)
+    fundamentals = fetch_fundamentals(ticker, current_price=price.get("current_price"))
     analyst_ratings = fetch_analyst_ratings(ticker)
     earnings_estimates = fetch_earnings_estimates(ticker)
     relative_performance = fetch_relative_performance(
@@ -153,6 +153,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True) -> tuple[dict, 
         "filings_digest": filings_digest.get("digest"),
         "data_notes": [
             n for n in [
+                fundamentals.get("note"),
                 insider.get("note"), institutional.get("note"), analyst_ratings.get("note"),
                 earnings_estimates.get("note"), relative_performance.get("note"),
                 dividends_buybacks.get("note"), options_sentiment.get("note"), macro_context.get("note"),

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.18
+
+- Fix: real, user-reported data accuracy bugs on MBLY -- dashboard showed
+  $7.94/$2.04B while the real numbers were $8.08/$6.87B. Current price now
+  prefers a live quote (yfinance's `fast_info`) over `.history()`'s last
+  daily bar, which can lag by up to a session -- fixed in both
+  `data/fetch_prices.py` and a second, independent copy of the same bug in
+  `backtest/engine.py`. Market cap was silently understated ~3.4x for
+  Mobileye specifically because it has a dual-class share structure
+  (252M publicly-traded Class A, 598M Class B held entirely by Intel and
+  never traded) that yfinance's own fields don't account for -- new
+  `data/fetch_shares_outstanding.py` reads the real total from the actual
+  10-Q/10-K balance sheet on SEC EDGAR and corrects market cap when a
+  genuine multi-class structure is found, with a data-quality note
+  explaining the correction. See HANDOFF.md item 42.
+
 ## 0.9.17
 
 - Add: a "Download for AI Chat" button on the dashboard, exporting the

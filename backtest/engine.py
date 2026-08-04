@@ -39,9 +39,27 @@ MIN_TRADING_DAYS = 210  # a bit over 200 -- below this, the 200-day-MA
 
 
 def _fetch_history(ticker: str) -> pd.DataFrame:
-    hist = yf.Ticker(ticker).history(period=HISTORY_PERIOD)
+    tk = yf.Ticker(ticker)
+    hist = tk.history(period=HISTORY_PERIOD)
     hist = hist[hist["Close"].notna()]
-    return hist[["Open", "High", "Low", "Close", "Volume"]]
+    hist = hist[["Open", "High", "Low", "Close", "Volume"]]
+    # Same fix as data/fetch_prices.py's current_price, applied here too:
+    # `.history()`'s last daily bar can lag a live quote by up to a
+    # session. This module's "current status" feature (backtest/
+    # strategies.py's per-strategy status_fn) reads the last bar's Close
+    # directly as "today's price" -- if left stale, every "what would this
+    # rule do right now" readout in the Strategy Backtests section would
+    # silently disagree with the (already-fixed) price shown everywhere
+    # else on the dashboard. Only the last bar's Close is patched -- the
+    # rest of history is unaffected, so past backtested trades don't change.
+    if not hist.empty:
+        try:
+            live_price = tk.fast_info.get("lastPrice")
+            if live_price:
+                hist.iloc[-1, hist.columns.get_loc("Close")] = float(live_price)
+        except Exception:
+            pass
+    return hist
 
 
 def _clean_stat(value):

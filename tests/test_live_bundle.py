@@ -38,7 +38,7 @@ EXPECTED_TOP_LEVEL_KEYS = {
     "balance_sheet_health", "income_statement", "insider_transactions",
     "institutional_ownership", "news_headlines", "news_articles_raw",
     "filings_raw", "form144_notices", "beneficial_ownership", "proxy_raw",
-    "fmp_valuation", "finnhub_signals",
+    "fmp_valuation", "finnhub_signals", "backtests",
     "news_digest", "filings_digest", "data_notes",
 }
 

@@ -6,6 +6,8 @@ import datetime as dt
 
 import yfinance as yf
 
+from data.fetch_shares_outstanding import fetch_true_shares_outstanding
+
 
 def _fmt_market_cap(value):
     if not value:
@@ -34,7 +36,7 @@ def _pct_change(current, prior):
     return round((current / prior - 1) * 100, 2)
 
 
-def fetch_fundamentals(ticker: str) -> dict:
+def fetch_fundamentals(ticker: str, current_price: float | None = None) -> dict:
     tk = yf.Ticker(ticker)
     try:
         info = tk.info or {}
@@ -54,10 +56,36 @@ def fetch_fundamentals(ticker: str) -> dict:
     except Exception:
         pass
 
+    # yfinance's marketCap/sharesOutstanding only ever reflect the
+    # publicly-traded share class -- for a company with a separate,
+    # never-traded control class (e.g. Mobileye: Intel holds 100% of
+    # Class B), that silently understates true market cap by however much
+    # that other class is worth. Confirmed for real on MBLY: yfinance's
+    # own count was ~3.4x too low. Only overrides when a genuine
+    # multi-class structure is found in the actual 10-Q/10-K balance
+    # sheet (see fetch_shares_outstanding.py) AND the correction is
+    # clearly meaningful (>10% higher), not just noise between two
+    # slightly-different-dated data sources.
+    market_cap_value = info.get("marketCap")
+    shares_note = None
+    yf_shares = info.get("sharesOutstanding")
+    if current_price:
+        shares_check = fetch_true_shares_outstanding(ticker)
+        true_shares = shares_check.get("total_shares")
+        if true_shares and (not yf_shares or true_shares > yf_shares * 1.1):
+            market_cap_value = true_shares * current_price
+            by_class_str = " + ".join(f"Class {k}: {v:,}" for k, v in sorted(shares_check["by_class"].items()))
+            shares_note = (
+                f"Market cap corrected for a multi-class share structure -- yfinance's own figure only "
+                f"counts the publicly-traded class ({yf_shares:,} shares if reported); the actual "
+                f"{shares_check['source_filing']} balance sheet shows {by_class_str} = "
+                f"{true_shares:,} total shares, used here instead."
+            )
+
     return {
         "pe_ratio": info.get("trailingPE"),
         "forward_pe": info.get("forwardPE"),
-        "market_cap": _fmt_market_cap(info.get("marketCap")),
+        "market_cap": _fmt_market_cap(market_cap_value),
         "sector": info.get("sector"),
         "industry": info.get("industry"),
         "next_earnings_date": next_earnings,
@@ -75,6 +103,7 @@ def fetch_fundamentals(ticker: str) -> dict:
             "short_pct_of_float": info.get("shortPercentOfFloat"),
             "as_of_date": _epoch_to_date(info.get("dateShortInterest")),
         },
+        "note": shares_note,
     }
 
 
