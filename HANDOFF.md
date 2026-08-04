@@ -1271,6 +1271,82 @@ StockLLM/
       price series is available yet); full non-live suite green (396
       passed, up from 386).
 
+41. **Added a "Download for AI Chat" button: exports the whole bundle as a
+    Markdown file for a free LLM chat** (0.9.17) — user's ask, with a
+    real underlying motivation worth stating explicitly: a dry run (every
+    data field in the bundle) is free; the Bull/Bear/Skeptic/Judge full
+    run costs a little in API calls. This lets someone get an equivalent
+    bull/bear/fair-value analysis for free, by pasting/uploading this
+    file into a free-tier chat UI (Claude.ai, ChatGPT, etc. — no API key
+    needed) instead of paying for our own agents to do it. The
+    instructions embedded in the file reuse the exact same grounding
+    rules `agents/prompts/bull.md`/`bear.md`/`judge.md` already establish
+    ("only use facts present in the document, do not use prior training-
+    data knowledge about this company," a fair-value range derived from
+    real figures not invented ones, an honest data-quality caveat) —
+    condensed into one instructions block a single general-purpose chat
+    model can follow in one pass, since a free chat can't run our actual
+    multi-agent pipeline.
+    - **Markdown, not JSON** — deliberate choice: this file is meant to be
+      pasted/uploaded into a chat UI a human reads, not parsed
+      programmatically. Headers/tables/bullet lists read naturally to both
+      a human skimming it and an LLM reasoning over it; a giant single-line
+      JSON blob risks getting mangled by a paste box and reads worse to
+      both audiences.
+    - **Deliberately excludes StockLLM's own AI Recommendation** even when
+      a bundle has one (`dashboard/llm_export.py`'s module docstring
+      explains why) — the whole point is an independent second read from a
+      different model, not a summary of what we already concluded; feeding
+      the free chat our own verdict would risk anchoring it rather than
+      getting a genuinely separate opinion.
+    - **New `dashboard/llm_export.py`**: `build_llm_export_markdown(bundle)`
+      renders every bundle section (price/technicals, fundamentals,
+      analyst ratings, backtests, relative performance, financials,
+      ownership/insider activity, dividends/options/macro/social
+      sentiment, independent valuation signals, news, filings, data
+      quality notes) as Markdown, prefixed with the instructions block.
+      Prefers `news_digest`/`filings_digest` when a full run produced them
+      (shorter, already AI-summarized); falls back to the raw headlines/
+      filing text on a dry run, which is the common case this feature is
+      actually for.
+    - **Caught and fixed several real field-name bugs during manual
+      review, not from a failing test** — comparing the rendered Markdown
+      against real fixture output line by line surfaced: earnings surprise
+      used `estimated_eps`/`actual_eps` (real fields are `eps_estimate`/
+      `eps_actual`), insider transactions used `insider`/`nature`/`value`
+      (real fields are `owner`/`direction`/`price_per_share`), Form 144
+      used entirely wrong field names, and beneficial ownership read from
+      a `filers` key that doesn't exist at all (the real bundle key is
+      `filings`, confirmed by reading `data/fetch_beneficial_ownership.py`
+      directly rather than guessing twice). Also caught: the Analyst
+      section was duplicating the entire Fundamentals section verbatim —
+      trimmed to just the analyst-specific content (rating actions,
+      earnings surprises, EPS trend). Added
+      `tests/test_llm_export.py::TestFieldNameCorrectnessAgainstRealFixture`
+      specifically to pin real fixture values against these exact fields
+      so this can't silently regress again.
+    - **Base64, not raw/escaped text, for embedding the export into the
+      HTML** (`build_dashboard()`'s own comment explains this) — a
+      `<script>` tag's content is parsed as raw text by the HTML parser
+      itself, looking only for a literal `</script` terminator, regardless
+      of its `type` attribute; base64's alphabet can never produce that
+      sequence (or any other HTML-special character), so this is safe
+      against arbitrary bundle content (raw filing text, tickers, anything)
+      without needing to HTML-escape it at all. Decoded back to text
+      client-side via `atob()` + `TextDecoder` in the new "Download for AI
+      Chat" button handler in `JS_SCRIPT`, which builds a `Blob` and
+      triggers a real file download via a temporary `<a download>` — no
+      server round-trip, works identically whether the page came from the
+      CLI or the webapp.
+    - Verified end-to-end in headless chromium against the real generated
+      dashboard (not just unit tests): confirmed the embedded base64
+      decodes to the exact same Markdown `build_llm_export_markdown()`
+      produces directly, and that clicking the real button in the real
+      page correctly triggers the anchor's `.click()` with
+      `download="AAPL-research-export.md"` set. 25 new tests in
+      `tests/test_llm_export.py`; full non-live suite green (460 passed,
+      up from 396).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

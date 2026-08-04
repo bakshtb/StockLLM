@@ -25,10 +25,13 @@ calls and no judgment calls of its own about the data.
 """
 
 import argparse
+import base64
 import html
 import json
 import sys
 import threading
+
+from dashboard.llm_export import build_llm_export_markdown
 
 # ============================================================================
 # Color roles -- verbatim from the dataviz skill's reference palette
@@ -554,6 +557,31 @@ JS_SCRIPT = """
       });
     });
   });
+
+  // "Download for AI Chat": decodes the base64 Markdown export embedded
+  // in #llm-export-data (see build_dashboard()'s comment on why base64,
+  // not raw/escaped text) and triggers a real file download via a
+  // Blob + temporary <a download>, entirely client-side -- no server
+  // round-trip, works the same whether this page came from the CLI or
+  // the webapp.
+  var exportBtn = document.getElementById('llm-export-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function () {
+      var dataEl = document.getElementById('llm-export-data');
+      if (!dataEl) return;
+      var bytes = Uint8Array.from(atob(dataEl.textContent), function (c) { return c.charCodeAt(0); });
+      var text = new TextDecoder('utf-8').decode(bytes);
+      var blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = (exportBtn.getAttribute('data-ticker') || 'stockllm') + '-research-export.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
 
   var themeBtn = document.getElementById('theme-toggle');
   if (themeBtn) {
@@ -1744,6 +1772,10 @@ def section_header(bundle):
     <div class="meta">Bundle fetched {esc(fetched_at)} · StockLLM (research/decision-support only, not financial advice)</div>
   </div>
   <div class="topbar-actions">
+    <button type="button" class="chip" id="llm-export-btn" data-ticker="{esc(ticker)}"
+            title="Download a Markdown file with all this data plus instructions, to paste/upload into a free AI chat (Claude, ChatGPT, etc.) for an independent analysis">
+      Download for AI Chat
+    </button>
     <button type="button" class="chip" id="theme-toggle">Dark mode</button>
   </div>
 </div>"""
@@ -2706,6 +2738,14 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     ]
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
     charts_json = json.dumps(_drain_chart_registry())
+    # Base64, not raw/escaped text: a <script> tag's content is parsed as
+    # raw text by the HTML parser regardless of `type`, looking only for a
+    # literal "</script" terminator -- base64's alphabet can never contain
+    # that (or any other HTML-special character), so this is safe against
+    # arbitrary bundle content (filing text, tickers, anything) without
+    # needing to HTML-escape it. Decoded back to text client-side in
+    # JS_SCRIPT's "Download for AI Chat" button handler.
+    llm_export_b64 = base64.b64encode(build_llm_export_markdown(bundle).encode("utf-8")).decode("ascii")
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2748,6 +2788,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
   unmodified data, not re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
 </footer>
 <script>window.__CHARTS__ = {charts_json};</script>
+<script type="text/plain" id="llm-export-data">{llm_export_b64}</script>
 <script src="assets/echarts.min.js"></script>
 <script src="assets/dashboard.js"></script>
 <script>{JS_SCRIPT}</script>

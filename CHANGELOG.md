@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.17
+
+- Add: a "Download for AI Chat" button on the dashboard, exporting the
+  entire bundle as a Markdown file with instructions for a free LLM chat
+  (Claude.ai, ChatGPT, etc.) to follow -- the same grounding rules
+  (only use facts in the document, not training-data knowledge) and
+  bull/bear/fair-value structure our own paid agents use, condensed into
+  one instructions block. Since a dry run is free and the full AI pipeline
+  costs a little, this lets someone get an equivalent independent analysis
+  for free via a chat UI instead. Deliberately excludes StockLLM's own AI
+  Recommendation, to keep the outside read genuinely independent. See
+  HANDOFF.md item 41 for several real field-name bugs caught and fixed
+  during manual review before this shipped.
+
 ## 0.9.16
 
 - Add: a real, interactive price chart to the Price & Technicals section --
