@@ -1587,6 +1587,57 @@ StockLLM/
       correctly (200, real content, not the wrong-path 404), and the page
       redirects to the finished dashboard on completion.
 
+45. **UI/UX overhaul Phase 3: flattened KPI chrome, segmented sub-tabs,
+    2-column news** (0.9.22) — user asked to screenshot the real Google
+    Finance site (installed Chromium in this sandbox and captured its
+    Overview/Analysis/Earnings/Financials/Holdings tabs for a real AAPL
+    quote, not from memory) and redesign our dashboard "based only on our
+    JSON" against that reference. First checked what the bundle actually
+    contains end-to-end (every top-level key in a real AAPL.json) and
+    which of Google's patterns we'd already independently matched or
+    exceeded (their Buy/Hold/Sell donut is *less* rigorous than our
+    existing diverging stacked bar for the same data — see item in
+    section_analyst's `rec_trend_html`, a deliberate dataviz-skill-driven
+    choice from before this pass — kept ours, didn't regress to a donut
+    just to look more like the reference) before changing anything.
+    - **The real gap wasn't data usage** (the bundle's ~20 top-level
+      sections were already nearly all surfaced) **or chart
+      sophistication** (already ahead of Google's) **— it was chrome
+      density.** Google puts zero border/shadow around a bare number
+      (Overview's stat grid, Earnings' KPI row); every one of our
+      `.stat-tile`s had both. Fixed by making `.stat-tile` bare typography
+      site-wide (`webui/src/styles/components.css`) — one CSS rule, no
+      Python changes needed, since every KPI row already used the shared
+      `stat_tile()` helper. Removed the now-redundant `.status-box
+      .stat-tile { box-shadow: none }` override this made dead.
+    - **New `subtabs()` component** (Python helper next to `viz_card()`
+      in `generate_dashboard.py`; `webui/src/js/subtabs.js`; CSS reuses
+      `.range-btn`'s exact pill look on purpose, so it reads as the same
+      control language as the existing chart range selector, not a second
+      one) — splits two sections that had become a dense 2-column wall of
+      unrelated tables into focused views, mirroring Google's Financials/
+      Holdings sub-tabs: **Ownership** → Institutional / Insiders;
+      **Dividends, Buybacks, Options & Sentiment** → 4 tabs, one per
+      topic. Every panel is fully server-rendered (only the first has
+      `is-active` by default), so a JS-disabled reader still sees a
+      complete, correctly-laid-out first tab — the JS only toggles
+      visibility, nothing is fetched or built client-side.
+    - **News → `.news-grid` two-column CSS layout**, matching Google's
+      news list; collapses to one column under the existing 700px mobile
+      breakpoint in `responsive.css`.
+    - **Verified for real**, not assumed from the diff: `npm run build`
+      clean; full non-live pytest suite green (480 passed, unchanged --
+      confirms no test coverage regressed and none needed updating);
+      regenerated a real AAPL dashboard from the current code and served
+      it over a local HTTP server (not `file://`, which blocks ES module
+      script loading via CORS and would've shown broken charts) in
+      headless Chromium — screenshotted light mode, dark mode (toggled
+      live), and a 390px mobile viewport; used Puppeteer to actually click
+      the new Institutional/Insiders and Dividends/Options/Macro/
+      Sentiment tabs and confirmed the right panel shows, ripple fires,
+      and no console errors beyond the browser's own automatic (and
+      irrelevant) `favicon.ico` 404.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.22
+
+- Add: UI/UX overhaul Phase 3 -- redesigned against a real screenshot
+  comparison with Google Finance (captured its Overview/Analysis/Earnings/
+  Financials/Holdings tabs for a live AAPL quote). The actual gap turned
+  out to be chrome density, not data usage or chart sophistication (both
+  already ahead of Google's on this dashboard): flattened every `.stat-
+  tile` to bare typography (no border/shadow) to match Google's borderless
+  KPI rows, added a reusable segmented pill sub-tabs component to split
+  the Ownership and Dividends/Buybacks/Options/Sentiment sections out of
+  a dense 2-column wall into focused views, and switched News to a
+  2-column grid. All client-side/CSS, no backend or data changes -- see
+  HANDOFF.md item 45.
+
 ## 0.9.21
 
 - Add: UI/UX overhaul Phase 2 -- `/run` no longer blocks the request for

@@ -4,7 +4,7 @@
 // `overflow: visible`, which a contained ripple can't share) and anything
 // added to the page after this runs (there is no dynamic content here --
 // every button already exists in the server-rendered HTML).
-var RIPPLE_SELECTOR = 'button.chip, .range-btn, .viz-toggle, .chart-disclosure summary';
+var RIPPLE_SELECTOR = 'button.chip, .range-btn, .viz-toggle, .chart-disclosure summary, .subtab-btn';
 
 function spawnRipple(el, x, y) {
   var rect = el.getBoundingClientRect();

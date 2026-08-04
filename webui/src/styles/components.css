@@ -30,12 +30,12 @@
 .split-2col > div { min-width: 0; } /* same grid-item auto-min-width fix, its direct children wrap SVG charts too */
 .stat-tile {
   min-width: 0; /* same grid-item auto-min-width fix as .card, see there */
-  background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px 16px;
-  box-shadow: var(--elevation-1);
-  transition: box-shadow var(--motion-lift), transform var(--motion-lift);
+  padding: 4px 0;
+  /* Deliberately no border/shadow/hover-lift -- a bare number is typography,
+     not a distinct object (see Google Finance's Overview/Earnings KPI rows:
+     zero chrome around individual stats, chrome reserved for genuinely
+     grouped panels -- .card/.viz-card/.strategy-card keep their elevation). */
 }
-.stat-tile:hover { box-shadow: var(--elevation-2); transform: translateY(-1px); }
 .stat-tile .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
 .stat-tile .value { font-size: 24px; font-weight: 650; margin-top: 4px; line-height: 1.15; letter-spacing: -0.2px; }
 .stat-tile .value.good { color: var(--status-good); }
@@ -54,8 +54,6 @@
   font-size: 12.5px; font-weight: 650; color: var(--text-secondary);
   margin-bottom: 10px;
 }
-.status-box .stat-tile { box-shadow: none; } /* the outer box already has its own depth cue */
-.status-box .stat-tile:hover { box-shadow: none; transform: none; }
 .status-box-caption { margin-top: 10px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
 
 /* One self-contained box per backtest strategy -- recessed against its
@@ -100,6 +98,25 @@
 }
 .range-btn:hover { background: var(--gridline); }
 .range-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+
+/* Segmented pill tabs: splits one crowded section into focused sub-views
+   (see webapp's section_ownership/section_dividends_options_macro_social)
+   -- same pill visual language as .range-btn above on purpose, so it reads
+   as the same control, not a second competing pattern. All panels already
+   exist server-rendered (see subtabs() in generate_dashboard.py); only the
+   first has is-active by default, so a JS-disabled reader still sees a
+   complete, correctly-laid-out first tab, just with no way to switch. */
+.subtabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.subtab-btn {
+  font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+  background: none; border: 1px solid var(--border); border-radius: 999px;
+  padding: 5px 14px; cursor: pointer; transition: background-color 0.15s ease;
+  position: relative; overflow: hidden;
+}
+.subtab-btn:hover { background: var(--gridline); }
+.subtab-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+.subtab-panel { display: none; }
+.subtab-panel.is-active { display: block; }
 
 /* Info icon + popover: a plain-language explainer on every metric */
 .info-ic {
@@ -258,6 +275,9 @@ table.data-table tbody tr:hover { background: var(--page-plane); }
   :root:where(:not([data-theme="light"])) .badge.serious { color: #ec835a; }
 }
 
+/* Two columns on wide screens (matches Google Finance's news layout);
+   collapses to one in responsive.css's mobile breakpoint. */
+.news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
 .news-item { padding: 10px 0; border-bottom: 1px solid var(--gridline); }
 .news-item:last-child { border-bottom: none; }
 .news-item .headline { font-weight: 600; font-size: 13.5px; }

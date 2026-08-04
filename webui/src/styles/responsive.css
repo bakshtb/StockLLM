@@ -21,7 +21,7 @@
   .grid { grid-template-columns: 1fr !important; }
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
   .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
-  .split-2col, .rec-thesis-grid { grid-template-columns: 1fr !important; }
+  .split-2col, .rec-thesis-grid, .news-grid { grid-template-columns: 1fr !important; }
   .rec-top { flex-direction: column; align-items: flex-start; }
 
   /* Dense multi-column tables (5-7 columns is common here -- rating

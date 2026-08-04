@@ -367,6 +367,23 @@ def legend(items):
     return f'<div class="viz-legend">{keys}</div>'
 
 
+def subtabs(group_id, tabs):
+    """tabs: list of (label, panel_html). Splits one crowded section into
+    focused sub-views (see section_ownership/section_dividends_options_macro_
+    social) via a pill bar matching .range-btn's visual language, toggled
+    client-side by webui/src/js/subtabs.js. Every panel is fully rendered
+    server-side; only the first carries is-active by default, so a
+    JS-disabled reader still sees a complete, correctly-laid-out first tab.
+    group_id must be unique on the page (multiple tab groups can coexist)."""
+    buttons, panels = [], []
+    for i, (label, panel_html) in enumerate(tabs):
+        panel_id = f"{group_id}-{i}"
+        active = " is-active" if i == 0 else ""
+        buttons.append(f'<button type="button" class="subtab-btn{active}" data-target="{panel_id}">{esc(label)}</button>')
+        panels.append(f'<div class="subtab-panel{active}" data-panel="{panel_id}">{panel_html}</div>')
+    return f'<div class="subtabs" role="tablist">{"".join(buttons)}</div><div>{"".join(panels)}</div>'
+
+
 # ============================================================================
 # Charts
 # ============================================================================
@@ -1967,22 +1984,21 @@ def section_ownership(bundle):
                           fmt_pct(b.get("percent_of_class"), signed=False, decimals=2), b.get("type_of_reporting_person") or "—"])
     ben_table = data_table(["Filed", "Reporting person", "Schedule", "% of class", "Type"], ben_rows)
 
+    institutional_panel = f"""
+{stack_card}
+<div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Top institutional holders {info_icon('top_holders')}</span></div>{holders_table}</div>
+<div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Schedule 13D/13G (&gt;5% stakes) {info_icon('beneficial_ownership')}</span></div>{ben_table if ben_rows else empty_state()}</div>"""
+
+    insiders_panel = f"""
+{mspr_html}
+<div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4) {info_icon('insider_transactions')}</span></div>{insider_table if insider_rows else empty_state()}</div>
+<div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales {info_icon('form144')}</span></div>{f144_table if f144_rows else empty_state()}</div>"""
+
     return f"""
 <div class="card full" id="sec-ownership">
   <h2>Ownership {info_icon('section_ownership')}</h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
-  <div class="split-2col">
-    <div>
-      {stack_card}
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Top institutional holders {info_icon('top_holders')}</span></div>{holders_table}</div>
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Schedule 13D/13G (&gt;5% stakes) {info_icon('beneficial_ownership')}</span></div>{ben_table if ben_rows else empty_state()}</div>
-    </div>
-    <div>
-      {mspr_html}
-      <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4) {info_icon('insider_transactions')}</span></div>{insider_table if insider_rows else empty_state()}</div>
-      <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales {info_icon('form144')}</span></div>{f144_table if f144_rows else empty_state()}</div>
-    </div>
-  </div>
+  {subtabs("ownership", [("Institutional", institutional_panel), ("Insiders", insiders_panel)])}
 </div>"""
 
 
@@ -2091,24 +2107,25 @@ def section_dividends_options_macro_social(bundle):
         for m in samples[:5]
     ) or empty_state()
 
+    dividends_panel = f"{div_tiles}{bb_card}"
+    options_panel = opt_html
+    macro_panel = macro_tiles
+    sentiment_panel = f"""
+{sent_card}
+<div class="viz-card" style="margin-top:16px;">
+  <div class="viz-card-head"><span class="viz-title">Sample posts (unverified)</span></div>
+  {sample_html}
+</div>"""
+
     return f"""
 <div class="card full" id="sec-extras">
   <h2>Dividends, Buybacks, Options & Sentiment {info_icon('section_extras')}</h2>
-  <div class="split-2col">
-    <div>
-      {div_tiles}
-      {bb_card}
-      {macro_tiles}
-    </div>
-    <div>
-      {opt_html}
-      <div style="margin-top:16px;">{sent_card}</div>
-      <div class="viz-card" style="margin-top:16px;">
-        <div class="viz-card-head"><span class="viz-title">Sample posts (unverified)</span></div>
-        {sample_html}
-      </div>
-    </div>
-  </div>
+  {subtabs("extras", [
+      ("Dividends & Buybacks", dividends_panel),
+      ("Options", options_panel),
+      ("Macro", macro_panel),
+      ("Sentiment", sentiment_panel),
+  ])}
 </div>"""
 
 
@@ -2126,7 +2143,7 @@ def section_news(bundle):
   <div class="meta">{esc(n.get('source'))} · {esc(n.get('date'))}</div>
   <div class="snippet">{esc(n.get('snippet'))}</div>
 </div>""")
-        body = "".join(items)
+        body = f'<div class="news-grid">{"".join(items)}</div>'
     digest = bundle.get("news_digest")
     digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else ""
     return f"""

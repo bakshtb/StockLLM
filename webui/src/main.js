@@ -15,6 +15,7 @@ import { initLlmExport } from './js/llm-export.js';
 import { initThemeToggle } from './js/theme-toggle.js';
 import { initInfoPopovers } from './js/info-popovers.js';
 import { initRipple } from './js/ripple.js';
+import { initSubtabs } from './js/subtabs.js';
 
 function initAll() {
   initVizToggle();
@@ -23,6 +24,7 @@ function initAll() {
   initThemeToggle();
   initInfoPopovers();
   initRipple();
+  initSubtabs();
 }
 
 if (document.readyState === 'loading') {
