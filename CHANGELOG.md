@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.19
+
+- Add: `CLAUDE.md` behavioral guidelines (from multica-ai/andrej-karpathy-
+  skills, MIT) -- think before coding, simplicity first, surgical changes,
+  goal-driven execution. Documentation only, no functional changes --
+  version bumped solely to satisfy this repo's pre-commit/CI convention.
+
 ## 0.9.18
 
 - Fix: real, user-reported data accuracy bugs on MBLY -- dashboard showed
