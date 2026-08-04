@@ -10,6 +10,8 @@ module's "never raise, return a note instead" convention. One
 same pattern as tests/test_live_fetchers.py.
 """
 
+import re
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -18,7 +20,20 @@ from backtest.engine import (
     MIN_TRADING_DAYS, _clean_stat, _extract_current_status, _extract_trades, _run_one, run_backtests,
 )
 from backtest.strategies import STRATEGIES, BENCHMARK_TICKER
-from dashboard.generate_dashboard import section_backtests, strategy_trade_chart, _backtest_status_box
+from dashboard.generate_dashboard import (
+    section_backtests, section_price_technicals, strategy_trade_chart, price_history_chart, _backtest_status_box,
+)
+
+
+def _get_chart_option(chart_html: str) -> dict:
+    """Given the div HTML register_chart() returned, look up the actual
+    registered ECharts option dict -- same pattern as test_charts.py's
+    own get_chart_option(), reimplemented here to avoid a cross-test-file
+    import for one small helper."""
+    import dashboard.generate_dashboard as gd
+    m = re.search(r'id="(chart-\d+)"', chart_html)
+    assert m, f"expected a chart div with an id, got: {chart_html[:120]!r}"
+    return dict(gd._chart_state.charts)[m.group(1)]
 
 
 def _synthetic_ohlcv(n=800, seed=0, with_benchmark=False):
@@ -200,6 +215,110 @@ class TestStrategyTradeChart:
                    "exit_price": 101.0, "return_pct": 1.0}]
         html = strategy_trade_chart(price_series, trades)
         assert html is not None
+        assert "echarts-container" in html
+
+
+class TestBuildPriceSeries:
+    """backtest/engine.py's _build_price_series() -- full OHLCV + moving
+    average overlays, shared by strategy_trade_chart() and the main
+    interactive price_history_chart(), computed once."""
+
+    def test_full_ohlcv_and_moving_averages_present(self):
+        from backtest.engine import _build_price_series
+        data = _synthetic_ohlcv(n=250)
+        series = _build_price_series(data)
+        assert len(series) == 250
+        for key in ("date", "open", "high", "low", "close", "volume", "ma20", "ma50", "ma200"):
+            assert key in series[0]
+
+    def test_moving_averages_none_during_warmup_then_populated(self):
+        from backtest.engine import _build_price_series
+        data = _synthetic_ohlcv(n=250)
+        series = _build_price_series(data)
+        assert series[0]["ma20"] is None  # day 1: nowhere near 20 days of history yet
+        assert series[19]["ma20"] is not None  # day 20: exactly enough for a 20-day average
+        assert series[198]["ma200"] is None  # day 199: one short of 200
+        assert series[199]["ma200"] is not None  # day 200: enough
+
+
+class TestPriceHistoryChart:
+    def _price_series(self, n=250, with_gaps=False):
+        rng = np.random.default_rng(1)
+        base = 100 + np.cumsum(rng.normal(0, 1, n))
+        dates = pd.bdate_range("2024-01-02", periods=n)
+        series = []
+        for i, (d, c) in enumerate(zip(dates, base)):
+            series.append({
+                "date": d.strftime("%Y-%m-%d"),
+                "open": None if with_gaps and i == 5 else round(float(c) - 0.3, 2),
+                "high": round(float(c) + 0.5, 2), "low": round(float(c) - 0.5, 2),
+                "close": round(float(c), 2), "volume": 1_000_000 + i * 100,
+                "ma20": round(float(c), 2) if i >= 19 else None,
+                "ma50": round(float(c), 2) if i >= 49 else None,
+                "ma200": round(float(c), 2) if i >= 199 else None,
+            })
+        return series
+
+    def test_returns_none_for_empty_series(self):
+        assert price_history_chart([]) is None
+
+    def test_builds_all_five_series(self):
+        html = price_history_chart(self._price_series())
+        assert html is not None
+        assert "echarts-container" in html
+
+    def test_handles_missing_ohlc_gracefully(self):
+        """A gap day (e.g. a genuinely missing bar) shouldn't crash chart
+        construction -- it should just produce a null candle for that day."""
+        html = price_history_chart(self._price_series(with_gaps=True))
+        assert html is not None
+
+    def test_candlestick_series_shape_and_colors(self):
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        html = price_history_chart(self._price_series(n=60))
+        option = _get_chart_option(html)
+        candle = next(s for s in option["series"] if s["type"] == "candlestick")
+        assert len(candle["data"]) == 60
+        assert candle["itemStyle"]["color"] == "var(--diverge-pos)"
+        assert candle["itemStyle"]["color0"] == "var(--diverge-neg)"
+        # ECharts candlestick value order is [open, close, low, high]
+        first = next(d for d in candle["data"] if d is not None)
+        assert len(first["value"]) == 4
+
+    def test_default_zoom_shows_roughly_last_year_for_long_history(self):
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        html = price_history_chart(self._price_series(n=1500))
+        option = _get_chart_option(html)
+        # (1 - 252/1500) * 100 =~ 83.2
+        assert 80 < option["dataZoom"][0]["start"] < 86
+        assert option["dataZoom"][0]["end"] == 100
+        # inside + slider zoom, both starting from the same point
+        assert option["dataZoom"][0]["start"] == option["dataZoom"][1]["start"]
+
+    def test_short_history_shows_everything(self):
+        """Fewer than a year of trading days (e.g. a very recent IPO) --
+        the default view should show all of it, not a near-empty sliver."""
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        html = price_history_chart(self._price_series(n=100))
+        option = _get_chart_option(html)
+        assert option["dataZoom"][0]["start"] == 0.0
+
+
+class TestSectionPriceTechnicalsWithHistoryChart:
+    def test_missing_backtests_key_omits_history_chart_not_crash(self):
+        html = section_price_technicals({"price": {}})
+        assert "price-chart-wrap" not in html
+
+    def test_present_price_series_renders_history_chart_and_range_buttons(self):
+        series = TestPriceHistoryChart()._price_series(n=300)
+        bundle = {"price": {}, "backtests": {"price_series": series}}
+        html = section_price_technicals(bundle)
+        assert "price-chart-wrap" in html
+        assert "chart-toolbar" in html
+        assert 'data-days="252"' in html
         assert "echarts-container" in html
 
 

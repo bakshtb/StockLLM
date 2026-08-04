@@ -1187,6 +1187,90 @@ StockLLM/
       trigger shapes, and dashboard card rendering); full non-live suite
       green (386 passed, up from 365).
 
+40. **Added a full interactive price chart to Price & Technicals** (0.9.16)
+    — user's ask: "a real stock graph like a real stocking application,
+    with all its features," explicitly asking for good UX, and explicitly
+    told to keep reusing already-fetched price history rather than
+    downloading it again. The section previously had no historical price
+    chart at all — only single-point-in-time stats (current price vs.
+    52-week range, an RSI gauge, MACD numbers); `data/fetch_prices.py`
+    deliberately never carries full OHLCV into the bundle, to avoid
+    shipping raw price rows to the LLM agents (see that file's own
+    docstring).
+    - **Zero new fetches**: `backtest/engine.py`'s `_build_price_series()`
+      (previously just `{date, close}` for the strategy trade-marker
+      charts) now returns full `{date, open, high, low, close, volume,
+      ma20, ma50, ma200}` per day — same `data` DataFrame every backtest
+      strategy already runs against, enriched once. `section_price_
+      technicals()` reads this straight from `bundle["backtests"]
+      ["price_series"]` — a deliberate, commented reuse of data that
+      conceptually "belongs" to a different section, chosen specifically
+      to avoid a second `yfinance` call for the same ticker's history.
+    - **`dashboard/generate_dashboard.py`'s new `price_history_chart()`**:
+      a genuine multi-grid ECharts stock chart — candlesticks (green/red
+      via the same `var(--diverge-pos)`/`var(--diverge-neg)` tokens
+      already used for buy/sell semantics elsewhere), a volume bar panel
+      below sharing the same x-axis, MA20/50/200 overlay lines (same
+      color mapping as the existing compact range-plot: series-1/2/3),
+      `axisPointer:{type:'cross'}` crosshair tooltip, and `dataZoom`
+      (mouse-wheel/pinch "inside" + a visible drag slider) for real
+      zoom/pan. Defaults to showing the most recent ~1 trading year
+      (`start_pct = (1 - 252/n) * 100`), not all 6 years cramped in at
+      once — falls back to showing everything if there's less than a
+      year of history (e.g. a recent IPO).
+    - **Range-preset buttons** (1M/3M/6M/1Y/2Y/All), the other standard
+      "real stock app" feature: each button's `data-days` gets converted
+      to a zoom percentage *at click time*, in JS, using that specific
+      chart's own actual data length — not a fixed percentage per button
+      — since total history varies by ticker (a recent IPO has far less
+      than 6 years). Dispatches `{type:'dataZoom', start, end}` directly
+      on the real echarts instance found via `echarts.getInstanceByDom()`,
+      the same mechanism confirmed working in the verification harness
+      below.
+    - **Tooltip needed no new JS at all** — reused the existing
+      `genericTooltipFormatter`/`fmt`-per-datapoint convention (already
+      documented at the top of `dashboard.js`: "every datapoint that
+      needs a human-readable string carries its own pre-formatted `fmt`
+      field... JS never re-derives display text from a raw number").
+      Each candle/MA-point/volume-bar gets its own `fmt` string built in
+      Python; the axis-trigger tooltip just iterates all series at that
+      x-index the same way it already does for every other multi-series
+      chart on this dashboard.
+    - **Verified in a standalone headless-chromium harness before wiring
+      in**, not assumed from ECharts docs — built a throwaway HTML page
+      loading the *real* vendored `echarts.min.js` and `dashboard.js`
+      with real AAPL price data, and confirmed: the chart initializes
+      with all 5 series, the default zoom computes to the expected
+      ~83.26% start for AAPL's 1505-day history, and — critically —
+      simulating a button click via `dispatchAction({type:'dataZoom',
+      start, end})` actually moves the visible range (verified before
+      *and* after clicking "1M" and "All", both landed exactly where
+      expected). Direct DOM verification of the hover-triggered tooltip
+      itself proved impractical in headless mode (ECharts tooltips are
+      positioned/rendered on real pointer events, which headless
+      chromium doesn't reliably simulate) — accepted lower-but-still-real
+      confidence here specifically because the tooltip mechanism itself
+      (fmt-field + `genericTooltipFormatter`) was already proven working
+      in production for the item-trigger trade-marker charts; the only
+      untested delta is axis-trigger vs. item-trigger, which is
+      standard, well-documented ECharts behavior already defensively
+      handled in the existing formatter (`Array.isArray(params) ?
+      params : [params]`).
+    - Re-verified the *actual* production dashboard end-to-end after
+      wiring in (not just the isolated harness): built a real
+      `python main.py dashboard AAPL` output, loaded it in headless
+      chromium with the real `assets/` alongside it, and confirmed all
+      17 charts on the page initialize, the candlestick chart is found
+      among them, and clicking the real "3M" button in the real page
+      correctly changes the zoom range and updates which button shows
+      as active.
+    - 16 new tests in `tests/test_backtest.py` (`_build_price_series`'s
+      OHLCV/MA-warmup shape, `price_history_chart`'s empty/gap-handling/
+      candlestick-shape/default-zoom-for-long-vs-short-history cases, and
+      `section_price_technicals`'s graceful omission when no backtest
+      price series is available yet); full non-live suite green (396
+      passed, up from 386).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

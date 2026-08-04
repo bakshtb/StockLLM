@@ -148,13 +148,27 @@ def _run_one(meta: dict, data: pd.DataFrame, shared_buy_hold_pct: float) -> dict
 
 
 def _build_price_series(data: pd.DataFrame) -> list:
-    """The shared price line every strategy's chart draws on top of --
-    built once here from the same `data` every strategy already runs
-    against, not re-fetched per strategy or per chart."""
-    return [
-        {"date": idx.strftime("%Y-%m-%d"), "close": round(float(close), 2)}
-        for idx, close in zip(data.index, data["Close"])
-    ]
+    """Full OHLCV + moving-average overlays, one point per trading day --
+    shared by every strategy's trade-marker chart AND the dashboard's main
+    interactive price chart (Price & Technicals section). Built once here
+    from the same `data` every strategy already runs against; neither
+    consumer re-fetches or re-derives this."""
+    closes = data["Close"]
+    ma20 = closes.rolling(20).mean()
+    ma50 = closes.rolling(50).mean()
+    ma200 = closes.rolling(200).mean()
+    series = []
+    for idx, o, h, lo, c, v, m20, m50, m200 in zip(
+        data.index, data["Open"], data["High"], data["Low"], data["Close"], data["Volume"],
+        ma20, ma50, ma200,
+    ):
+        series.append({
+            "date": idx.strftime("%Y-%m-%d"),
+            "open": _clean_stat(o), "high": _clean_stat(h), "low": _clean_stat(lo), "close": _clean_stat(c),
+            "volume": int(v) if v == v else None,
+            "ma20": _clean_stat(m20), "ma50": _clean_stat(m50), "ma200": _clean_stat(m200),
+        })
+    return series
 
 
 def run_backtests(ticker: str) -> dict:
@@ -164,8 +178,10 @@ def run_backtests(ticker: str) -> dict:
         "years_tested": float | None,
         "history_start": str | None,
         "history_end": str | None,
-        "price_series": [ {date, close}, ... ],  # shared across every
-            strategy's chart -- fetched once, not duplicated per strategy
+        "price_series": [ {date, open, high, low, close, volume,
+            ma20, ma50, ma200}, ... ],  # shared across every strategy's
+            trade chart AND the main interactive price chart -- fetched
+            once, not duplicated per consumer
         "strategies": [ {key, name, category, explanation, return_pct,
                           buy_hold_return_pct, win_rate_pct, num_trades,
                           max_drawdown_pct, sharpe_ratio, beat_buy_hold,

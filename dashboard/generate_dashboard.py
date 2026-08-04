@@ -268,6 +268,16 @@ button.chip:hover { background: var(--gridline); }
 .chart-disclosure { margin-top: 14px; }
 .chart-disclosure > div { margin-top: 10px; }
 
+.price-chart-wrap { margin-top: 6px; }
+.chart-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.range-btn {
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; cursor: pointer; transition: background-color 0.15s ease;
+}
+.range-btn:hover { background: var(--gridline); }
+.range-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+
 /* Info icon + popover: a plain-language explainer on every metric */
 .info-ic {
   display: inline-flex; align-items: center; justify-content: center;
@@ -518,6 +528,30 @@ JS_SCRIPT = """
   document.querySelectorAll('.chart-disclosure').forEach(function (details) {
     details.addEventListener('toggle', function () {
       if (details.open && window.StockLLMCharts) window.StockLLMCharts.resizeWithin(details);
+    });
+  });
+
+  // Price chart range-preset buttons (1M/3M/6M/1Y/2Y/All): each button's
+  // data-days becomes a percentage of the chart's own total data length
+  // (not a fixed date -- the chart's total history varies by ticker, e.g.
+  // a recent IPO has less than 6 years) and is applied as a dataZoom
+  // action directly via the real echarts instance, found the same way the
+  // standalone verification harness confirmed works (see
+  // price_history_chart()'s docstring in generate_dashboard.py).
+  document.querySelectorAll('.chart-toolbar').forEach(function (toolbar) {
+    var chartEl = toolbar.parentElement && toolbar.parentElement.querySelector('.echarts-container');
+    if (!chartEl || !window.echarts) return;
+    var buttons = toolbar.querySelectorAll('.range-btn');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var inst = echarts.getInstanceByDom(chartEl);
+        if (!inst) return;
+        var total = inst.getOption().series[0].data.length;
+        var days = parseInt(btn.getAttribute('data-days'), 10);
+        var startPct = days === 0 ? 0 : Math.max(0, (1 - days / total) * 100);
+        inst.dispatchAction({ type: 'dataZoom', start: startPct, end: 100 });
+        buttons.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+      });
     });
   });
 
@@ -1508,6 +1542,141 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
     return chart_html, table, leg
 
 
+def price_history_chart(price_series, aria_label="price history"):
+    """A full interactive price chart -- candlesticks, volume, and MA20/
+    50/200 overlays, with drag-to-zoom (mouse wheel/pinch + a slider) and
+    a crosshair tooltip -- the "real stock app" chart the Price &
+    Technicals section was missing. Built entirely from price_series,
+    which backtest/engine.py already fetches once per run and shares with
+    every strategy's own trade chart; this reuses the exact same list, no
+    separate fetch of its own.
+
+    Verified structurally against the real vendored echarts.min.js in a
+    standalone headless-chromium harness before wiring in here: 5 series
+    render, the default ~1-year zoom window computes correctly, and the
+    range-preset buttons' dataZoom dispatch actually changes the visible
+    range (see HANDOFF.md for the item covering this).
+    """
+    if not price_series:
+        return None
+    dates = [p["date"] for p in price_series]
+    n = len(price_series)
+
+    candles = []
+    for p in price_series:
+        if p["open"] is None:
+            candles.append(None)
+            continue
+        candles.append({
+            "value": [p["open"], p["close"], p["low"], p["high"]],
+            "fmt": (
+                f"Open {fmt_price(p['open'])} · High {fmt_price(p['high'])} · "
+                f"Low {fmt_price(p['low'])} · Close {fmt_price(p['close'])}"
+            ),
+        })
+
+    def _ma_series(key, color, name):
+        data = []
+        for p in price_series:
+            v = p.get(key)
+            data.append(None if v is None else {"value": v, "fmt": fmt_price(v)})
+        return {
+            "name": name, "type": "line", "data": data,
+            "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False,
+            "lineStyle": {"color": color, "width": 1.25}, "z": 2, "connectNulls": True,
+        }
+
+    volumes = []
+    for p in price_series:
+        if p["volume"] is None:
+            volumes.append(None)
+            continue
+        up = (p["close"] or 0) >= (p["open"] or 0)
+        volumes.append({
+            "value": p["volume"], "fmt": fmt_compact(p["volume"]),
+            "itemStyle": {"color": "var(--diverge-pos)" if up else "var(--diverge-neg)"},
+        })
+
+    # Default view: the most recent ~1 trading year, not all 6 -- matches
+    # how real stock apps land (recent context first), with the range
+    # buttons/slider available to zoom out. If there's less than a year of
+    # history (a recent IPO), just show everything.
+    start_pct = max(0.0, (1 - 252 / n) * 100) if n > 252 else 0.0
+
+    option = {
+        "animation": False,
+        "tooltip": {"trigger": "axis", "axisPointer": {"type": "cross"}, "formatter": "__tooltipFmt__"},
+        "legend": {
+            "data": ["MA20", "MA50", "MA200"], "top": 0, "right": 8,
+            "textStyle": {"color": "var(--text-secondary)", "fontSize": 11.5},
+            "itemWidth": 14, "itemHeight": 8,
+        },
+        "axisPointer": {"link": [{"xAxisIndex": "all"}]},
+        "grid": [
+            {"left": 8, "right": 16, "top": 30, "height": "56%", "containLabel": True},
+            {"left": 8, "right": 16, "top": "72%", "height": "16%", "containLabel": True},
+        ],
+        "xAxis": [
+            {
+                "type": "category", "data": dates, "gridIndex": 0, "boundaryGap": True,
+                "axisLine": {"lineStyle": {"color": "var(--baseline)"}}, "axisLabel": {"show": False},
+                "axisTick": {"show": False}, "splitLine": {"show": False},
+            },
+            {
+                "type": "category", "data": dates, "gridIndex": 1, "boundaryGap": True,
+                "axisLine": {"lineStyle": {"color": "var(--baseline)"}},
+                "axisLabel": {"color": "var(--text-secondary)", "fontSize": 11},
+                "axisTick": {"show": False}, "splitLine": {"show": False},
+            },
+        ],
+        "yAxis": [
+            {
+                "type": "value", "scale": True, "gridIndex": 0,
+                "splitLine": {"lineStyle": {"color": "var(--gridline)"}},
+                "axisLabel": {"color": "var(--text-muted)", "fontSize": 11, "formatter": "${value}"},
+            },
+            {
+                "type": "value", "scale": True, "gridIndex": 1, "splitNumber": 2,
+                "splitLine": {"show": False},
+                "axisLabel": {"color": "var(--text-muted)", "fontSize": 10, "formatter": "__compactAxis__"},
+            },
+        ],
+        "dataZoom": [
+            {"type": "inside", "xAxisIndex": [0, 1], "start": start_pct, "end": 100},
+            {
+                "type": "slider", "xAxisIndex": [0, 1], "start": start_pct, "end": 100,
+                "height": 20, "bottom": 4,
+                "borderColor": "var(--border)", "fillerColor": "rgba(42,120,214,0.12)",
+                "handleStyle": {"color": "var(--series-1)"},
+                "textStyle": {"color": "var(--text-secondary)", "fontSize": 10},
+                "dataBackground": {
+                    "lineStyle": {"color": "var(--text-muted)"},
+                    "areaStyle": {"color": "var(--gridline)"},
+                },
+            },
+        ],
+        "series": [
+            {
+                "name": "Price", "type": "candlestick", "data": candles,
+                "xAxisIndex": 0, "yAxisIndex": 0,
+                "itemStyle": {
+                    "color": "var(--diverge-pos)", "color0": "var(--diverge-neg)",
+                    "borderColor": "var(--diverge-pos)", "borderColor0": "var(--diverge-neg)",
+                },
+                "z": 3,
+            },
+            _ma_series("ma20", "var(--series-1)", "MA20"),
+            _ma_series("ma50", "var(--series-2)", "MA50"),
+            _ma_series("ma200", "var(--series-3)", "MA200"),
+            {
+                "name": "Volume", "type": "bar", "data": volumes,
+                "xAxisIndex": 1, "yAxisIndex": 1, "barMaxWidth": 6,
+            },
+        ],
+    }
+    return register_chart(option, height_px=460, aria_label=aria_label)
+
+
 def strategy_trade_chart(price_series, trades, aria_label="strategy trades over time"):
     """Line chart of a stock's own price over the tested period, with a
     green triangle at each real buy and a red diamond at each real sell --
@@ -1907,6 +2076,28 @@ def section_kpis(bundle):
 
 def section_price_technicals(bundle):
     price = bundle.get("price", {}) or {}
+
+    # Reuses backtest/engine.py's price_series -- the same OHLCV +
+    # MA20/50/200 history already fetched once for the Strategy Backtests
+    # section -- rather than fetching price history a second time here.
+    price_series = ((bundle.get("backtests", {}) or {}).get("price_series")) or []
+    history_chart_html = price_history_chart(price_series, aria_label="interactive price history with volume and moving averages")
+    if history_chart_html:
+        history_block = f"""
+<div class="price-chart-wrap">
+  <div class="chart-toolbar">
+    <button type="button" class="range-btn" data-days="21">1M</button>
+    <button type="button" class="range-btn" data-days="63">3M</button>
+    <button type="button" class="range-btn" data-days="126">6M</button>
+    <button type="button" class="range-btn is-active" data-days="252">1Y</button>
+    <button type="button" class="range-btn" data-days="504">2Y</button>
+    <button type="button" class="range-btn" data-days="0">All</button>
+  </div>
+  {history_chart_html}
+</div>"""
+    else:
+        history_block = ""
+
     low_52w, high_52w = price.get("52w_low"), price.get("52w_high")
     ma_markers = [
         ("MA200", price.get("ma200"), "var(--series-3)"),
@@ -1942,6 +2133,7 @@ def section_price_technicals(bundle):
 <div class="card" id="sec-price">
   <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
+  {history_block}
   {price_card}
   {rsi_card}
   {macd_html}

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.16
+
+- Add: a real, interactive price chart to the Price & Technicals section --
+  candlesticks, a volume panel, MA20/50/200 overlay lines, a crosshair
+  tooltip, drag-to-zoom (mouse wheel/pinch + a slider), and 1M/3M/6M/1Y/2Y/
+  All range-preset buttons. The section previously had no historical price
+  chart at all, only single-point stats. Reuses the same price history
+  already fetched once for the Strategy Backtests section -- no second
+  download. Verified in a standalone headless-chromium harness against the
+  real vendored ECharts library before wiring in, then re-verified against
+  the actual generated dashboard end-to-end. See HANDOFF.md item 40.
+
 ## 0.9.15
 
 - Update: add an "i" info tooltip to the Win Rate stat in each Strategy
