@@ -227,7 +227,7 @@ button.chip:hover { background: var(--gridline); }
 .delta.critical { color: var(--status-critical); }
 .delta.neutral { color: var(--text-secondary); }
 .status-box {
-  margin-top: 12px; padding: 14px 16px;
+  margin-top: 14px; padding: 14px 16px;
   background: var(--gridline); border-radius: 12px;
 }
 .status-box-head {
@@ -235,8 +235,38 @@ button.chip:hover { background: var(--gridline); }
   font-size: 12.5px; font-weight: 650; color: var(--text-secondary);
   margin-bottom: 10px;
 }
-.status-box .kpi-row .stat-tile { box-shadow: none; } /* the outer box already has its own depth cue */
+.status-box .stat-tile { box-shadow: none; } /* the outer box already has its own depth cue */
 .status-box-caption { margin-top: 10px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+
+/* One self-contained box per backtest strategy -- recessed against its
+   parent .card's surface (var(--page-plane), the same token the mobile
+   data-table row style already uses for the identical "nested box" look),
+   not just a bare list of items. Deliberately its own class rather than
+   reusing .viz-card: a strategy card is a real sub-section (heading, prose,
+   a stat grid, a status panel, an optional chart), not a single chart's
+   wrapper. */
+.strategy-card-list { display: grid; gap: 16px; margin-top: 14px; }
+.strategy-card {
+  background: var(--page-plane); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(11,11,11,0.03), 0 1px 8px rgba(11,11,11,0.02);
+}
+.strategy-card-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.strategy-card-title-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.strategy-card-title { font-size: 15px; font-weight: 650; color: var(--text-primary); letter-spacing: -0.1px; }
+.strategy-card .card-sub { margin-bottom: 0; }
+/* Always exactly 2 columns, at every screen width -- the generic .kpi-row's
+   own mobile breakpoints collapse to 1 column on narrow phones, which for
+   only 4 short numbers (Return/Buy & Hold/Win Rate/Trades) means 4 stacked
+   full-width tiles eating a lot of vertical space for very little content
+   each. A dedicated, non-collapsing class here fixes that specifically for
+   this section without touching every other .kpi-row site-wide. */
+.backtest-stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.chart-disclosure { margin-top: 14px; }
+.chart-disclosure > div { margin-top: 10px; }
 
 /* Info icon + popover: a plain-language explainer on every metric */
 .info-ic {
@@ -2075,7 +2105,7 @@ def _backtest_status_box(status):
     return f"""
 <div class="status-box">
   <div class="status-box-head">{_holding_badge(status)} What would this rule do right now?</div>
-  <div class="kpi-row cols-2">
+  <div class="backtest-stats-row" style="margin-top:0;">
     {stat_tile(status['current_label'], fmt(status['current_value']))}
     {stat_tile(f"{verb} trigger", fmt(status['trigger_value']), sub=status['trigger_label'])}
   </div>
@@ -2105,10 +2135,13 @@ def section_backtests(bundle):
 
     cards = []
     for s in strategies:
+        return_pct, buy_hold_pct = s.get("return_pct"), s.get("buy_hold_return_pct")
         stats_row = f"""
-<div class="kpi-row cols-4" style="margin-top:10px;">
-  {stat_tile("Return", fmt_pct(s.get("return_pct")) if s.get("return_pct") is not None else "—")}
-  {stat_tile("Buy & Hold", fmt_pct(s.get("buy_hold_return_pct")) if s.get("buy_hold_return_pct") is not None else "—")}
+<div class="backtest-stats-row">
+  {stat_tile("Return", fmt_pct(return_pct) if return_pct is not None else "—",
+              value_cls=delta_class(return_pct) if return_pct is not None else None)}
+  {stat_tile("Buy & Hold", fmt_pct(buy_hold_pct) if buy_hold_pct is not None else "—",
+              value_cls=delta_class(buy_hold_pct) if buy_hold_pct is not None else None)}
   {stat_tile("Win Rate", fmt_pct(s.get("win_rate_pct"), signed=False) if s.get("win_rate_pct") is not None else "—")}
   {stat_tile("Trades", fmt_num(s.get("num_trades")) if s.get("num_trades") is not None else "—")}
 </div>"""
@@ -2122,15 +2155,18 @@ def section_backtests(bundle):
             if trades and price_series else None
         )
         chart_block = f"""
-<details class="chart-disclosure" style="margin-top:10px;">
+<details class="chart-disclosure">
   <summary>Show chart (buy/sell markers on price)</summary>
-  <div style="margin-top:10px;">{chart_html}</div>
+  <div>{chart_html}</div>
 </details>""" if chart_html else ""
 
         cards.append(f"""
-<div class="viz-card" style="margin-top:16px;">
-  <div class="viz-card-head">
-    <span class="viz-title">{esc(s.get('name') or '—')} {badge(s.get('category') or '—', 'neutral')}</span>
+<div class="strategy-card">
+  <div class="strategy-card-head">
+    <span class="strategy-card-title-group">
+      <span class="strategy-card-title">{esc(s.get('name') or '—')}</span>
+      {badge(s.get('category') or '—', 'neutral')}
+    </span>
     {_backtest_result_badge(s)}
   </div>
   <div class="card-sub">{esc(s.get('explanation') or '')}</div>
@@ -2143,7 +2179,7 @@ def section_backtests(bundle):
 <div class="card full" id="sec-backtests">
   <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
   <div class="card-sub">{esc(period_note)}</div>
-  {''.join(cards)}
+  <div class="strategy-card-list">{''.join(cards)}</div>
 </div>"""
 
 

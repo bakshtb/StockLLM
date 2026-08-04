@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.14
+
+- Update: Strategy Backtests UI polish. Each strategy now sits in its own
+  clearly-bordered card (recessed against the section background, matching
+  the same visual treatment already used for mobile table rows) instead of
+  a bare list. The 4-number stat row (Return/Buy & Hold/Win Rate/Trades)
+  now stays a fixed 2-column grid at every screen width -- previously it
+  collapsed to 1 column on narrow phones, stacking 4 short numbers
+  full-width each and wasting vertical space. Return and Buy & Hold are now
+  color-coded (green/red by sign); Win Rate and Trades stay neutral since
+  they aren't inherently good or bad on their own.
+
 ## 0.9.13
 
 - Update: restyle each strategy's "what would this rule do right now"
