@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.30
+
+- Change: company logo switched from Google's favicon service to
+  logo.dev (user's preference) -- ticker-native (no more domain-guessing
+  from yfinance's `website` field) and genuinely theme-aware, matching
+  the dashboard's own light/dark toggle instead of one static image.
+  Confirmed logo.dev returns a clean auto-generated placeholder for an
+  unknown ticker rather than a broken image, so the local fallback badge
+  now only covers a real network failure. Uses a hardcoded API token, an
+  informed choice the user made after being told this repo is public.
+  See HANDOFF.md item 53.
+
 ## 0.9.29
 
 - Change: renamed the app's display branding from "StockLLM" to "ADELE"

@@ -1974,6 +1974,57 @@ StockLLM/
       `webapp/`/`webui/` tree afterward to confirm zero remaining
       "StockLLM" occurrences anywhere in user-facing code.
 
+53. **Switched the company logo from Google favicons to logo.dev,
+    ticker-native and theme-aware** (0.9.30) — user's own preference,
+    with a working example URL and his personal API token, explicitly
+    told to hardcode it after being warned this repo is public on GitHub
+    (so a hardcoded token is readable by anyone, forever, even from old
+    commits, if this file is ever changed again) -- an informed choice,
+    not an oversight; `LOGO_DEV_TOKEN` is a single named constant in
+    `generate_dashboard.py` specifically so it's the one obvious place
+    to rotate if that ever matters.
+    - **Ticker-native**: `https://img.logo.dev/ticker/{TICKER}?token=...`
+      needs no domain at all, so `_company_domain()` (added for the
+      Clearbit/Google versions, to derive a domain from yfinance's
+      `website` field) is now dead code -- deleted, along with the `re`
+      import it was the only user of.
+    - **Confirmed logo.dev's own fallback behavior before relying on
+      it**: fetched a real ticker (a real NVIDIA logo, identical bytes
+      for `theme=light` vs `theme=dark` -- NVIDIA's mark already has its
+      own brand-color background, so theme doesn't change anything for
+      it specifically) and a made-up ticker ("ZZZZFAKE123"), which
+      returned a small, clean, auto-generated "Z" placeholder rather
+      than a 404 or broken image. This means the `onerror` fallback to
+      the initial-letter badge realistically only ever fires for a
+      genuine network failure (logo.dev unreachable), not "ticker not
+      found" -- logo.dev already handles that case itself.
+    - **Theme-aware, correctly this time**: a first pass tried two
+      parallel `<img>` elements (one per theme) shown/hidden via CSS,
+      each with its own `onerror` -- caught before shipping that a
+      failure on one theme's image could interfere with the other
+      (hiding a sibling that might have loaded fine). Replaced with a
+      single `<img id="company-logo-img">` carrying both URLs as
+      `data-light`/`data-dark`, switched by a new `applyLogoForTheme()`
+      in `webui/src/js/theme-toggle.js` -- called once at load (the
+      element's plain `src` always starts on the light URL regardless of
+      the resolved theme) and again inside the existing toggle handler,
+      right alongside `reapplyTheme()`, the exact same "re-run on toggle"
+      shape charts already use. `resolveTheme()` extracted as a shared
+      helper (`data-theme` attribute if the user has manually toggled,
+      else OS `prefers-color-scheme`) instead of duplicating that
+      one-liner in two places. Deliberately not a `<picture><source
+      media="(prefers-color-scheme: dark)">` -- that only ever tracks OS
+      preference and has no way to see this app's own manual dark-mode
+      toggle (a separate, already-supported, localStorage-persisted
+      preference layered on top of OS preference), so it would silently
+      ignore the in-app toggle.
+    - **Verified for real**: full pytest suite green (480 passed, no
+      test changes needed); regenerated a real NVDA dashboard and
+      confirmed in headless Chromium that the real NVIDIA logo renders,
+      and specifically that clicking the theme toggle changes the
+      `<img>`'s actual `src` from `...theme=light` to `...theme=dark`
+      (not just that the button/other page elements re-themed).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

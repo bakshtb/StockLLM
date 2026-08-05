@@ -31,7 +31,6 @@ import datetime as dt
 import html
 import json
 import os
-import re
 import sys
 import threading
 
@@ -1304,16 +1303,15 @@ def _humanize_fetched_at(iso_str: str) -> str:
     return parsed.strftime("%b %-d, %Y · %-I:%M %p UTC")
 
 
-def _company_domain(website) -> str | None:
-    """Best-effort bare domain (e.g. "apple.com") from yfinance's
-    `website` field (e.g. "https://www.apple.com") -- feeds the logo
-    lookup in section_header(). None for anything that isn't a URL, so
-    the logo falls back to a plain initial-letter badge instead of
-    requesting a guaranteed-broken image."""
-    if not website:
-        return None
-    m = re.match(r"^(?:https?://)?(?:www\.)?([^/\s]+)", website.strip())
-    return m.group(1) if m else None
+# logo.dev's token, chosen (over Google's keyless favicon service used
+# previously) for real ticker-native, theme-aware brand logos instead of
+# a low-res favicon guessed from a domain. Deliberately hardcoded, not
+# routed through config.py's env-var pattern like ANTHROPIC_API_KEY/etc:
+# an explicit choice the user made after being told this repo is public
+# on GitHub and anyone can read (and use) a hardcoded token forever, even
+# from old commits. If this ever needs rotating, this is the one place
+# to change it.
+LOGO_DEV_TOKEN = "pk_fdrRsJx-Rh64maUoQjYCnQ"
 
 
 def section_header(bundle):
@@ -1321,30 +1319,34 @@ def section_header(bundle):
     fundamentals = bundle.get("fundamentals", {}) or {}
     company_name = fundamentals.get("company_name")
     fetched_at = _humanize_fetched_at(bundle.get("fetched_at", ""))
-    domain = _company_domain(fundamentals.get("website"))
     initial = esc((ticker or "?")[:1].upper())
 
-    # Was Clearbit's logo API -- discontinued Dec 1, 2025 (confirmed dead
-    # in this environment: DNS won't even resolve logo.clearbit.com, while
-    # unrelated domains resolve fine). Replaced with Google's public
-    # favicon service: free, keyless, and backed by infrastructure that
-    # isn't a startup's side project -- a far safer long-term bet than
-    # another small third-party logo API after just getting burned by one
-    # (checked logo.dev too: real logos, but requires an account + API
-    # token, i.e. not actually keyless). Lower resolution than a proper
-    # logo API (a favicon, not a brand asset), but legible at the 40px
-    # this renders at. Same graceful-degradation shape as before: skip
-    # the image request entirely with no website on file, or fall back
-    # via onerror if Google has no favicon for a real domain or is
-    # unreachable (e.g. an offline HA instance).
-    if domain:
-        logo_html = f"""
-      <img class="company-logo" src="https://www.google.com/s2/favicons?domain={esc(domain)}&sz=64" alt="{esc(company_name or ticker)} logo"
+    # logo.dev looks up by ticker directly -- no domain-guessing from
+    # yfinance's `website` field needed (unlike the Google-favicon version
+    # this replaced). A single <img>, not a light/dark pair: logo.dev's
+    # own theme variants are picked client-side by JS on load and on
+    # every toggle (webui/src/js/theme-toggle.js's applyLogoForTheme()),
+    # the same "re-run on toggle" shape hydrate.js's reapplyTheme()
+    # already uses for charts -- a pure-CSS <picture media="..."> can't
+    # do this correctly, since it only ever tracks OS-level
+    # prefers-color-scheme and has no way to see this app's own manual
+    # dark-mode toggle (a real, separate, already-supported preference
+    # layered on top of OS preference, persisted to localStorage). The
+    # two URLs are precomputed here and handed to the client as data
+    # attributes -- it only ever picks between them, never builds a URL
+    # itself. A ticker logo.dev has nothing for still returns a real
+    # (small, clean) image -- its own auto-generated initial-letter
+    # placeholder -- so the onerror fallback below only ever fires for a
+    # genuine network failure (offline HA instance, logo.dev itself
+    # unreachable), the same case Clearbit's and Google's versions
+    # handled the same way.
+    logo_base = f"https://img.logo.dev/ticker/{esc(ticker)}?token={LOGO_DEV_TOKEN}&format=webp&retina=true&theme="
+    logo_html = f"""
+      <img class="company-logo" id="company-logo-img" data-light="{logo_base}light" data-dark="{logo_base}dark"
+           src="{logo_base}light" alt="{esc(company_name or ticker)} logo"
            width="40" height="40" loading="lazy"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
       <div class="company-logo-fallback" style="display:none;">{initial}</div>"""
-    else:
-        logo_html = f'<div class="company-logo-fallback">{initial}</div>'
 
     company_line = f" · {esc(company_name)}" if company_name else ""
 
