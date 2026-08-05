@@ -1,5 +1,5 @@
 """
-Flask web UI for StockLLM -- lets a user pick a ticker, choose dry-run or a
+Flask web UI for ADELE -- lets a user pick a ticker, choose dry-run or a
 full LLM-powered run, and view the resulting dashboard in a browser. This is
 what the Home Assistant add-on runs (see run.sh / Dockerfile at the repo
 root); it can also just be run directly with `python -m webapp.app` for
@@ -190,9 +190,9 @@ PAGE_HEAD = f"""<!DOCTYPE html>
      token prefix isn't stable enough to bookmark as a home-screen icon. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="StockLLM">
+<meta name="apple-mobile-web-app-title" content="ADELE">
 <link rel="apple-touch-icon" href="/assets/icon.png">
-<title>StockLLM</title>
+<title>ADELE</title>
 <script>
 (function () {{
   try {{
@@ -306,7 +306,7 @@ def _render_login(error=None, next_path="/"):
     return f"""{PAGE_HEAD}
 <div class="wrap">
   <div class="card form-card">
-    <h2>StockLLM</h2>
+    <h2>ADELE</h2>
     <div class="card-sub">Enter the password to continue.</div>
     {error_html}
     <form method="post" action="/login">
@@ -393,7 +393,7 @@ def _render_form(error=None):
   {logout_html}
   {unprotected_html}
   <div class="card form-card">
-    <h2>StockLLM</h2>
+    <h2>ADELE</h2>
     <div class="card-sub">Pick a ticker to research. Not financial advice.</div>
     {error_html}
     <form method="post" action="{prefix}/run" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Running…';">

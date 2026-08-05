@@ -107,7 +107,7 @@ class TestIndexPage:
     def test_get_root_returns_200(self, client):
         resp = client.get("/")
         assert resp.status_code == 200
-        assert b"StockLLM" in resp.data
+        assert b"ADELE" in resp.data
 
     def test_recent_runs_empty_state(self, client):
         resp = client.get("/")
@@ -120,7 +120,7 @@ class TestIndexPage:
         html = client.get("/").get_data(as_text=True)
         assert '<meta name="apple-mobile-web-app-capable" content="yes">' in html
         assert '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' in html
-        assert '<meta name="apple-mobile-web-app-title" content="StockLLM">' in html
+        assert '<meta name="apple-mobile-web-app-title" content="ADELE">' in html
         assert '<link rel="apple-touch-icon" href="/assets/icon.png">' in html
 
 
@@ -406,7 +406,7 @@ class TestDirectAccessLogin:
         # test implicitly already exercises; asserted explicitly here too.
         resp = client.get("/")
         assert resp.status_code == 200
-        assert b"StockLLM" in resp.data
+        assert b"ADELE" in resp.data
 
     def test_unprotected_warning_shown_when_no_password_and_no_ingress(self, client):
         resp = client.get("/")
@@ -430,7 +430,7 @@ class TestDirectAccessLogin:
         monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
         resp = client.get("/", headers={"X-Ingress-Path": "/api/hassio_ingress/abc123"})
         assert resp.status_code == 200
-        assert b"StockLLM" in resp.data
+        assert b"ADELE" in resp.data
 
     def test_wrong_password_rejected(self, client, monkeypatch):
         monkeypatch.setattr(wa, "WEB_PASSWORD", "hunter2")
@@ -447,7 +447,7 @@ class TestDirectAccessLogin:
         # not be redirected back to /login.
         resp2 = client.get("/")
         assert resp2.status_code == 200
-        assert b"StockLLM" in resp2.data
+        assert b"ADELE" in resp2.data
 
     def test_open_redirect_via_next_param_rejected(self, client, monkeypatch):
         # ?next=https://evil.example must never be honored -- would turn

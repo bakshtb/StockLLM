@@ -1,5 +1,5 @@
 """
-Generates an offline HTML dashboard from a StockLLM research bundle JSON
+Generates an offline HTML dashboard from an ADELE research bundle JSON
 file (the same JSON produced by `data/bundle.py`, or written to disk via
 `python main.py check TICKER --dry-run -o file.json`).
 
@@ -135,7 +135,7 @@ GLOSSARY = {
     "section_financials": "The actual business results: how much money is coming in, how much is profit, and how healthy the balance sheet is.",
     "section_ownership": "Who holds the stock and what company insiders have been doing with their own shares.",
     "section_extras": "A grab-bag of other signals: whether the company returns cash to shareholders, what the options market is pricing in, the broader economic backdrop, and what retail investors are saying online.",
-    "ai_recommendation": "The output of StockLLM's own 6-agent pipeline: a Bull agent argues the case to buy, a Bear agent argues the case against, two independent Skeptics (different AI models) critique both for unsupported claims, a Quant Checker verifies the specific numbers cited, and a Judge weighs everything (including all the data below) into one final call. This is the one section that's an AI-generated opinion, not raw data — read the reasoning and key risks, not just the verdict, and remember this is a research aid, not financial advice.",
+    "ai_recommendation": "The output of ADELE's own 6-agent pipeline: a Bull agent argues the case to buy, a Bear agent argues the case against, two independent Skeptics (different AI models) critique both for unsupported claims, a Quant Checker verifies the specific numbers cited, and a Judge weighs everything (including all the data below) into one final call. This is the one section that's an AI-generated opinion, not raw data — read the reasoning and key risks, not just the verdict, and remember this is a research aid, not financial advice.",
     "fair_value": "The Judge's estimate of what this stock is worth TODAY, based on the bull/bear cases and the data below — not a prediction of where the price will be at some future date. If the current price is below this range, the AI sees it as undervalued; above the range, overvalued. Treat this the same as the recommendation above: an AI-generated opinion, not a guarantee.",
     "cpi_yoy": "How much prices for everyday goods have risen over the past 12 months, economy-wide — not specific to this company. High inflation tends to pressure the Federal Reserve to keep interest rates higher, which (like the 10Y Treasury yield above) tends to weigh more on expensive/high-growth stocks. Only shown if a free FRED API key is configured.",
     "unemployment_rate": "The percentage of the U.S. workforce currently without a job and looking for one. A rising rate often signals a slowing economy; a falling rate often signals a strong one. Not specific to this company. Only shown if a free FRED API key is configured.",
@@ -2345,9 +2345,9 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
      page a user actually bookmarks to their home screen. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="StockLLM">
+<meta name="apple-mobile-web-app-title" content="ADELE">
 <link rel="apple-touch-icon" href="assets/icon.png">
-<title>{ticker} — StockLLM Research Dashboard</title>
+<title>{ticker} — ADELE Research Dashboard</title>
 <script>{THEME_INIT_SCRIPT}</script>
 <link rel="stylesheet" href="assets/dist/{built['css']}">
 </head>
@@ -2365,12 +2365,12 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
   {data_notes_html}
 </div>
 <footer class="disclaimer">
-  StockLLM is a research/decision-support tool. It is NOT financial advice and never places trades.
+  ADELE is a research/decision-support tool. It is NOT financial advice and never places trades.
   This dashboard renders what is in the underlying JSON research bundle. The "At a Glance" panel
   turns numbers into sentences — every sentence there comes from a fixed, mechanical rule applied
   to a real field below (e.g. "P/E premium over 15% = trading at a premium"), not from any judgment
   call or outside opinion. The "AI Recommendation" panel, when present, is different: it is the
-  actual output of StockLLM's own 6-agent LLM pipeline (Bull/Bear/two independent Skeptics/Quant
+  actual output of ADELE's own 6-agent LLM pipeline (Bull/Bear/two independent Skeptics/Quant
   Checker/Judge) — read it as one
   automated opinion informed by the data below, not as fact. Everything else on this page is
   unmodified data, not re-derived, judged, or fact-checked beyond what the data-fetch layer already notes.
@@ -2384,7 +2384,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate an HTML dashboard from a StockLLM research bundle JSON file.")
+    parser = argparse.ArgumentParser(description="Generate an HTML dashboard from an ADELE research bundle JSON file.")
     parser.add_argument("bundle_path", help="Path to a bundle JSON file (e.g. mobileye.json)")
     parser.add_argument("-o", "--output", help="Output HTML path (default: <bundle_name>_dashboard.html)")
     args = parser.parse_args()

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.29
+
+- Change: renamed the app's display branding from "StockLLM" to "ADELE"
+  (Agent-Driven Evaluation LLM Engine) across the dashboard and webapp UI
+  -- page titles, the footer disclaimer, the AI Recommendation tooltip,
+  the Markdown export, both form pages, and `config.yaml`'s display
+  name. The add-on's technical slug, the GitHub repo, and the on-disk
+  folder name are unchanged (the user is pointing a new domain at the
+  existing instance himself). See HANDOFF.md item 52.
+
 ## 0.9.28
 
 - Fix: the company logo used Clearbit's free logo API, which the user
