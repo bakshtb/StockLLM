@@ -1761,6 +1761,51 @@ StockLLM/
       end dot in both light and dark mode, and the 1M range-button zoom
       -- all in headless Chromium, zero console errors.
 
+49. **Fixed 3 real accessibility/UX findings from an ad-hoc audit against
+    Vercel's public Web Interface Guidelines checklist** (0.9.26) — user
+    pointed at github.com/vercel-labs/agent-skills asking to "clone and use
+    its UX skill." That skill turned out to be a thin wrapper (fetches
+    vercel-labs/web-interface-guidelines' checklist at review time, checks
+    files against it) with no license file -- rather than clone
+    unlicensed files into this repo, applied the same checklist directly
+    to StockLLM's own code by hand, since the checklist itself is just a
+    public, readable set of rules, not something that needs "cloning" to
+    use once. A 4th initial finding (a download-icon `<svg>` allegedly
+    missing `aria-hidden`) turned out to be a false positive on re-check --
+    it already had one, reported anyway rather than silently dropped.
+    - **`webui/src/styles/base.css`'s `.section-nav a`** and
+      **`components.css`'s `.info-ic`** both did `:hover, :focus {
+      ...outline: none }` -- suppressing the focus ring for keyboard users
+      with only a subtle hover-shared color/border change as a
+      replacement. Split into separate `:hover` and `:focus-visible`
+      rules; `:focus-visible` now adds a real `outline: 2px solid
+      var(--series-1)` with `outline-offset: 2px`. Verified for real (not
+      assumed from the CSS): a headless-Chromium check that actually
+      calls `.focus()` and reads back `getComputedStyle().outline*`
+      confirmed a real 2px ring renders on both -- first attempt
+      accidentally tested `.section-nav a` at a desktop viewport where
+      `@media (min-width: 900px) { .section-nav { display: none } }`
+      hides it entirely (a hidden element can't take focus, so the first
+      check silently proved nothing); re-ran at a <900px width where it's
+      actually visible before trusting the result.
+    - **`webapp/app.py`'s login password field and the ticker-entry
+      field** both had `autofocus` -- pops the on-screen keyboard the
+      instant either page loads, before the user has even looked at the
+      screen, on what is very much a mobile-first add-on for this user.
+      Removed from both; no replacement needed (removing it entirely is
+      the fix here, not conditional/JS-driven autofocus).
+    - **`webapp/app.py`'s Run-button JS** set its disabled-state label to
+      literal `"Running..."` (three ASCII periods) while every other
+      progress-stage string in the same file already correctly used a
+      real ellipsis `"…"` (`set_stage("Fetching market data...")` etc.
+      already did this right) -- fixed the one inconsistent spot to match.
+    - **Verified for real**: full pytest suite green (480 passed, no test
+      changes needed -- nothing asserted on the old `outline:none`/
+      `autofocus`/literal-dots behavior); rebuilt `webui/`, regenerated a
+      real dashboard, and re-confirmed the two focus rings render with
+      real computed `outline-width`/`style`/`color` via headless
+      Chromium, not just "the CSS parses."
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

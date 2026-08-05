@@ -137,7 +137,8 @@
   position: relative; transition: background-color 0.15s ease, color 0.15s ease;
   overflow: visible; /* .info-pop is an absolutely-positioned child that must escape this box */
 }
-.info-ic:hover, .info-ic:focus { background: var(--series-1); color: #fff; outline: none; }
+.info-ic:hover { background: var(--series-1); color: #fff; }
+.info-ic:focus-visible { background: var(--series-1); color: #fff; outline: 2px solid var(--series-1); outline-offset: 2px; }
 .info-pop {
   display: none; position: absolute; z-index: 100; left: 0; top: 22px;
   width: 240px; max-width: min(240px, calc(100vw - 32px)); background: var(--text-primary); color: var(--surface-1);

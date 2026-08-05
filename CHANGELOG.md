@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.26
+
+- Fix: 3 real accessibility/UX issues found via an ad-hoc audit against
+  Vercel's public Web Interface Guidelines checklist -- keyboard focus was
+  being suppressed (`outline: none` with no replacement) on section-nav
+  links and the "i" info-icons, now a real focus-visible ring; the login
+  password field and ticker field both had `autofocus`, popping the
+  on-screen keyboard the instant either page loads on mobile, now
+  removed; the Run button's "Running..." used literal dots instead of
+  the real ellipsis used everywhere else in the same file. See
+  HANDOFF.md item 49.
+
 ## 0.9.25
 
 - Change: page order is now KPI row, then the price chart, then At a

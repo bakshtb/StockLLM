@@ -313,7 +313,7 @@ def _render_login(error=None, next_path="/"):
       <input type="hidden" name="next" value="{esc(_safe_next_path(next_path))}">
       <div class="form-row">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autofocus>
+        <input type="password" id="password" name="password" required>
       </div>
       <button type="submit" class="submit">Log in</button>
     </form>
@@ -396,10 +396,10 @@ def _render_form(error=None):
     <h2>StockLLM</h2>
     <div class="card-sub">Pick a ticker to research. Not financial advice.</div>
     {error_html}
-    <form method="post" action="{prefix}/run" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Running...';">
+    <form method="post" action="{prefix}/run" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Running…';">
       <div class="form-row">
         <label for="ticker">Ticker symbol</label>
-        <input type="text" id="ticker" name="ticker" placeholder="e.g. AAPL" maxlength="10" required autofocus>
+        <input type="text" id="ticker" name="ticker" placeholder="e.g. AAPL" maxlength="10" required>
       </div>
       <div class="form-row checkbox">
         <input type="checkbox" id="dry_run" name="dry_run" checked>
