@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.28
+
+- Fix: the company logo used Clearbit's free logo API, which the user
+  caught was discontinued December 1, 2025 -- not a DNS blocklist as
+  speculated in 0.9.27, the service is simply gone. Replaced with
+  Google's public favicon service (`google.com/s2/favicons`), also free
+  and keyless -- also checked logo.dev (the user's suggestion), but its
+  real API requires an account + token, not actually keyless. Same
+  graceful fallback to an initial-letter badge either way. See
+  HANDOFF.md item 51.
+
 ## 0.9.27
 
 - Add: a back-to-search button in the header; a real company logo (via

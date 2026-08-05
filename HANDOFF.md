@@ -1907,6 +1907,38 @@ StockLLM/
       mode, and checked a 390px mobile view (logo, truncated company
       name, horizontally-scrolling tabs all correct).
 
+51. **Swapped the dead Clearbit logo API for Google's favicon service**
+    (0.9.28) — item 50's logo picked Clearbit specifically because it was
+    free and keyless; the user immediately pointed out Clearbit's Logo
+    API was discontinued December 1, 2025, which is *before* this
+    session's own "today" -- it wasn't a DNS blocklist as speculated in
+    item 50, the service is just gone. Also evaluated logo.dev (the
+    user's own suggestion): its real API endpoint
+    (`img.logo.dev/<domain>`) returns a real logo but a hard 401 without
+    an account + API token, confirmed directly against the endpoint (not
+    just reading their marketing site, which sits behind a bot-check page
+    that returns obfuscated JS to a plain curl, not real content) -- so
+    not actually keyless either, ruled out for the same "must work with
+    zero setup" reason Clearbit was chosen for originally.
+    - **Replacement: `https://www.google.com/s2/favicons?domain={domain}
+      &sz=64`** -- free, keyless, confirmed working live for a real
+      domain (nvidia.com) in this same environment where Clearbit's DNS
+      lookup failed. Lower resolution than a proper logo API (a favicon,
+      not a brand asset) and Google-backed rather than a small
+      independent company, which is the actual point after just getting
+      burned once: favicons at 40px display size are legible enough, and
+      Google's favicon service is far less likely to disappear than
+      another small third party's free tier.
+    - Same graceful-degradation shape as before, unchanged: no image
+      request at all when there's no `website` on file; the `onerror`
+      fallback to the initial-letter badge still covers "Google has
+      nothing for this domain" or "unreachable."
+    - **Verified for real**: re-fetched a real NVDA bundle, regenerated
+      the dashboard, confirmed in headless Chromium that the actual
+      NVIDIA icon now renders in the header (not the fallback badge).
+      Full pytest suite green (480 passed, no test changes needed --
+      nothing asserted on the specific logo provider URL).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

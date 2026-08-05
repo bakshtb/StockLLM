@@ -1324,16 +1324,22 @@ def section_header(bundle):
     domain = _company_domain(fundamentals.get("website"))
     initial = esc((ticker or "?")[:1].upper())
 
-    # Clearbit's logo API is free, keyless, and exists for exactly this
-    # ("give me a company's logo from its domain") -- the one external
-    # network call this otherwise fully self-contained page makes, so it
-    # degrades to a plain initial-letter badge (no image request at all)
-    # whenever there's no website on file, and via onerror if Clearbit
-    # has no logo for a real domain or is unreachable (e.g. an offline HA
-    # instance).
+    # Was Clearbit's logo API -- discontinued Dec 1, 2025 (confirmed dead
+    # in this environment: DNS won't even resolve logo.clearbit.com, while
+    # unrelated domains resolve fine). Replaced with Google's public
+    # favicon service: free, keyless, and backed by infrastructure that
+    # isn't a startup's side project -- a far safer long-term bet than
+    # another small third-party logo API after just getting burned by one
+    # (checked logo.dev too: real logos, but requires an account + API
+    # token, i.e. not actually keyless). Lower resolution than a proper
+    # logo API (a favicon, not a brand asset), but legible at the 40px
+    # this renders at. Same graceful-degradation shape as before: skip
+    # the image request entirely with no website on file, or fall back
+    # via onerror if Google has no favicon for a real domain or is
+    # unreachable (e.g. an offline HA instance).
     if domain:
         logo_html = f"""
-      <img class="company-logo" src="https://logo.clearbit.com/{esc(domain)}" alt="{esc(company_name or ticker)} logo"
+      <img class="company-logo" src="https://www.google.com/s2/favicons?domain={esc(domain)}&sz=64" alt="{esc(company_name or ticker)} logo"
            width="40" height="40" loading="lazy"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
       <div class="company-logo-fallback" style="display:none;">{initial}</div>"""
