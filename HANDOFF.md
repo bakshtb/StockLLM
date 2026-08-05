@@ -2094,6 +2094,32 @@ StockLLM/
       rendered) once the Analyst tab is active, while the Analyst
       section's own `offsetParent` is non-null (genuinely visible).
 
+56. **Removed the "Data Quality Notes" dashboard section** (0.9.33) --
+    user request. `section_data_notes(bundle)` (rendered `bundle
+    ["data_notes"]` as a plain list, e.g. "Snapshot of current holders,
+    not a quarter-over-quarter change") and its call site deleted from
+    `generate_dashboard.py`, along with the now-dead `.notes-list` CSS
+    rule (its only user) in `components.css` -- and the `.stat-tile`
+    divider comment nearby, which cited `.notes-list li` as one of three
+    precedents for that convention, updated to drop the reference since
+    only two (`.news-item`/`.filing-row`) still exist.
+    - **Deliberately NOT touched**: `dashboard/llm_export.py`'s own,
+      separate `_section_data_notes()` -- the "Download for AI Chat"
+      Markdown export's own "## Data Quality Notes" section is a
+      different feature entirely (a different document, for a different
+      purpose -- pasting into an external AI chat, not this dashboard's
+      own UI), and the user's request was specifically about what he'd
+      been looking at on the dashboard. Grepped for every reference to
+      confirm this distinction before touching anything, rather than
+      assuming "Data Quality Notes" meant one single thing everywhere it
+      appeared in the codebase. The underlying `data_notes` field itself
+      is untouched too -- still fetched, still in the bundle, still in
+      the Markdown export; only this dashboard's dedicated visual
+      section for it is gone.
+    - **Verified for real**: full pytest suite green (480 passed, no
+      test changes needed -- nothing in `tests/test_dashboard_build.py`
+      asserted on this section).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

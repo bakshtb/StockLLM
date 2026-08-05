@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.33
+
+- Remove: the "Data Quality Notes" dashboard section, per user request.
+  The separate "Data Quality Notes" section in the "Download for AI
+  Chat" Markdown export is a different feature and untouched, as is the
+  underlying data itself. See HANDOFF.md item 56.
+
 ## 0.9.32
 
 - Fix: the KPI row and At a Glance panel were pinned above the tab bar,

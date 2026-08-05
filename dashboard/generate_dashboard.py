@@ -2283,18 +2283,6 @@ def section_filings(bundle):
 </div>"""
 
 
-def section_data_notes(bundle):
-    notes = bundle.get("data_notes", []) or []
-    if not notes:
-        return ""
-    items = "".join(f"<li>{badge('note','neutral')} <span>{esc(n)}</span></li>" for n in notes)
-    return f"""
-<div class="card full">
-  <h2>Data Quality Notes</h2>
-  <ul class="notes-list">{items}</ul>
-</div>"""
-
-
 # ============================================================================
 # Assembly
 # ============================================================================
@@ -2333,7 +2321,6 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
         ],
         bar_class="page-tabs",
     )
-    data_notes_html = section_data_notes(bundle)
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
     charts_json = json.dumps(_drain_chart_registry())
     # Base64, not raw/escaped text: a <script> tag's content is parsed as
@@ -2370,7 +2357,6 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <div class="wrap">
   {ai_section}
   {main_tabs_panels}
-  {data_notes_html}
 </div>
 <footer class="disclaimer">
   ADELE is a research/decision-support tool. It is NOT financial advice and never places trades.

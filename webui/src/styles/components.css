@@ -42,10 +42,10 @@
      not a distinct object (see Google Finance's Overview/Earnings KPI rows:
      zero chrome around individual stats, chrome reserved for genuinely
      grouped panels -- .card/.viz-card/.strategy-card keep their elevation).
-     A bottom-only divider (same convention as .news-item/.filing-row/
-     .notes-list li below) still separates one stat from the next -- without
-     it, a single-column mobile kpi-row (every .kpi-row collapses to 1
-     column under 420px, see responsive.css) reads as one run-on paragraph
+     A bottom-only divider (same convention as .news-item/.filing-row
+     below) still separates one stat from the next -- without it, a
+     single-column mobile kpi-row (every .kpi-row collapses to 1 column
+     under 420px, see responsive.css) reads as one run-on paragraph
      instead of a list of distinct stats, confirmed on a real phone. */
   border-bottom: 1px solid var(--gridline);
 }
@@ -320,10 +320,6 @@ table.data-table tbody tr:hover { background: var(--page-plane); }
 .filing-row:last-child { border-bottom: none; }
 .filing-row .name { width: 130px; font-weight: 600; font-size: 13px; }
 .filing-row .info { font-size: 12.5px; color: var(--text-secondary); }
-
-.notes-list { margin: 0; padding: 0; list-style: none; }
-.notes-list li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); font-size: 13px; color: var(--text-secondary); }
-.notes-list li:last-child { border-bottom: none; }
 
 .empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
 
