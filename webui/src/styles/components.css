@@ -15,7 +15,14 @@
 
 .kpi-row {
   display: grid; gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  /* 130px, not the old 160px: the top-level KPI row (section_kpis()) always
+     has exactly 7 tiles, and 160px's floor left the 7th (10Y Treasury
+     yield) wrapping alone onto a second row on real desktop widths (a
+     1180px-max .wrap only has ~1060px left after gaps -- 1060/7 ≈ 151px,
+     just under the old floor). 130px comfortably fits all 7 in one line
+     on desktop (user request: minimalist, one line), while the existing
+     700px/420px breakpoints below still collapse this on mobile either way. */
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   margin-bottom: 20px;
 }
 /* Fixed-column-count variants (used where auto-fit's column count would
@@ -116,6 +123,19 @@
    first has is-active by default, so a JS-disabled reader still sees a
    complete, correctly-laid-out first tab, just with no way to switch. */
 .subtabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+/* The top-level page tabs (build_dashboard()'s "main" group) render inside
+   .sticky-top right below the topbar -- both stick together as one unit
+   (see base.css's .sticky-top comment), so this doesn't need its own
+   position: sticky. Horizontal-scroll + no-wrap instead of letting 9 tab
+   labels wrap to a second line, same pattern the old anchor-nav pill bar
+   used for the same reason (many pills, must stay usable on a phone). */
+.subtabs.page-tabs {
+  margin-bottom: 0; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; padding: 10px 24px;
+  background: var(--surface-1); border-bottom: 1px solid var(--border);
+}
+.subtabs.page-tabs::-webkit-scrollbar { display: none; }
+.subtabs.page-tabs .subtab-btn { flex-shrink: 0; }
 .subtab-btn {
   font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
   background: none; border: 1px solid var(--border); border-radius: 999px;

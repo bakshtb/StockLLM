@@ -3,10 +3,15 @@ import { resizeWithin } from './hydrate.js';
 // Segmented pill tabs (see subtabs() in generate_dashboard.py): every panel
 // is already server-rendered, this only toggles which one is visible. Scoped
 // per .subtabs bar rather than globally, since a page can have more than one
-// independent tab group (Ownership, Dividends/Options/Macro/Sentiment).
+// independent tab group (Ownership, Dividends/Options/Macro/Sentiment, and
+// the top-level page tabs wrapping all of those). Linked to its panels by
+// data-group/data-panels-for, not DOM adjacency -- the top-level bar lives
+// in .sticky-top (so it sticks to the topbar) while its panels live in
+// .wrap, several elements later, not as a sibling.
 export function initSubtabs() {
   document.querySelectorAll('.subtabs').forEach(function (bar) {
-    var panels = bar.nextElementSibling ? bar.nextElementSibling.querySelectorAll('.subtab-panel') : [];
+    var panelsWrap = document.querySelector('[data-panels-for="' + bar.getAttribute('data-group') + '"]');
+    var panels = panelsWrap ? panelsWrap.querySelectorAll('.subtab-panel') : [];
     bar.querySelectorAll('.subtab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var target = btn.getAttribute('data-target');

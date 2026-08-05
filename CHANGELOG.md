@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.9.27
+
+- Add: a back-to-search button in the header; a real company logo (via
+  Clearbit's free logo API, with a graceful initial-letter fallback if
+  there's no website on file or the logo can't load); a humanized,
+  absolute "Aug 5, 2026 · 6:14 PM UTC" timestamp instead of a raw
+  ISO8601 string; the redundant disclaimer text dropped from the header
+  (the footer already has a fuller one).
+- Fix: the top KPI row now fits on one line on desktop (was wrapping its
+  7th tile onto a lonely second row).
+- Change: the long single-page scroll of ~9 section cards is now
+  page-level tabs (Price & Technicals, Analyst, Backtests, Performance,
+  Financials, Ownership, Dividends & More, News, Filings) -- the same
+  tab component already used inside Ownership/Dividends & More, applied
+  one level up. Caught and fixed a real bug in the underlying component
+  while verifying: clicking a tab highlighted the button but didn't
+  switch the content, because the JS found panels via DOM adjacency,
+  which broke once the tab bar needed to live in the sticky header
+  separately from its panels.
+- Note: the new company logo is the one external network call this
+  otherwise self-contained dashboard makes. Verified it degrades cleanly
+  to an initial-letter badge if unavailable -- discovered live that this
+  environment's own DNS won't resolve Clearbit's domain specifically
+  (unrelated domains resolve fine), plausibly consistent with a
+  DNS-level ad/tracker blocklist (common on home networks/Pi-hole
+  setups). Real logos may not load depending on your own network. See
+  HANDOFF.md item 50.
+
 ## 0.9.26
 
 - Fix: 3 real accessibility/UX issues found via an ad-hoc audit against

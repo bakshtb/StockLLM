@@ -407,32 +407,40 @@ class TestInsiderActivityAtAGlance:
         assert_no_leaked_values(html)
 
 
-class TestSectionNav:
-    """The mobile jump-to-section pill bar (HANDOFF.md: dashboard UX pass) --
-    every link's href must resolve to a real section id on the same page,
-    or a phone user tapping it lands nowhere."""
+class TestPageTabs:
+    """The top-level page tabs (build_dashboard()'s "main" subtabs group,
+    superseding the old anchor-scroll section-nav pill bar) -- every
+    tab's data-target must resolve to a real panel on the same page, or
+    clicking it switches to nothing."""
 
-    def test_nav_present_with_anchors_for_every_section(self, sample_bundle):
+    def test_page_tabs_bar_present_with_a_button_per_section(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")
-        nav = soup.find("nav", class_="section-nav")
-        assert nav is not None
-        hrefs = [a["href"] for a in nav.find_all("a")]
-        assert hrefs, "nav has no links"
-        for href in hrefs:
-            assert href.startswith("#")
-            target_id = href[1:]
-            assert soup.find(id=target_id) is not None, f"nav links to #{target_id} but no element has that id"
+        bar = soup.find("div", class_=lambda c: c and "page-tabs" in c.split())
+        assert bar is not None
+        buttons = bar.find_all("button", class_="subtab-btn")
+        assert buttons, "page-tabs bar has no tab buttons"
+        for btn in buttons:
+            target = btn["data-target"]
+            assert soup.find(attrs={"data-panel": target}) is not None, \
+                f"tab targets panel {target!r} but no element has that data-panel"
 
-    def test_every_top_level_card_has_matching_nav_link(self, sample_bundle):
+    def test_every_major_section_has_a_matching_tab(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")
-        nav_targets = {a["href"][1:] for a in soup.find("nav", class_="section-nav").find_all("a")}
-        expected_ids = {
-            "sec-price", "sec-analyst", "sec-relative", "sec-ownership",
-            "sec-financials", "sec-extras", "sec-news", "sec-filings",
+        bar = soup.find("div", class_=lambda c: c and "page-tabs" in c.split())
+        labels = {btn.get_text(strip=True) for btn in bar.find_all("button", class_="subtab-btn")}
+        expected_labels = {
+            "Price & Technicals", "Analyst", "Backtests", "Performance",
+            "Financials", "Ownership", "Dividends & More", "News", "Filings",
         }
-        assert expected_ids <= nav_targets
+        assert expected_labels <= labels
+        # The tab bar sits in .sticky-top (with the topbar); the panels it
+        # controls do not -- they'd make the whole page's height sticky.
+        assert soup.find("div", class_="sticky-top").find("div", class_=lambda c: c and "page-tabs" in c.split()) is not None
+        assert soup.find(id="sec-price") is not None
+        sticky_top = soup.find("div", class_="sticky-top")
+        assert sticky_top.find(id="sec-price") is None
 
 
 class TestHeroBlock:

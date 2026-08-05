@@ -27,9 +27,11 @@ calls and no judgment calls of its own about the data.
 
 import argparse
 import base64
+import datetime as dt
 import html
 import json
 import os
+import re
 import sys
 import threading
 
@@ -367,21 +369,42 @@ def legend(items):
     return f'<div class="viz-legend">{keys}</div>'
 
 
-def subtabs(group_id, tabs):
+def subtabs(group_id, tabs, bar_class=""):
     """tabs: list of (label, panel_html). Splits one crowded section into
     focused sub-views (see section_ownership/section_dividends_options_macro_
     social) via a pill bar matching .range-btn's visual language, toggled
     client-side by webui/src/js/subtabs.js. Every panel is fully rendered
     server-side; only the first carries is-active by default, so a
     JS-disabled reader still sees a complete, correctly-laid-out first tab.
-    group_id must be unique on the page (multiple tab groups can coexist)."""
+    group_id must be unique on the page (multiple tab groups can coexist,
+    including nested -- see build_dashboard()'s top-level "main" group
+    wrapping section_ownership's own "ownership" group).
+
+    The bar carries data-group="{group_id}" and the panels wrapper carries
+    data-panels-for="{group_id}" -- subtabs.js links them by that attribute,
+    not DOM adjacency, specifically because build_dashboard() renders the
+    top-level "main" bar inside .sticky-top (so it sticks to the topbar)
+    while its panels live in .wrap several elements later, not as a
+    sibling (an earlier version used bar.nextElementSibling and silently
+    never switched the top-level panels because of exactly this -- the
+    button's is-active toggle worked fine either way, which is what made
+    it easy to miss until actually clicking a tab and checking the
+    content, not just the button state).
+
+    bar_class: extra class(es) on the pill bar itself (e.g. "page-tabs"
+    for the top-level group, which is sticky and styled larger -- see
+    components.css -- to read as primary navigation, not a second copy of
+    the same secondary in-section grouping control)."""
     buttons, panels = [], []
     for i, (label, panel_html) in enumerate(tabs):
         panel_id = f"{group_id}-{i}"
         active = " is-active" if i == 0 else ""
         buttons.append(f'<button type="button" class="subtab-btn{active}" data-target="{panel_id}">{esc(label)}</button>')
         panels.append(f'<div class="subtab-panel{active}" data-panel="{panel_id}">{panel_html}</div>')
-    return f'<div class="subtabs" role="tablist">{"".join(buttons)}</div><div>{"".join(panels)}</div>'
+    bar_cls = f"subtabs {bar_class}".strip()
+    bar_html = f'<div class="{bar_cls}" role="tablist" data-group="{group_id}">{"".join(buttons)}</div>'
+    panels_html = f'<div data-panels-for="{group_id}">{"".join(panels)}</div>'
+    return bar_html, panels_html
 
 
 # ============================================================================
@@ -1264,14 +1287,75 @@ def strategy_trade_chart(price_series, trades, aria_label="strategy trades over 
 # Sections
 # ============================================================================
 
+def _humanize_fetched_at(iso_str: str) -> str:
+    """Bundle timestamps are always UTC ISO8601 with a trailing "Z" (see
+    data/bundle.py) -- shown here as a readable absolute date/time, not a
+    relative "3 hours ago": this dashboard is a static file that can be
+    reopened long after it was generated, and a relative time computed at
+    generation would silently go wrong the moment that happens (there's
+    no client-side clock to recompute it against, unlike the live
+    /progress page)."""
+    if not iso_str:
+        return "—"
+    try:
+        parsed = dt.datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+    except ValueError:
+        return iso_str
+    return parsed.strftime("%b %-d, %Y · %-I:%M %p UTC")
+
+
+def _company_domain(website) -> str | None:
+    """Best-effort bare domain (e.g. "apple.com") from yfinance's
+    `website` field (e.g. "https://www.apple.com") -- feeds the logo
+    lookup in section_header(). None for anything that isn't a URL, so
+    the logo falls back to a plain initial-letter badge instead of
+    requesting a guaranteed-broken image."""
+    if not website:
+        return None
+    m = re.match(r"^(?:https?://)?(?:www\.)?([^/\s]+)", website.strip())
+    return m.group(1) if m else None
+
+
 def section_header(bundle):
     ticker = bundle.get("ticker", "?")
-    fetched_at = bundle.get("fetched_at", "")
+    fundamentals = bundle.get("fundamentals", {}) or {}
+    company_name = fundamentals.get("company_name")
+    fetched_at = _humanize_fetched_at(bundle.get("fetched_at", ""))
+    domain = _company_domain(fundamentals.get("website"))
+    initial = esc((ticker or "?")[:1].upper())
+
+    # Clearbit's logo API is free, keyless, and exists for exactly this
+    # ("give me a company's logo from its domain") -- the one external
+    # network call this otherwise fully self-contained page makes, so it
+    # degrades to a plain initial-letter badge (no image request at all)
+    # whenever there's no website on file, and via onerror if Clearbit
+    # has no logo for a real domain or is unreachable (e.g. an offline HA
+    # instance).
+    if domain:
+        logo_html = f"""
+      <img class="company-logo" src="https://logo.clearbit.com/{esc(domain)}" alt="{esc(company_name or ticker)} logo"
+           width="40" height="40" loading="lazy"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="company-logo-fallback" style="display:none;">{initial}</div>"""
+    else:
+        logo_html = f'<div class="company-logo-fallback">{initial}</div>'
+
+    company_line = f" · {esc(company_name)}" if company_name else ""
+
     return f"""
 <div class="topbar">
-  <div>
-    <h1>{esc(ticker)} — Research Dashboard</h1>
-    <div class="meta">Bundle fetched {esc(fetched_at)} · StockLLM (research/decision-support only, not financial advice)</div>
+  <div class="topbar-identity">
+    <a href="/" class="back-link" title="Back to ticker search" aria-label="Back to ticker search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+      </svg>
+    </a>
+    <div class="company-logo-wrap">{logo_html}</div>
+    <div class="topbar-title-group">
+      <h1>{esc(ticker)}</h1>
+      <div class="meta">{esc(fetched_at)}{company_line}</div>
+    </div>
   </div>
   <div class="topbar-actions">
     <button type="button" class="chip chip-accent" id="llm-export-btn" data-ticker="{esc(ticker)}"
@@ -1285,30 +1369,6 @@ def section_header(bundle):
     <button type="button" class="chip" id="theme-toggle">Dark mode</button>
   </div>
 </div>"""
-
-
-_NAV_ITEMS = [
-    ("sec-price", "Price"),
-    ("sec-analyst", "Analyst"),
-    ("sec-backtests", "Backtests"),
-    ("sec-relative", "Performance"),
-    ("sec-ownership", "Ownership"),
-    ("sec-financials", "Financials"),
-    ("sec-extras", "Dividends"),
-    ("sec-news", "News"),
-    ("sec-filings", "Filings"),
-]
-
-
-def section_nav(bundle):
-    """
-    A jump-to-section pill bar, primarily a mobile affordance (hidden on
-    wide desktop viewports where the eye can already scan the whole page --
-    see the min-width: 900px rule in webui/src/styles/base.css) so a phone reader isn't
-    stuck scrolling through 9 sections to find the one they want.
-    """
-    links = "".join(f'<a href="#{anchor}">{esc(label)}</a>' for anchor, label in _NAV_ITEMS)
-    return f'<nav class="section-nav" aria-label="Jump to section">{links}</nav>'
 
 
 def section_hero(bundle, pipeline_result=None):
@@ -2025,11 +2085,13 @@ def section_ownership(bundle):
 <div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4) {info_icon('insider_transactions')}</span></div>{insider_table if insider_rows else empty_state()}</div>
 <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales {info_icon('form144')}</span></div>{f144_table if f144_rows else empty_state()}</div>"""
 
+    ownership_bar, ownership_panels = subtabs("ownership", [("Institutional", institutional_panel), ("Insiders", insiders_panel)])
     return f"""
 <div class="card full" id="sec-ownership">
   <h2>Ownership {info_icon('section_ownership')}</h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
-  {subtabs("ownership", [("Institutional", institutional_panel), ("Insiders", insiders_panel)])}
+  {ownership_bar}
+  {ownership_panels}
 </div>"""
 
 
@@ -2148,15 +2210,17 @@ def section_dividends_options_macro_social(bundle):
   {sample_html}
 </div>"""
 
+    extras_bar, extras_panels = subtabs("extras", [
+        ("Dividends & Buybacks", dividends_panel),
+        ("Options", options_panel),
+        ("Macro", macro_panel),
+        ("Sentiment", sentiment_panel),
+    ])
     return f"""
 <div class="card full" id="sec-extras">
   <h2>Dividends, Buybacks, Options & Sentiment {info_icon('section_extras')}</h2>
-  {subtabs("extras", [
-      ("Dividends & Buybacks", dividends_panel),
-      ("Options", options_panel),
-      ("Macro", macro_panel),
-      ("Sentiment", sentiment_panel),
-  ])}
+  {extras_bar}
+  {extras_panels}
 </div>"""
 
 
@@ -2230,21 +2294,30 @@ def section_data_notes(bundle):
 def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     _reset_chart_registry()  # must run before any section/chart function below
     ticker = esc(bundle.get("ticker", "Ticker"))
-    # Rendered directly in .wrap below, not inside .grid/sections -- sits
-    # full-width right after the KPI row, ahead of At a Glance (user
-    # request: chart high up, right under the vitals, before the prose).
-    price_technicals_html = section_price_technicals(bundle)
-    sections = [
-        section_analyst(bundle),
-        section_backtests(bundle),
-        section_relative_performance(bundle),
-        section_financials(bundle),
-        section_ownership(bundle),
-        section_dividends_options_macro_social(bundle),
-        section_news(bundle),
-        section_filings(bundle),
-        section_data_notes(bundle),
-    ]
+    # One section visible at a time instead of one long scroll of ~9 full
+    # cards (user request) -- same subtabs() component section_ownership/
+    # section_dividends_options_macro_social already use internally, just
+    # applied one level up. Price & Technicals is first (so it's still
+    # the first thing shown, same as when it had its own pinned spot) and
+    # therefore active by default. Data Quality Notes stays outside the
+    # tabs, same reasoning as the footer disclaimer below: a brief,
+    # page-wide caveat, not a per-topic view.
+    main_tabs_bar, main_tabs_panels = subtabs(
+        "main",
+        [
+            ("Price & Technicals", section_price_technicals(bundle)),
+            ("Analyst", section_analyst(bundle)),
+            ("Backtests", section_backtests(bundle)),
+            ("Performance", section_relative_performance(bundle)),
+            ("Financials", section_financials(bundle)),
+            ("Ownership", section_ownership(bundle)),
+            ("Dividends & More", section_dividends_options_macro_social(bundle)),
+            ("News", section_news(bundle)),
+            ("Filings", section_filings(bundle)),
+        ],
+        bar_class="page-tabs",
+    )
+    data_notes_html = section_data_notes(bundle)
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
     charts_json = json.dumps(_drain_chart_registry())
     # Base64, not raw/escaped text: a <script> tag's content is parsed as
@@ -2275,17 +2348,15 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <body>
 <div class="sticky-top">
 {section_header(bundle)}
-{section_nav(bundle)}
+{main_tabs_bar}
 </div>
 {section_hero(bundle, pipeline_result)}
 <div class="wrap">
   {ai_section}
   {section_kpis(bundle)}
-  {price_technicals_html}
   {section_at_a_glance(bundle)}
-  <div class="grid">
-    {''.join(sections)}
-  </div>
+  {main_tabs_panels}
+  {data_notes_html}
 </div>
 <footer class="disclaimer">
   StockLLM is a research/decision-support tool. It is NOT financial advice and never places trades.

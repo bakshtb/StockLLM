@@ -14,10 +14,10 @@ html, body {
 }
 body { padding: 0 0 64px 0; }
 
-/* Topbar and the section nav below it stick together as one unit -- see
-   .sticky-top, the wrapper that actually holds position: sticky (putting
-   sticky on each separately would need the nav to know the topbar's exact
-   rendered height, which varies with content/wrapping). */
+/* Topbar sticks alone now -- it used to share .sticky-top with the old
+   anchor-scroll section-nav pill bar, superseded by the real page-level
+   tabs in components.css (.subtabs.page-tabs, which sticks to its own
+   position right below the topbar instead). */
 .sticky-top { position: sticky; top: 0; z-index: 20; }
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
@@ -25,28 +25,31 @@ body { padding: 0 0 64px 0; }
   background: var(--surface-1);
   border-bottom: 1px solid var(--border);
 }
+.topbar-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.back-link {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 50%; color: var(--text-secondary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.back-link:hover { background: var(--gridline); color: var(--text-primary); }
+.back-link:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+.company-logo-wrap { flex-shrink: 0; width: 40px; height: 40px; }
+.company-logo {
+  width: 40px; height: 40px; border-radius: 8px; object-fit: contain;
+  background: var(--page-plane);
+}
+.company-logo-fallback {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 8px;
+  background: var(--series-1); color: #fff; font-size: 16px; font-weight: 700;
+}
+.topbar-title-group { min-width: 0; }
 .topbar h1 { font-size: 20px; margin: 0; font-weight: 600; }
-.topbar .meta { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
-
-.section-nav {
-  display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-  padding: 8px 24px; background: var(--surface-1); border-bottom: 1px solid var(--border);
-  scrollbar-width: none;
+.topbar .meta {
+  color: var(--text-secondary); font-size: 13px; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.section-nav::-webkit-scrollbar { display: none; }
-.section-nav a {
-  flex-shrink: 0; font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
-  text-decoration: none; background: var(--page-plane); border: 1px solid var(--border);
-  border-radius: 999px; padding: 6px 13px; white-space: nowrap;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.section-nav a:hover { color: var(--text-primary); border-color: var(--text-secondary); }
-.section-nav a:focus-visible {
-  color: var(--text-primary); border-color: var(--text-secondary);
-  outline: 2px solid var(--series-1); outline-offset: 2px;
-}
-@media (min-width: 900px) { .section-nav { display: none; } }
-.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 button.chip {
   font: inherit; font-size: 13px; cursor: pointer;
   display: inline-flex; align-items: center; gap: 6px;

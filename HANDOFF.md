@@ -1806,6 +1806,107 @@ StockLLM/
       real computed `outline-width`/`style`/`color` via headless
       Chromium, not just "the CSS parses."
 
+50. **Back-to-search button, redesigned header with a company logo, a
+    real one-line KPI row, and page-level tabs replacing the long scroll**
+    (0.9.27) — four user requests in one pass: a way back to the ticker
+    form after a run; the plain "TICKER — Research Dashboard / Bundle
+    fetched <raw ISO8601>" header called out as ugly; the top KPI row
+    wrapping to 2 lines on desktop; and "each section its own tab" (the
+    pattern already used inside Ownership/Dividends & More, applied one
+    level up to the whole page).
+    - **Back button**: a small circular arrow-left icon button in the new
+      `.topbar-identity` group, `href="/"` -- confirmed this is genuinely
+      the ticker-form route (`webapp/app.py`'s `index()`), and that a bare
+      absolute `/` works the same way `/assets/...` already does under
+      Ingress (Ingress strips its own prefix before forwarding, so Flask
+      always sees the plain path -- same reasoning already documented on
+      `PAGE_HEAD`'s CSS link).
+    - **Header redesign**: `data/fetch_fundamentals.py` now also returns
+      `company_name`/`website` from the *same* already-fetched yfinance
+      `info` dict (no new API call). `section_header()` shows a real
+      company logo via Clearbit's free, keyless logo API
+      (`https://logo.clearbit.com/{domain}`, domain parsed from
+      `website`), falling back to a plain colored initial-letter badge
+      when there's no website on file, or via the `<img>`'s `onerror` if
+      Clearbit has no logo for a real domain or is unreachable. This is
+      the one external network call this otherwise fully self-contained
+      page makes -- **found live, while verifying**: this sandbox's own
+      DNS specifically fails to resolve `logo.clearbit.com` ("DNS server
+      returned answer with no data") while unrelated domains (github.com,
+      google.com) resolve fine -- strong evidence something in the
+      resolution path (quite possibly the user's own home network, given
+      this add-on's target environment is HAOS on a home Raspberry Pi,
+      where a Pi-hole/ad-blocking DNS setup is common and Clearbit is a
+      known data-enrichment domain on many public blocklists) filters it
+      specifically. The fallback badge renders correctly either way --
+      no broken image icon -- but real logos may never actually load for
+      this user depending on their own network's DNS. Flagged to the user
+      rather than silently assumed working. Also: `fetched_at` (raw
+      ISO8601, e.g. "2026-08-05T18:14:42.824321Z") replaced with a
+      readable absolute date/time (`_humanize_fetched_at()`) -- absolute,
+      not relative ("3 hours ago"), since this is a static file that can
+      be reopened long after generation with no client-side clock to
+      recompute a relative time against. The redundant "StockLLM
+      (research/decision-support only, not financial advice)" text
+      dropped from the header entirely -- the footer already carries a
+      fuller version of the same disclaimer.
+    - **One-line KPI row**: `.kpi-row`'s `auto-fit` floor lowered from
+      160px to 130px -- at 160px, a 1180px-max `.wrap` only leaves
+      ~1060px after gaps for `section_kpis()`'s 7 tiles (1060/7 ≈ 151px,
+      just under the floor), so the 7th tile (10Y Treasury yield) wrapped
+      alone onto a second row on real desktop widths. 130px fits all 7
+      comfortably; the existing 700px/420px mobile breakpoints still
+      collapse this either way.
+    - **Page-level tabs**: `build_dashboard()`'s `<div class="grid">` of
+      ~9 always-visible full cards replaced with one `subtabs()` call
+      (Price & Technicals first/default-active, then Analyst, Backtests,
+      Performance, Financials, Ownership, Dividends & More, News,
+      Filings) -- the exact same component `section_ownership`/
+      `section_dividends_options_macro_social` already used internally,
+      just applied one level up; nesting (Ownership's own Institutional/
+      Insiders sub-tabs inside the top-level Ownership tab) works
+      unmodified. At a Glance and the KPI row stay outside the tabs
+      (always visible, above them); Data Quality Notes also stays outside
+      (a brief page-wide caveat, not a per-topic view, same reasoning as
+      the footer disclaimer). The old anchor-scroll `section_nav()`/
+      `_NAV_ITEMS` (a mobile-only jump bar, hidden ≥900px) is gone
+      entirely, superseded by the new bar, which is real navigation now
+      and so must be visible at every width.
+    - `subtabs()` now returns `(bar_html, panels_html)` as a tuple instead
+      of one concatenated string, needed because the top-level bar lives
+      in `.sticky-top` (so it sticks to the topbar as one unit, avoiding
+      the "would need to know the topbar's exact rendered height, which
+      varies with content/wrapping" problem noted -- and still true --
+      for the old nav) while its panels live in `.wrap`. The two existing
+      call sites (Ownership, Dividends & More) updated to unpack and
+      concatenate locally.
+    - **A real bug found and fixed only by actually clicking a tab and
+      checking the content, not just the button state**: `subtabs.js`
+      originally found a bar's panels via `bar.nextElementSibling`, which
+      is `null`/wrong for the top-level bar specifically because it's no
+      longer adjacent to its panels (see above) -- clicking a top-level
+      tab correctly highlighted the button but silently never switched
+      the visible content, because `panels` resolved to an empty list.
+      Fixed by linking bar and panels with explicit `data-group`/
+      `data-panels-for` attributes instead of relying on DOM adjacency at
+      all -- robust for both the adjacent (Ownership, Dividends & More)
+      and non-adjacent (top-level) cases.
+    - `tests/test_dashboard_build.py`'s old `TestSectionNav` (asserted on
+      `<nav class="section-nav">` anchor links) replaced with
+      `TestPageTabs`, asserting on the new tab bar/buttons/data-panel
+      targets, plus that the bar (not its panels) lives inside
+      `.sticky-top`.
+    - **Verified for real**: full pytest suite green (480 passed);
+      fetched a real NVDA bundle (`company_name` "NVIDIA Corporation",
+      `website` "https://www.nvidia.com" -- confirms the new fundamentals
+      fields work against live data) and a real backtest price_series,
+      regenerated the dashboard, and in headless Chromium: confirmed all
+      7 KPIs render on one line, clicked the "Financials" tab and
+      confirmed the *content* actually switched (not just the button,
+      per the bug above), confirmed the back-link's href, checked dark
+      mode, and checked a 390px mobile view (logo, truncated company
+      name, horizontally-scrolling tabs all correct).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

@@ -83,6 +83,8 @@ def fetch_fundamentals(ticker: str, current_price: float | None = None) -> dict:
             )
 
     return {
+        "company_name": info.get("longName") or info.get("shortName"),
+        "website": info.get("website"),
         "pe_ratio": info.get("trailingPE"),
         "forward_pe": info.get("forwardPE"),
         "market_cap": _fmt_market_cap(market_cap_value),
