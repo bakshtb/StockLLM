@@ -1043,7 +1043,8 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
 
 def price_history_chart(price_series, aria_label="price history"):
     """A full interactive price chart -- a colored area line (green/red by
-    net change over the series, like Google Finance's quote chart) with
+    net change over the series, gradient-filled and topped with a filled
+    dot at the latest close, like Google Finance's quote chart) with
     volume and MA20/50/200 overlays, drag-to-zoom (mouse wheel/pinch + a
     slider), and a crosshair tooltip -- the "real stock app" chart the
     Price & Technicals section was missing. Built entirely from
@@ -1056,6 +1057,18 @@ def price_history_chart(price_series, aria_label="price history"):
     this dashboard's research/decision-support framing -- a smooth line is
     also what most non-trader users expect when they picture "a stock
     chart". OHLC detail isn't lost from the bundle, just not charted here.
+
+    The gradient fill and end-of-line dot are real, theme-aware colors
+    resolved client-side (see hydrate.js's areaGradient()/hexToRgba()),
+    not baked into this HTML -- the "__areaGradientPos__"/"Neg__" tokens
+    below are the same "leave a token, let JS resolve it" pattern this
+    file already uses for every other formatter/color (see this module's
+    top-of-file comment on register_chart()). No "previous close" dashed
+    reference line, unlike Google's: that's specifically an intraday
+    (today vs. yesterday's close) concept, and this chart shows daily
+    closes over months/years, not intraday ticks -- there's no single
+    "previous close" value that stays meaningful across every zoom level
+    here, so it's not faked in.
 
     Verified structurally against the real vendored echarts.min.js in a
     standalone headless-chromium harness before wiring in here: 5 series
@@ -1073,8 +1086,25 @@ def price_history_chart(price_series, aria_label="price history"):
         c = p.get("close")
         closes.append(None if c is None else {"value": c, "fmt": fmt_price(c)})
     first_close = next((p["close"] for p in price_series if p.get("close") is not None), None)
-    last_close = next((p["close"] for p in reversed(price_series) if p.get("close") is not None), None)
-    line_color = "var(--diverge-neg)" if (first_close is not None and last_close is not None and last_close < first_close) else "var(--diverge-pos)"
+    last_idx, last_close = next(
+        ((i, p["close"]) for i, p in reversed(list(enumerate(price_series))) if p.get("close") is not None),
+        (None, None),
+    )
+    is_down = first_close is not None and last_close is not None and last_close < first_close
+    line_color = "var(--diverge-neg)" if is_down else "var(--diverge-pos)"
+    area_gradient = "__areaGradientNeg__" if is_down else "__areaGradientPos__"
+    # A filled dot at the most recent close, like Google Finance's quote
+    # chart -- every range-preset button (see chart-toolbar.js) zooms to
+    # end:100, so the latest point is always at the visible right edge.
+    end_marker = (
+        {
+            "symbol": "circle", "symbolSize": 7,
+            "itemStyle": {"color": line_color},
+            "label": {"show": False},
+            "data": [{"coord": [last_idx, last_close]}],
+        }
+        if last_idx is not None else None
+    )
 
     def _ma_series(key, color, name):
         data = []
@@ -1161,8 +1191,9 @@ def price_history_chart(price_series, aria_label="price history"):
                 "name": "Price", "type": "line", "data": closes,
                 "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False,
                 "lineStyle": {"color": line_color, "width": 2},
-                "areaStyle": {"color": line_color, "opacity": 0.12},
+                "areaStyle": {"color": area_gradient},
                 "connectNulls": True, "z": 3,
+                **({"markPoint": end_marker} if end_marker else {}),
             },
             _ma_series("ma20", "var(--series-1)", "MA20"),
             _ma_series("ma50", "var(--series-2)", "MA50"),
@@ -1637,7 +1668,7 @@ def section_price_technicals(bundle):
 </div>"""
 
     return f"""
-<div class="card full" id="sec-price">
+<div class="card" id="sec-price">
   <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
   {history_block}
@@ -2199,8 +2230,11 @@ def section_data_notes(bundle):
 def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     _reset_chart_registry()  # must run before any section/chart function below
     ticker = esc(bundle.get("ticker", "Ticker"))
+    # Rendered directly in .wrap below, not inside .grid/sections -- sits
+    # full-width right after the KPI row, ahead of At a Glance (user
+    # request: chart high up, right under the vitals, before the prose).
+    price_technicals_html = section_price_technicals(bundle)
     sections = [
-        section_price_technicals(bundle),
         section_analyst(bundle),
         section_backtests(bundle),
         section_relative_performance(bundle),
@@ -2247,6 +2281,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <div class="wrap">
   {ai_section}
   {section_kpis(bundle)}
+  {price_technicals_html}
   {section_at_a_glance(bundle)}
   <div class="grid">
     {''.join(sections)}

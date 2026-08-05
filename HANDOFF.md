@@ -1701,6 +1701,66 @@ StockLLM/
       the line/fill color still reads correctly, zero console errors.
       Full pytest suite green (480 passed).
 
+48. **Further page reorder + a real gradient fill and end-of-line dot on
+    the price chart** (0.9.25) — user sent a screenshot of Google
+    Finance's own chart (dark mode, Hebrew UI) as the visual target and
+    asked for: KPI row → chart → At a Glance (was KPI → At a Glance →
+    chart, from item 47); the chart itself "beautiful, minimalist" like
+    the reference.
+    - **Reorder**: `section_price_technicals(bundle)` pulled out of the
+      `sections` list/`.grid` entirely and computed once as
+      `price_technicals_html`, rendered directly in `build_dashboard()`'s
+      markup between `section_kpis()` and `section_at_a_glance()` --
+      matches how `ai_section`/kpis/at-a-glance were already handled
+      (top-level blocks in `.wrap`, not grid items). Its wrapper reverted
+      from `class="card full"` (needed for the old in-grid full-width
+      hack from item 47) back to plain `class="card"`, since a
+      `.wrap`-level block doesn't need the grid-only "full" class.
+    - **Real gradient fill, not flat opacity**: item 47's `areaStyle`
+      compromise (a flat `opacity: 0.12` fill, chosen specifically to
+      avoid extending the client-side color resolver) turned out to be
+      worth doing properly once actually compared side-by-side against
+      the reference. Added `TOKEN_AREA_GRADIENT_POS`/`_NEG` to
+      `hydrate.js`: `price_history_chart()` now emits `"__areaGradientPos
+      __"`/`"__areaGradientNeg__"` as the areaStyle color instead of a
+      literal `var(--x)`, and `hydrateOption()` resolves that token into
+      a real two-stop linear gradient (30% alpha at the line, fading to
+      2% at the axis) built from the *live* computed `--diverge-pos`/
+      `--diverge-neg` value via a small hex→rgba helper (`tokens.css`
+      always defines these as `#rrggbb`, confirmed by reading the file --
+      no need for a generic CSS-color-string parser). Still fully
+      theme-aware: `reapplyTheme()` already re-runs `hydrateOption()` on
+      every registered chart on a dark-mode toggle, so the gradient
+      recomputes from the new theme's hex with no special-casing.
+    - **End-of-line marker dot**: a `markPoint` on the Price series at the
+      last non-null close (`{"coord": [last_idx, last_close]}`), colored
+      to match the line. Every range-preset button zooms to `end: 100`
+      (chart-toolbar.js), so the latest point -- and therefore this dot
+      -- is always at the visible right edge, matching the reference.
+    - **Range-tab chrome lightened**: `.range-btn` (1M/3M/6M/.../All)
+      lost its resting `1px solid var(--border)` box (now transparent
+      until hover/active) and gained a fully rounded pill radius, closer
+      to the reference's borderless tabs with a single filled active
+      pill. Scoped to `.range-btn` only -- confirmed via grep this class
+      isn't reused anywhere else on the page, so nothing else changed.
+    - **Deliberately not attempted**: the reference's top toolbar (chart-
+      type/Compare/Indicators dropdowns) and its dashed "previous close"
+      line. The toolbar dropdowns are real new features (compare-vs-
+      benchmark, indicator overlays), well beyond "make the existing
+      chart beautiful" as asked. The previous-close line is specifically
+      an intraday (today vs. yesterday) concept -- this chart shows daily
+      closes over months/years with no single "previous close" that
+      stays meaningful across every zoom level, so faking one in would
+      violate this dashboard's own no-fabricated-data principle.
+    - `tests/test_backtest.py`'s price-series test updated to assert the
+      new gradient token and markPoint shape instead of a literal color.
+    - **Verified for real**: full pytest suite green (480 passed);
+      regenerated a real AAPL dashboard with a real 1506-point
+      `price_series` (same `run_backtests()` approach as item 47),
+      screenshotted the new order/full-width chart, the gradient fill and
+      end dot in both light and dark mode, and the 1M range-button zoom
+      -- all in headless Chromium, zero console errors.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

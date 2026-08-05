@@ -24,10 +24,40 @@ var TOKEN_LABEL = '__labelFmt__';
 var TOKEN_AXIS_COMPACT = '__compactAxis__';
 var TOKEN_RANGE_TRACK_LABEL_LAYOUT = '__rangeTrackLabelLayout__';
 var TOKEN_VBAR_LABEL_STAGGER = '__verticalBarLabelStagger__';
+var TOKEN_AREA_GRADIENT_POS = '__areaGradientPos__';
+var TOKEN_AREA_GRADIENT_NEG = '__areaGradientNeg__';
 var VAR_RE = /^var\((--[\w-]+)\)$/;
 
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// tokens.css always defines color custom properties as #rgb/#rrggbb (never
+// rgb()/hsl()/named colors -- true across every var used in a chart, see
+// tokens.css) -- a plain hex parser is enough here, no need for a
+// DOM-probe-based generic CSS color normalizer.
+function hexToRgba(hex, alpha) {
+  var h = hex.replace('#', '');
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  var num = parseInt(h, 16);
+  if (h.length !== 6 || isNaN(num)) return hex; // not hex -- fall back to opaque, still renders
+  return 'rgba(' + ((num >> 16) & 255) + ',' + ((num >> 8) & 255) + ',' + (num & 255) + ',' + alpha + ')';
+}
+
+// price_history_chart's area fill, faded top-to-bottom like Google
+// Finance's quote chart -- top of the fill echoes the line color at low
+// opacity, fading to near-nothing at the axis. Built from the live
+// computed CSS var (not baked at generation time), so it re-themes
+// correctly on a dark-mode toggle exactly like every other chart color.
+function areaGradient(varName) {
+  var base = cssVar(varName);
+  return {
+    type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+    colorStops: [
+      { offset: 0, color: hexToRgba(base, 0.30) },
+      { offset: 1, color: hexToRgba(base, 0.02) },
+    ],
+  };
 }
 
 // Mirrors dashboard/generate_dashboard.py's fmt_compact() exactly (same
@@ -229,6 +259,8 @@ function hydrateOption(node) {
     if (node === TOKEN_AXIS_COMPACT) return formatCompact;
     if (node === TOKEN_RANGE_TRACK_LABEL_LAYOUT) return makeRangeTrackLabelLayout();
     if (node === TOKEN_VBAR_LABEL_STAGGER) return makeVerticalBarLabelStagger();
+    if (node === TOKEN_AREA_GRADIENT_POS) return areaGradient('--diverge-pos');
+    if (node === TOKEN_AREA_GRADIENT_NEG) return areaGradient('--diverge-neg');
     return node;
   }
   if (Array.isArray(node)) return node.map(hydrateOption);

@@ -97,13 +97,15 @@
 
 .price-chart-wrap { margin-top: 6px; }
 .chart-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+/* No resting border (unlike .subtab-btn's pill) -- plain text until
+   hovered/active, matching Google Finance's minimal range-tab row. */
 .range-btn {
   font-size: 12px; font-weight: 600; color: var(--text-secondary);
-  background: none; border: 1px solid var(--border); border-radius: 6px;
-  padding: 4px 10px; cursor: pointer; transition: background-color 0.15s ease;
+  background: none; border: 1px solid transparent; border-radius: 999px;
+  padding: 4px 12px; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
   position: relative; overflow: hidden;
 }
-.range-btn:hover { background: var(--gridline); }
+.range-btn:hover { background: var(--gridline); color: var(--text-primary); }
 .range-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
 
 /* Segmented pill tabs: splits one crowded section into focused sub-views

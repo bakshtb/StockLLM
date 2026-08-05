@@ -276,7 +276,9 @@ class TestPriceHistoryChart:
     def test_price_line_series_shape_and_color(self):
         """Price is a colored area line (not candlesticks -- see
         price_history_chart's docstring for why), green/red by net change
-        over the whole series."""
+        over the whole series, gradient-filled and topped with a dot at
+        the latest close -- both resolved client-side by hydrate.js, so
+        this only checks for the token strings it dispatches on."""
         import dashboard.generate_dashboard as gd
         gd._reset_chart_registry()
         series = self._price_series(n=60)
@@ -285,11 +287,15 @@ class TestPriceHistoryChart:
         price = next(s for s in option["series"] if s["name"] == "Price")
         assert price["type"] == "line"
         assert len(price["data"]) == 60
-        expected_color = "var(--diverge-neg)" if series[-1]["close"] < series[0]["close"] else "var(--diverge-pos)"
+        is_down = series[-1]["close"] < series[0]["close"]
+        expected_color = "var(--diverge-neg)" if is_down else "var(--diverge-pos)"
+        expected_gradient = "__areaGradientNeg__" if is_down else "__areaGradientPos__"
         assert price["lineStyle"]["color"] == expected_color
-        assert price["areaStyle"]["color"] == expected_color
+        assert price["areaStyle"]["color"] == expected_gradient
         first = next(d for d in price["data"] if d is not None)
         assert isinstance(first["value"], (int, float))
+        assert price["markPoint"]["data"][0]["coord"] == [59, series[-1]["close"]]
+        assert price["markPoint"]["itemStyle"]["color"] == expected_color
 
     def test_default_zoom_shows_roughly_last_year_for_long_history(self):
         import dashboard.generate_dashboard as gd

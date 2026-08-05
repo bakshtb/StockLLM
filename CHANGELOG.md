@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.25
+
+- Change: page order is now KPI row, then the price chart, then At a
+  Glance (was KPI, At a Glance, then chart). The price chart's area fill
+  is now a real theme-aware gradient (was flat opacity), with a filled
+  dot marking the latest close, and the range tabs (1M/3M/.../All) lost
+  their resting border for a more minimalist look -- matched against a
+  Google Finance screenshot the user sent as the visual target. See
+  HANDOFF.md item 48.
+
 ## 0.9.24
 
 - Change: page order is now hero price, KPI row, At a Glance, then a
