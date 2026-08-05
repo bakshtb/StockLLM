@@ -2061,6 +2061,39 @@ StockLLM/
       real dashboard and confirmed `ensure_vendored_assets()` copies the
       new icon through to `assets/icon.png` at the correct 180x180 size.
 
+55. **KPIs and At a Glance scoped into the Price & Technicals tab, not
+    pinned above every tab** (0.9.32) — real user-reported bug (pasted
+    the actual KPI/At-a-Glance text from a live MBLY dashboard): item 48
+    deliberately kept `section_kpis()`/`section_at_a_glance()` outside
+    the tab-switching entirely, always visible above `main_tabs_panels` --
+    technically correct (nothing was literally duplicated per tab, it's
+    one instance that just never got hidden), but experientially it read
+    exactly like the user described: click any tab and the same KPI
+    row/At-a-Glance content is still sitting there every time, before you
+    even get to that tab's own unique content.
+    - **Fix**: `build_dashboard()` now builds
+      `section_kpis(bundle) + section_at_a_glance(bundle) +
+      section_price_technicals(bundle)` as the *content* of the
+      "Price & Technicals" tab (the first/default-active one) instead of
+      three separate always-visible pieces above the tab bar. Every other
+      tab (Analyst, Financials, ...) now shows only its own section when
+      clicked. `ai_section` (the AI Recommendation verdict, when a
+      pipeline_result exists) deliberately stayed outside the tabs,
+      unchanged -- the user's report was specifically about the KPI/
+      At-a-Glance text, and a verdict arguably deserves to stay visible
+      regardless of which tab is open, unlike a data summary that's most
+      at home with the price/technicals view it was written to introduce.
+    - **Verified for real**: full pytest suite green (480 passed, no
+      test changes needed -- nothing asserted on the old placement);
+      regenerated a real MBLY dashboard (the same bundle referenced in
+      the user's report) and confirmed in headless Chromium that the
+      KPI row/At a Glance render inside Price & Technicals, and --
+      checked properly this time, not just `document.querySelector`
+      returning non-null for an element that still exists in the DOM
+      just hidden -- that `.kpi-row`'s `offsetParent` is `null` (not
+      rendered) once the Analyst tab is active, while the Analyst
+      section's own `offsetParent` is non-null (genuinely visible).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

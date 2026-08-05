@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.32
+
+- Fix: the KPI row and At a Glance panel were pinned above the tab bar,
+  so they stayed visible no matter which tab was open -- read exactly
+  like "the same content repeats on every tab" even though nothing was
+  technically duplicated. Moved both into the Price & Technicals tab
+  itself (the default/first one); every other tab now shows only its
+  own content. See HANDOFF.md item 55.
+
 ## 0.9.31
 
 - Add: replaced the app icon (`dashboard/assets/icon.png`, the

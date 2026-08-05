@@ -2310,10 +2310,18 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     # therefore active by default. Data Quality Notes stays outside the
     # tabs, same reasoning as the footer disclaimer below: a brief,
     # page-wide caveat, not a per-topic view.
+    # KPIs and At a Glance live inside the Price & Technicals tab itself
+    # (not pinned above the tab bar) -- user feedback: with them above
+    # the tabs, they stayed visible no matter which tab was open, reading
+    # as "the same content repeated on every tab" even though technically
+    # they were just outside the tab-switching entirely. Scoping them to
+    # the one tab they actually belong with means every other tab
+    # (Analyst, Financials, ...) shows only its own content when clicked.
+    price_technicals_tab = section_kpis(bundle) + section_at_a_glance(bundle) + section_price_technicals(bundle)
     main_tabs_bar, main_tabs_panels = subtabs(
         "main",
         [
-            ("Price & Technicals", section_price_technicals(bundle)),
+            ("Price & Technicals", price_technicals_tab),
             ("Analyst", section_analyst(bundle)),
             ("Backtests", section_backtests(bundle)),
             ("Performance", section_relative_performance(bundle)),
@@ -2361,8 +2369,6 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 {section_hero(bundle, pipeline_result)}
 <div class="wrap">
   {ai_section}
-  {section_kpis(bundle)}
-  {section_at_a_glance(bundle)}
   {main_tabs_panels}
   {data_notes_html}
 </div>
