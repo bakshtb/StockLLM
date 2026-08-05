@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.24
+
+- Change: page order is now hero price, KPI row, At a Glance, then a
+  full-width Price & Technicals (was: hero, At a Glance, KPI row, then a
+  half-width Price & Technicals sharing a row with empty space). Also
+  replaced the price chart's candlesticks with a colored area line
+  (green/red by net change), keeping the MA20/50/200 overlays, volume,
+  zoom, and crosshair tooltip unchanged -- user request. See HANDOFF.md
+  item 47.
+
 ## 0.9.23
 
 - Fix: real regression from 0.9.22's KPI-tile flattening -- on mobile,

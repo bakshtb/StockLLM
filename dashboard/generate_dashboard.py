@@ -1042,13 +1042,20 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
 
 
 def price_history_chart(price_series, aria_label="price history"):
-    """A full interactive price chart -- candlesticks, volume, and MA20/
-    50/200 overlays, with drag-to-zoom (mouse wheel/pinch + a slider) and
-    a crosshair tooltip -- the "real stock app" chart the Price &
-    Technicals section was missing. Built entirely from price_series,
-    which backtest/engine.py already fetches once per run and shares with
-    every strategy's own trade chart; this reuses the exact same list, no
-    separate fetch of its own.
+    """A full interactive price chart -- a colored area line (green/red by
+    net change over the series, like Google Finance's quote chart) with
+    volume and MA20/50/200 overlays, drag-to-zoom (mouse wheel/pinch + a
+    slider), and a crosshair tooltip -- the "real stock app" chart the
+    Price & Technicals section was missing. Built entirely from
+    price_series, which backtest/engine.py already fetches once per run
+    and shares with every strategy's own trade chart; this reuses the
+    exact same list, no separate fetch of its own.
+
+    Line, not candlesticks: candlesticks read as a trading/execution tool
+    (each bar is a single day's open/high/low/close), which doesn't match
+    this dashboard's research/decision-support framing -- a smooth line is
+    also what most non-trader users expect when they picture "a stock
+    chart". OHLC detail isn't lost from the bundle, just not charted here.
 
     Verified structurally against the real vendored echarts.min.js in a
     standalone headless-chromium harness before wiring in here: 5 series
@@ -1061,18 +1068,13 @@ def price_history_chart(price_series, aria_label="price history"):
     dates = [p["date"] for p in price_series]
     n = len(price_series)
 
-    candles = []
+    closes = []
     for p in price_series:
-        if p["open"] is None:
-            candles.append(None)
-            continue
-        candles.append({
-            "value": [p["open"], p["close"], p["low"], p["high"]],
-            "fmt": (
-                f"Open {fmt_price(p['open'])} · High {fmt_price(p['high'])} · "
-                f"Low {fmt_price(p['low'])} · Close {fmt_price(p['close'])}"
-            ),
-        })
+        c = p.get("close")
+        closes.append(None if c is None else {"value": c, "fmt": fmt_price(c)})
+    first_close = next((p["close"] for p in price_series if p.get("close") is not None), None)
+    last_close = next((p["close"] for p in reversed(price_series) if p.get("close") is not None), None)
+    line_color = "var(--diverge-neg)" if (first_close is not None and last_close is not None and last_close < first_close) else "var(--diverge-pos)"
 
     def _ma_series(key, color, name):
         data = []
@@ -1156,13 +1158,11 @@ def price_history_chart(price_series, aria_label="price history"):
         ],
         "series": [
             {
-                "name": "Price", "type": "candlestick", "data": candles,
-                "xAxisIndex": 0, "yAxisIndex": 0,
-                "itemStyle": {
-                    "color": "var(--diverge-pos)", "color0": "var(--diverge-neg)",
-                    "borderColor": "var(--diverge-pos)", "borderColor0": "var(--diverge-neg)",
-                },
-                "z": 3,
+                "name": "Price", "type": "line", "data": closes,
+                "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False,
+                "lineStyle": {"color": line_color, "width": 2},
+                "areaStyle": {"color": line_color, "opacity": 0.12},
+                "connectNulls": True, "z": 3,
             },
             _ma_series("ma20", "var(--series-1)", "MA20"),
             _ma_series("ma50", "var(--series-2)", "MA50"),
@@ -1637,7 +1637,7 @@ def section_price_technicals(bundle):
 </div>"""
 
     return f"""
-<div class="card" id="sec-price">
+<div class="card full" id="sec-price">
   <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
   {history_block}
@@ -2246,8 +2246,8 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 {section_hero(bundle, pipeline_result)}
 <div class="wrap">
   {ai_section}
-  {section_at_a_glance(bundle)}
   {section_kpis(bundle)}
+  {section_at_a_glance(bundle)}
   <div class="grid">
     {''.join(sections)}
   </div>

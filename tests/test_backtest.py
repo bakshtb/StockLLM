@@ -273,18 +273,23 @@ class TestPriceHistoryChart:
         html = price_history_chart(self._price_series(with_gaps=True))
         assert html is not None
 
-    def test_candlestick_series_shape_and_colors(self):
+    def test_price_line_series_shape_and_color(self):
+        """Price is a colored area line (not candlesticks -- see
+        price_history_chart's docstring for why), green/red by net change
+        over the whole series."""
         import dashboard.generate_dashboard as gd
         gd._reset_chart_registry()
-        html = price_history_chart(self._price_series(n=60))
+        series = self._price_series(n=60)
+        html = price_history_chart(series)
         option = _get_chart_option(html)
-        candle = next(s for s in option["series"] if s["type"] == "candlestick")
-        assert len(candle["data"]) == 60
-        assert candle["itemStyle"]["color"] == "var(--diverge-pos)"
-        assert candle["itemStyle"]["color0"] == "var(--diverge-neg)"
-        # ECharts candlestick value order is [open, close, low, high]
-        first = next(d for d in candle["data"] if d is not None)
-        assert len(first["value"]) == 4
+        price = next(s for s in option["series"] if s["name"] == "Price")
+        assert price["type"] == "line"
+        assert len(price["data"]) == 60
+        expected_color = "var(--diverge-neg)" if series[-1]["close"] < series[0]["close"] else "var(--diverge-pos)"
+        assert price["lineStyle"]["color"] == expected_color
+        assert price["areaStyle"]["color"] == expected_color
+        first = next(d for d in price["data"] if d is not None)
+        assert isinstance(first["value"], (int, float))
 
     def test_default_zoom_shows_roughly_last_year_for_long_history(self):
         import dashboard.generate_dashboard as gd

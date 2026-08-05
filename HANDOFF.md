@@ -1659,6 +1659,48 @@ StockLLM/
     that showed the problem (confirmed fixed) and desktop (confirmed
     unchanged/still clean), full pytest suite green (480 passed).
 
+47. **Reordered the top of the page and replaced the price chart's
+    candlesticks with a colored area line** (0.9.24) — user request,
+    explicit layout order: hero price, then the KPI row, then At a
+    Glance, then Price & Technicals full-width; and "change" the
+    candlestick chart (didn't want it).
+    - **Reorder**: `build_dashboard()`'s markup now emits
+      `section_kpis()` before `section_at_a_glance()` (previously the
+      reverse); `ai_section` (the AI Recommendation panel, when a
+      pipeline_result exists) was left in its existing position right
+      after the hero, since the user's ask was specifically about the
+      kpis/at-a-glance/price-technicals order and didn't mention it.
+      `section_price_technicals()`'s wrapper changed from `class="card"`
+      to `class="card full"` and stayed first in the `sections` list
+      feeding `.grid` — full-width and immediately after At a Glance,
+      with no other change to the grid/section machinery needed.
+    - **Chart**: `price_history_chart()`'s "Price" series changed from
+      `type: candlestick` (4-value OHLC bars) to `type: line` with
+      `areaStyle` — colored `var(--diverge-pos)`/`var(--diverge-neg)` by
+      whether the series' last close is above or below its first (net
+      direction over the full history, not per-point), a flat low-opacity
+      fill rather than a multi-stop gradient (a themeable gradient would
+      need `webui/src/js/hydrate.js`'s `var(--x)`-resolving `hydrateOption()`
+      to also resolve alpha-blended stops, real added complexity for a
+      marginal visual gain over a flat 12%-opacity fill in the same
+      color). MA20/50/200 overlays, volume bars, zoom/pan, and the
+      crosshair tooltip are unchanged -- only the one series' shape and
+      style changed. OHLC data itself is untouched in the bundle, just no
+      longer charted here.
+    - `tests/test_backtest.py`'s `test_candlestick_series_shape_and_colors`
+      rewritten as `test_price_line_series_shape_and_color`, asserting
+      against the new line/area shape and computing the expected color
+      from the same fixture rather than hardcoding it.
+    - **Verified for real**: regenerated a real AAPL dashboard (this
+      bundle snapshot has no `backtests` key, so also ran
+      `backtest.engine.run_backtests()` for real to get an actual
+      1506-point `price_series` and confirm the chart itself, not just
+      the empty-state path), screenshotted the new order and full-width
+      chart, clicked the "1M" range button and confirmed the zoom and
+      area/MA rendering update correctly, toggled dark mode and confirmed
+      the line/fill color still reads correctly, zero console errors.
+      Full pytest suite green (480 passed).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
