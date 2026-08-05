@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.31
+
+- Add: replaced the app icon (`dashboard/assets/icon.png`, the
+  `apple-touch-icon` used across the dashboard and webapp) with the
+  user's own ADELE logo -- cropped and resized programmatically from the
+  supplied artwork to a clean 180x180 icon. Not to be confused with the
+  per-ticker company logo (0.9.30's logo.dev integration), a different
+  thing entirely. See HANDOFF.md item 54.
+
 ## 0.9.30
 
 - Change: company logo switched from Google's favicon service to

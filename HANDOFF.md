@@ -2025,6 +2025,42 @@ StockLLM/
       `<img>`'s actual `src` from `...theme=light` to `...theme=dark`
       (not just that the button/other page elements re-themed).
 
+54. **Replaced the app icon with the user's own ADELE logo** (0.9.31) —
+    user supplied a finished logo (a brushed-steel "A"/upward-arrow mark
+    over an "ADELE" wordmark and tagline, on a paper-textured
+    background). `dashboard/assets/icon.png` (180x180, the
+    `apple-touch-icon` referenced by both `webapp/app.py` and
+    `generate_dashboard.py`) is the only place an app-level icon lives in
+    this codebase -- not to be confused with the per-ticker company logo
+    (item 53's logo.dev integration), a completely different thing (a
+    stock's own brand logo, not this app's).
+    - Installed Pillow in this session's sandbox to crop/resize
+      programmatically rather than eyeballing coordinates: found the
+      mark's exact pixel bounding box by thresholding for dark pixels
+      row-by-row (separating the "A"/arrow mark from the "ADELE" text and
+      tagline below it, which sit in their own distinct dark-pixel bands
+      with light gaps in between -- confirmed the exact y-ranges before
+      cropping, not assumed from eyeballing the image), then a square
+      crop centered on it.
+    - **First crop attempt padded to square with a synthetic flat fill
+      color** (sampled from a corner pixel) rather than real image
+      content, since the mark's natural bounding box (516x444) isn't
+      square -- produced a visible seam where the flat fill met the
+      textured paper background. Caught by actually looking at the
+      cropped result, not assumed fine from the crop coordinates alone.
+      Fixed by cropping a full 516x516 square directly from the original
+      image instead (shifted upward so the bottom edge stays a few
+      pixels above where the "ADELE" text band starts), which is all
+      real pixels -- no seam, since there's nothing synthetic to blend.
+    - Resized to 180x180 (the existing icon.png's size, and the standard
+      `apple-touch-icon` dimension) with Lanczos resampling.
+    - **Verified for real**: full pytest suite green (480 passed, no
+      test changes needed -- `dashboard/assets.py` already treats
+      `icon.png` as an optional, checked-in binary asset, not something
+      any test generates or inspects pixel content of); regenerated a
+      real dashboard and confirmed `ensure_vendored_assets()` copies the
+      new icon through to `assets/icon.png` at the correct 180x180 size.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
