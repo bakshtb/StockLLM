@@ -276,10 +276,15 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
    toggle button in that case; it must stay visible regardless of the
    is-table-view class the card never gets. */
 .viz-card .viz-table.viz-table-only { display: block; }
-/* Defensive: charts always render at width:100% (never require scrolling
-   to see the whole chart -- see the mobile text-size override below
-   instead), but this catches anything unexpectedly wider than its card. */
-.viz-chart, .rec-trend-chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* Defensive: every chart renders at width:100% of its container (see
+   .echarts-container below), so none of them should ever be legitimately
+   wider than their card -- `hidden`, not `auto`, catches anything
+   unexpectedly wider anyway (e.g. a sub-pixel rounding mismatch) by
+   clipping it instead of surfacing a visible scrollbar for it. `auto`
+   here was the actual cause of a real, user-reported scrollbar under the
+   RSI gauge that had nothing to scroll to -- confirmed the gauge's own
+   SVG has no genuine overflow, so `hidden` loses nothing real. */
+.viz-chart, .rec-trend-chart { overflow-x: hidden; }
 .echarts-container { width: 100%; }
 .viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
 .viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }

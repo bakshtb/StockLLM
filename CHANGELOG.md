@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.36
+
+- Fix: a phantom horizontal scrollbar under the RSI gauge (and
+  potentially any other chart/trend-line, same rule) with nothing to
+  actually scroll to -- a "defensive" `overflow-x: auto` meant to catch
+  charts wider than their card, but every chart is already `width: 100%`
+  of its container so none should ever legitimately overflow. Changed to
+  `overflow-x: hidden`, which keeps the same defensive intent without
+  ever surfacing a scrollbar. See HANDOFF.md item 59.
+
 ## 0.9.35
 
 - Remove: the chart's visible date-range slider (the horizontal bar with

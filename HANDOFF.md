@@ -2223,6 +2223,28 @@ StockLLM/
       red) -- not just that a click handler exists, that the displayed
       number is correct for what's now on screen.
 
+59. **Removed a phantom horizontal scrollbar under the RSI gauge**
+    (0.9.36) -- real user-reported bug, a screenshot of a native-looking
+    scrollbar (complete with arrow buttons) sitting under the gauge with
+    nothing to actually scroll to. Root cause: `.viz-chart, .rec-trend-
+    chart { overflow-x: auto }` was a *defensive* rule (comment: "catches
+    anything unexpectedly wider than its card") added on the assumption
+    that some chart, someday, might genuinely overflow -- but every
+    chart is explicitly `width: 100%` of its container (`.echarts-
+    container`), so none of them should ever legitimately need
+    horizontal scroll, and `auto` was surfacing a visible scrollbar for
+    what's actually just a sub-pixel rounding mismatch, not real
+    overflow. Changed to `overflow-x: hidden` -- keeps the same
+    defensive intent (clips anything unexpectedly wide) without ever
+    showing a scrollbar for it.
+    - **Verified for real, not assumed from the CSS change alone**: full
+      pytest suite green (481 passed, no test changes needed); rebuilt,
+      regenerated a real AAPL dashboard, and in headless Chromium
+      measured the RSI gauge's `.viz-chart` wrapper directly --
+      `scrollWidth` exactly equals `clientWidth` (1086px = 1086px, zero
+      overflow) and `overflow-x` computes to `hidden` -- confirmed
+      screenshotted too, no scrollbar visible anywhere on the card.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
