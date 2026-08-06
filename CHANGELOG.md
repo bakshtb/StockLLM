@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.37
+
+- Fix: no favicon was showing at all -- only `apple-touch-icon` (iOS
+  home-screen bookmarks) was declared, never a real `<link rel="icon">`,
+  so browsers fell back to requesting `/favicon.ico`, which doesn't
+  exist. Added a proper favicon link (reusing the existing
+  `assets/icon.png`) to both the webapp form pages and every generated
+  dashboard. See HANDOFF.md item 60.
+
 ## 0.9.36
 
 - Fix: a phantom horizontal scrollbar under the RSI gauge (and

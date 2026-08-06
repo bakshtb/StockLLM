@@ -2345,6 +2345,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ADELE">
+<link rel="icon" type="image/png" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <title>{ticker} — ADELE Research Dashboard</title>
 <script>{THEME_INIT_SCRIPT}</script>

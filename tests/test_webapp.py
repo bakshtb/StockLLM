@@ -123,6 +123,15 @@ class TestIndexPage:
         assert '<meta name="apple-mobile-web-app-title" content="ADELE">' in html
         assert '<link rel="apple-touch-icon" href="/assets/icon.png">' in html
 
+    def test_favicon_link_present(self, client):
+        """Distinct from apple-touch-icon above -- that's iOS-specific
+        (home-screen bookmarks), not a browser tab favicon. Without a
+        real <link rel="icon">, browsers fall back to requesting
+        /favicon.ico, which doesn't exist -- a real user-reported bug
+        (no favicon showing at all)."""
+        html = client.get("/").get_data(as_text=True)
+        assert '<link rel="icon" type="image/png" href="/assets/icon.png">' in html
+
 
 class TestStaticAssetsRoute:
     """The index page isn't inside an OUTPUT_DIR run folder, so it can't

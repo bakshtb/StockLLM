@@ -2245,6 +2245,34 @@ StockLLM/
       overflow) and `overflow-x` computes to `hidden` -- confirmed
       screenshotted too, no scrollbar visible anywhere on the card.
 
+60. **Fixed a real "no favicon" bug: only `apple-touch-icon` was
+    declared, never a real `<link rel="icon">`** (0.9.37) -- user asked
+    why he wasn't getting a favicon. `apple-touch-icon` is iOS-specific
+    (home-screen bookmark icon), not a browser tab favicon; without an
+    explicit `<link rel="icon">`, browsers fall back to requesting
+    `/favicon.ico` at the page's own path, which this app has never
+    served -- the resulting 404 was actually seen and noted twice
+    earlier this session (items 49 and 53's "the browser's own automatic
+    favicon.ico request" asides), each time correctly identified as
+    harmless to whatever was being verified at the time, but never
+    connected to the fact that it meant no favicon was showing at all.
+    - Added `<link rel="icon" type="image/png" href="...">` right above
+      the existing `apple-touch-icon` line, in both `webapp/app.py`'s
+      `PAGE_HEAD` and `generate_dashboard.py`'s page head -- reusing the
+      same `assets/icon.png` (already served, already correctly sized)
+      rather than adding a second image or a `.ico` conversion step.
+    - New test coverage in both `tests/test_webapp.py` and
+      `tests/test_dashboard_build.py` (the latter runs across every
+      committed bundle fixture, per that file's existing pattern) --
+      the previous `apple-touch-icon` tests only ever asserted on that
+      one tag and would never have caught a missing favicon link.
+    - **Verified for real**: full pytest suite green (488 passed, +7 for
+      the new parametrized-across-fixtures test); regenerated a real
+      dashboard and confirmed in headless Chromium, via the page's
+      actual network requests, that only one icon-related request fires
+      now (`assets/icon.png`, 200) -- no more `favicon.ico` 404 fallback
+      request at all.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

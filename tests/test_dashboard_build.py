@@ -131,6 +131,15 @@ class TestBuildDashboardAgainstEveryFixture:
         assert '<meta name="apple-mobile-web-app-title" content="ADELE">' in html
         assert '<link rel="apple-touch-icon" href="assets/icon.png">' in html
 
+    def test_favicon_link_present(self, sample_bundle):
+        """Distinct from apple-touch-icon above -- that's iOS-specific
+        (home-screen bookmarks), not a browser tab favicon. Without a
+        real <link rel="icon">, browsers fall back to requesting
+        /favicon.ico, which doesn't exist -- a real user-reported bug
+        (no favicon showing at all)."""
+        html = build_dashboard(sample_bundle)
+        assert '<link rel="icon" type="image/png" href="assets/icon.png">' in html
+
     def test_no_ai_recommendation_section_without_pipeline_result(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")
