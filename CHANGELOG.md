@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.38
+
+- Fix: switching an outer page tab (e.g. to "Ownership") silently
+  stripped `is-active` from every *inner* sub-tab panel on the whole
+  page, since the click handler looked up panels with a plain descendant
+  selector instead of scoping to direct children -- clicking "Ownership"
+  showed an empty panel until manually re-clicking the already-selected
+  "Institutional" sub-tab. Fixed with `:scope > .subtab-panel`. See
+  HANDOFF.md item 61.
+
 ## 0.9.37
 
 - Fix: no favicon was showing at all -- only `apple-touch-icon` (iOS

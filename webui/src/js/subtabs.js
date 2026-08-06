@@ -11,7 +11,19 @@ import { resizeWithin } from './hydrate.js';
 export function initSubtabs() {
   document.querySelectorAll('.subtabs').forEach(function (bar) {
     var panelsWrap = document.querySelector('[data-panels-for="' + bar.getAttribute('data-group') + '"]');
-    var panels = panelsWrap ? panelsWrap.querySelectorAll('.subtab-panel') : [];
+    // :scope > .subtab-panel, not a plain descendant selector -- a panel
+    // can itself contain a *nested* subtabs group (e.g. the top-level
+    // "main" group's Ownership panel contains its own "ownership" group,
+    // Institutional/Insiders). A plain querySelectorAll('.subtab-panel')
+    // matches those nested panels too, so switching an outer tab would
+    // strip is-active from every inner panel on the whole page (none of
+    // their data-panel values match the outer target) -- including the
+    // one that should stay active in whatever tab was just switched to.
+    // Real bug, not theoretical: clicking "Ownership" showed an empty
+    // panel until manually re-clicking "Institutional", which only
+    // "worked" because *that* click was correctly scoped to just the
+    // inner group's own two panels.
+    var panels = panelsWrap ? panelsWrap.querySelectorAll(':scope > .subtab-panel') : [];
     bar.querySelectorAll('.subtab-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var target = btn.getAttribute('data-target');

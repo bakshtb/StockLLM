@@ -2273,6 +2273,41 @@ StockLLM/
       now (`assets/icon.png`, 200) -- no more `favicon.ico` 404 fallback
       request at all.
 
+61. **Fixed a real nested-tabs bug: switching an outer page tab silently
+    stripped `is-active` from every inner sub-tab panel on the whole
+    page** (0.9.38) -- real user-reported bug with a screenshot: clicking
+    "Ownership" showed the tab as selected but an empty panel below it
+    (no chart, no tables), and it only started working after manually
+    re-clicking the already-selected "Institutional" sub-tab.
+    - **Root cause**: `subtabs.js`'s `initSubtabs()` found a bar's panels
+      via `panelsWrap.querySelectorAll('.subtab-panel')` -- a plain
+      descendant selector, which matches *every* `.subtab-panel`
+      anywhere in the subtree, not just direct children. The top-level
+      "main" group's Ownership panel contains its own *nested* "ownership"
+      group (Institutional/Insiders); the outer click handler's `panels`
+      NodeList unintentionally included those two inner panels too, and
+      for each one -- since neither `data-panel` value ("ownership-0"/
+      "-1") ever equals the outer click's target ("main-N") -- toggled
+      `is-active` off. Same bug for the "extras" group nested inside
+      "Dividends & More". A click on the *inner* tab "fixed" it only
+      because that click's own `panels` lookup was correctly scoped to
+      just its own two panels.
+    - **Fix**: `:scope > .subtab-panel` instead of a plain descendant
+      selector -- panels are always direct children of their own
+      `[data-panels-for]` wrapper (see `subtabs()` in
+      `generate_dashboard.py`), so this now only ever matches a bar's
+      *own* panels, regardless of what's nested inside any of them.
+    - **Verified for real, precisely the failure mode reported**: full
+      pytest suite green (488 passed, no test changes needed -- this was
+      a pure client-side interaction bug, nothing server-rendered was
+      wrong); regenerated a real dashboard and in headless Chromium
+      clicked the outer "Ownership" tab *exactly once* (no follow-up
+      click on "Institutional") and confirmed via `offsetParent`
+      (genuine visibility, not just the `is-active` class) that the
+      inner Institutional panel and its content render immediately --
+      same check repeated for "Dividends & More" (a 4-panel nested
+      group) with the same result.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
