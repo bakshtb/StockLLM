@@ -435,12 +435,17 @@ class TestPageTabs:
             "Financials", "Ownership", "Dividends & More", "News", "Filings",
         }
         assert expected_labels <= labels
-        # The tab bar sits in .sticky-top (with the topbar); the panels it
-        # controls do not -- they'd make the whole page's height sticky.
-        assert soup.find("div", class_="sticky-top").find("div", class_=lambda c: c and "page-tabs" in c.split()) is not None
-        assert soup.find(id="sec-price") is not None
+        # Only the topbar itself is sticky -- the tab bar and its panels
+        # both live in .wrap, below the always-visible price chart, not
+        # inside .sticky-top (that would make the whole page's height
+        # sticky, or -- for the chart specifically -- fight with the
+        # user's own request that price+chart stay above the tabs, not
+        # collapse into the fixed header).
         sticky_top = soup.find("div", class_="sticky-top")
+        assert sticky_top.find("div", class_=lambda c: c and "page-tabs" in c.split()) is None
+        assert soup.find(id="sec-price") is not None
         assert sticky_top.find(id="sec-price") is None
+        assert sticky_top.find(class_="price-chart-wrap") is None
 
 
 class TestHeroBlock:

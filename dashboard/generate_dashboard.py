@@ -1064,15 +1064,24 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
 
 
 def price_history_chart(price_series, aria_label="price history"):
-    """A full interactive price chart -- a colored area line (green/red by
+    """A clean, minimal price chart -- a colored area line (green/red by
     net change over the series, gradient-filled and topped with a filled
-    dot at the latest close, like Google Finance's quote chart) with
-    volume and MA20/50/200 overlays, drag-to-zoom (mouse wheel/pinch + a
-    slider), and a crosshair tooltip -- the "real stock app" chart the
-    Price & Technicals section was missing. Built entirely from
-    price_series, which backtest/engine.py already fetches once per run
-    and shares with every strategy's own trade chart; this reuses the
-    exact same list, no separate fetch of its own.
+    dot at the latest close) with drag-to-zoom (mouse wheel/pinch + a
+    slider) and a crosshair tooltip, in the spirit of a mainstream phone
+    stock app's chart: just the price, nothing else competing with it.
+    Built entirely from price_series, which backtest/engine.py already
+    fetches once per run and shares with every strategy's own trade
+    chart; this reuses the exact same list, no separate fetch of its own.
+
+    No MA20/50/200 overlay, no volume subplot (an earlier version had
+    both) -- user feedback, pointing at a reference phone screenshot:
+    wanted this chart promoted to always-visible above the tabs (see
+    build_dashboard()) and "minimal... without features that make it
+    ugly". Not a real data loss: MA20/50/200 are still shown as static
+    markers on the "Price vs. moving averages" range plot inside the
+    Price & Technicals tab (a different, already-existing visualization
+    of the same values), and volume trend is still stated as text
+    ("volume trend: increasing/decreasing") in that same tab's card-sub.
 
     Line, not candlesticks: candlesticks read as a trading/execution tool
     (each bar is a single day's open/high/low/close), which doesn't match
@@ -1086,17 +1095,11 @@ def price_history_chart(price_series, aria_label="price history"):
     below are the same "leave a token, let JS resolve it" pattern this
     file already uses for every other formatter/color (see this module's
     top-of-file comment on register_chart()). No "previous close" dashed
-    reference line, unlike Google's: that's specifically an intraday
-    (today vs. yesterday's close) concept, and this chart shows daily
-    closes over months/years, not intraday ticks -- there's no single
-    "previous close" value that stays meaningful across every zoom level
-    here, so it's not faked in.
-
-    Verified structurally against the real vendored echarts.min.js in a
-    standalone headless-chromium harness before wiring in here: 5 series
-    render, the default ~1-year zoom window computes correctly, and the
-    range-preset buttons' dataZoom dispatch actually changes the visible
-    range (see HANDOFF.md for the item covering this).
+    reference line, unlike a typical phone stock app's 1-day view: that's
+    specifically an intraday (today vs. yesterday's close) concept, and
+    this chart shows daily closes over months/years, not intraday ticks --
+    there's no single "previous close" value that stays meaningful across
+    every zoom level here, so it's not faked in.
     """
     if not price_series:
         return None
@@ -1115,9 +1118,10 @@ def price_history_chart(price_series, aria_label="price history"):
     is_down = first_close is not None and last_close is not None and last_close < first_close
     line_color = "var(--diverge-neg)" if is_down else "var(--diverge-pos)"
     area_gradient = "__areaGradientNeg__" if is_down else "__areaGradientPos__"
-    # A filled dot at the most recent close, like Google Finance's quote
-    # chart -- every range-preset button (see chart-toolbar.js) zooms to
-    # end:100, so the latest point is always at the visible right edge.
+    # A filled dot at the most recent close, like a phone stock app's
+    # quote chart -- every range-preset button (see chart-toolbar.js)
+    # zooms to end:100, so the latest point is always at the visible
+    # right edge.
     end_marker = (
         {
             "symbol": "circle", "symbolSize": 7,
@@ -1128,28 +1132,6 @@ def price_history_chart(price_series, aria_label="price history"):
         if last_idx is not None else None
     )
 
-    def _ma_series(key, color, name):
-        data = []
-        for p in price_series:
-            v = p.get(key)
-            data.append(None if v is None else {"value": v, "fmt": fmt_price(v)})
-        return {
-            "name": name, "type": "line", "data": data,
-            "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False,
-            "lineStyle": {"color": color, "width": 1.25}, "z": 2, "connectNulls": True,
-        }
-
-    volumes = []
-    for p in price_series:
-        if p["volume"] is None:
-            volumes.append(None)
-            continue
-        up = (p["close"] or 0) >= (p["open"] or 0)
-        volumes.append({
-            "value": p["volume"], "fmt": fmt_compact(p["volume"]),
-            "itemStyle": {"color": "var(--diverge-pos)" if up else "var(--diverge-neg)"},
-        })
-
     # Default view: the most recent ~1 trading year, not all 6 -- matches
     # how real stock apps land (recent context first), with the range
     # buttons/slider available to zoom out. If there's less than a year of
@@ -1159,45 +1141,22 @@ def price_history_chart(price_series, aria_label="price history"):
     option = {
         "animation": False,
         "tooltip": {"trigger": "axis", "axisPointer": {"type": "cross"}, "formatter": "__tooltipFmt__"},
-        "legend": {
-            "data": ["MA20", "MA50", "MA200"], "top": 0, "right": 8,
-            "textStyle": {"color": "var(--text-secondary)", "fontSize": 11.5},
-            "itemWidth": 14, "itemHeight": 8,
+        "grid": {"left": 8, "right": 16, "top": 16, "bottom": 32, "containLabel": True},
+        "xAxis": {
+            "type": "category", "data": dates, "boundaryGap": True,
+            "axisLine": {"lineStyle": {"color": "var(--baseline)"}},
+            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 11},
+            "axisTick": {"show": False}, "splitLine": {"show": False},
         },
-        "axisPointer": {"link": [{"xAxisIndex": "all"}]},
-        "grid": [
-            {"left": 8, "right": 16, "top": 30, "height": "56%", "containLabel": True},
-            {"left": 8, "right": 16, "top": "72%", "height": "16%", "containLabel": True},
-        ],
-        "xAxis": [
-            {
-                "type": "category", "data": dates, "gridIndex": 0, "boundaryGap": True,
-                "axisLine": {"lineStyle": {"color": "var(--baseline)"}}, "axisLabel": {"show": False},
-                "axisTick": {"show": False}, "splitLine": {"show": False},
-            },
-            {
-                "type": "category", "data": dates, "gridIndex": 1, "boundaryGap": True,
-                "axisLine": {"lineStyle": {"color": "var(--baseline)"}},
-                "axisLabel": {"color": "var(--text-secondary)", "fontSize": 11},
-                "axisTick": {"show": False}, "splitLine": {"show": False},
-            },
-        ],
-        "yAxis": [
-            {
-                "type": "value", "scale": True, "gridIndex": 0,
-                "splitLine": {"lineStyle": {"color": "var(--gridline)"}},
-                "axisLabel": {"color": "var(--text-muted)", "fontSize": 11, "formatter": "${value}"},
-            },
-            {
-                "type": "value", "scale": True, "gridIndex": 1, "splitNumber": 2,
-                "splitLine": {"show": False},
-                "axisLabel": {"color": "var(--text-muted)", "fontSize": 10, "formatter": "__compactAxis__"},
-            },
-        ],
+        "yAxis": {
+            "type": "value", "scale": True,
+            "splitLine": {"lineStyle": {"color": "var(--gridline)"}},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 11, "formatter": "${value}"},
+        },
         "dataZoom": [
-            {"type": "inside", "xAxisIndex": [0, 1], "start": start_pct, "end": 100},
+            {"type": "inside", "start": start_pct, "end": 100},
             {
-                "type": "slider", "xAxisIndex": [0, 1], "start": start_pct, "end": 100,
+                "type": "slider", "start": start_pct, "end": 100,
                 "height": 20, "bottom": 4,
                 "borderColor": "var(--border)", "fillerColor": "rgba(42,120,214,0.12)",
                 "handleStyle": {"color": "var(--series-1)"},
@@ -1211,22 +1170,15 @@ def price_history_chart(price_series, aria_label="price history"):
         "series": [
             {
                 "name": "Price", "type": "line", "data": closes,
-                "xAxisIndex": 0, "yAxisIndex": 0, "showSymbol": False,
+                "showSymbol": False,
                 "lineStyle": {"color": line_color, "width": 2},
                 "areaStyle": {"color": area_gradient},
                 "connectNulls": True, "z": 3,
                 **({"markPoint": end_marker} if end_marker else {}),
             },
-            _ma_series("ma20", "var(--series-1)", "MA20"),
-            _ma_series("ma50", "var(--series-2)", "MA50"),
-            _ma_series("ma200", "var(--series-3)", "MA200"),
-            {
-                "name": "Volume", "type": "bar", "data": volumes,
-                "xAxisIndex": 1, "yAxisIndex": 1, "barMaxWidth": 6,
-            },
         ],
     }
-    return register_chart(option, height_px=460, aria_label=aria_label)
+    return register_chart(option, height_px=320, aria_label=aria_label)
 
 
 def strategy_trade_chart(price_series, trades, aria_label="strategy trades over time"):
@@ -1680,16 +1632,23 @@ def section_kpis(bundle):
     return f'<div class="kpi-row">{"".join(tiles)}</div>'
 
 
-def section_price_technicals(bundle):
-    price = bundle.get("price", {}) or {}
-
-    # Reuses backtest/engine.py's price_series -- the same OHLCV +
-    # MA20/50/200 history already fetched once for the Strategy Backtests
-    # section -- rather than fetching price history a second time here.
+def section_price_chart(bundle):
+    """The persistent, always-visible price chart -- promoted out of the
+    Price & Technicals tab (see build_dashboard()) per user feedback
+    pointing at a phone stock app's screenshot: price + chart always at
+    the top, page tabs come after, and the chart itself should be
+    minimal, not sharing space with MA overlays/volume (see
+    price_history_chart()'s docstring). No card wrapper here, matching
+    that reference's chart sitting directly on the page background, not
+    boxed."""
+    # Reuses backtest/engine.py's price_series -- the same OHLCV history
+    # already fetched once for the Strategy Backtests section -- rather
+    # than fetching price history a second time here.
     price_series = ((bundle.get("backtests", {}) or {}).get("price_series")) or []
-    history_chart_html = price_history_chart(price_series, aria_label="interactive price history with volume and moving averages")
-    if history_chart_html:
-        history_block = f"""
+    history_chart_html = price_history_chart(price_series, aria_label="interactive price history")
+    if not history_chart_html:
+        return ""
+    return f"""
 <div class="price-chart-wrap">
   <div class="chart-toolbar">
     <button type="button" class="range-btn" data-days="21">1M</button>
@@ -1701,9 +1660,10 @@ def section_price_technicals(bundle):
   </div>
   {history_chart_html}
 </div>"""
-    else:
-        history_block = ""
 
+
+def section_price_technicals(bundle):
+    price = bundle.get("price", {}) or {}
     low_52w, high_52w = price.get("52w_low"), price.get("52w_high")
     ma_markers = [
         ("MA200", price.get("ma200"), "var(--series-3)"),
@@ -1739,7 +1699,6 @@ def section_price_technicals(bundle):
 <div class="card" id="sec-price">
   <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
-  {history_block}
   {price_card}
   {rsi_card}
   {macd_html}
@@ -2293,11 +2252,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     # One section visible at a time instead of one long scroll of ~9 full
     # cards (user request) -- same subtabs() component section_ownership/
     # section_dividends_options_macro_social already use internally, just
-    # applied one level up. Price & Technicals is first (so it's still
-    # the first thing shown, same as when it had its own pinned spot) and
-    # therefore active by default. Data Quality Notes stays outside the
-    # tabs, same reasoning as the footer disclaimer below: a brief,
-    # page-wide caveat, not a per-topic view.
+    # applied one level up. Price & Technicals is first (default-active).
     # KPIs and At a Glance live inside the Price & Technicals tab itself
     # (not pinned above the tab bar) -- user feedback: with them above
     # the tabs, they stayed visible no matter which tab was open, reading
@@ -2305,6 +2260,10 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     # they were just outside the tab-switching entirely. Scoping them to
     # the one tab they actually belong with means every other tab
     # (Analyst, Financials, ...) shows only its own content when clicked.
+    # The interactive chart itself (section_price_chart) is NOT part of
+    # this tab -- see its own placement below, promoted to always-visible
+    # above the tab bar per later user feedback (a phone stock app
+    # reference: price + chart always at the top, tabs after).
     price_technicals_tab = section_kpis(bundle) + section_at_a_glance(bundle) + section_price_technicals(bundle)
     main_tabs_bar, main_tabs_panels = subtabs(
         "main",
@@ -2322,6 +2281,22 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
         bar_class="page-tabs",
     )
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
+    # Must be computed here, before the drain below -- not called inline
+    # inside the return f-string like it originally was. _drain_chart_
+    # registry() resets register_chart()'s id counter back to 0 as a side
+    # effect (see _reset_chart_registry()); calling a chart-registering
+    # function *after* that point silently collides with an id already
+    # baked into earlier HTML (both end up "chart-1"), and its actual
+    # option data -- serialized into charts_json below -- never includes
+    # the later call at all, since charts_json is already computed by
+    # then. The real, symptom-only-visible-by-inspecting-the-rendered-SVG
+    # bug this caused: the price chart's container silently got some
+    # *other* chart's option rendered into it instead of its own, while
+    # still ending up marked is-hydrated (setOption() didn't error, it
+    # just drew the wrong thing) -- caught by inspecting the actual SVG
+    # paths and window.__CHARTS__ entry for that container id, not by
+    # the shallow "is the container hydrated" check that looked fine.
+    price_chart_html = section_price_chart(bundle)
     charts_json = json.dumps(_drain_chart_registry())
     # Base64, not raw/escaped text: a <script> tag's content is parsed as
     # raw text by the HTML parser regardless of `type`, looking only for a
@@ -2351,11 +2326,12 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <body>
 <div class="sticky-top">
 {section_header(bundle)}
-{main_tabs_bar}
 </div>
 {section_hero(bundle, pipeline_result)}
 <div class="wrap">
   {ai_section}
+  {price_chart_html}
+  {main_tabs_bar}
   {main_tabs_panels}
 </div>
 <footer class="disclaimer">

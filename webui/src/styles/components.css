@@ -123,16 +123,19 @@
    first has is-active by default, so a JS-disabled reader still sees a
    complete, correctly-laid-out first tab, just with no way to switch. */
 .subtabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-/* The top-level page tabs (build_dashboard()'s "main" group) render inside
-   .sticky-top right below the topbar -- both stick together as one unit
-   (see base.css's .sticky-top comment), so this doesn't need its own
-   position: sticky. Horizontal-scroll + no-wrap instead of letting 9 tab
-   labels wrap to a second line, same pattern the old anchor-nav pill bar
-   used for the same reason (many pills, must stay usable on a phone). */
+/* The top-level page tabs (build_dashboard()'s "main" group) render in
+   .wrap, right below the always-visible price chart -- not sticky, and
+   not boxed/bordered like an extension of the topbar above it (an
+   earlier version put this bar inside .sticky-top, directly under the
+   topbar; user feedback moved the chart to be permanently visible above
+   the tabs instead, so the bar no longer sits flush against the header
+   and doesn't need to look like it does). Horizontal-scroll + no-wrap
+   instead of letting 9 tab labels wrap to a second line, same pattern
+   the old anchor-nav pill bar used for the same reason (many pills, must
+   stay usable on a phone). */
 .subtabs.page-tabs {
-  margin-bottom: 0; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; padding: 10px 24px;
-  background: var(--surface-1); border-bottom: 1px solid var(--border);
+  flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 .subtabs.page-tabs::-webkit-scrollbar { display: none; }
 .subtabs.page-tabs .subtab-btn { flex-shrink: 0; }

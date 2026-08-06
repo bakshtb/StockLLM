@@ -21,7 +21,8 @@ from backtest.engine import (
 )
 from backtest.strategies import STRATEGIES, BENCHMARK_TICKER
 from dashboard.generate_dashboard import (
-    section_backtests, section_price_technicals, strategy_trade_chart, price_history_chart, _backtest_status_box,
+    section_backtests, section_price_technicals, section_price_chart, strategy_trade_chart, price_history_chart,
+    _backtest_status_box,
 )
 
 
@@ -262,10 +263,16 @@ class TestPriceHistoryChart:
     def test_returns_none_for_empty_series(self):
         assert price_history_chart([]) is None
 
-    def test_builds_all_five_series(self):
+    def test_builds_a_single_price_series(self):
+        """No MA20/50/200 overlay, no volume subplot (an earlier version
+        had both) -- see price_history_chart's docstring for why."""
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
         html = price_history_chart(self._price_series())
         assert html is not None
         assert "echarts-container" in html
+        option = _get_chart_option(html)
+        assert [s["name"] for s in option["series"]] == ["Price"]
 
     def test_handles_missing_ohlc_gracefully(self):
         """A gap day (e.g. a genuinely missing bar) shouldn't crash chart
@@ -318,19 +325,36 @@ class TestPriceHistoryChart:
         assert option["dataZoom"][0]["start"] == 0.0
 
 
-class TestSectionPriceTechnicalsWithHistoryChart:
+class TestSectionPriceChart:
+    """The interactive price chart lives in its own top-level
+    section_price_chart(), promoted out of section_price_technicals to
+    always-visible above the tab bar (see build_dashboard()) -- user
+    feedback, a phone stock app reference: price + chart always at the
+    top, tabs after."""
+
     def test_missing_backtests_key_omits_history_chart_not_crash(self):
-        html = section_price_technicals({"price": {}})
+        html = section_price_chart({"price": {}})
         assert "price-chart-wrap" not in html
 
     def test_present_price_series_renders_history_chart_and_range_buttons(self):
         series = TestPriceHistoryChart()._price_series(n=300)
         bundle = {"price": {}, "backtests": {"price_series": series}}
-        html = section_price_technicals(bundle)
+        html = section_price_chart(bundle)
         assert "price-chart-wrap" in html
         assert "chart-toolbar" in html
         assert 'data-days="252"' in html
         assert "echarts-container" in html
+
+
+class TestSectionPriceTechnicalsWithoutChart:
+    def test_no_history_chart_markup_left_in_this_section(self):
+        """section_price_chart owns the chart now -- this section should
+        have neither the chart wrapper nor the range-button toolbar."""
+        series = TestPriceHistoryChart()._price_series(n=300)
+        bundle = {"price": {}, "backtests": {"price_series": series}}
+        html = section_price_technicals(bundle)
+        assert "price-chart-wrap" not in html
+        assert "chart-toolbar" not in html
 
 
 class TestBacktestStatusBox:

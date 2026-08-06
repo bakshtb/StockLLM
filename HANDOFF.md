@@ -2120,6 +2120,72 @@ StockLLM/
       test changes needed -- nothing in `tests/test_dashboard_build.py`
       asserted on this section).
 
+57. **Price chart promoted above the tab bar and simplified; a real
+    chart-id-collision bug found and fixed along the way** (0.9.34) --
+    user sent a phone stock app screenshot: price + chart always at the
+    top (before any tab nav), the chart itself minimal ("without
+    features that make it ugly"), tabs come after.
+    - **Chart simplified**: `price_history_chart()`'s MA20/50/200
+      overlay (3 line series + legend) and volume subplot (a second
+      grid/axis pair) deleted -- down to one "Price" series (gradient
+      area + end dot, unchanged from item 47/48). Not a real data loss:
+      MA20/50/200 are still shown as static markers on the "Price vs.
+      moving averages" range plot inside the Price & Technicals tab (a
+      different, already-existing visualization of the same values), and
+      volume trend is still stated as text in that tab's card-sub.
+    - **New `section_price_chart(bundle)`**, extracted out of
+      `section_price_technicals()`, wraps just the chart + range-button
+      toolbar, no card border (matching the reference's chart sitting
+      directly on the page background). Rendered in `build_dashboard()`
+      between the hero and the tab bar -- always visible regardless of
+      which tab is open. `section_price_technicals()` keeps everything
+      else (the MA range plot, RSI gauge, MACD tiles) as the first tab's
+      content, unchanged in substance, just missing the chart it no
+      longer owns.
+    - **Tab bar moved out of `.sticky-top`**: it used to sit directly
+      below the topbar, both sticking together as one unit; now the
+      chart sits between them, so `.subtabs.page-tabs` lost its
+      sticky-adjacent background/border styling (would've looked like a
+      stray boxed bar floating mid-page) and just scrolls normally now.
+    - **A real, serious bug found only by inspecting actual rendered SVG
+      paths and the chart's own option data -- not by the shallow "is
+      the container marked is-hydrated" check that looked completely
+      fine**: `section_price_chart(bundle)` was called *inline inside
+      the return f-string*, after `charts_json = json.dumps(_drain_
+      chart_registry())` had already run. `_drain_chart_registry()`
+      resets `register_chart()`'s id counter back to 0 as a side effect
+      -- calling a chart-registering function after that point silently
+      collides with an id already baked into earlier HTML (both call
+      sites' first chart ends up `"chart-1"`), and the later call's
+      actual option data is never captured in `charts_json` at all,
+      since that was already serialized. The concrete, silent-failure
+      symptom: `document.getElementById("chart-1")` resolves to the
+      *first* matching element in DOM order (the price chart, being
+      earlier in the page than the tab panels), so `hydrate.js` faithfully
+      rendered the **wrong** chart's option (the MA/range plot's 2-series
+      line+scatter data) into the price chart's container -- which still
+      completed `setOption()` without error and got marked `is-hydrated`,
+      making the bug invisible to any check that stops at "did hydration
+      succeed." Fixed by computing `price_chart_html = section_price_
+      chart(bundle)` as its own line *before* the drain, same as
+      `main_tabs_bar`/`main_tabs_panels`/`ai_section` already were,
+      and referencing that variable in the f-string instead of calling
+      the function inline. Checked the rest of the f-string for any other
+      inline chart-registering calls after the drain point before
+      trusting the fix was complete (`section_header`/`section_hero`
+      don't register charts, so they were never at risk).
+    - **Verified for real**: full pytest suite green (481 passed, +1 for
+      the new "only one series, named Price" assertion replacing the old
+      5-series check); regenerated a real AAPL dashboard with a real
+      1506-point `price_series`, and in headless Chromium: confirmed the
+      chart container's actual `window.__CHARTS__` entry has a unique id
+      (`chart-17`, not colliding with anything) and its `series` array
+      is exactly `[{name: "Price", type: "line", areaStyle: {...},
+      data: [1506 points]}]` -- not just that some SVG rendered, that it's
+      the *correct* SVG -- confirmed visually too, in both light and dark
+      mode, plus that the new layout order (price/chart, then tabs, then
+      tab content) matches the reference.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.34
+
+- Change: the price chart is now always visible above the tab bar
+  (was buried inside the "Price & Technicals" tab), and simplified to
+  just the price line + gradient fill (dropped the MA20/50/200 overlay
+  and volume subplot) -- user request, matching a phone stock app
+  reference. MA values are still shown elsewhere (the "Price vs. moving
+  averages" plot); volume trend is still stated as text.
+- Fix: a real bug found while verifying the above, not assumed from the
+  diff -- the chart's container was silently rendering a *different*
+  chart's data due to an id collision (a chart-registering function was
+  being called after the id counter had already been reset), while still
+  reporting as successfully hydrated. See HANDOFF.md item 57 for the
+  full mechanism.
+
 ## 0.9.33
 
 - Remove: the "Data Quality Notes" dashboard section, per user request.
