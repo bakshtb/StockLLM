@@ -136,9 +136,14 @@ class TestBuildDashboardAgainstEveryFixture:
         (home-screen bookmarks), not a browser tab favicon. Without a
         real <link rel="icon">, browsers fall back to requesting
         /favicon.ico, which doesn't exist -- a real user-reported bug
-        (no favicon showing at all)."""
+        (no favicon showing at all). Two variants (light/dark, user
+        supplied both images), switched natively via the media attribute
+        -- no JS needed, unlike the per-ticker company logo, since this
+        only needs to track OS-level prefers-color-scheme, not the
+        in-app manual toggle."""
         html = build_dashboard(sample_bundle)
-        assert '<link rel="icon" type="image/png" href="assets/icon.png">' in html
+        assert '<link rel="icon" type="image/png" href="assets/icon.png" media="(prefers-color-scheme: light)">' in html
+        assert '<link rel="icon" type="image/png" href="assets/icon-dark.png" media="(prefers-color-scheme: dark)">' in html
 
     def test_no_ai_recommendation_section_without_pipeline_result(self, sample_bundle):
         html = build_dashboard(sample_bundle)

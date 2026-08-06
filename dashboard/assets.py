@@ -31,7 +31,7 @@ _SOURCE_DIST_DIR = os.path.join(_SOURCE_DIR, "dist")
 # depends on it -- so a missing or deleted icon.png must never be able to
 # break every single dashboard write the way a missing dist/ correctly
 # still does.
-_OPTIONAL_ASSET_FILES = ("icon.png",)
+_OPTIONAL_ASSET_FILES = ("icon.png", "icon-dark.png")
 
 
 def ensure_vendored_assets(dest_dir: str) -> None:

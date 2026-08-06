@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.39
+
+- Add: theme-aware favicon -- separate light/dark variants of the
+  user's ADELE logo, switched natively via `media="(prefers-color-
+  scheme: ...)"` on two `<link rel="icon">` tags (no JS, tracks OS
+  preference; doesn't follow the in-app manual toggle -- a deliberate,
+  stated tradeoff for a small peripheral element, unlike the per-ticker
+  company logo). `dashboard/assets/icon.png` also replaced with a
+  cleaner, purpose-cropped source. See HANDOFF.md item 62.
+
 ## 0.9.38
 
 - Fix: switching an outer page tab (e.g. to "Ownership") silently

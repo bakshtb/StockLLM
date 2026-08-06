@@ -2308,6 +2308,48 @@ StockLLM/
       same check repeated for "Dividends & More" (a 4-panel nested
       group) with the same result.
 
+62. **Theme-aware favicon: separate light/dark variants of the user's
+    ADELE logo** (0.9.39) -- follow-up to item 60 (which added the first
+    real `<link rel="icon">` at all, fixing "no favicon shows"). User
+    supplied two cropped versions of the same brushed-steel "A"/arrow
+    mark: one on a light paper-textured background, one on a dark navy
+    background.
+    - Cropped both to a tight square around just the mark (found the
+      real content bounding box per image via a dark/light-pixel
+      threshold, same approach as item 54's original icon crop, not
+      eyeballed) and resized to 180x180. The light version *replaces*
+      `dashboard/assets/icon.png` (a cleaner, purpose-cropped source
+      than the original, which was cropped down from a full logo +
+      wordmark + tagline lockup); the dark version is new, `dashboard/
+      assets/icon-dark.png`. `dashboard/assets.py`'s
+      `_OPTIONAL_ASSET_FILES` extended to vendor both.
+    - **Switched natively via the `media` attribute**
+      (`media="(prefers-color-scheme: light)"` / `"dark"`) on two
+      `<link rel="icon">` tags, not JS -- deliberately simpler than the
+      per-ticker company logo's approach (item 53, a single `<img>`
+      swapped by `theme-toggle.js` on load and on toggle): a favicon is
+      a small, peripheral browser-tab element where tracking just the OS
+      preference is a reasonable, idiomatic tradeoff, unlike the
+      company logo (a prominent in-page element where matching this
+      app's own manual dark-mode toggle, not just the OS, mattered
+      enough to justify the JS). Tradeoff stated plainly, not silently
+      decided: the favicon won't follow a manual in-app toggle if it
+      disagrees with the OS's own preference -- only the two OS-level
+      media queries are wired up.
+    - `apple-touch-icon` (iOS home-screen bookmarks) intentionally left
+      pointing at the single light `icon.png` -- iOS doesn't have an
+      equivalent light/dark home-screen-icon mechanism worth building
+      for here.
+    - **Verified for real**: full pytest suite green (488 passed, tests
+      in both `test_webapp.py`/`test_dashboard_build.py` updated for the
+      new two-link markup); regenerated a real dashboard and, in
+      headless Chromium with `page.emulateMediaFeatures()` set to each
+      of `light`/`dark`, confirmed via the page's actual network
+      requests that *only* the correct variant's file is ever requested
+      (`icon.png` under light, `icon-dark.png` under dark) -- not just
+      that both links exist in the markup, that the browser's own media
+      query resolution picks the right one.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
