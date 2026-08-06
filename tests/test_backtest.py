@@ -305,6 +305,9 @@ class TestPriceHistoryChart:
         assert price["markPoint"]["itemStyle"]["color"] == expected_color
 
     def test_default_zoom_shows_roughly_last_year_for_long_history(self):
+        """Only one dataZoom component now (type: inside, wheel/pinch --
+        no visible slider, see price_history_chart()'s docstring for
+        why)."""
         import dashboard.generate_dashboard as gd
         gd._reset_chart_registry()
         html = price_history_chart(self._price_series(n=1500))
@@ -312,8 +315,7 @@ class TestPriceHistoryChart:
         # (1 - 252/1500) * 100 =~ 83.2
         assert 80 < option["dataZoom"][0]["start"] < 86
         assert option["dataZoom"][0]["end"] == 100
-        # inside + slider zoom, both starting from the same point
-        assert option["dataZoom"][0]["start"] == option["dataZoom"][1]["start"]
+        assert len(option["dataZoom"]) == 1
 
     def test_short_history_shows_everything(self):
         """Fewer than a year of trading days (e.g. a very recent IPO) --

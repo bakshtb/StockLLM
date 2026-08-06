@@ -234,6 +234,24 @@ def delta_class(v, invert=False):
     return "neutral"
 
 
+def _range_pct_change(price_series, days):
+    """% price change over one of the chart's range-preset windows (see
+    chart-toolbar.js) -- the exact number a data-pct attribute carries.
+    Computed with the same index math the button's own zoom action uses
+    (start index = max(0, n - days), 0 = the full series, matching
+    data-days="0" on the "All" button) so the displayed % always matches
+    whatever window is actually visible after clicking that button."""
+    n = len(price_series)
+    if n < 2:
+        return None
+    last_close = next((p["close"] for p in reversed(price_series) if p.get("close") is not None), None)
+    start_idx = 0 if days == 0 or days >= n else n - days
+    start_close = next((p["close"] for p in price_series[start_idx:] if p.get("close") is not None), None)
+    if not last_close or not start_close:
+        return None
+    return (last_close / start_close - 1) * 100
+
+
 def rsi_class(v):
     """Conventional RSI reading, colored for a quick glance: below 30
     ("oversold") green, above 70 ("overbought") red, the 30-70 middle
@@ -1066,9 +1084,15 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
 def price_history_chart(price_series, aria_label="price history"):
     """A clean, minimal price chart -- a colored area line (green/red by
     net change over the series, gradient-filled and topped with a filled
-    dot at the latest close) with drag-to-zoom (mouse wheel/pinch + a
-    slider) and a crosshair tooltip, in the spirit of a mainstream phone
-    stock app's chart: just the price, nothing else competing with it.
+    dot at the latest close) with drag-to-zoom (mouse wheel/pinch) and a
+    crosshair tooltip, in the spirit of a mainstream phone stock app's
+    chart: just the price, nothing else competing with it. No visible
+    date-range slider (an earlier version had one, a horizontal bar with
+    draggable handles below the chart) -- user feedback, pointing at a
+    reference screenshot of it: remove it. The range-preset buttons (see
+    chart-toolbar.js) already cover "pick a window"; wheel/pinch zoom
+    still works via the "inside" dataZoom component below, just with no
+    persistent visible widget for it.
     Built entirely from price_series, which backtest/engine.py already
     fetches once per run and shares with every strategy's own trade
     chart; this reuses the exact same list, no separate fetch of its own.
@@ -1155,17 +1179,6 @@ def price_history_chart(price_series, aria_label="price history"):
         },
         "dataZoom": [
             {"type": "inside", "start": start_pct, "end": 100},
-            {
-                "type": "slider", "start": start_pct, "end": 100,
-                "height": 20, "bottom": 4,
-                "borderColor": "var(--border)", "fillerColor": "rgba(42,120,214,0.12)",
-                "handleStyle": {"color": "var(--series-1)"},
-                "textStyle": {"color": "var(--text-secondary)", "fontSize": 10},
-                "dataBackground": {
-                    "lineStyle": {"color": "var(--text-muted)"},
-                    "areaStyle": {"color": "var(--gridline)"},
-                },
-            },
         ],
         "series": [
             {
@@ -1648,15 +1661,29 @@ def section_price_chart(bundle):
     history_chart_html = price_history_chart(price_series, aria_label="interactive price history")
     if not history_chart_html:
         return ""
+
+    # Each button carries its own precomputed % change (data-pct) plus a
+    # good/critical/neutral class (data-pct-cls) -- clicking a button (see
+    # chart-toolbar.js) both zooms the chart and swaps the visible label
+    # below to that button's numbers, server-computed here rather than
+    # re-derived from chart data in JS, same "server computes, client only
+    # toggles" split as every other interactive piece on this page.
+    ranges = [("1M", 21), ("3M", 63), ("6M", 126), ("1Y", 252), ("2Y", 504), ("All", 0)]
+    default_days = 252
+    buttons = []
+    for label, days in ranges:
+        pct = _range_pct_change(price_series, days)
+        active = " is-active" if days == default_days else ""
+        buttons.append(
+            f'<button type="button" class="range-btn{active}" data-days="{days}" '
+            f'data-pct="{esc(fmt_pct(pct))}" data-pct-cls="{delta_class(pct)}">{esc(label)}</button>'
+        )
+    default_pct = _range_pct_change(price_series, default_days)
     return f"""
 <div class="price-chart-wrap">
   <div class="chart-toolbar">
-    <button type="button" class="range-btn" data-days="21">1M</button>
-    <button type="button" class="range-btn" data-days="63">3M</button>
-    <button type="button" class="range-btn" data-days="126">6M</button>
-    <button type="button" class="range-btn is-active" data-days="252">1Y</button>
-    <button type="button" class="range-btn" data-days="504">2Y</button>
-    <button type="button" class="range-btn" data-days="0">All</button>
+    {"".join(buttons)}
+    <span class="chart-range-pct {delta_class(default_pct)}">{esc(fmt_pct(default_pct))}</span>
   </div>
   {history_chart_html}
 </div>"""

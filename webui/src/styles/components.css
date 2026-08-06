@@ -103,7 +103,13 @@
 .chart-disclosure > div { margin-top: 10px; }
 
 .price-chart-wrap { margin-top: 6px; }
-.chart-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.chart-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+/* The selected range's % change (see section_price_chart()/chart-toolbar.js)
+   -- pushed to the far right of the toolbar, away from the range buttons. */
+.chart-range-pct { margin-left: auto; font-size: 13px; font-weight: 700; }
+.chart-range-pct.good { color: var(--success-text); }
+.chart-range-pct.critical { color: var(--status-critical); }
+.chart-range-pct.neutral { color: var(--text-secondary); }
 /* No resting border (unlike .subtab-btn's pill) -- plain text until
    hovered/active, matching Google Finance's minimal range-tab row. */
 .range-btn {

@@ -10,6 +10,10 @@ export function initChartToolbar() {
     var chartEl = toolbar.parentElement && toolbar.parentElement.querySelector('.echarts-container');
     if (!chartEl || !window.echarts) return;
     var buttons = toolbar.querySelectorAll('.range-btn');
+    // Precomputed server-side (data-pct/data-pct-cls on each button, see
+    // section_price_chart()) -- this just swaps which one is displayed,
+    // no client-side recomputation from chart data.
+    var pctLabel = toolbar.querySelector('.chart-range-pct');
     buttons.forEach(function (btn) {
       btn.addEventListener('click', function () {
         var inst = echarts.getInstanceByDom(chartEl);
@@ -19,6 +23,10 @@ export function initChartToolbar() {
         var startPct = days === 0 ? 0 : Math.max(0, (1 - days / total) * 100);
         inst.dispatchAction({ type: 'dataZoom', start: startPct, end: 100 });
         buttons.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+        if (pctLabel) {
+          pctLabel.textContent = btn.getAttribute('data-pct');
+          pctLabel.className = 'chart-range-pct ' + btn.getAttribute('data-pct-cls');
+        }
       });
     });
   });

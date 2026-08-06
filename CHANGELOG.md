@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.35
+
+- Remove: the chart's visible date-range slider (the horizontal bar with
+  draggable handles below the x-axis) -- user request. Wheel/pinch zoom
+  still works, just with no persistent widget for it.
+- Add: the range buttons (1M/3M/6M/1Y/2Y/All) now show the % price
+  change over their own window -- computed with the same index math the
+  buttons' own zoom action uses, so the number always matches what's
+  actually on screen after clicking. See HANDOFF.md item 58.
+
 ## 0.9.34
 
 - Change: the price chart is now always visible above the tab bar

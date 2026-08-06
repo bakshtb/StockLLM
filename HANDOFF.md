@@ -2186,6 +2186,43 @@ StockLLM/
       mode, plus that the new layout order (price/chart, then tabs, then
       tab content) matches the reference.
 
+58. **Removed the chart's visible date-range slider; range buttons now
+    show the % change over their own window** (0.9.35) -- user sent
+    another reference screenshot, this time of just the slider widget
+    (the horizontal bar with draggable handles below the x-axis labels),
+    asking for it gone; separately asked for the range buttons
+    (1M/3M/6M/1Y/2Y/All) to show how much the stock moved over whichever
+    window is selected.
+    - **Slider removed**: `price_history_chart()`'s `dataZoom` array
+      dropped its `type: "slider"` entry, keeping only `type: "inside"`
+      (mouse wheel/pinch zoom still works, just with no persistent
+      visible widget for it -- the range buttons already cover "pick a
+      window" for anyone not using wheel/trackpad zoom).
+    - **New `_range_pct_change(price_series, days)`** computes % change
+      using the *same* index math the range buttons' own zoom action
+      already uses (`start index = max(0, n - days)`, `0` = the full
+      series) -- so the displayed % always describes exactly the window
+      that's actually visible after clicking, not a slightly different
+      one computed a different way. `section_price_chart()` now embeds
+      each button's own `data-pct`/`data-pct-cls` (server-computed, via
+      the existing `fmt_pct()`/`delta_class()` helpers -- not re-derived
+      from chart data in JS) plus a `.chart-range-pct` label showing the
+      default (1Y) window's %; `chart-toolbar.js`'s click handler swaps
+      that label's text/color to the clicked button's numbers, same
+      "server computes, client only toggles" split as every other
+      interactive piece on this page.
+    - `tests/test_backtest.py`'s dataZoom test updated (it asserted on
+      `dataZoom[1]`, the now-removed slider entry -- would `IndexError`
+      immediately, not silently pass).
+    - **Verified for real**: full pytest suite green (481 passed);
+      regenerated a real AAPL dashboard and confirmed in headless
+      Chromium that no slider renders, that the label reads a real
+      computed number matching the 1Y window on load (`+53.9%`, colored
+      green), and that clicking "1M" both zooms the chart *and* updates
+      the label to that window's own actual number (`-0.8%`, colored
+      red) -- not just that a click handler exists, that the displayed
+      number is correct for what's now on screen.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 
