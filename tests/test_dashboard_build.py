@@ -220,10 +220,12 @@ class TestBuildDashboardWithPipelineResult:
         rec_card = soup.find("div", class_="rec-card")
         assert "Fair value estimate" in rec_card.get_text()
         assert "Weighed bull/bear estimates" in rec_card.get_text()
-        # the range_meter chart itself: Low/High labels made it into the
-        # registered ECharts option (chart data lives in window.__CHARTS__,
-        # not as literal text in the HTML body since charts render client-side)
-        assert '"fmt": "Low $180.00"' in html
+        # the range_meter chart itself: Low/High corner labels made it into
+        # the registered ECharts option (chart data lives in
+        # window.__CHARTS__, not as literal text in the HTML body since
+        # charts render client-side) -- rich-text kicker/value markup, not
+        # a single "Low $180.00" string.
+        assert '"label_fmt": "{kicker|LOW}\\n{value|$180.00}"' in html
         assert "$220.00" in html  # bull's fair_value_estimate surfaced in the thesis grid
 
     def test_fair_value_absent_does_not_crash_or_leak(self, mock_pipeline_result):

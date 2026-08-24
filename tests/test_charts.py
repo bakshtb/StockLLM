@@ -231,13 +231,13 @@ class TestRangeMeter:
         # marker (found live from a screenshot). Must stay clearly bigger
         # than the track's own lineStyle width, with a border so it reads
         # as a distinct dot even when its fill color is close to the
-        # track's var(--gridline).
+        # track's own muted fill.
         chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=160)
         option = get_chart_option(chart)
         track_width = option["series"][0]["lineStyle"]["width"]
-        marker_size = option["series"][1]["symbolSize"]
-        assert marker_size > track_width + 4
         mean_point = next(d for d in option["series"][1]["data"] if d["name"] == "Mean")
+        assert mean_point["symbol"] == "rect"
+        assert mean_point["symbolSize"][0] > track_width and mean_point["symbolSize"][1] > track_width
         assert mean_point["itemStyle"]["borderWidth"] > 0
 
     def test_low_high_visible_and_painted_above_track(self):
@@ -245,11 +245,13 @@ class TestRangeMeter:
         # target price range"): Low/High had no dot at all (symbolSize: 0),
         # and every marker's dot was painted UNDER the opaque track instead
         # of on top of it. Shared root cause with range_position_plot,
-        # fixed in the shared _range_track_option() both call.
+        # fixed in the shared _range_track_option() both call. Low/High are
+        # now thin end-stop ticks (rect, [2, 20]) rather than round dots.
         chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=160)
         option = get_chart_option(chart)
         low_point, high_point = option["series"][1]["data"][0], option["series"][1]["data"][1]
-        assert low_point["symbolSize"] > 0 and high_point["symbolSize"] > 0
+        assert low_point["symbol"] == "rect" and low_point["symbolSize"][1] > 0
+        assert high_point["symbol"] == "rect" and high_point["symbolSize"][1] > 0
         assert option["series"][1]["z"] > option["series"][0]["z"]
 
     def test_current_outside_range_is_clamped_not_crashed_on(self):
@@ -289,8 +291,8 @@ class TestRangeMeter:
         # which (found live, same gap as range_position_plot below).
         chart, table, legend = range_meter(low=100, mean=150, median=140, high=200, current=160)
         assert "Mean" in legend and "Median" in legend
-        assert "var(--series-1)" in legend  # Mean's color
-        assert "var(--series-3)" in legend  # Median's color
+        assert "var(--accent)" in legend  # Mean's color
+        assert "var(--accent-300)" in legend  # Median's color
 
     def test_no_markers_means_no_legend(self):
         # The AI fair-value block calls range_meter with mean=median=None
@@ -366,25 +368,20 @@ class TestRangePositionPlot:
         assert low_label["fmt"] == "$201.58" and low_label["label"]["show"] is True
         assert high_label["fmt"] == "$340.08" and high_label["label"]["show"] is True
 
-    def test_low_high_labels_use_a_keyword_position_not_a_raw_offset(self):
-        # Regression: array-form position [dx, dy] is measured from the
-        # symbol's TOP-LEFT corner, not its center -- with align:"center"
-        # (tried first) that put the label's anchor a half-symbol-width
-        # left of the dot's true center, visibly shifting it off the dot
-        # (found live: a user asked for the High label to render directly
-        # on its own dot, and it rendered noticeably left of it instead).
-        # A string keyword ("top", matching how the marker group already
-        # correctly uses "bottom") centers on the symbol correctly; confirmed
-        # by reading the actual rendered SVG label coordinates against the
-        # track's real pixel positions, not assumed from ECharts' docs.
+    def test_low_high_corner_labels_are_left_right_aligned(self):
+        # The Industry restyle's two-line kicker/value corner label aligns
+        # inward from each end (left at the low end, right at the high
+        # end) rather than centering on the tick -- position stays the
+        # string keyword "top" (not a raw [dx, dy] offset, which is
+        # measured from the symbol's top-left corner rather than its
+        # center and would visibly shift with a non-square tick symbol).
         chart, table, legend = range_position_plot(
             100, 200, 150, [("MA20", 150, "var(--series-1)")],
         )
         option = get_chart_option(chart)
         low_label, high_label = option["series"][1]["data"][0]["label"], option["series"][1]["data"][1]["label"]
-        assert low_label["position"] == "top"
-        assert high_label["position"] == "top"
-        assert "align" not in low_label and "align" not in high_label
+        assert low_label["position"] == "top" and low_label["align"] == "left"
+        assert high_label["position"] == "top" and high_label["align"] == "right"
 
     def test_table_lists_every_marker_and_range(self):
         chart, table, legend = range_position_plot(100, 200, 150, [("MA20", 130, "var(--series-1)")])
@@ -421,16 +418,16 @@ class TestRangePositionPlot:
         assert marker_z > track_z
 
     def test_low_high_have_visible_marker_dots(self):
-        # Low/High used to be symbolSize: 0 (invisible) -- given a real dot
-        # here too, matching every other marker on the track, after a user
+        # Low/High used to be symbolSize: 0 (invisible) -- given a real,
+        # visible end-stop tick here too (rect, [2, 20]), after a user
         # asked for one directly ("the low key ... need a circle too").
         chart, table, legend = range_position_plot(
             100, 200, 150, [("MA20", 150, "var(--series-1)")],
         )
         option = get_chart_option(chart)
         low_point, high_point = option["series"][1]["data"][0], option["series"][1]["data"][1]
-        assert low_point["symbolSize"] > 0
-        assert high_point["symbolSize"] > 0
+        assert low_point["symbolSize"][1] > 0
+        assert high_point["symbolSize"][1] > 0
 
     def test_no_markers_means_no_legend(self):
         chart, table, legend = range_position_plot(100, 200, 150, [])
@@ -438,50 +435,56 @@ class TestRangePositionPlot:
 
 
 class TestGaugeMeter:
-    """RSI's gauge: a real, deliberate visual-form change from a horizontal
-    zone-strip-with-a-dot to a native ECharts semicircular dial -- the old
-    version needed hand-tracked track_y/headline-offset math that clipped
-    its own headline number against the SVG edge more than once. This is
-    the idiomatic way to render "single value + zones + a big number"."""
+    """RSI's gauge: a flat zone-band bar (frame series + one stacked "bar"
+    series per zone) with a triangle marker above it -- the same track/
+    marker idiom range_meter()/range_position_plot() use via
+    _range_track_option(), rather than ECharts' native type:"gauge"
+    semicircular dial, so every value+context figure on the page shares one
+    visual grammar (see the Industry design-system handoff)."""
 
     def test_none_value_returns_empty_state(self):
         chart, table = gauge_meter(None, 0, 100, zones=[(100, "var(--gridline)", "x")], label="RSI")
         assert chart is None
 
-    def test_real_value_has_dimensions_and_right_series_type(self):
+    def test_real_value_has_dimensions_and_a_needle_marker(self):
         chart, table = gauge_meter(65.4, 0, 100, zones=[(30, "var(--status-good)", "a"), (100, "var(--status-critical)", "b")], label="RSI")
         assert_chart_has_dimensions(chart)
         option = get_chart_option(chart)
-        gauge = option["series"][0]
-        assert gauge["type"] == "gauge"
-        assert gauge["data"][0]["value"] == 65.4
+        needle = option["series"][-1]
+        assert needle["type"] == "line"
+        assert needle["markPoint"]["data"][0]["coord"] == [65.4, ""]
+        assert needle["markPoint"]["data"][0]["fmt"] == "65.4"
 
-    def test_zone_stops_are_fractions_of_the_min_max_span(self):
-        # ECharts gauge zone stops are fractions of [min, max], not the
-        # absolute threshold values zones are expressed in.
+    def test_zones_render_as_stacked_bar_segments_with_correct_widths(self):
+        # Zones are absolute-width bar segments stacked left-to-right, not
+        # fractions of [min, max] the way ECharts' native gauge zones are.
         chart, table = gauge_meter(45, 0, 100, zones=[(30, "var(--status-good)", "a"), (70, "var(--gridline)", "b"), (100, "var(--status-critical)", "c")], label="RSI")
         option = get_chart_option(chart)
-        stops = option["series"][0]["axisLine"]["lineStyle"]["color"]
-        assert stops == [[0.3, "var(--status-good)"], [0.7, "var(--gridline)"], [1.0, "var(--status-critical)"]]
+        zone_series = option["series"][1:-1]  # series[0] is the frame, series[-1] is the needle
+        assert [z["itemStyle"]["color"] for z in zone_series] == ["var(--status-good)", "var(--gridline)", "var(--status-critical)"]
+        assert [z["data"][0]["value"] for z in zone_series] == [30, 40, 30]
+        assert all(z["stack"] == "zones" for z in zone_series)
 
-    def test_value_rounded_for_display_fmt_kept_for_tooltip(self):
+    def test_frame_series_draws_a_bordered_background_bar(self):
+        chart, table = gauge_meter(45, 0, 100, zones=[(100, "var(--gridline)", "x")], label="RSI")
+        option = get_chart_option(chart)
+        frame = option["series"][0]
+        assert frame["itemStyle"]["color"] == "transparent"
+        assert frame["itemStyle"]["borderColor"] == "var(--border)"
+        assert frame["data"] == [100]
+
+    def test_value_rounded_for_display_fmt_kept_for_marker_position(self):
         chart, table = gauge_meter(45.06, 0, 100, zones=[(100, "var(--gridline)", "x")], label="RSI")
         option = get_chart_option(chart)
-        assert option["series"][0]["data"][0]["value"] == 45.1
-        assert option["series"][0]["data"][0]["fmt"] == "45.1"
+        needle = option["series"][-1]
+        assert needle["markPoint"]["data"][0]["coord"][0] == 45.06
+        assert needle["markPoint"]["data"][0]["fmt"] == "45.1"
 
-    def test_pointer_is_shown_as_a_dot_on_the_band(self):
-        # Regression: the pointer was `show: False` -- a big number sitting
-        # next to a static colored band with no visual link between them,
-        # found live from a real screenshot ("where is it in the red/green/
-        # gray?"). It must be a dot, not the default needle from the pivot
-        # (a needle this short would cross straight through the headline
-        # number sitting in the same central area).
+    def test_needle_is_a_triangle_marker_above_the_track(self):
         chart, table = gauge_meter(45.1, 0, 100, zones=[(100, "var(--gridline)", "x")], label="RSI")
         option = get_chart_option(chart)
-        pointer = option["series"][0]["pointer"]
-        assert pointer["show"] is True
-        assert pointer["icon"] == "circle"
+        needle = option["series"][-1]
+        assert needle["markPoint"]["symbol"].startswith("path://")
 
 
 class TestStackedBarParts:
@@ -502,20 +505,25 @@ class TestStackedBarParts:
         ])
         assert_chart_has_dimensions(chart)
         option = get_chart_option(chart)
-        assert all(s["stack"] == "total" for s in option["series"])
-        assert [s["data"][0]["value"] for s in option["series"]] == [60, 30, 10]
+        segments = option["series"][1:]  # series[0] is the frame series
+        assert all(s["stack"] == "total" for s in segments)
+        assert [s["data"][0]["value"] for s in segments] == [60, 30, 10]
 
-    def test_first_and_last_segments_are_rounded_middle_is_not(self):
+    def test_frame_series_draws_a_bordered_background_bar(self):
+        # Square, not rounded (Industry's system has no rounded bars) --
+        # framed with a 1px border instead, drawn as a background bar under
+        # the stack via the same barGap:"-100%" trick gauge_meter() uses.
         chart, table, legend = stacked_bar_parts([
             ("Institutions", 60, "var(--series-1)"),
             ("Insiders", 30, "var(--series-2)"),
             ("Other", 10, "var(--gridline)"),
         ])
         option = get_chart_option(chart)
-        radii = [s["itemStyle"]["borderRadius"] for s in option["series"]]
-        assert radii[0] == [4, 0, 0, 4]  # first: rounded on the left only
-        assert radii[1] == [0, 0, 0, 0]  # middle: square
-        assert radii[2] == [0, 4, 4, 0]  # last: rounded on the right only
+        frame = option["series"][0]
+        assert frame["itemStyle"]["color"] == "transparent"
+        assert frame["itemStyle"]["borderColor"] == "var(--border)"
+        assert frame["data"] == [100.0]
+        assert all("borderRadius" not in s["itemStyle"] for s in option["series"][1:])
 
 
 class TestDivergingStackedSentiment:

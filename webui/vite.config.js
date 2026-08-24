@@ -9,6 +9,13 @@ import { defineConfig } from "vite";
 // (see dashboard/assets/README.md), and running it through Rollup would buy
 // nothing but risk.
 export default defineConfig({
+  // Relative, not the default "/": generate_dashboard.py links the built
+  // CSS/JS with a relative "assets/dist/..." path so the generated HTML
+  // works from any directory it's copied to (it's meant to be portable,
+  // offline-capable output, not served from a fixed domain root) -- an
+  // absolute base would emit "/assets/xxx.woff2" font url()s inside the
+  // built CSS that 404 the moment the page isn't served from "/".
+  base: "./",
   publicDir: "public",
   build: {
     outDir: "../dashboard/assets/dist",

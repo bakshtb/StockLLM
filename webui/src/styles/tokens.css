@@ -1,112 +1,178 @@
-/* Color roles -- verbatim from the dataviz skill's reference palette
-   (bundled-skills/.../dataviz/references/palette.md). Do not hand-tune a
-   hex here; if the brand palette ever changes, swap the values in this
-   file only. */
+/* Type: Barlow / Barlow Condensed, self-hosted (see assets/fonts/). The
+   generated dashboard is explicitly offline-capable ("no CDN at request
+   time"), so these are vendored woff2 files rather than a Google Fonts
+   @import -- system-ui is the fallback if a file fails to load. */
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/barlow-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/barlow-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/barlow-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/barlow-condensed-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Barlow Condensed";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/barlow-condensed-600.woff2") format("woff2");
+}
+
+/* Color roles -- Industry design system (blueprint/steel-on-paper), a mono
+   steel accent on a light ground with exactly one deliberate palette break:
+   the diverge pair for directional values (returns, EPS beat/miss, P/L,
+   sentiment), derived in OKLCH at the accent's own lightness so it sits
+   inside the palette rather than shouting over it. Everything else that
+   isn't directional (categorical chart series, warning/serious status,
+   badge.info) is re-derived from the steel + neutral ramps. Do not hand-tune
+   a hex here without checking the handoff doc this was derived from. */
 :root, .viz-root {
   color-scheme: light;
-  --surface-1:      #fcfcfb;
-  --page-plane:     #f9f9f7;
-  --text-primary:   #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted:     #898781;
-  --gridline:       #e1e0d9;
-  --baseline:       #c3c2b7;
-  --border:         rgba(11,11,11,0.10);
-  --success-text:   #006300;
 
-  --series-1: #2a78d6; /* blue */
-  --series-2: #eb6834; /* orange */
-  --series-3: #1baf7a; /* aqua */
-  --series-4: #eda100; /* yellow */
-  --series-5: #e87ba4; /* magenta */
-  --series-6: #008300; /* green */
-  --series-7: #4a3aa7; /* violet */
-  --series-8: #e34948; /* red */
+  /* Ground and ink */
+  --page-plane:     #f2f2f3;
+  --surface-1:      #f2f2f3;   /* surfaces == ground; cards are line drawings, not raised planes */
+  --text-primary:   #1d1f20;
+  --text-secondary: color-mix(in srgb, #1d1f20 60%, transparent);
+  --text-muted:     color-mix(in srgb, #1d1f20 45%, transparent);
+  --gridline:       color-mix(in srgb, #1d1f20 8%,  transparent);
+  --baseline:       #1d1f20;   /* chart zero-lines are full-strength ink, 1px */
+  --border:         color-mix(in srgb, #1d1f20 16%, transparent);
 
-  /* Diverging pairs here mean "good news vs. bad news" (beat/miss, bullish/
-     bearish), not neutral polarity/identity -- so they intentionally reuse
-     the status colors (green/red) rather than the dataviz skill's default
-     blue/red diverging pair, per explicit request for a green/red = good/bad
-     convention throughout this dashboard. */
-  --diverge-pos: #0ca30c;
-  --diverge-neg: #d03b3b;
-  --diverge-mid: #f0efec;
+  /* The one accent, with its 100-900 ramp */
+  --accent:      #5980a6;
+  --accent-100:  #eef6ff;
+  --accent-200:  #d6ebff;
+  --accent-300:  #b5d9fd;
+  --accent-400:  #94bce3;
+  --accent-500:  #749dc4;
+  --accent-600:  #597ea3;
+  --accent-700:  #416180;
+  --accent-800:  #2c455d;
+  --accent-900:  #1d2d3d;
 
-  --status-good:     #0ca30c;
-  --status-warning:  #fab219;
-  --status-serious:  #ec835a;
-  --status-critical: #d03b3b;
+  /* Neutral ramp, for second/third chart series */
+  --neutral-300: #d4d4d7;
+  --neutral-400: #b7b7ba;
+  --neutral-500: #98989b;
+  --neutral-600: #7a7a7d;
+  --neutral-700: #5d5d60;
+  --neutral-800: #424244;
+  --neutral-900: #2b2b2d;
 
-  /* Material elevation scale -- a light, near-invisible shadow at rest
-     (level 1, same weight the original .card shadow already used) rising
-     to a slightly more present shadow on hover/focus (level 2) and for
-     genuinely "floating above the page" elements like a FAB (level 3).
-     Kept subtle on purpose: dataviz skill's rule ("the data is the only
-     thing allowed to be loud") still applies -- these are depth cues, not
-     decoration. */
-  --elevation-1: 0 1px 2px rgba(11,11,11,0.03), 0 1px 10px rgba(11,11,11,0.025);
-  --elevation-2: 0 2px 4px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);
-  --elevation-3: 0 4px 8px rgba(11,11,11,0.08), 0 8px 28px rgba(11,11,11,0.10);
+  /* Chart series: categorical identity comes from the steel + neutral
+     ramps, not eight hues. Order matters -- series-1 is the subject (the
+     stock), series-2/3 are the references (benchmark, sector). */
+  --series-1: var(--accent);
+  --series-2: var(--accent-400);
+  --series-3: var(--neutral-400);
+  --series-4: var(--accent-700);
+  --series-5: var(--accent-200);
+  --series-6: var(--neutral-600);
+  --series-7: var(--accent-500);
+  --series-8: var(--neutral-300);
+
+  /* Direction -- the one deliberate palette break */
+  --diverge-pos: oklch(0.48 0.10 150);
+  --diverge-neg: oklch(0.48 0.13 28);
+  --diverge-mid: color-mix(in srgb, #1d1f20 6%, transparent);
+  --success-text: oklch(0.42 0.10 150);   /* deeper, for body-size text on the light ground */
+
+  /* Status: warning/serious lose their own hues and become accent steps.
+     Only good/critical stay directional. */
+  --status-good:     oklch(0.48 0.10 150);
+  --status-warning:  var(--accent-600);
+  --status-serious:  var(--accent-800);
+  --status-critical: oklch(0.48 0.13 28);
+
+  /* Elevation is gone -- depth comes from hairlines and registration marks,
+     not shadows. Kept defined so nothing breaks; zeroed except the dialog. */
+  --elevation-1: none;
+  --elevation-2: none;
+  --elevation-3: 0 12px 32px color-mix(in srgb, #2b2b2d 22%, transparent);
+
+  /* Radius: everything square except the dialog */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+
+  --font-heading: "Barlow Condensed", system-ui, sans-serif;
+  --font-body:    "Barlow", system-ui, sans-serif;
+
+  /* Industry's 0.85x spacing scale */
+  --space-1: 3.4px;  --space-2: 6.8px;  --space-3: 10.2px;
+  --space-4: 13.6px; --space-6: 20.4px; --space-8: 27.2px;
+
   --motion-fast: 0.15s ease;
   --motion-lift: 0.18s cubic-bezier(0.2, 0, 0, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --surface-1:      #1a1a19;
-    --page-plane:     #0d0d0d;
-    --text-primary:   #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted:     #898781;
-    --gridline:       #2c2c2a;
-    --baseline:       #383835;
-    --border:         rgba(255,255,255,0.10);
-    --success-text:   #0ca30c;
-
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --series-4: #c98500;
-    --series-5: #d55181;
-    --series-6: #008300;
-    --series-7: #9085e9;
-    --series-8: #e66767;
-
-    --diverge-pos: #0ca30c;
-    --diverge-neg: #e66767;
-    --diverge-mid: #383835;
-
-    --elevation-1: 0 1px 2px rgba(0,0,0,0.16), 0 1px 10px rgba(0,0,0,0.14);
-    --elevation-2: 0 2px 4px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.24);
-    --elevation-3: 0 4px 8px rgba(0,0,0,0.30), 0 8px 28px rgba(0,0,0,0.34);
+    /* Same structure; swap ground and ink and step the accent one lighter
+       (Industry's own rule: pressed/hover states go one step lighter on a
+       dark ground). Everything not listed here (the accent/neutral ramps,
+       series-4..8, warning/serious status) stays the same across themes. */
+    --page-plane:     #1d2d3d;   /* accent-900 -- steel as ground, type reversed to paper */
+    --surface-1:      #1d2d3d;
+    --text-primary:   #f2f2f3;
+    --text-secondary: color-mix(in srgb, #f2f2f3 65%, transparent);
+    --text-muted:     color-mix(in srgb, #f2f2f3 45%, transparent);
+    --gridline:       color-mix(in srgb, #f2f2f3 10%, transparent);
+    --baseline:       color-mix(in srgb, #f2f2f3 45%, transparent);
+    --border:         color-mix(in srgb, #f2f2f3 16%, transparent);
+    --accent:         #94bce3;   /* accent-400 */
+    --series-1:       #94bce3;
+    --series-2:       #5980a6;
+    --series-3:       #98989b;
+    --diverge-pos:    oklch(0.68 0.11 150);
+    --diverge-neg:    oklch(0.66 0.14 28);
+    --success-text:   oklch(0.72 0.11 150);
+    --status-good:    oklch(0.68 0.11 150);
+    --status-critical: oklch(0.66 0.14 28);
+    --elevation-1: none;
+    --elevation-2: none;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface-1:      #1a1a19;
-  --page-plane:     #0d0d0d;
-  --text-primary:   #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted:     #898781;
-  --gridline:       #2c2c2a;
-  --baseline:       #383835;
-  --border:         rgba(255,255,255,0.10);
-  --success-text:   #0ca30c;
-
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --series-5: #d55181;
-  --series-6: #008300;
-  --series-7: #9085e9;
-  --series-8: #e66767;
-
-  --diverge-pos: #0ca30c;
-  --diverge-neg: #e66767;
-  --diverge-mid: #383835;
-
-  --elevation-1: 0 1px 2px rgba(0,0,0,0.16), 0 1px 10px rgba(0,0,0,0.14);
-  --elevation-2: 0 2px 4px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.24);
-  --elevation-3: 0 4px 8px rgba(0,0,0,0.30), 0 8px 28px rgba(0,0,0,0.34);
+  --page-plane:     #1d2d3d;
+  --surface-1:      #1d2d3d;
+  --text-primary:   #f2f2f3;
+  --text-secondary: color-mix(in srgb, #f2f2f3 65%, transparent);
+  --text-muted:     color-mix(in srgb, #f2f2f3 45%, transparent);
+  --gridline:       color-mix(in srgb, #f2f2f3 10%, transparent);
+  --baseline:       color-mix(in srgb, #f2f2f3 45%, transparent);
+  --border:         color-mix(in srgb, #f2f2f3 16%, transparent);
+  --accent:         #94bce3;
+  --series-1:       #94bce3;
+  --series-2:       #5980a6;
+  --series-3:       #98989b;
+  --diverge-pos:    oklch(0.68 0.11 150);
+  --diverge-neg:    oklch(0.66 0.14 28);
+  --success-text:   oklch(0.72 0.11 150);
+  --status-good:    oklch(0.68 0.11 150);
+  --status-critical: oklch(0.66 0.14 28);
+  --elevation-1: none;
+  --elevation-2: none;
 }

@@ -2,7 +2,6 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';
 import './styles/responsive.css';
-import './styles/ripple.css';
 import './styles/skeleton.css';
 
 // hydrate.js runs its own chart init immediately (self-invoking, same as
@@ -14,7 +13,6 @@ import { initChartToolbar } from './js/chart-toolbar.js';
 import { initLlmExport } from './js/llm-export.js';
 import { initThemeToggle } from './js/theme-toggle.js';
 import { initInfoPopovers } from './js/info-popovers.js';
-import { initRipple } from './js/ripple.js';
 import { initSubtabs } from './js/subtabs.js';
 
 function initAll() {
@@ -23,7 +21,6 @@ function initAll() {
   initLlmExport();
   initThemeToggle();
   initInfoPopovers();
-  initRipple();
   initSubtabs();
 }
 

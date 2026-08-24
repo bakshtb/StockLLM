@@ -21,6 +21,7 @@
 
 var TOKEN_TOOLTIP = '__tooltipFmt__';
 var TOKEN_LABEL = '__labelFmt__';
+var TOKEN_RICH_LABEL = '__richLabelFmt__';
 var TOKEN_AXIS_COMPACT = '__compactAxis__';
 var TOKEN_RANGE_TRACK_LABEL_LAYOUT = '__rangeTrackLabelLayout__';
 var TOKEN_VBAR_LABEL_STAGGER = '__verticalBarLabelStagger__';
@@ -30,6 +31,28 @@ var VAR_RE = /^var\((--[\w-]+)\)$/;
 
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Resolves a full CSS color expression containing a color-mix()/var() call
+// (e.g. RSI gauge zone colors, "color-mix(in srgb, var(--diverge-pos) 35%,
+// transparent)") to a concrete color the SVG renderer can use, the same way
+// cssVar() resolves a bare "var(--x)" -- but color-mix() needs the browser's
+// actual CSS engine to compute (not just a custom-property lookup), so this
+// assigns it to a detached element's `color` and reads the computed result
+// back, rather than hand-rolling color math in JS. Re-run on every
+// hydrateOption() pass (theme toggle, resize), so it always reflects the
+// live theme like every other resolved color here.
+var _colorMixScratch = null;
+function resolveColorMix(expr) {
+  if (!_colorMixScratch) {
+    _colorMixScratch = document.createElement('span');
+    _colorMixScratch.style.display = 'none';
+    document.body.appendChild(_colorMixScratch);
+  }
+  _colorMixScratch.style.color = '';
+  _colorMixScratch.style.color = expr;
+  var resolved = getComputedStyle(_colorMixScratch).color;
+  return resolved || expr;
 }
 
 // tokens.css always defines color custom properties as #rgb/#rrggbb (never
@@ -93,6 +116,17 @@ function genericLabelFormatter(params) {
   var d = params.data;
   if (d && typeof d === 'object' && d.fmt !== undefined) return d.fmt;
   return params.value;
+}
+
+// Same idea as genericLabelFormatter, but reads a separate `label_fmt`
+// field carrying ECharts rich-text markup ("{kicker|LOW}\n{value|$201.58}")
+// -- kept apart from `fmt` so the tooltip (which reads `fmt` via
+// genericTooltipFormatter) shows plain text, not the markup. See
+// _range_track_option()'s corner labels in generate_dashboard.py.
+function richLabelFormatter(params) {
+  var d = params.data;
+  if (d && typeof d === 'object' && d.label_fmt !== undefined) return d.label_fmt;
+  return genericLabelFormatter(params);
 }
 
 // ECharts' declarative `labelLayout: {moveOverlap: "shiftY"}` does not
@@ -254,8 +288,10 @@ function hydrateOption(node) {
   if (typeof node === 'string') {
     var m = VAR_RE.exec(node);
     if (m) return cssVar(m[1]);
+    if (node.indexOf('color-mix(') !== -1) return resolveColorMix(node);
     if (node === TOKEN_TOOLTIP) return genericTooltipFormatter;
     if (node === TOKEN_LABEL) return genericLabelFormatter;
+    if (node === TOKEN_RICH_LABEL) return richLabelFormatter;
     if (node === TOKEN_AXIS_COMPACT) return formatCompact;
     if (node === TOKEN_RANGE_TRACK_LABEL_LAYOUT) return makeRangeTrackLabelLayout();
     if (node === TOKEN_VBAR_LABEL_STAGGER) return makeVerticalBarLabelStagger();

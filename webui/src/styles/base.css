@@ -21,61 +21,70 @@ body { padding: 0 0 64px 0; }
 .sticky-top { position: sticky; top: 0; z-index: 20; }
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; padding: 16px 24px;
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--border);
+  gap: 16px; padding: 14px 24px;
+  background: transparent;
+  border-bottom: 1px solid var(--text-primary);   /* full-strength ink -- the "sheet header" cue */
 }
 .topbar-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .back-link {
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: 32px; height: 32px; border-radius: 50%; color: var(--text-secondary);
+  width: 32px; height: 32px; border-radius: 0; border: 1px solid var(--border);
+  color: var(--text-secondary);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-.back-link:hover { background: var(--gridline); color: var(--text-primary); }
-.back-link:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
-.company-logo-wrap { flex-shrink: 0; width: 40px; height: 40px; }
+.back-link:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); color: var(--text-primary); }
+.company-logo-wrap {
+  position: relative; flex-shrink: 0; width: 40px; height: 40px;
+  border: 1px solid var(--border);
+}
 .company-logo {
-  width: 40px; height: 40px; border-radius: 8px; object-fit: contain;
+  width: 40px; height: 40px; border-radius: 0; object-fit: contain;
   background: var(--page-plane);
 }
 .company-logo-fallback {
   display: flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; border-radius: 8px;
-  background: var(--series-1); color: #fff; font-size: 16px; font-weight: 700;
+  width: 40px; height: 40px; border-radius: 0;
+  background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-700);
+  font-family: var(--font-heading); font-size: 19px; font-weight: 600;
 }
 .topbar-title-group { min-width: 0; }
-.topbar h1 { font-size: 20px; margin: 0; font-weight: 600; }
+.topbar h1 {
+  font-family: var(--font-heading); font-size: 23px; margin: 0; font-weight: 600;
+  letter-spacing: .08em;
+}
+.topbar-product-label {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted);
+}
 .topbar .meta {
-  color: var(--text-secondary); font-size: 13px; margin-top: 2px;
+  color: var(--text-secondary); font-size: 12.5px; margin-top: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .topbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-button.chip {
-  font: inherit; font-size: 13px; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--surface-1); color: var(--text-primary);
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 7px 12px;
-  transition: background-color 0.15s ease, box-shadow var(--motion-fast);
-  position: relative; overflow: hidden;
-}
-button.chip:hover { background: var(--gridline); box-shadow: var(--elevation-1); }
 
-/* The one filled/prominent action button on the page ("Download for AI
-   Chat") -- a Material "filled button" treatment (solid fill, its own
-   elevation, lifts further on hover) to stand out from the plain outlined
-   .chip buttons around it, per explicit request to make this a prominent
-   styled action rather than just another chip. */
+/* Buttons -- outlined by default; the primary action is the one solid
+   accent object on the board. */
+button.chip {
+  font-family: var(--font-heading); font-weight: 600; font-size: 14px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 0;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  transition: background-color 0.15s ease;
+}
+button.chip:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); box-shadow: none; }
+button.chip:active { background: color-mix(in srgb, var(--text-primary) 14%, transparent); }
+
 /* button.chip-accent, not .chip-accent: a bare class selector here has
    lower specificity than "button.chip" above (0,1,0 vs 0,1,1) and loses to
    it regardless of source order, silently keeping the default chip
    background -- confirmed live via headless Chromium (computed
    background-color stayed var(--surface-1)) before this fix. */
 button.chip-accent {
-  background: var(--series-1); color: #fff; border-color: var(--series-1);
-  box-shadow: var(--elevation-1);
+  background: var(--accent); color: var(--page-plane); border-color: var(--accent);
+  box-shadow: none;
 }
-button.chip-accent:hover { background: var(--series-1); filter: brightness(1.08); box-shadow: var(--elevation-2); }
+button.chip-accent:hover { background: var(--accent-600); filter: none; box-shadow: none; }
+button.chip-accent:active { background: var(--accent-700); }
 .chip-accent .chip-icon { flex-shrink: 0; }
 
 .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 24px; }

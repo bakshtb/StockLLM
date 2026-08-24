@@ -89,6 +89,15 @@ SERIES_ROLE = {
     7: "var(--series-7)", 8: "var(--series-8)",
 }
 
+# Four "+" registration marks emitted as the first children of every
+# .blueprint-framed element (.card, .strategy-card, .rec-card, the
+# At-a-Glance panel, .data-notes) -- see webui/src/styles/components.css's
+# .corner rules. Not applied to .stat-tile/.viz-card/.glance-item/
+# .news-item/.filing-row -- those read as a hairline grid or rule-separated
+# list, not a framed object.
+CORNERS = ('<i class="corner tl"></i><i class="corner tr"></i>'
+           '<i class="corner bl"></i><i class="corner br"></i>')
+
 # ============================================================================
 # Plain-language explanations, one per metric/section, written for someone
 # with no finance background. Attached via info_icon() -- click the small
@@ -444,12 +453,12 @@ def bar_chart_horizontal(items, unit="", value_fmt=None):
         "yAxis": {
             "type": "category", "inverse": True, "data": [label for label, _ in items],
             "axisLine": {"show": False}, "axisTick": {"show": False},
-            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 13},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 10.5, "letterSpacing": ".07em"},
         },
         "series": [{
             "type": "bar", "barMaxWidth": row_h,
-            "itemStyle": {"color": "var(--series-1)", "borderRadius": [0, 4, 4, 0]},
-            "label": {"show": True, "position": "right", "color": "var(--text-primary)", "formatter": "__labelFmt__"},
+            "itemStyle": {"color": "var(--series-1)", "borderRadius": 0},
+            "label": {"show": True, "position": "right", "color": "var(--text-primary)", "fontFamily": "Barlow Condensed", "fontWeight": 600, "formatter": "__labelFmt__"},
             "data": [{"value": v, "fmt": value_fmt(v)} for _, v in items],
         }],
     }
@@ -484,8 +493,9 @@ def diverging_bar_horizontal(items, value_fmt=None):
             "itemStyle": {"color": color},
             "label": {
                 "position": position,
-                "color": "#fff" if long_enough else "var(--text-primary)",
-                "fontWeight": 600 if long_enough else 400,
+                "color": "var(--page-plane)" if long_enough else "var(--text-primary)",
+                "fontWeight": 500 if long_enough else 400,
+                "fontFamily": "Barlow Condensed",
             },
         })
 
@@ -496,11 +506,11 @@ def diverging_bar_horizontal(items, value_fmt=None):
         "yAxis": {
             "type": "category", "inverse": True, "data": [label for label, _ in items],
             "axisLine": {"show": False}, "axisTick": {"show": False},
-            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 13},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 10.5, "letterSpacing": ".07em"},
         },
         "series": [{
             "type": "bar", "barMaxWidth": row_h,
-            "markLine": {"symbol": "none", "silent": True, "lineStyle": {"color": "var(--baseline)"}, "data": [{"xAxis": 0}]},
+            "markLine": {"symbol": "none", "silent": True, "lineStyle": {"color": "var(--baseline)", "width": 1}, "data": [{"xAxis": 0}]},
             "label": {"show": True, "formatter": "__labelFmt__"},
             "data": data,
         }],
@@ -548,16 +558,28 @@ def grouped_bar_horizontal(groups, value_fmt=None):
     row_h, gap, group_gap, header_h, pad = 20, 8, 22, 22, 16
     H = pad * 2 + len(groups) * (n_series * (row_h + gap) - gap + group_gap) - group_gap
 
+    # A bar this close to zero would render at sub-pixel length and read as
+    # a rendering artifact rather than a real (small) value -- found in the
+    # reference with a -0.4% bar. Clamp the *rendered* length to a visible
+    # floor while the label/tooltip (`fmt`) still shows the true value.
+    MIN_BAR_FRACTION = 0.02
+
     series = []
     for name in series_order:
         data = []
         for group_title, items in groups:
             v = next((v for n2, _, v in items if n2 == name), None)
-            data.append({"value": v, "fmt": value_fmt(v), "name": f"{name} — {group_title}"} if v is not None else None)
+            if v is None:
+                data.append(None)
+                continue
+            display_v = v
+            if v != 0 and abs(v) < max_abs * MIN_BAR_FRACTION:
+                display_v = max_abs * MIN_BAR_FRACTION if v > 0 else -max_abs * MIN_BAR_FRACTION
+            data.append({"value": display_v, "fmt": value_fmt(v), "name": f"{name} — {group_title}"})
         series.append({
             "name": name, "type": "bar",
             "itemStyle": {"color": series_colors[name]},
-            "label": {"show": True, "formatter": "__labelFmt__", "color": "var(--text-primary)"},
+            "label": {"show": True, "formatter": "__labelFmt__", "color": "var(--text-primary)", "fontFamily": "Barlow Condensed", "fontWeight": 600},
             "data": data,
         })
 
@@ -569,7 +591,7 @@ def grouped_bar_horizontal(groups, value_fmt=None):
         "yAxis": {
             "type": "category", "inverse": True, "data": [g for g, _ in groups],
             "axisLine": {"show": False}, "axisTick": {"show": False},
-            "axisLabel": {"color": "var(--text-primary)", "fontWeight": 600, "fontSize": 13.5},
+            "axisLabel": {"color": "var(--text-primary)", "fontWeight": 600, "fontSize": 13.5, "fontFamily": "Barlow Condensed"},
         },
         "series": series,
     }
@@ -607,7 +629,7 @@ def grouped_column_chart(categories, series):
                 continue
             point = {"value": v, "fmt": fmt_usd(v, 1), "name": f"{categories[ci]} — {name}"}
             if ci == n_cat - 1:  # direct label on the last/most-recent category only
-                point["label"] = {"show": True, "position": "top", "color": "var(--text-primary)", "formatter": "__labelFmt__"}
+                point["label"] = {"show": True, "position": "top", "color": "var(--text-primary)", "fontFamily": "Barlow Condensed", "fontWeight": 600, "formatter": "__labelFmt__"}
             data.append(point)
         echarts_series.append({
             "name": name, "type": "bar", "barMaxWidth": 24,
@@ -627,16 +649,16 @@ def grouped_column_chart(categories, series):
         "labelLayout": "__verticalBarLabelStagger__",
         "xAxis": {
             "type": "category", "data": categories,
-            "axisLine": {"lineStyle": {"color": "var(--baseline)"}},
-            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 12.5}, "axisTick": {"show": False},
+            "axisLine": {"lineStyle": {"color": "var(--baseline)", "width": 1}},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 10.5, "letterSpacing": ".07em"}, "axisTick": {"show": False},
         },
         "yAxis": {
             # interval forces exactly 3 gridline ticks (min/mid/max), matching
             # the old fixed 3-tick scheme instead of ECharts' default
             # "nice number" auto-ticking, which could vary chart to chart.
             "type": "value", "min": min_v, "max": max_v, "interval": (max_v - min_v) / 2 or 1,
-            "splitLine": {"lineStyle": {"color": "var(--gridline)"}},
-            "axisLabel": {"color": "var(--text-muted)", "fontSize": 12, "formatter": "__compactAxis__"},
+            "splitLine": {"lineStyle": {"color": "var(--gridline)", "width": 1}},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 10.5, "letterSpacing": ".07em", "formatter": "__compactAxis__"},
         },
         "series": echarts_series,
     }
@@ -652,32 +674,23 @@ def grouped_column_chart(categories, series):
     return chart_html, table, leg
 
 
-def _range_track_option(low, high, current, markers, current_label, label_fmt, corner_word_prefix=False):
+def _range_track_option(low, high, current, markers, current_label, label_fmt, low_kicker="LOW", high_kicker="HIGH"):
     """Shared ECharts option for range_meter and range_position_plot: a
-    value-axis track from low to high, named point markers (dots + labels),
-    and a distinct triangle "current" marker. markers: list of (name, value,
-    color_css_var). corner_word_prefix: range_meter's corner labels read
-    "Low $215.00" / "High $400.00"; range_position_plot's read just the bare
-    price ("$201.58") since its track already leads with a "Price vs..."
-    card title -- the word would be redundant there.
+    value-axis track from low to high, named point markers (squares +
+    labels), a distinct triangle "current" marker, and a two-line
+    kicker/value corner label at each end. markers: list of (name, value,
+    color_css_var). low_kicker/high_kicker: the corner label's small
+    uppercase kicker line -- range_meter's target track reads "LOW"/"HIGH",
+    range_position_plot's 52-week track reads "52W LOW"/"52W HIGH".
 
     ECharts' labelLayout (set globally below) resolves label-vs-label
     collisions automatically -- Mean/Median crowding together, or "Current"
-    crowding a Low/High corner label when the value sits near an edge (the
-    old SVG version needed a hand-rolled stagger pass and a "suppress
-    whichever label is in the way" compromise for exactly these two cases;
-    neither is needed here). Low/High labels are centered on their own dot
-    (no align override), same as every other marker -- an explicit
-    align:"left"/"right" was tried first specifically to avoid clipping
-    past the plot's edge, but a user reading the rendered page expected
-    every dot to carry its own label directly above it the same way
-    MA20/Mean/etc. do, not off to one side. The grid's left/right margin is
-    widened instead (see below) to give a centered label room to clip
-    against the SVG edge, without needing the label to land off to one side.
+    crowding a Low/High corner label when the value sits near an edge.
+    Low/High corner labels are left/right-aligned inward from their own end
+    (not centered like the named markers below the track), so the grid's
+    left/right margin no longer needs the wide clearance a centered label
+    used to clip against.
     """
-    def low_high_fmt(word, v):
-        return f"{word} {label_fmt(v)}" if corner_word_prefix else label_fmt(v)
-
     def clamp(v):
         # A marker (most commonly "current") can legitimately fall outside
         # [low, high] -- e.g. today's price above its own 52-week high on a
@@ -686,51 +699,85 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         # to whichever edge it overshot instead of losing it.
         return max(low, min(high, v))
 
-    # Low/High used to be symbolSize: 0 (invisible, relying on the track's
-    # own rounded end-caps to imply an endpoint) -- given an explicit dot
-    # here too, same size/border as every other marker, for visual
-    # consistency across the whole track (found live: a user expected
-    # every labeled point to carry the same dot the named markers do).
-    # var(--text-secondary) keeps them visually neutral, since Low/High
-    # aren't a categorical series the way MA20/Mean/etc. are.
+    # Two-line "{KICKER}\n{value}" corner label, built as ECharts rich text
+    # (label.formatter reading a datapoint's own label_fmt field via the
+    # __richLabelFmt__ token -- see hydrate.js) so the kicker and value can
+    # carry different type styles within one label. Kept out of `fmt`
+    # (used for the tooltip) so the tooltip shows plain text, not markup.
+    def corner_rich(kicker, v):
+        return f"{{kicker|{kicker.upper()}}}\n{{value|{label_fmt(v)}}}"
+
+    CORNER_RICH_STYLES = {
+        "kicker": {"fontFamily": "Barlow", "fontSize": 10, "fontWeight": 400,
+                   "letterSpacing": ".08em", "color": "var(--text-muted)"},
+        "value": {"fontFamily": "Barlow Condensed", "fontSize": 12, "fontWeight": 600,
+                  "color": "var(--text-secondary)", "padding": [2, 0, 0, 0]},
+    }
+
+    # End stops: a thin tick at each end of the track, replacing the old
+    # round Low/High dots -- a structural boundary marker, not a data point
+    # the way the named markers below are.
     scatter_data = [
-        {"value": [low, 0.5], "symbolSize": 18,
-         "itemStyle": {"color": "var(--text-secondary)", "borderColor": "var(--surface-1)", "borderWidth": 2},
-         "name": "Low", "fmt": low_high_fmt("Low", low),
-         "label": {"show": True, "position": "top", "distance": 20, "color": "var(--text-secondary)",
-                    "fontSize": 13.5, "formatter": "__labelFmt__"}},
-        {"value": [high, 0.5], "symbolSize": 18,
-         "itemStyle": {"color": "var(--text-secondary)", "borderColor": "var(--surface-1)", "borderWidth": 2},
-         "name": "High", "fmt": low_high_fmt("High", high),
-         "label": {"show": True, "position": "top", "distance": 20, "color": "var(--text-secondary)",
-                    "fontSize": 13.5, "formatter": "__labelFmt__"}},
+        {"value": [low, 0.5], "symbol": "rect", "symbolSize": [2, 20],
+         "itemStyle": {"color": "var(--neutral-600)"},
+         "name": "Low", "fmt": label_fmt(low), "label_fmt": corner_rich(low_kicker, low),
+         # distance 36, not 20: this two-line kicker/value block naturally
+         # rests at nearly the same height as the Current triangle marker's
+         # own label (both anchored "top" a small, similar offset above the
+         # track) -- found live, they landed on top of each other, digit on
+         # digit. The dynamic labelLayout stagger (below) is meant to catch
+         # exactly this, but a taller rich-text label's real height isn't
+         # always reported back accurately by ECharts' layout callback for
+         # rich text, so a bigger static clearance is the reliable fix, not
+         # just a fallback.
+         "label": {"show": True, "position": "top", "distance": 36, "align": "left",
+                    "rich": CORNER_RICH_STYLES, "formatter": "__richLabelFmt__"}},
+        {"value": [high, 0.5], "symbol": "rect", "symbolSize": [2, 20],
+         "itemStyle": {"color": "var(--neutral-600)"},
+         "name": "High", "fmt": label_fmt(high), "label_fmt": corner_rich(high_kicker, high),
+         "label": {"show": True, "position": "top", "distance": 36, "align": "right",
+                    "rich": CORNER_RICH_STYLES, "formatter": "__richLabelFmt__"}},
     ]
-    for name, v, color in markers:
+    # Two label rows, alternating by VALUE order (not list order) -- two
+    # markers adjacent in value are the ones most likely to sit close
+    # enough on the track to collide, so alternating across the
+    # value-sorted order guarantees any such pair lands on different rows.
+    # A fixed server-side assignment, not a client-side collision pass:
+    # found live that ECharts' labelLayout callback was not reliably
+    # separating two same-row labels here (e.g. Mean/Median a few dollars
+    # apart), the same class of gap the corner labels above hit.
+    row_of = {}
+    for row_pos, orig_i in enumerate(sorted(range(len(markers)), key=lambda i: clamp(markers[i][1]))):
+        row_of[orig_i] = row_pos % 2
+    for i, (name, v, color) in enumerate(markers):
+        distance = 18 if row_of[i] == 0 else 40
         scatter_data.append({
-            # borderColor/borderWidth: at the series-level symbolSize (18,
-            # below) a flat-colored dot still read as a thin sliver barely
-            # poking above the 10px-thick track it sits on (found live from
-            # a screenshot) -- a light ring gives every marker a crisp,
-            # consistent edge against the track regardless of how close its
-            # own color is to var(--gridline).
-            "value": [clamp(v), 0.5],
-            "itemStyle": {"color": color, "borderColor": "var(--surface-1)", "borderWidth": 2},
+            # 14px squares, not circles -- Industry's system draws every
+            # marker as a square, never a rounded shape. The 2px page-plane
+            # border still gives each marker a crisp edge against the
+            # track regardless of how close its own color sits to the
+            # track's own muted fill.
+            "value": [clamp(v), 0.5], "symbol": "rect", "symbolSize": [14, 14],
+            "itemStyle": {"color": color, "borderColor": "var(--page-plane)", "borderWidth": 2},
             "name": name, "fmt": label_fmt(v),
-            "label": {"show": True, "position": "bottom", "color": "var(--text-secondary)", "formatter": "__labelFmt__"},
+            "label": {
+                "show": True, "position": "bottom", "distance": distance, "color": "var(--text-secondary)",
+                "fontFamily": "Barlow", "formatter": "__labelFmt__",
+            },
         })
 
     track_series = {
         # z: 1 -- ECharts does NOT paint cartesian series strictly in this
         # list's order (confirmed live by reading the actual rendered SVG's
         # element order): the scatter series below was painted BEFORE this
-        # line regardless of array position, so the opaque 10px-thick track
-        # drew right on top of every marker dot, hiding most of each one --
-        # found live from a real screenshot ("the circles are still behind
-        # the bar"). Explicit z (not array order) is what actually controls
-        # paint order; the scatter series is given z: 2 to guarantee it
-        # always paints above this track regardless of type-based defaults.
+        # line regardless of array position, so the opaque track drew right
+        # on top of every marker dot, hiding most of each one -- found live
+        # from a real screenshot ("the circles are still behind the bar").
+        # Explicit z (not array order) is what actually controls paint
+        # order; the scatter series is given z: 2 to guarantee it always
+        # paints above this track regardless of type-based defaults.
         "type": "line", "silent": True, "symbol": "none", "z": 1,
-        "lineStyle": {"width": 10, "color": "var(--gridline)", "cap": "round"},
+        "lineStyle": {"width": 8, "color": "color-mix(in srgb, var(--text-primary) 9%, transparent)", "cap": "butt"},
         "data": [[low, 0.5], [high, 0.5]],
     }
     if current is not None:
@@ -743,16 +790,24 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
             # entirely). [12, 10] renders the path at its own native size.
             "symbol": "path://M -6 -10 L 6 -10 L 0 0 Z", "symbolSize": [12, 10], "symbolOffset": [0, -16],
             "itemStyle": {"color": "var(--text-primary)"},
-            "label": {"show": True, "position": "top", "fontWeight": 600, "color": "var(--text-primary)", "formatter": "__labelFmt__"},
+            "label": {
+                "show": True, "position": "top", "color": "var(--text-primary)",
+                "fontFamily": "Barlow Condensed", "fontWeight": 600, "fontSize": 15,
+                "formatter": "__labelFmt__",
+            },
             "data": [{"coord": [clamp(current), 0.5], "name": current_label, "fmt": label_fmt(current)}],
         }
 
     return {
-        # left/right: wide enough that a centered Low/High label (up to
-        # "High $400.00" -- range_meter's corner_word_prefix form, the
-        # longest case) doesn't clip past the SVG edge now that it's
-        # centered on its own dot instead of right/left-aligned inward.
-        "grid": {"left": 55, "right": 55, "top": 50, "bottom": 40},
+        # left/right: now that Low/High corner labels align inward (left at
+        # the low end, right at the high end) instead of centering on their
+        # own dot, they no longer need wide clearance to avoid clipping past
+        # the SVG edge -- a small margin is enough.
+        # bottom: two staggered marker-label rows below the track (~18px and
+        # ~40px) plus their own line-height need real room; too little here
+        # was the exact way this chart clipped its own labels in the
+        # reference (see range_meter()/range_position_plot()'s docstrings).
+        "grid": {"left": 16, "right": 16, "top": 62, "bottom": 68},
         "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
         # A real, working greedy stagger (see webui/src/js/hydrate.js's
         # makeRangeTrackLabelLayout) -- the declarative
@@ -762,12 +817,7 @@ def _range_track_option(low, high, current, markers, current_label, label_fmt, c
         "labelLayout": "__rangeTrackLabelLayout__",
         "xAxis": {"type": "value", "min": low, "max": high, "show": False},
         "yAxis": {"type": "value", "min": 0, "max": 1, "show": False},
-        # symbolSize 18 vs. the track's own 10px width: markers must be
-        # clearly larger than the line they sit on, or they read as a thin
-        # colored sliver peeking out from behind it rather than a distinct
-        # dot on top of it (found live from a screenshot -- 12 was only 1px
-        # bigger than the track per side, effectively invisible).
-        "series": [track_series, {"type": "scatter", "z": 2, "symbolSize": 18, "data": scatter_data}],
+        "series": [track_series, {"type": "scatter", "z": 2, "data": scatter_data}],
     }
 
 
@@ -777,11 +827,11 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
         return None, empty_state(), ""
     markers = []
     if mean is not None:
-        markers.append(("Mean", mean, "var(--series-1)"))
+        markers.append(("Mean", mean, "var(--accent)"))
     if median is not None and median != mean:
-        markers.append(("Median", median, "var(--series-3)"))
-    option = _range_track_option(low, high, current, markers, "Current", label_fmt, corner_word_prefix=True)
-    chart_html = register_chart(option, 150, aria_label="analyst target price range")
+        markers.append(("Median", median, "var(--accent-300)"))
+    option = _range_track_option(low, high, current, markers, "Current", label_fmt)
+    chart_html = register_chart(option, 165, aria_label="analyst target price range")
 
     rows = [["Low", label_fmt(low)], ["Mean", label_fmt(mean)], ["Median", label_fmt(median)],
             ["High", label_fmt(high)], ["Current price", label_fmt(current)]]
@@ -795,7 +845,7 @@ def range_meter(low, mean, median, high, current, label_fmt=fmt_price):
     return chart_html, table, leg
 
 
-def range_position_plot(low, high, current, markers, aria_label="value range", current_label="Current", label_fmt=fmt_price):
+def range_position_plot(low, high, current, markers, aria_label="value range", current_label="Current", label_fmt=fmt_price, low_kicker="LOW", high_kicker="HIGH"):
     """
     A dot plot on one shared axis: a track from low to high with named
     marker points placed by value, plus a distinct triangle marker for
@@ -815,8 +865,8 @@ def range_position_plot(low, high, current, markers, aria_label="value range", c
     if low is None or high is None or high <= low:
         return None, empty_state(), ""
     valid_markers = [(l, v, c) for l, v, c in markers if v is not None]
-    option = _range_track_option(low, high, current, valid_markers, current_label, label_fmt)
-    chart_html = register_chart(option, 150, aria_label=aria_label)
+    option = _range_track_option(low, high, current, valid_markers, current_label, label_fmt, low_kicker, high_kicker)
+    chart_html = register_chart(option, 165, aria_label=aria_label)
 
     rows = [[label, label_fmt(v)] for label, v, _ in valid_markers]
     if current is not None:
@@ -834,88 +884,110 @@ def gauge_meter(value, min_v, max_v, zones, label=""):
     """zones: list of (threshold_upto, color_var, status_name) covering
     min_v..max_v in order (e.g. RSI's oversold/neutral/overbought bands).
 
-    Native ECharts type:"gauge" -- a real, deliberate visual-form change
-    from the old horizontal zone-strip-with-a-dot to a semicircular dial
-    (see CHANGELOG for why: the old version needed hand-tracked track_y/
-    headline-offset math that clipped its own headline number against the
-    SVG edge more than once). This is the idiomatic, well-supported way to
-    render "single value + zones + a big number" -- a hand-built "linear
-    gauge" custom series would just be re-building bespoke geometry again."""
+    A single flat 16px zone-band bar (square ends, 1px frame) with a
+    triangle "you are here" marker above it -- the same track/marker
+    idiom range_meter()/range_position_plot() already use via
+    _range_track_option(), reused here instead of ECharts' native
+    type:"gauge" semicircular dial so every value+context figure on the
+    page shares one visual grammar."""
     if value is None:
         return None, empty_state()
-    span = (max_v - min_v) or 1
-    # ECharts zone stops are fractions of [min_v, max_v], not absolute values.
-    color_stops = [[(upto - min_v) / span, color] for upto, color, _ in zones]
+    clamped = max(min_v, min(max_v, value))
+    bar_w = 16
+    tick_values = [min_v] + [upto for upto, _, _ in zones]
+
+    # Full-width bordered bar drawn first, then the zone stack drawn
+    # directly on top of it via barGap:"-100%" (the standard ECharts
+    # "background bar" recipe) -- this is what gives the strip its 1px
+    # var(--border) frame without ECharts needing a real border-around-
+    # a-stack primitive, which doesn't exist.
+    frame_series = {
+        "type": "bar", "barWidth": bar_w, "z": 0, "silent": True,
+        "itemStyle": {"color": "transparent", "borderColor": "var(--border)", "borderWidth": 1},
+        "data": [max_v - min_v],
+    }
+    zone_series = []
+    lower = min_v
+    for i, (upto, color, status_name) in enumerate(zones):
+        zone = {
+            "type": "bar", "stack": "zones", "barWidth": bar_w, "z": 1,
+            "itemStyle": {"color": color},
+            "data": [{"value": upto - lower, "fmt": status_name}],
+        }
+        if i == 0:
+            zone["barGap"] = "-100%"
+        zone_series.append(zone)
+        lower = upto
+    needle_series = {
+        "type": "line", "silent": True, "symbol": "none", "data": [],
+        "markPoint": {
+            "symbol": "path://M -6 -10 L 6 -10 L 0 0 Z", "symbolSize": [12, 10], "symbolOffset": [0, -14],
+            "itemStyle": {"color": "var(--text-primary)"},
+            "label": {
+                "show": True, "position": "top", "formatter": "__labelFmt__",
+                "fontFamily": "Barlow Condensed", "fontWeight": 600, "fontSize": 15, "color": "var(--text-primary)",
+            },
+            "data": [{"coord": [clamped, ""], "name": label, "fmt": fmt_num(value, 1)}],
+        },
+    }
 
     option = {
+        # left/right: the first/last tick (0/100) center exactly on the
+        # grid edge, so their label text would otherwise clip past the
+        # chart's own boundary (found live: "100" rendered as "10", even
+        # with containLabel -- it reserves margin for the axis as a whole,
+        # not specifically for an edge tick's label overhanging past the
+        # last data point it's centered on). A fixed margin sized for a
+        # 3-character numeric label is simpler and actually fixes it.
+        "grid": {"left": 12, "right": 16, "top": 34, "bottom": 26},
         "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
-        "series": [{
-            "type": "gauge", "startAngle": 180, "endAngle": 0,
-            "min": min_v, "max": max_v,
-            "radius": "100%", "center": ["50%", "85%"],
-            "axisLine": {"lineStyle": {"width": 12, "color": color_stops}},
-            # A "you are here" dot exactly on the colored band, not the
-            # default needle from the pivot -- was `show: False` entirely
-            # until a real user screenshot pointed out there was no visual
-            # link at all between the big number and the band it's meant to
-            # sit within. For icon:"circle", ECharts centers the dot at
-            # HALF of `length` (confirmed empirically by reading the
-            # rendered SVG's actual transform, not assumed from docs) --
-            # 186% here lands the dot at 93% of the gauge's own radius,
-            # i.e. the middle of the band (band spans ~86%-100% of radius
-            # at width:12), and being a percentage (not a fixed px length)
-            # it stays correctly on the band across every container width
-            # this responsive chart can render at.
-            "pointer": {
-                "show": True, "icon": "circle", "length": "186%", "width": 16,
-                "itemStyle": {"color": "var(--surface-1)", "borderColor": "var(--text-primary)", "borderWidth": 3},
+        "xAxis": {
+            "type": "value", "min": min_v, "max": max_v,
+            "axisLine": {"show": False}, "axisTick": {"show": False}, "splitLine": {"show": False},
+            "axisLabel": {
+                "color": "var(--text-secondary)", "fontSize": 11,
+                "customValues": tick_values,
             },
-            "anchor": {"show": False},
-            "axisTick": {"show": False}, "splitLine": {"show": False},
-            "axisLabel": {"distance": -30, "color": "var(--text-muted)", "fontSize": 12},
-            "detail": {
-                "valueAnimation": False, "formatter": "{value}",
-                "fontSize": 34, "fontWeight": 650, "offsetCenter": [0, "-30%"],
-                "color": "var(--text-primary)",
-            },
-            "data": [{"value": round(value, 1), "name": label, "fmt": fmt_num(value, 1)}],
-        }],
+        },
+        "yAxis": {"type": "category", "data": [""], "show": False},
+        "series": [frame_series] + zone_series + [needle_series],
     }
-    chart_html = register_chart(option, 170, aria_label=f"{label} gauge")
+    chart_html = register_chart(option, 100, aria_label=f"{label} gauge")
 
     table = data_table(["Metric", "Value"], [[label, fmt_num(value, 1)]])
     return chart_html, table
 
 
 def stacked_bar_parts(parts_data, total=100.0):
-    """parts_data: list of (label, value, color_var). Renders one horizontal stacked bar."""
+    """parts_data: list of (label, value, color_var). Renders one horizontal
+    stacked bar -- square (Industry's system has no rounded bars), framed
+    with a 1px var(--border) outline drawn via the same background-bar-plus-
+    barGap:"-100%" trick as gauge_meter()'s frame_series."""
     parts_data = [(l, v, c) for l, v, c in parts_data if v is not None and v > 0]
     if not parts_data:
         return None, empty_state(), ""
-    n = len(parts_data)
-    r = 4
 
-    echarts_series = []
+    frame_series = {
+        "type": "bar", "barWidth": 24, "z": 0, "silent": True,
+        "itemStyle": {"color": "transparent", "borderColor": "var(--border)", "borderWidth": 1},
+        "data": [total],
+    }
+    echarts_series = [frame_series]
     for i, (label, v, color) in enumerate(parts_data):
-        is_first, is_last = i == 0, i == n - 1
-        # ECharts' 4-corner array ([top-left, top-right, bottom-right,
-        # bottom-left], CSS order) directly replaces the old manual
-        # rounded-rect path math: only the outermost edge of the first/
-        # last segment in the stack gets rounded.
-        echarts_series.append({
-            "name": label, "type": "bar", "stack": "total", "barWidth": 24,
-            "itemStyle": {
-                "color": color,
-                "borderRadius": [r if is_first else 0, r if is_last else 0, r if is_last else 0, r if is_first else 0],
-            },
+        seg = {
+            "name": label, "type": "bar", "stack": "total", "barWidth": 24, "z": 1,
+            "itemStyle": {"color": color},
             "data": [{"value": v, "fmt": fmt_pct(v, signed=False), "name": label}],
-        })
+        }
+        if i == 0:
+            seg["barGap"] = "-100%"
+        echarts_series.append(seg)
 
     option = {
         "grid": {"left": 4, "right": 4, "top": 4, "bottom": 4},
         "tooltip": {"trigger": "item", "formatter": "__tooltipFmt__"},
         "legend": {"show": False},  # the HTML legend below is authoritative
-        "xAxis": {"type": "value", "max": total, "show": False},
+        "xAxis": {"type": "value", "min": 0, "max": total, "show": False},
         "yAxis": {"type": "category", "data": [""], "show": False},
         "series": echarts_series,
     }
@@ -1134,21 +1206,22 @@ def price_history_chart(price_series, aria_label="price history"):
     for p in price_series:
         c = p.get("close")
         closes.append(None if c is None else {"value": c, "fmt": fmt_price(c)})
-    first_close = next((p["close"] for p in price_series if p.get("close") is not None), None)
     last_idx, last_close = next(
         ((i, p["close"]) for i, p in reversed(list(enumerate(price_series))) if p.get("close") is not None),
         (None, None),
     )
-    is_down = first_close is not None and last_close is not None and last_close < first_close
-    line_color = "var(--diverge-neg)" if is_down else "var(--diverge-pos)"
-    area_gradient = "__areaGradientNeg__" if is_down else "__areaGradientPos__"
+    # Steel, not a green/red day-of-move color: direction is already
+    # carried by the hero's own delta chip above this chart (caret +
+    # color), so the line itself stays the structural accent voice, not a
+    # second, redundant directional signal.
+    line_color = "var(--accent)"
     # A filled dot at the most recent close, like a phone stock app's
     # quote chart -- every range-preset button (see chart-toolbar.js)
     # zooms to end:100, so the latest point is always at the visible
     # right edge.
     end_marker = (
         {
-            "symbol": "circle", "symbolSize": 7,
+            "symbol": "circle", "symbolSize": 3.5,
             "itemStyle": {"color": line_color},
             "label": {"show": False},
             "data": [{"coord": [last_idx, last_close]}],
@@ -1168,14 +1241,14 @@ def price_history_chart(price_series, aria_label="price history"):
         "grid": {"left": 8, "right": 16, "top": 16, "bottom": 32, "containLabel": True},
         "xAxis": {
             "type": "category", "data": dates, "boundaryGap": True,
-            "axisLine": {"lineStyle": {"color": "var(--baseline)"}},
-            "axisLabel": {"color": "var(--text-secondary)", "fontSize": 11},
+            "axisLine": {"show": False},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 10.5, "letterSpacing": ".07em"},
             "axisTick": {"show": False}, "splitLine": {"show": False},
         },
         "yAxis": {
-            "type": "value", "scale": True,
-            "splitLine": {"lineStyle": {"color": "var(--gridline)"}},
-            "axisLabel": {"color": "var(--text-muted)", "fontSize": 11, "formatter": "${value}"},
+            "type": "value", "scale": True, "splitNumber": 4,
+            "splitLine": {"lineStyle": {"color": "var(--gridline)", "width": 1}},
+            "axisLabel": {"color": "var(--text-muted)", "fontSize": 10.5, "letterSpacing": ".07em", "formatter": "${value}"},
         },
         "dataZoom": [
             {"type": "inside", "start": start_pct, "end": 100},
@@ -1183,9 +1256,8 @@ def price_history_chart(price_series, aria_label="price history"):
         "series": [
             {
                 "name": "Price", "type": "line", "data": closes,
-                "showSymbol": False,
-                "lineStyle": {"color": line_color, "width": 2},
-                "areaStyle": {"color": area_gradient},
+                "showSymbol": False, "smooth": False,
+                "lineStyle": {"color": line_color, "width": 1.8, "join": "round"},
                 "connectNulls": True, "z": 3,
                 **({"markPoint": end_marker} if end_marker else {}),
             },
@@ -1320,12 +1392,13 @@ def section_header(bundle):
   <div class="topbar-identity">
     <a href="/" class="back-link" title="Back to ticker search" aria-label="Back to ticker search">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
       </svg>
     </a>
-    <div class="company-logo-wrap">{logo_html}</div>
+    <div class="company-logo-wrap">{CORNERS}{logo_html}</div>
     <div class="topbar-title-group">
+      <div class="topbar-product-label">ADELE Research Dashboard</div>
       <h1>{esc(ticker)}</h1>
       <div class="meta">{esc(fetched_at)}{company_line}</div>
     </div>
@@ -1334,7 +1407,7 @@ def section_header(bundle):
     <button type="button" class="chip chip-accent" id="llm-export-btn" data-ticker="{esc(ticker)}"
             title="Download a Markdown file with all this data plus instructions, to paste/upload into a free AI chat (Claude, ChatGPT, etc.) for an independent analysis">
       <svg class="chip-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>
       </svg>
       Download for AI Chat
@@ -1356,8 +1429,12 @@ def section_hero(bundle, pipeline_result=None):
     price = bundle.get("price", {}) or {}
     current_price = price.get("current_price")
     pct_20d = price.get("pct_change_20d")
+    delta_cls = delta_class(pct_20d)
+    caret = {"good": "▲", "critical": "▼"}.get(delta_cls, "")
+    caret_html = f'<span class="caret">{caret}</span>' if caret else ""
 
     rec_html = ""
+    dryrun_html = ""
     if pipeline_result:
         judge = pipeline_result.get("judge", {}) or {}
         rec_key = (judge.get("recommendation") or "hold").lower()
@@ -1369,18 +1446,23 @@ def section_hero(bundle, pipeline_result=None):
     <span class="hero-rec-badge {rec_cls}">{esc(rec_label)}</span>
     {conf_html}
   </div>"""
+    else:
+        dryrun_html = '<span class="hero-dryrun">Dry run · No AI verdict in this bundle</span>'
 
     return f"""
 <div class="hero">
   <div class="hero-price-row">
     <span class="hero-price">{fmt_price(current_price)}</span>
-    <span class="delta {delta_class(pct_20d)}">{fmt_pct(pct_20d)}<span class="hero-delta-label">20d</span></span>
+    <span class="delta {delta_cls}">{caret_html}{fmt_pct(pct_20d)}<span class="hero-delta-label">20d</span></span>
+    {dryrun_html}
   </div>{rec_html}
 </div>"""
 
 
-def _glance_item(icon_cls, icon_char, html_text):
-    return f'<li class="glance-item"><span class="glance-icon {icon_cls}">{icon_char}</span><span>{html_text}</span></li>'
+def _glance_item(icon_cls, icon_char, html_text, modifier=""):
+    item_cls = f"glance-item {modifier}".strip() if modifier else "glance-item"
+    icon_cls_full = f"{icon_cls} {modifier}".strip() if modifier else icon_cls
+    return f'<li class="{item_cls}"><span class="glance-icon {icon_cls_full}">{icon_char}</span><span>{html_text}</span></li>'
 
 
 _REC_STYLE = {
@@ -1464,6 +1546,7 @@ def section_ai_recommendation(bundle, pipeline_result):
 
     return f"""
 <div class="card full rec-card rec-{rec_cls}">
+  {CORNERS}
   <div class="rec-top">
     <div>
       <span class="rec-badge-big {rec_cls}">{esc(rec_label)}</span>
@@ -1532,10 +1615,10 @@ def section_at_a_glance(bundle):
     if stock_pe is not None and pe_prem_bench is not None:
         if pe_prem_bench > 15:
             sentence = f"<b>Trading at a premium valuation</b> — its P/E ratio ({fmt_num(stock_pe,1)}) is {fmt_pct(pe_prem_bench, signed=False)} higher than the S&P 500's, meaning investors are paying more per dollar of profit than for an average stock."
-            items.append(_glance_item("neutral", "$", sentence))
+            items.append(_glance_item("neutral", "$", sentence, modifier="is-valuation"))
         elif pe_prem_bench < -15:
             sentence = f"<b>Trading at a discount valuation</b> — its P/E ratio ({fmt_num(stock_pe,1)}) is {fmt_pct(abs(pe_prem_bench), signed=False)} lower than the S&P 500's, meaning investors are paying less per dollar of profit than for an average stock."
-            items.append(_glance_item("neutral", "$", sentence))
+            items.append(_glance_item("neutral", "$", sentence, modifier="is-valuation"))
     elif stock_pe is None and annual.get("net_income") is not None and annual.get("net_income") < 0:
         items.append(_glance_item("critical", "!", "<b>No P/E ratio to show</b> — the company lost money over the past year, so this common valuation measure doesn't apply."))
 
@@ -1609,6 +1692,7 @@ def section_at_a_glance(bundle):
 
     return f"""
 <div class="card full">
+  {CORNERS}
   <h2>At a Glance <span style="font-weight:400;color:var(--text-secondary);font-size:12px;">— plain-language summary, auto-generated from the data below</span></h2>
   <ul class="glance-list">{''.join(items)}</ul>
 </div>"""
@@ -1692,20 +1776,27 @@ def section_price_chart(bundle):
 def section_price_technicals(bundle):
     price = bundle.get("price", {}) or {}
     low_52w, high_52w = price.get("52w_low"), price.get("52w_high")
+    # Colored by depth from the accent ramp -- the shorter the moving
+    # average window, the closer to today's price, the deeper the step.
     ma_markers = [
-        ("MA200", price.get("ma200"), "var(--series-3)"),
-        ("MA50", price.get("ma50"), "var(--series-2)"),
-        ("MA20", price.get("ma20"), "var(--series-1)"),
+        ("MA200", price.get("ma200"), "var(--accent-300)"),
+        ("MA50", price.get("ma50"), "var(--accent-500)"),
+        ("MA20", price.get("ma20"), "var(--accent-700)"),
     ]
     svg, table, ma_legend = range_position_plot(
         low_52w, high_52w, price.get("current_price"), ma_markers,
         aria_label="price vs. 52-week range and moving averages",
+        low_kicker="52W LOW", high_kicker="52W HIGH",
     )
     price_card = viz_card("Price vs. moving averages", svg, table, ma_legend, info="price_vs_ma")
 
     rsi_svg, rsi_table = gauge_meter(
         price.get("rsi_14"), 0, 100,
-        zones=[(30, "var(--status-good)", "below 30 (oversold)"), (70, "var(--gridline)", "30-70 (neutral)"), (100, "var(--status-critical)", "above 70 (overbought)")],
+        zones=[
+            (30, "color-mix(in srgb, var(--diverge-pos) 35%, transparent)", "below 30 (oversold)"),
+            (70, "color-mix(in srgb, var(--text-primary) 7%, transparent)", "30-70 (neutral)"),
+            (100, "color-mix(in srgb, var(--diverge-neg) 35%, transparent)", "above 70 (overbought)"),
+        ],
         label="RSI (14d)",
     )
     rsi_card = viz_card("RSI (14-day)", rsi_svg, rsi_table, info="rsi_gauge",
@@ -1724,6 +1815,7 @@ def section_price_technicals(bundle):
 
     return f"""
 <div class="card" id="sec-price">
+  {CORNERS}
   <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
   {price_card}
@@ -1831,6 +1923,7 @@ def section_analyst(bundle):
 
     return f"""
 <div class="card full" id="sec-analyst">
+  {CORNERS}
   <h2>Analyst Ratings & Estimates {info_icon('section_analyst')}</h2>
   <div class="card-sub">Recommendation: {esc(fundamentals.get('analyst_recommendation') or '—')} · last {analyst_ratings.get('lookback_days', 60)} days of rating actions</div>
   <div class="split-2col">
@@ -1905,6 +1998,7 @@ def section_backtests(bundle):
     if not strategies:
         return f"""
 <div class="card full" id="sec-backtests">
+  {CORNERS}
   <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
   {empty_state(backtests.get("note") or "Not enough price history to run a backtest for this ticker.")}
 </div>"""
@@ -1947,6 +2041,7 @@ def section_backtests(bundle):
 
         cards.append(f"""
 <div class="strategy-card">
+  {CORNERS}
   <div class="strategy-card-head">
     <span class="strategy-card-title-group">
       <span class="strategy-card-title">{esc(s.get('name') or '—')}</span>
@@ -1962,6 +2057,7 @@ def section_backtests(bundle):
 
     return f"""
 <div class="card full" id="sec-backtests">
+  {CORNERS}
   <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
   <div class="card-sub">{esc(period_note)}</div>
   <div class="strategy-card-list">{''.join(cards)}</div>
@@ -2007,6 +2103,7 @@ def section_relative_performance(bundle):
 
     return f"""
 <div class="card full" id="sec-relative">
+  {CORNERS}
   <h2>Relative Performance & Valuation {info_icon('section_relative')}</h2>
   <div class="card-sub">Returns and P/E vs. {esc(rp.get('benchmark','SPY'))} and sector ETF {esc(rp.get('sector_etf') or '—')} — two different questions, shown separately.</div>
   {perf_card}
@@ -2020,8 +2117,8 @@ def section_ownership(bundle):
     pct_insider = (inst.get("pct_held_by_insiders") or 0) * 100
     pct_other = max(0, 100 - pct_inst - pct_insider)
     stack_svg, stack_table, stack_legend = stacked_bar_parts([
-        ("Institutions", pct_inst, "var(--series-1)"),
-        ("Insiders", pct_insider, "var(--series-2)"),
+        ("Institutions", pct_inst, "var(--accent)"),
+        ("Insiders", pct_insider, "var(--accent-700)"),
         ("Other / retail", pct_other, "var(--gridline)"),
     ])
     stack_card = viz_card("Institutional vs. insider ownership", stack_svg, stack_table, stack_legend, info="ownership_breakdown")
@@ -2037,9 +2134,12 @@ def section_ownership(bundle):
         # a grant/award or option exercise also shows direction == "buy"
         # (holdings went up) but isn't the insider choosing to spend their
         # own money, so it doesn't get the same green badge.
-        is_real_buy = t.get("direction") == "buy" and t.get("is_open_market")
         is_real_sell = t.get("direction") == "sell" and t.get("is_open_market")
-        direction_badge = badge(t.get("direction") or "—", "good" if is_real_buy else "critical" if is_real_sell else "neutral")
+        # Deliberately not good/critical: a "buy" with no price is a stock
+        # grant, not a purchase, so direction alone isn't a confidence
+        # signal here the way it is in the At-a-Glance summary above (which
+        # already separates open-market buys from grants/exercises).
+        direction_badge = badge(t.get("direction") or "—", "outline" if is_real_sell else "neutral")
         insider_rows.append([t.get("date") or "—", t.get("owner") or "—", t.get("title") or "—",
                               direction_badge, t.get("transaction_nature") or "—",
                               fmt_num(t.get("shares")), fmt_price(t.get("price_per_share")) if t.get("price_per_share") else "—"])
@@ -2076,12 +2176,14 @@ def section_ownership(bundle):
 
     insiders_panel = f"""
 {mspr_html}
-<div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4) {info_icon('insider_transactions')}</span></div>{insider_table if insider_rows else empty_state()}</div>
+<div class="viz-card"><div class="viz-card-head"><span class="viz-title">Insider transactions (Form 4) {info_icon('insider_transactions')}</span></div>{insider_table if insider_rows else empty_state()}
+<div class="viz-note">"Buy" isn't always a purchase — a stock grant or option exercise also shows direction "buy" with no price attached. Only an outlined "sell" here is a genuine open-market sale; a plain "buy"/"sell" may be routine compensation.</div></div>
 <div class="viz-card" style="margin-top:16px;"><div class="viz-card-head"><span class="viz-title">Form 144 proposed sales {info_icon('form144')}</span></div>{f144_table if f144_rows else empty_state()}</div>"""
 
     ownership_bar, ownership_panels = subtabs("ownership", [("Institutional", institutional_panel), ("Insiders", insiders_panel)])
     return f"""
 <div class="card full" id="sec-ownership">
+  {CORNERS}
   <h2>Ownership {info_icon('section_ownership')}</h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
   {ownership_bar}
@@ -2117,8 +2219,8 @@ def section_financials(bundle):
 
     cats = [q.get("period_end", "—") for q in quarterly]
     series = [
-        ("Revenue", "var(--series-1)", [q.get("total_revenue") for q in quarterly]),
-        ("Net income", "var(--series-2)", [q.get("net_income") for q in quarterly]),
+        ("Revenue", "var(--accent)", [q.get("total_revenue") for q in quarterly]),
+        ("Net income", "var(--accent-300)", [q.get("net_income") for q in quarterly]),
     ]
     if cats:
         q_svg, q_table, q_legend = grouped_column_chart(cats, series)
@@ -2128,6 +2230,7 @@ def section_financials(bundle):
 
     return f"""
 <div class="card full" id="sec-financials">
+  {CORNERS}
   <h2>Financials {info_icon('section_financials')}</h2>
   {bs_tiles}
   {q_card}
@@ -2212,6 +2315,7 @@ def section_dividends_options_macro_social(bundle):
     ])
     return f"""
 <div class="card full" id="sec-extras">
+  {CORNERS}
   <h2>Dividends, Buybacks, Options & Sentiment {info_icon('section_extras')}</h2>
   {extras_bar}
   {extras_panels}
@@ -2224,19 +2328,23 @@ def section_news(bundle):
         body = empty_state()
     else:
         items = []
-        for n in news[:12]:
+        for i, n in enumerate(news[:12]):
             url = n.get("url") or "#"
+            is_lead = i < 2
+            item_cls = "news-item is-lead" if is_lead else "news-item"
+            snippet_html = f'<div class="snippet">{esc(n.get("snippet"))}</div>' if is_lead else ""
             items.append(f"""
-<div class="news-item">
+<div class="{item_cls}">
   <div class="headline"><a href="{esc(url)}" target="_blank" rel="noopener">{esc(n.get('headline'))}</a></div>
   <div class="meta">{esc(n.get('source'))} · {esc(n.get('date'))}</div>
-  <div class="snippet">{esc(n.get('snippet'))}</div>
+  {snippet_html}
 </div>""")
         body = f'<div class="news-grid">{"".join(items)}</div>'
     digest = bundle.get("news_digest")
     digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else ""
     return f"""
 <div class="card full" id="sec-news">
+  {CORNERS}
   <h2>News</h2>
   {body}
   {digest_html}
@@ -2250,22 +2358,52 @@ def section_filings(bundle):
     for name in ["10-K", "10-Q", "8-K"]:
         f = filings_raw.get(name, {}) or {}
         if f.get("text"):
-            rows.append(f'<div class="filing-row"><span class="name">{esc(name)}</span>{badge("Fetched","good")}<span class="info">Filed {esc(f.get("filing_date"))} · {len(f.get("text",""))} chars</span></div>')
+            rows.append(
+                f'<div class="filing-row"><span class="name">{esc(name)}</span>{badge("Fetched","good")}'
+                f'<span class="date">{esc(f.get("filing_date"))}</span><span class="info">{len(f.get("text",""))} chars</span></div>'
+            )
         else:
-            rows.append(f'<div class="filing-row"><span class="name">{esc(name)}</span>{badge("Not found","neutral")}<span class="info">{esc(f.get("note") or "")}</span></div>')
+            rows.append(
+                f'<div class="filing-row"><span class="name">{esc(name)}</span>{badge("Not found","neutral")}'
+                f'<span class="date"></span><span class="info">{esc(f.get("note") or "")}</span></div>'
+            )
     if proxy.get("text"):
-        rows.append(f'<div class="filing-row"><span class="name">DEF 14A</span>{badge("Fetched","good")}<span class="info">Filed {esc(proxy.get("filing_date"))} · {len(proxy.get("text",""))} chars</span></div>')
+        rows.append(
+            f'<div class="filing-row"><span class="name">DEF 14A</span>{badge("Fetched","good")}'
+            f'<span class="date">{esc(proxy.get("filing_date"))}</span><span class="info">{len(proxy.get("text",""))} chars</span></div>'
+        )
     else:
-        rows.append(f'<div class="filing-row"><span class="name">DEF 14A</span>{badge("Not found","neutral")}<span class="info">{esc(proxy.get("note") or "")}</span></div>')
+        rows.append(
+            f'<div class="filing-row"><span class="name">DEF 14A</span>{badge("Not found","neutral")}'
+            f'<span class="date"></span><span class="info">{esc(proxy.get("note") or "")}</span></div>'
+        )
 
     digest = bundle.get("filings_digest")
     digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else '<div class="viz-note" style="margin-top:10px;">Filings digest not generated (dry run or no API key).</div>'
 
     return f"""
 <div class="card full" id="sec-filings">
+  {CORNERS}
   <h2>Filings & Proxy</h2>
   {''.join(rows)}
   {digest_html}
+</div>"""
+
+
+def section_data_notes(bundle):
+    """The bundle's own data-quality caveats (see data/bundle.py's
+    "data_notes" list) -- previously only surfaced in the CLI (main.py) and
+    the LLM export, not the HTML dashboard itself. Rendered as a framed,
+    accent-tinted panel above the footer -- the page's honesty panel."""
+    notes = bundle.get("data_notes", []) or []
+    if not notes:
+        return ""
+    items = "".join(f'<div class="data-note">{esc(n)}</div>' for n in notes)
+    return f"""
+<div class="data-notes">
+  {CORNERS}
+  <h6>Data quality notes</h6>
+  {items}
 </div>"""
 
 
@@ -2362,7 +2500,9 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
   {price_chart_html}
   {main_tabs_bar}
   {main_tabs_panels}
+  {section_data_notes(bundle)}
 </div>
+<div class="hr" style="max-width:1180px;margin-left:auto;margin-right:auto;"></div>
 <footer class="disclaimer">
   ADELE is a research/decision-support tool. It is NOT financial advice and never places trades.
   This dashboard renders what is in the underlying JSON research bundle. The "At a Glance" panel

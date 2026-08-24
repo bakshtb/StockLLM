@@ -1,144 +1,166 @@
-/* Hero: the one focal point the page leads with, before any scrolling --
-   see dataviz skill's figure spec (>=48px, same sans, exactly one per view). */
-.hero { max-width: 1180px; margin: 0 auto; padding: 22px 24px 6px 24px; }
-.hero-price-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.hero-price { font-size: 48px; font-weight: 650; line-height: 1; letter-spacing: -0.5px; }
-.hero-price-row .delta { font-size: 17px; }
-.hero-delta-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-left: 4px; }
+/* .blueprint -- the frame primitive every card, figure and framed region
+   wears: square corners, a single hairline border, no fill, and four "+"
+   registration marks that sit outside the box at the corners. Any
+   blueprint element needs >=8px of clearance on all sides for the marks
+   (the 26px grid gap below is sized for this). Applied to .card,
+   .strategy-card, .rec-card and the At-a-Glance panel -- NOT to
+   .stat-tile, .viz-card, .glance-item, .news-item or .filing-row, which
+   are separated by rules and grid hairlines instead. */
+.blueprint { position: relative; border: 1px solid var(--border); border-radius: 0; }
+.blueprint > .corner,
+.card > .corner,
+.strategy-card > .corner,
+.rec-card > .corner,
+.data-notes > .corner {
+  position: absolute; width: 11px; height: 11px;
+  color: color-mix(in srgb, var(--text-primary) 55%, transparent);
+}
+.corner::before,
+.corner::after { content: ""; position: absolute; background: currentColor; }
+.corner::before { left: 5px; top: 0; width: 1px; height: 100%; }
+.corner::after  { top: 5px; left: 0; width: 100%; height: 1px; }
+.corner.tl { top: -6px; left: -6px; }
+.corner.tr { top: -6px; right: -6px; }
+.corner.bl { bottom: -6px; left: -6px; }
+.corner.br { bottom: -6px; right: -6px; }
+
+/* Hero: the one focal point the page leads with, before any scrolling. */
+.hero { max-width: 1180px; margin: 0 auto; padding: 26px 24px 8px; }
+.hero-price-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.hero-price {
+  font-family: var(--font-heading); font-weight: 600; font-size: 64px;
+  line-height: .92; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+}
+.hero-price-row .delta {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--diverge-pos); color: var(--page-plane);
+  padding: 4px 10px; font-size: 16px; border-radius: 0;
+}
+.hero-price-row .delta.critical { background: var(--diverge-neg); }
+.hero-price-row .delta.neutral  { background: var(--neutral-600); }
+.hero-price-row .delta .caret { font-size: 10px; }
+/* .delta.good/.critical/.neutral below set a colored TEXT color for the
+   plain inline .delta elsewhere on the page -- same specificity (two
+   classes) as .hero-price-row .delta above, so without this the general
+   rule wins by source order and paints the hero chip's text the same
+   color as its own solid fill (found live: an invisible delta, text
+   color == background color). Re-assert page-plane text at higher
+   specificity so the hero chip stays legible regardless of source order. */
+.hero-price-row .delta.good,
+.hero-price-row .delta.critical,
+.hero-price-row .delta.neutral { color: var(--page-plane); }
+.hero-delta-label {
+  font-size: 11px; opacity: .75; letter-spacing: .06em;
+  text-transform: uppercase; margin-left: 0; font-weight: 400;
+}
+.hero-dryrun {
+  font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid var(--border); padding: 4px 9px; color: var(--text-secondary);
+}
 .hero-rec { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.hero-rec-badge { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; padding: 5px 14px; border-radius: 8px; }
-.hero-rec-badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
-.hero-rec-badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
-.hero-rec-badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
-.hero-rec-badge.neutral { background: var(--gridline); color: var(--text-secondary); }
+.hero-rec-badge {
+  font-family: var(--font-heading); font-weight: 600; font-size: 15px;
+  letter-spacing: .3px; padding: 5px 14px; border-radius: 0; color: var(--page-plane);
+}
+.hero-rec-badge.good { background: var(--diverge-pos); }
+.hero-rec-badge.critical { background: var(--diverge-neg); }
+.hero-rec-badge.warning { background: var(--accent-600); }
+.hero-rec-badge.neutral { background: var(--neutral-600); }
 .hero-rec-conf { font-size: 13px; color: var(--text-secondary); }
 
+/* KPI row: a hairline grid -- a 1px --border background showing through
+   1px gaps between tiles, with a 1px outer border. This is what makes the
+   row read as an instrument panel rather than a gapped list of numbers. */
 .kpi-row {
-  display: grid; gap: 12px;
-  /* 130px, not the old 160px: the top-level KPI row (section_kpis()) always
-     has exactly 7 tiles, and 160px's floor left the 7th (10Y Treasury
-     yield) wrapping alone onto a second row on real desktop widths (a
-     1180px-max .wrap only has ~1060px left after gaps -- 1060/7 ≈ 151px,
-     just under the old floor). 130px comfortably fits all 7 in one line
-     on desktop (user request: minimalist, one line), while the existing
-     700px/420px breakpoints below still collapse this on mobile either way. */
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  margin-bottom: 20px;
+  display: grid; gap: 1px; background: var(--border);
+  border: 1px solid var(--border); margin-bottom: 20px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
-/* Fixed-column-count variants (used where auto-fit's column count would
-   otherwise vary awkwardly, e.g. a 3-tile MACD row). Named classes instead
-   of inline styles so the mobile media query below can collapse them. */
-.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
-.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
-.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
-/* Two sub-panels side by side within one section (distinct from the
-   page-level .grid below, which arranges whole section cards). */
+.kpi-row.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpi-row.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-.split-2col > div { min-width: 0; } /* same grid-item auto-min-width fix, its direct children wrap SVG charts too */
+.split-2col > div { min-width: 0; }
 .stat-tile {
-  min-width: 0; /* same grid-item auto-min-width fix as .card, see there */
-  padding: 4px 0 12px 0;
-  /* Deliberately no box/shadow/hover-lift -- a bare number is typography,
-     not a distinct object (see Google Finance's Overview/Earnings KPI rows:
-     zero chrome around individual stats, chrome reserved for genuinely
-     grouped panels -- .card/.viz-card/.strategy-card keep their elevation).
-     A bottom-only divider (same convention as .news-item/.filing-row
-     below) still separates one stat from the next -- without it, a
-     single-column mobile kpi-row (every .kpi-row collapses to 1 column
-     under 420px, see responsive.css) reads as one run-on paragraph
-     instead of a list of distinct stats, confirmed on a real phone. */
-  border-bottom: 1px solid var(--gridline);
+  min-width: 0;
+  background: var(--page-plane);
+  padding: 12px 13px; border-bottom: none;
 }
-.stat-tile:last-child { border-bottom: none; }
-.stat-tile .label { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
-.stat-tile .value { font-size: 24px; font-weight: 650; margin-top: 4px; line-height: 1.15; letter-spacing: -0.2px; }
+.stat-tile .label {
+  font-size: 10px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--text-secondary); display: flex; align-items: center; gap: 5px;
+}
+.stat-tile .value {
+  font-family: var(--font-heading); font-weight: 600; font-size: 25px;
+  line-height: 1.15; letter-spacing: 0; margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
 .stat-tile .value.good { color: var(--status-good); }
 .stat-tile .value.critical { color: var(--status-critical); }
-.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.delta { font-weight: 600; }
-.delta.good { color: var(--success-text); }
-.delta.critical { color: var(--status-critical); }
-.delta.neutral { color: var(--text-secondary); }
+.stat-tile .sub { font-size: 11.5px; margin-top: 0; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.delta { font-weight: 500; font-variant-numeric: tabular-nums; }
+.delta.good     { color: var(--diverge-pos); }
+.delta.critical { color: var(--diverge-neg); }
+.delta.neutral  { color: var(--text-secondary); }
+
 .status-box {
-  margin-top: 14px; padding: 14px 16px;
-  background: var(--gridline); border-radius: 12px;
+  margin-top: 14px; padding: 11px 13px; border-radius: 0;
+  background: transparent; border: 1px solid var(--accent);
+  color: var(--accent-700); font-size: 11.5px; line-height: 1.5;
 }
 .status-box-head {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: 12.5px; font-weight: 650; color: var(--text-secondary);
-  margin-bottom: 10px;
+  font-family: var(--font-heading); font-weight: 600; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px;
 }
-.status-box-caption { margin-top: 10px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+.status-box-caption { margin-top: 8px; font-size: 11.5px; color: var(--text-secondary); }
 
-/* One self-contained box per backtest strategy -- recessed against its
-   parent .card's surface (var(--page-plane), the same token the mobile
-   data-table row style already uses for the identical "nested box" look),
-   not just a bare list of items. Deliberately its own class rather than
-   reusing .viz-card: a strategy card is a real sub-section (heading, prose,
-   a stat grid, a status panel, an optional chart), not a single chart's
-   wrapper. */
-.strategy-card-list { display: grid; gap: 16px; margin-top: 14px; }
+/* One self-contained framed panel per backtest strategy. */
+.strategy-card-list { display: grid; gap: 20px; margin-top: 14px; }
 .strategy-card {
-  background: var(--page-plane); border: 1px solid var(--border);
-  border-radius: 14px; padding: 18px 20px;
-  box-shadow: var(--elevation-1);
-  transition: box-shadow var(--motion-lift);
+  position: relative;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 0; padding: 18px 20px; box-shadow: none;
 }
-.strategy-card:hover { box-shadow: var(--elevation-2); }
 .strategy-card-head {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
 }
 .strategy-card-title-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.strategy-card-title { font-size: 15px; font-weight: 650; color: var(--text-primary); letter-spacing: -0.1px; }
+.strategy-card-title { font-family: var(--font-heading); font-weight: 600; font-size: 16px; color: var(--text-primary); }
 .strategy-card .card-sub { margin-bottom: 0; }
-/* Always exactly 2 columns, at every screen width -- the generic .kpi-row's
-   own mobile breakpoints collapse to 1 column on narrow phones, which for
-   only 4 short numbers (Return/Buy & Hold/Win Rate/Trades) means 4 stacked
-   full-width tiles eating a lot of vertical space for very little content
-   each. A dedicated, non-collapsing class here fixes that specifically for
-   this section without touching every other .kpi-row site-wide. */
-.backtest-stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.backtest-stats-row {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px;
+  background: var(--border); border: 1px solid var(--border); margin-top: 14px;
+}
+.backtest-stats-row .stat-tile { background: var(--page-plane); }
 .chart-disclosure { margin-top: 14px; }
 .chart-disclosure > div { margin-top: 10px; }
 
 .price-chart-wrap { margin-top: 6px; }
 .chart-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-/* The selected range's % change (see section_price_chart()/chart-toolbar.js)
-   -- pushed to the far right of the toolbar, away from the range buttons. */
-.chart-range-pct { margin-left: auto; font-size: 13px; font-weight: 700; }
-.chart-range-pct.good { color: var(--success-text); }
-.chart-range-pct.critical { color: var(--status-critical); }
-.chart-range-pct.neutral { color: var(--text-secondary); }
-/* No resting border (unlike .subtab-btn's pill) -- plain text until
-   hovered/active, matching Google Finance's minimal range-tab row. */
-.range-btn {
-  font-size: 12px; font-weight: 600; color: var(--text-secondary);
-  background: none; border: 1px solid transparent; border-radius: 999px;
-  padding: 4px 12px; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
-  position: relative; overflow: hidden;
+.chart-range-pct {
+  margin-left: auto; font-family: var(--font-heading); font-weight: 600; font-size: 17px;
+  font-variant-numeric: tabular-nums;
 }
-.range-btn:hover { background: var(--gridline); color: var(--text-primary); }
-.range-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+.chart-range-pct.good     { color: var(--diverge-pos); }
+.chart-range-pct.critical { color: var(--diverge-neg); }
+.chart-range-pct.neutral  { color: var(--text-secondary); }
+.range-btn {
+  font-family: var(--font-heading); font-weight: 600; font-size: 12px;
+  border-radius: 0; border: 1px solid transparent;
+  background: none; color: var(--accent-700);
+  padding: 4px 12px; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
+}
+.range-btn:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+.range-btn.is-active { background: var(--accent); border-color: var(--accent); color: var(--page-plane); }
 
-/* Segmented pill tabs: splits one crowded section into focused sub-views
-   (see webapp's section_ownership/section_dividends_options_macro_social)
-   -- same pill visual language as .range-btn above on purpose, so it reads
-   as the same control, not a second competing pattern. All panels already
-   exist server-rendered (see subtabs() in generate_dashboard.py); only the
-   first has is-active by default, so a JS-disabled reader still sees a
-   complete, correctly-laid-out first tab, just with no way to switch. */
-.subtabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-/* The top-level page tabs (build_dashboard()'s "main" group) render in
-   .wrap, right below the always-visible price chart -- not sticky, and
-   not boxed/bordered like an extension of the topbar above it (an
-   earlier version put this bar inside .sticky-top, directly under the
-   topbar; user feedback moved the chart to be permanently visible above
-   the tabs instead, so the bar no longer sits flush against the header
-   and doesn't need to look like it does). Horizontal-scroll + no-wrap
-   instead of letting 9 tab labels wrap to a second line, same pattern
-   the old anchor-nav pill bar used for the same reason (many pills, must
-   stay usable on a phone). */
+/* Segmented tabs: splits one crowded section into focused sub-views. All
+   panels render server-side; only the first has is-active by default, so
+   a JS-disabled reader still sees a complete, correctly-laid-out first
+   tab, just with no way to switch. */
+.subtabs { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
 .subtabs.page-tabs {
   flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -146,77 +168,95 @@
 .subtabs.page-tabs::-webkit-scrollbar { display: none; }
 .subtabs.page-tabs .subtab-btn { flex-shrink: 0; }
 .subtab-btn {
-  font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
-  background: none; border: 1px solid var(--border); border-radius: 999px;
-  padding: 5px 14px; cursor: pointer; transition: background-color 0.15s ease;
-  position: relative; overflow: hidden;
+  font-family: var(--font-heading); font-weight: 600; font-size: 12.5px;
+  border-radius: 0; border: 1px solid var(--border);
+  background: transparent; color: var(--text-primary);
+  padding: 6px 14px; cursor: pointer; transition: background-color 0.15s ease;
 }
-.subtab-btn:hover { background: var(--gridline); }
-.subtab-btn.is-active { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+.subtab-btn:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
+.subtab-btn.is-active { background: var(--accent); border-color: var(--accent); color: var(--page-plane); }
 .subtab-panel { display: none; }
 .subtab-panel.is-active { display: block; }
 
 /* Info icon + popover: a plain-language explainer on every metric */
 .info-ic {
+  width: 15px; height: 15px; border-radius: 0;
+  background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+  font-family: var(--font-heading); font-weight: 600; font-size: 10px; font-style: normal;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; height: 15px; border-radius: 50%;
-  background: var(--gridline); color: var(--text-secondary);
-  font-size: 10px; font-weight: 700; font-style: normal;
-  border: none; cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
+  cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
   position: relative; transition: background-color 0.15s ease, color 0.15s ease;
   overflow: visible; /* .info-pop is an absolutely-positioned child that must escape this box */
 }
-.info-ic:hover { background: var(--series-1); color: #fff; }
-.info-ic:focus-visible { background: var(--series-1); color: #fff; outline: 2px solid var(--series-1); outline-offset: 2px; }
+.info-ic:hover { background: var(--accent); border-color: var(--accent); color: var(--page-plane); }
+.info-ic:focus-visible {
+  background: var(--accent); border-color: var(--accent); color: var(--page-plane);
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
 .info-pop {
   display: none; position: absolute; z-index: 100; left: 0; top: 22px;
-  width: 240px; max-width: min(240px, calc(100vw - 32px)); background: var(--text-primary); color: var(--surface-1);
-  font-size: 12px; font-weight: 400; line-height: 1.5; padding: 10px 12px;
-  border-radius: 8px; box-shadow: var(--elevation-3); text-align: left;
+  width: 240px; max-width: min(240px, calc(100vw - 32px));
+  border-radius: 0; background: var(--text-primary); color: var(--page-plane);
+  font-family: var(--font-body); font-size: 12px; font-weight: 400; line-height: 1.5;
+  padding: 10px 12px; box-shadow: var(--elevation-3); text-align: left;
   white-space: normal;
 }
 .info-ic.is-open .info-pop { display: block; }
 h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 
-/* At-a-glance plain-language summary */
-.glance-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 0 0; padding: 0; list-style: none; }
+/* At-a-glance plain-language summary: square hairline rows with a 3px
+   left rule in the item's direction color and a square icon. */
+.glance-list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .glance-item {
-  display: flex; align-items: flex-start; gap: 12px;
-  padding: 12px 14px; border-radius: 10px; background: var(--page-plane);
-  border: 1px solid var(--border); font-size: 13.5px; line-height: 1.5;
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 13px 15px; border-radius: 0; background: transparent;
+  border: 1px solid var(--border);
+  font-size: 14px; line-height: 1.55; text-wrap: pretty;
 }
+.glance-item:has(.glance-icon.good)     { border-left: 3px solid var(--diverge-pos); }
+.glance-item:has(.glance-icon.critical) { border-left: 3px solid var(--diverge-neg); }
+.glance-item:has(.glance-icon.neutral)  { border-left: 3px solid var(--neutral-500); }
+.glance-item.is-valuation { border-left: 3px solid var(--accent); }
 .glance-icon {
-  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700;
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 0;
+  display: grid; place-items: center; font-size: 11px; font-weight: 600;
+  font-family: var(--font-heading);
 }
-.glance-icon.good { background: rgba(12,163,12,0.16); color: var(--status-good); }
-.glance-icon.critical { background: rgba(208,59,59,0.16); color: var(--status-critical); }
-.glance-icon.neutral { background: var(--gridline); color: var(--text-secondary); }
+.glance-icon.good     { background: var(--diverge-pos); color: var(--page-plane); }
+.glance-icon.critical { background: var(--diverge-neg); color: var(--page-plane); }
+.glance-icon.neutral  { background: transparent; border: 1px solid var(--neutral-500); color: var(--neutral-700); }
+.glance-icon.is-valuation { background: transparent; border: 1px solid var(--accent); color: var(--accent-700); }
 .glance-item b { font-weight: 700; }
 
 .rec-card {
-  background: var(--surface-1); border: 2px solid var(--border);
-  border-radius: 14px; padding: 20px 22px; margin-bottom: 20px;
+  position: relative;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 0; padding: 20px 22px; margin-bottom: 20px;
 }
-.rec-card.rec-good { border-color: var(--status-good); }
-.rec-card.rec-critical { border-color: var(--status-critical); }
-.rec-card.rec-warning { border-color: var(--status-warning); }
+.rec-card.rec-good     { border-color: var(--diverge-pos); }
+.rec-card.rec-critical { border-color: var(--diverge-neg); }
+.rec-card.rec-warning  { border-color: var(--accent-600); }
 .rec-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-.rec-badge-big { font-size: 28px; font-weight: 700; letter-spacing: 0.3px; }
-.rec-badge-big.good { color: var(--status-good); }
-.rec-badge-big.critical { color: var(--status-critical); }
-.rec-badge-big.warning { color: #7a5200; }
+.rec-badge-big { font-family: var(--font-heading); font-weight: 600; font-size: 28px; letter-spacing: .02em; }
+.rec-badge-big.good { color: var(--diverge-pos); }
+.rec-badge-big.critical { color: var(--diverge-neg); }
+.rec-badge-big.warning { color: var(--accent-700); }
 .rec-badge-big.neutral { color: var(--text-secondary); }
 .rec-meta { font-size: 12px; color: var(--text-muted); }
 .rec-body { margin-top: 14px; font-size: 14px; line-height: 1.6; }
 .rec-risks { margin: 10px 0 0 0; padding-left: 20px; }
 .rec-risks li { margin-bottom: 4px; }
 .rec-thesis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
-.rec-thesis { min-width: 0; background: var(--page-plane); border-radius: 10px; padding: 12px 14px; font-size: 13px; }
-.rec-thesis .who { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
-.rec-thesis.bull .who { color: var(--status-good); }
-.rec-thesis.bear .who { color: var(--status-critical); }
+.rec-thesis {
+  min-width: 0; background: transparent; border: 1px solid var(--border);
+  border-radius: 0; padding: 12px 14px; font-size: 13px;
+}
+.rec-thesis .who {
+  font-family: var(--font-heading); font-weight: 600; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
+}
+.rec-thesis.bull .who { color: var(--diverge-pos); }
+.rec-thesis.bear .who { color: var(--diverge-neg); }
 .rec-skeptic { margin-top: 14px; font-size: 13px; }
 
 .rec-trend-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
@@ -225,28 +265,22 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .rec-trend-chart { flex: 1; min-width: 0; }
 
 .grid {
-  display: grid; gap: 18px;
+  display: grid; gap: 26px;
   grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   align-items: start;
 }
 .card {
-  background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 14px; padding: 20px 22px;
-  /* A quiet, considered look -- a near-invisible shadow for depth, not a
-     heavy drop shadow (see dataviz skill: "the data is the only thing
-     allowed to be loud"). */
-  box-shadow: var(--elevation-1);
-  transition: box-shadow var(--motion-lift);
-  /* Grid items default to min-width: auto, meaning a track won't shrink
-     below the largest intrinsic content size of anything inside it --
-     content with an explicit pixel width can set exactly that floor,
-     silently forcing this card (and its whole grid track) wider than the
-     viewport regardless of any width:100% override further down. */
-  min-width: 0;
+  position: relative;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 0; padding: 20px 22px;
+  box-shadow: none; min-width: 0;
 }
-.card:hover { box-shadow: var(--elevation-2); }
+.card:hover { box-shadow: none; }
 .card.full { grid-column: 1 / -1; }
-.card h2 { font-size: 16px; margin: 0 0 4px 0; font-weight: 650; letter-spacing: -0.1px; }
+.card h2 {
+  font-family: var(--font-heading); font-weight: 600;
+  font-size: 20px; letter-spacing: 0; margin: 0 0 4px 0;
+}
 .card .card-sub { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; }
 
 .viz-card { margin-top: 6px; }
@@ -254,90 +288,119 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 6px;
 }
-.viz-card-head .viz-title { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
-.viz-toggle {
-  font-size: 11px; color: var(--text-secondary); background: none;
-  border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; cursor: pointer;
-  transition: background-color 0.15s ease;
-  position: relative; overflow: hidden;
+.viz-card-head .viz-title {
+  font-family: var(--font-heading); font-weight: 600; font-size: 13px;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--accent-700);
 }
-.viz-toggle:hover { background: var(--gridline); }
+.viz-toggle, .chart-disclosure summary {
+  border-radius: 0; border: 1px solid var(--border); background: transparent;
+  font-size: 11px; color: var(--text-secondary); padding: 3px 8px; cursor: pointer;
+  transition: background-color 0.15s ease;
+}
 .chart-disclosure summary {
-  cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary);
-  list-style: none; display: inline-block; border: 1px solid var(--border);
-  border-radius: 6px; padding: 3px 8px; transition: background-color 0.15s ease;
-  position: relative; overflow: hidden;
+  font-weight: 600; list-style: none; display: inline-block;
 }
 .chart-disclosure summary::-webkit-details-marker { display: none; }
-.chart-disclosure summary:hover { background: var(--gridline); }
+.viz-toggle:hover, .chart-disclosure summary:hover {
+  background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+}
 .viz-card.is-table-view .viz-chart { display: none; }
 .viz-card:not(.is-table-view) .viz-table { display: none; }
-/* No chart at all (empty data) -- viz_card() renders the table with no
-   toggle button in that case; it must stay visible regardless of the
-   is-table-view class the card never gets. */
 .viz-card .viz-table.viz-table-only { display: block; }
-/* Defensive: every chart renders at width:100% of its container (see
-   .echarts-container below), so none of them should ever be legitimately
-   wider than their card -- `hidden`, not `auto`, catches anything
-   unexpectedly wider anyway (e.g. a sub-pixel rounding mismatch) by
-   clipping it instead of surfacing a visible scrollbar for it. `auto`
-   here was the actual cause of a real, user-reported scrollbar under the
-   RSI gauge that had nothing to scroll to -- confirmed the gauge's own
-   SVG has no genuine overflow, so `hidden` loses nothing real. */
 .viz-chart, .rec-trend-chart { overflow-x: hidden; }
 .echarts-container { width: 100%; }
 .viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
 .viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
-.viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+.viz-legend .swatch { width: 10px; height: 10px; border-radius: 0; display: inline-block; }
+.viz-note { font-size: 11.5px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; text-wrap: pretty; }
 
-table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.data-table th, table.data-table td {
-  text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--gridline);
+table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.data-table th {
+  text-align: left; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  font-weight: 400; color: var(--text-secondary);
+  padding: 7px 10px; border-bottom: 1px solid var(--border);
+}
+table.data-table td {
+  padding: 7px 10px; border-bottom: 1px solid var(--gridline);
   font-variant-numeric: tabular-nums;
 }
-table.data-table th { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
 table.data-table tr:last-child td { border-bottom: none; }
 table.data-table tbody tr { transition: background-color var(--motion-fast); }
-table.data-table tbody tr:hover { background: var(--page-plane); }
+table.data-table tbody tr:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
 .table-scroll { overflow-x: auto; }
 
 .badge {
-  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px;
-  border-radius: 999px; white-space: nowrap;
+  display: inline-flex; align-items: center; border-radius: 0;
+  font-size: 11px; letter-spacing: .02em; padding: 3px 10px; white-space: nowrap;
 }
-.badge.good { background: rgba(12,163,12,0.14); color: var(--status-good); }
-.badge.warning { background: rgba(250,178,25,0.18); color: #7a5200; }
-.badge.serious { background: rgba(236,131,90,0.18); color: #8a3311; }
-.badge.critical { background: rgba(208,59,59,0.14); color: var(--status-critical); }
-.badge.neutral { background: var(--gridline); color: var(--text-secondary); }
-.badge.info { background: rgba(42,120,214,0.14); color: var(--series-1); }
-:root[data-theme="dark"] .badge.warning { color: #fab219; }
-:root[data-theme="dark"] .badge.serious { color: #ec835a; }
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) .badge.warning { color: #fab219; }
-  :root:where(:not([data-theme="light"])) .badge.serious { color: #ec835a; }
+.badge.good     { background: color-mix(in srgb, var(--diverge-pos) 16%, transparent); color: oklch(0.40 0.10 150); }
+.badge.critical { background: color-mix(in srgb, var(--diverge-neg) 16%, transparent); color: oklch(0.40 0.13 28); }
+.badge.neutral  { background: color-mix(in srgb, var(--text-primary) 7%, transparent); color: var(--neutral-800); }
+.badge.info     { background: var(--accent-100); color: var(--accent-800); }
+.badge.warning  { border: 1px solid var(--accent); background: transparent; color: var(--accent-700); }
+.badge.serious  { border: 1px solid var(--accent-800); background: transparent; color: var(--accent-800); }
+.badge.outline  { border: 1px solid var(--accent); background: transparent; color: var(--accent-700); }
+
+/* Two columns on wide screens; collapses to one in responsive.css's mobile
+   breakpoint. Rules sit at the top of each item (not the bottom), and the
+   first item in each of the two grid columns gets a full-strength ink
+   rule -- the "sheet" convention also used by the topbar and news lead. */
+.news-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 0 40px; }
+.news-item { padding: 14px 0; border-bottom: none; border-top: 1px solid var(--gridline); }
+.news-item:first-child, .news-item:nth-child(2) { border-top: 1px solid var(--text-primary); }
+.news-item .headline {
+  font-family: var(--font-heading); font-weight: 600; font-size: 17px;
+  line-height: 1.25; text-wrap: pretty;
 }
+.news-item.is-lead .headline { font-size: 18px; }
+.news-item .meta { font-size: 11.5px; color: var(--text-muted); margin: 5px 0 6px; }
+.news-item .snippet {
+  font-size: 13px; line-height: 1.5;
+  color: color-mix(in srgb, var(--text-primary) 72%, transparent); text-wrap: pretty;
+}
+.news-item a { color: var(--accent-700); text-decoration: none; }
+.news-item a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 
-/* Two columns on wide screens (matches Google Finance's news layout);
-   collapses to one in responsive.css's mobile breakpoint. */
-.news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
-.news-item { padding: 10px 0; border-bottom: 1px solid var(--gridline); }
-.news-item:last-child { border-bottom: none; }
-.news-item .headline { font-weight: 600; font-size: 13.5px; }
-.news-item .meta { font-size: 12px; color: var(--text-muted); margin: 2px 0 4px 0; }
-.news-item .snippet { font-size: 13px; color: var(--text-secondary); }
-.news-item a { color: var(--series-1); text-decoration: none; }
-.news-item a:hover { text-decoration: underline; }
-
-.filing-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gridline); }
-.filing-row:last-child { border-bottom: none; }
-.filing-row .name { width: 130px; font-weight: 600; font-size: 13px; }
-.filing-row .info { font-size: 12.5px; color: var(--text-secondary); }
+.filing-row {
+  display: flex; align-items: center; gap: 18px; padding: 14px 0;
+  border-bottom: none; border-top: 1px solid var(--gridline);
+}
+.filing-row:first-child { border-top: 1px solid var(--text-primary); }
+.filing-row:last-child  { border-bottom: 1px solid var(--gridline); }
+.filing-row .name {
+  width: 80px; flex: none;
+  font-family: var(--font-heading); font-weight: 600; font-size: 17px; letter-spacing: .06em;
+}
+.filing-row .date { width: 110px; flex: none; font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.filing-row .info { flex: 1; min-width: 0; font-size: 13.5px; color: var(--text-primary); }
 
 .empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
 
+.hr, footer.disclaimer > .rule { height: 1px; border: 0; background: var(--border); margin: 18px 0; }
+
 footer.disclaimer {
-  max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px;
-  font-size: 12px; color: var(--text-muted); line-height: 1.6;
+  max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px 48px;
+  font-size: 12px; color: var(--text-secondary); line-height: 1.65; text-wrap: pretty;
 }
+
+/* Data-quality notes: the bundle's data_notes surfaced as a framed,
+   accent-tinted panel above the footer -- the only accent-tinted fill on
+   the page, earned by being the page's honesty panel. */
+.data-notes {
+  position: relative; padding: 18px 20px; margin-top: 26px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.data-notes h6 {
+  font-family: var(--font-heading); font-weight: 600; font-size: 13px;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--accent-700);
+  margin: 0 0 12px;
+}
+.data-note { display: flex; gap: 11px; font-size: 12.5px; line-height: 1.55; }
+.data-note::before { content: "\2014"; flex: none; color: var(--accent); }
+
+/* Focus and selection (global) -- themed everywhere, never the browser
+   default. */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); }

@@ -281,11 +281,12 @@ class TestPriceHistoryChart:
         assert html is not None
 
     def test_price_line_series_shape_and_color(self):
-        """Price is a colored area line (not candlesticks -- see
-        price_history_chart's docstring for why), green/red by net change
-        over the whole series, gradient-filled and topped with a dot at
-        the latest close -- both resolved client-side by hydrate.js, so
-        this only checks for the token strings it dispatches on."""
+        """Price is a plain steel line (not candlesticks -- see
+        price_history_chart's docstring for why), no area fill and no
+        green/red-by-net-change coloring -- direction is carried by the
+        hero's own delta chip instead, so this line stays the structural
+        accent color regardless of whether the series is up or down, and
+        is topped with a dot at the latest close."""
         import dashboard.generate_dashboard as gd
         gd._reset_chart_registry()
         series = self._price_series(n=60)
@@ -294,15 +295,12 @@ class TestPriceHistoryChart:
         price = next(s for s in option["series"] if s["name"] == "Price")
         assert price["type"] == "line"
         assert len(price["data"]) == 60
-        is_down = series[-1]["close"] < series[0]["close"]
-        expected_color = "var(--diverge-neg)" if is_down else "var(--diverge-pos)"
-        expected_gradient = "__areaGradientNeg__" if is_down else "__areaGradientPos__"
-        assert price["lineStyle"]["color"] == expected_color
-        assert price["areaStyle"]["color"] == expected_gradient
+        assert price["lineStyle"]["color"] == "var(--accent)"
+        assert "areaStyle" not in price
         first = next(d for d in price["data"] if d is not None)
         assert isinstance(first["value"], (int, float))
         assert price["markPoint"]["data"][0]["coord"] == [59, series[-1]["close"]]
-        assert price["markPoint"]["itemStyle"]["color"] == expected_color
+        assert price["markPoint"]["itemStyle"]["color"] == "var(--accent)"
 
     def test_default_zoom_shows_roughly_last_year_for_long_history(self):
         """Only one dataZoom component now (type: inside, wheel/pinch --

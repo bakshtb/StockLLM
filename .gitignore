@@ -9,3 +9,7 @@ storage/*.db
 # Docker image's builder stage; see Dockerfile). Neither is checked in.
 webui/node_modules/
 dashboard/assets/dist/
+# ensure_vendored_assets() also copies the built webui output next to any
+# HTML the CLI writes into output/, so the same built-output exclusion
+# applies there.
+output/assets/
