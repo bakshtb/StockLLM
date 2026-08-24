@@ -91,10 +91,10 @@ SERIES_ROLE = {
 
 # Four "+" registration marks emitted as the first children of every
 # .blueprint-framed element (.card, .strategy-card, .rec-card, the
-# At-a-Glance panel, .data-notes) -- see webui/src/styles/components.css's
-# .corner rules. Not applied to .stat-tile/.viz-card/.glance-item/
-# .news-item/.filing-row -- those read as a hairline grid or rule-separated
-# list, not a framed object.
+# At-a-Glance panel) -- see webui/src/styles/components.css's .corner
+# rules. Not applied to .stat-tile/.viz-card/.glance-item/.news-item/
+# .filing-row -- those read as a hairline grid or rule-separated list,
+# not a framed object.
 CORNERS = ('<i class="corner tl"></i><i class="corner tr"></i>'
            '<i class="corner bl"></i><i class="corner br"></i>')
 
@@ -2390,23 +2390,6 @@ def section_filings(bundle):
 </div>"""
 
 
-def section_data_notes(bundle):
-    """The bundle's own data-quality caveats (see data/bundle.py's
-    "data_notes" list) -- previously only surfaced in the CLI (main.py) and
-    the LLM export, not the HTML dashboard itself. Rendered as a framed,
-    accent-tinted panel above the footer -- the page's honesty panel."""
-    notes = bundle.get("data_notes", []) or []
-    if not notes:
-        return ""
-    items = "".join(f'<div class="data-note">{esc(n)}</div>' for n in notes)
-    return f"""
-<div class="data-notes">
-  {CORNERS}
-  <h6>Data quality notes</h6>
-  {items}
-</div>"""
-
-
 # ============================================================================
 # Assembly
 # ============================================================================
@@ -2500,7 +2483,6 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
   {price_chart_html}
   {main_tabs_bar}
   {main_tabs_panels}
-  {section_data_notes(bundle)}
 </div>
 <div class="hr" style="max-width:1180px;margin-left:auto;margin-right:auto;"></div>
 <footer class="disclaimer">

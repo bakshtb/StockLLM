@@ -10,8 +10,7 @@
 .blueprint > .corner,
 .card > .corner,
 .strategy-card > .corner,
-.rec-card > .corner,
-.data-notes > .corner {
+.rec-card > .corner {
   position: absolute; width: 11px; height: 11px;
   color: color-mix(in srgb, var(--text-primary) 55%, transparent);
 }
@@ -382,22 +381,6 @@ footer.disclaimer {
   max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px 48px;
   font-size: 12px; color: var(--text-secondary); line-height: 1.65; text-wrap: pretty;
 }
-
-/* Data-quality notes: the bundle's data_notes surfaced as a framed,
-   accent-tinted panel above the footer -- the only accent-tinted fill on
-   the page, earned by being the page's honesty panel. */
-.data-notes {
-  position: relative; padding: 18px 20px; margin-top: 26px;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-}
-.data-notes h6 {
-  font-family: var(--font-heading); font-weight: 600; font-size: 13px;
-  text-transform: uppercase; letter-spacing: .08em; color: var(--accent-700);
-  margin: 0 0 12px;
-}
-.data-note { display: flex; gap: 11px; font-size: 12.5px; line-height: 1.55; }
-.data-note::before { content: "\2014"; flex: none; color: var(--accent); }
 
 /* Focus and selection (global) -- themed everywhere, never the browser
    default. */

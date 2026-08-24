@@ -2350,6 +2350,111 @@ StockLLM/
       that both links exist in the markup, that the browser's own media
       query resolution picks the right one.
 
+63. **Restyled the dashboard to the "Industry" design system -- a
+    steel-on-paper blueprint theme** (0.9.40) -- user-supplied design
+    handoff (a `.dc.html` reference mock plus the Industry system's own
+    tokens/guidance). Page architecture unchanged (topbar → hero →
+    always-visible price chart → page tabs → panels → footer); every
+    surface, color and chart restyled.
+    - **Tokens** (`webui/src/styles/tokens.css`, largest change):
+      light ground `#f2f2f3`, ink `#1d1f20`, one steel accent `#5980a6`
+      with a 100-900 ramp, a neutral ramp for second/third chart
+      series, zeroed elevation/radius (everything square, hairlines
+      instead of shadows). The one deliberate palette break: `
+      --diverge-pos`/`--diverge-neg` re-derived in OKLCH at the
+      accent's own lightness (`oklch(0.48 0.10 150)` / `oklch(0.48
+      0.13 28)`) so green/red-for-direction (an explicit earlier
+      request, see this file's own tokens.css header) still reads
+      inside the mono palette rather than shouting over it, per
+      explicit maintainer choice over keeping the system's plain mono
+      scheme. Barlow/Barlow Condensed self-hosted as woff2
+      (`webui/src/assets/fonts/`) rather than a Google Fonts
+      `@import`, matching `generate_dashboard.py`'s own "no CDN at
+      request time" offline-capable claim -- required setting Vite's
+      `base: "./"` (was the default `"/"`), which had been silently
+      emitting root-absolute font `url()`s that 404 the moment the
+      generated HTML isn't served from a domain root (found live,
+      verifying this in a real browser, not assumed).
+    - **New `.blueprint` frame primitive**: four `<i class="corner">`
+      registration marks (a `+` mark outside each corner) on every
+      `.card`, `.strategy-card`, `.rec-card` and the At-a-Glance panel
+      -- a `CORNERS` HTML constant in `generate_dashboard.py`, emitted
+      as the first child of each. Deliberately NOT applied to
+      `.stat-tile`/`.viz-card`/`.glance-item`/`.news-item`/
+      `.filing-row` (separated by rules/hairlines instead) --
+      over-applying the marks is the way this system goes wrong per
+      the handoff's own warning.
+    - **KPI row** became a hairline grid (1px `--border` background
+      showing through 1px gaps, explicit `repeat(7, ...)` rather than
+      `auto-fit`) so it reads as an instrument panel.
+    - **Charts** (`generate_dashboard.py`'s chart functions): price
+      line is now a single steel `var(--accent)` line, no area fill,
+      no green/red-by-day's-move coloring -- direction is already
+      carried by the hero's own delta chip, so the always-visible price
+      chart stays the structural/neutral voice. RSI's gauge changed
+      from ECharts' native semicircular `type:"gauge"` to a flat
+      16px zone-band bar with a triangle marker (the same track/marker
+      idiom `range_meter()`/`range_position_plot()` already used),
+      reusing the "background bar + `barGap:"-100%"`" recipe for the
+      1px frame. Range tracks (`_range_track_option()`, shared by
+      `range_meter()`/`range_position_plot()`): markers became 14px
+      squares colored by accent-ramp depth, Low/High became thin tick
+      "end stops" with a two-line kicker/value corner label (new
+      `__richLabelFmt__` hydrate.js token, reading a datapoint's own
+      `label_fmt` field so the tooltip -- which reads the plain `fmt`
+      field -- doesn't show ECharts rich-text markup).
+    - **Two real layout bugs found and fixed via actual browser
+      screenshots**, not assumed from the code: (1) the "Current"
+      marker's own label and the "High" corner label rendered directly
+      on top of each other (`$333.43` overlapping `$340.08`) --
+      ECharts' `labelLayout` collision callback (`hydrate.js`'s
+      `makeRangeTrackLabelLayout`) was not reliably resolving overlaps
+      for the new taller two-line rich-text corner labels, so fixed
+      with a bigger static label `distance` instead of trusting the
+      dynamic pass alone. (2) Two named markers close in value (e.g.
+      Mean/Median a few dollars apart) rendered fully overlapping below
+      the track too -- same underlying labelLayout unreliability found
+      on the "below" group, this time fixed by assigning markers to one
+      of two label rows deterministically server-side (alternating by
+      *value-sorted* order, not list order, so any two adjacent-in-
+      value markers always land on different rows) rather than
+      depending on the client-side collision pass at all.
+    - **A third real bug, unrelated to charts**: the hero's delta chip
+      (`.hero-price-row .delta`) rendered as a solid colored rectangle
+      with completely invisible text -- `.delta.good`/`.critical`/
+      `.neutral` (setting a colored *text* color, for the plain inline
+      `.delta` used elsewhere) has the same specificity as
+      `.hero-price-row .delta` (which sets page-plane text for
+      contrast against the chip's solid fill) and appeared later in
+      `components.css`, so it won by source order and painted the
+      chip's text the same color as its own background. Fixed by
+      re-asserting page-plane text at higher specificity
+      (`.hero-price-row .delta.good` etc.), found only by actually
+      looking at a rendered screenshot -- the HTML/data were correct
+      the whole time.
+    - Removed the Material ripple click effect (`ripple.js`/
+      `ripple.css` deleted, import dropped from `main.js`) -- sits
+      oddly in a flat blueprint system; hover-tint + a pressed step
+      down the accent ramp carry the same feedback instead.
+    - **Deliberately NOT re-added**: the "Data Quality Notes" dashboard
+      panel the handoff's reference mock included -- item 56 above
+      already removed this exact section by explicit user request
+      (0.9.33); added back once during this pass since the mock had it
+      and the removal history wasn't checked first, caught and reverted
+      once flagged. `data_notes` itself is untouched -- still in the
+      bundle, still in the CLI (`main.py`) and LLM export
+      (`llm_export.py`'s own, separate section), just not this
+      dashboard's own visual panel.
+    - **Verified for real**: full pytest suite green (489 passed, tests
+      in `test_charts.py`/`test_backtest.py`/`test_dashboard_build.py`
+      updated for the new chart shapes and color tokens) plus real
+      Playwright screenshots of a generated dashboard in light, dark
+      and a 390px mobile width -- every chart confirmed hydrated (no
+      silent table-view fallback), no console errors, no 404s, the two
+      label-collision bugs and the invisible-delta bug all confirmed
+      fixed by re-screenshotting after each patch, not assumed fixed
+      from the code change alone.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

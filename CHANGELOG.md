@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.40
+
+- Change: restyled the dashboard to the "Industry" design system -- a
+  steel-on-paper blueprint theme (square corner-marked cards, hairline
+  KPI grid, self-hosted Barlow/Barlow Condensed, OKLCH-derived
+  diverge colors) replacing the Material-ish card surfaces, elevation
+  shadows and rounded corners. Matching restyle of every ECharts
+  option (price line, RSI gauge rebuilt as a flat zone-band bar, range
+  tracks, EPS/relative/quarterly charts, ownership stack). Removes the
+  Material ripple click effect. See HANDOFF.md item 63.
+
 ## 0.9.39
 
 - Add: theme-aware favicon -- separate light/dark variants of the
