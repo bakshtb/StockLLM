@@ -2455,6 +2455,124 @@ StockLLM/
       fixed by re-screenshotting after each patch, not assumed fixed
       from the code change alone.
 
+64. **Replaced the Industry blueprint theme with "Field" -- a deep steel
+    ground + tonal panel theme** (0.9.41) -- a second, larger design
+    handoff the user supplied immediately after item 63 shipped,
+    explicitly replacing it rather than extending it: no borders or
+    corner registration marks anywhere, depth comes from surface value
+    contrast (`--surface-1`/`--surface-2` tonal fills) instead. Page
+    architecture inside each tab is unchanged; the top-level navigation
+    and hero row are restructured.
+    - **Dark-only for now**, by explicit user instruction -- the handoff
+      had no light variant. `#theme-toggle` removed from
+      `section_header()`, `THEME_INIT_SCRIPT` removed, dark theme forced
+      via `data-theme="dark"` on `<html>` server-side. The light-theme
+      CSS block in `tokens.css` is untouched but currently unreachable;
+      re-enable the toggle once a Field light variant exists rather than
+      guessing one.
+    - **Governing principle for the whole pass, from explicit user
+      choice ("keep full detail, add teasers")**: every condensed widget
+      the Field mock shows (hero Verdict/Consensus panels, the 2x2
+      Technicals grid, backtest sparklines) was added as a *new*, compact
+      summary alongside the existing full detail -- nothing detailed was
+      deleted or shrunk. The full AI bull/bear/skeptic/judge breakdown,
+      the full Analyst tab (rating-actions table, EPS charts), the full
+      backtest stats-row/status-box/chart-disclosure, and the existing
+      MA-marker/RSI-gauge charts all still render in full, below/beside
+      their new teaser.
+    - **Tokens** (`tokens.css`): new `--surface-1`/`--surface-2`/
+      `--accent-strong` and a radius scale (`--radius-panel: 14px`,
+      `-inner: 10px`, `-pill: 8px`, `-sheet: 20px`), applied only to the
+      dark theme blocks. Old zeroed `--radius-sm/md/lg` from item 63 left
+      defined but now unused.
+    - **Navigation**: the top-level `page-tabs` bar became a
+      `sidebar-nav` (same `subtabs()`/`subtabs.js` component, just
+      restyled and renamed via `bar_class`) -- zero JS or markup-
+      structure change needed, since the existing architecture already
+      rendered "Price & Technicals" as the default-active first tab, the
+      same content the mock's default screenshot happens to show.
+    - **Hero row restructure** (`section_hero()`): now a price panel
+      (identity, price + delta stack, the interactive chart, a static
+      footer strip computed from the default 1Y window) plus a side
+      column with two new condensed panels -- `_verdict_panel()` (AI
+      bull/bear/skeptic/judge teaser) and `_consensus_panel()` (a
+      4-segment analyst-rating stacked bar + mean-target row, built from
+      `finnhub_signals.recommendation_trend[0]`). Both are teasers only;
+      `section_ai_recommendation()` and `section_analyst()` still render
+      their full detail in their own tab/section, unchanged.
+    - **New `_technicals_grid()`**: a 2x2 summary (20-day change, RSI,
+      MACD, 52-week position) rendered above the existing
+      `range_position_plot()`/`gauge_meter()`/MACD content in
+      `section_price_technicals()` (kept, not replaced). Progress-track
+      widths use natural bounds where they exist (RSI 0-100, 52-week
+      range) and disclosed fixed scales where they don't (±15% for
+      20-day change, ±3%-of-price for MACD) -- chosen over either
+      fabricating a false sense of precision or copying the mock's
+      arbitrary-looking percentages verbatim.
+    - **Price chart** (`price_history_chart()`): single accent-colored
+      line with a gradient area fill (`__areaGradientAccent__`, replacing
+      the old positive/negative-tinted gradient tokens since the line no
+      longer changes color by direction) and a translucent glow dot at
+      the endpoint. Chart height reduced 320px → 210px to fit the new
+      hero-row layout.
+    - **Backtests** (`section_backtests()`): a new equity-curve SVG
+      sparkline per strategy card, derived for real from that strategy's
+      own `trades` + `price_series` (`_equity_curve_path()` walks the
+      dates and position state -- not fabricated), plus a compact win-
+      rate/return row. Both sit above the existing stats-row/status-box/
+      chart-disclosure detail, which is unchanged.
+    - **Scope deliberately held back from the mock, disclosed rather
+      than silently done**:
+      - Relative Performance kept its existing grouped-bar chart
+        (recolored only) rather than the mock's literal 3-line indexed
+        time series -- that would need daily benchmark/sector price
+        history the bundle doesn't fetch, which the handoff's own README
+        says is out of scope (data layer / ECharts data series unchanged,
+        styling only).
+      - Mobile keeps the sidebar as a horizontally-scrolling pill row
+        (the same pattern the old top tab bar used pre-Field), not the
+        mock's 5-icon bottom tab bar -- that needs a curated icon-per-
+        section mapping the real 9-tab set has no designed equivalent
+        for.
+      - The hero chart's footer strip (date/High/Low/%change) is
+        computed once from the default 1Y window and does not re-sync
+        when a different range button is clicked -- static by design for
+        this pass, not a bug.
+      - `.strategy-card-list` uses `repeat(auto-fit, minmax(320px, 1fr))`
+        rather than the mock's fixed 4-column grid -- the mock's cards
+        only ever show a sparkline, but these carry the full existing
+        stats/status-box detail (see the governing principle above), so
+        a 4-up fixed grid would be too cramped.
+    - **Topbar**: search field and "RUN CHECK" button from the mock were
+      *not* added -- explicit user instruction to keep the existing
+      separate-page flow (ticker entry + running a check happens on
+      `webapp/app.py`'s own page, not the generated dashboard) and to
+      keep the existing back-link (←) button. Only the wordmark lockup
+      and single Export button changed.
+    - **Deliberately NOT re-added, again**: the "Data Quality Notes"
+      panel -- the Field mock's own reference also included it; re-asked
+      explicitly given the item 63 history of accidentally re-adding it,
+      user re-confirmed leaving it out.
+    - **Verified for real**: full pytest suite green (489 passed;
+      `test_dashboard_build.py`/`test_backtest.py` updated for the new
+      class names and the price chart's glow series), plus Playwright
+      screenshots of every one of the 9 top-level tabs and a 390px mobile
+      width. Two things that looked like bugs on first screenshot were
+      investigated and confirmed pre-existing, not Field regressions: a
+      narrow-column analyst "recent rating actions" table clips its last
+      column visually in a static screenshot because it's inside the
+      existing `.table-scroll` horizontal-scroll container (scrollable
+      interactively, not actually cut off; unrelated to this session's
+      diff); and the Relative Performance chart's near-zero return bars
+      (e.g. -0.4%/-2.7%) have overlapping labels, which traces to
+      `grouped_bar_horizontal()`'s existing label-position logic, also
+      untouched by this session's diff. Neither was fixed here --
+      flagging both for a future pass. Also confirmed all fixture bundles
+      in `output/*.json` have no `backtests.price_series` data, so the
+      price chart and equity-curve sparklines had never been visually
+      verified before this session; verified instead against a synthetic
+      bundle built for this purpose (not committed).
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

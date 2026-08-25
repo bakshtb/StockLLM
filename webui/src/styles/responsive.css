@@ -16,17 +16,43 @@
   .wrap { padding: 10px 10px; }
   .card { padding: 16px 14px; }
   .topbar { padding: 12px 10px; flex-wrap: wrap; }
-  .hero { padding: 16px 10px 4px 10px; }
-  .hero-price { font-size: 36px; }
+  .topbar-wordmark, .topbar-divider { display: none; }
+  .hero { padding: 14px 10px 0; }
+  .hero-row { grid-template-columns: 1fr !important; }
+  .hero-price-panel, .verdict-panel, .consensus-panel { padding: 16px 14px; }
+  .hero-price { font-size: 62px; }
+  .hero-price-row { gap: 14px; }
+  .verdict-word { font-size: 42px; }
+  .technicals-grid { gap: 18px 20px; }
   .grid { grid-template-columns: 1fr !important; }
   /* !important here (not just override specificity) is load-bearing: the
-     base .kpi-row rule now sets an explicit 7-column grid-template-columns
-     (was auto-fit), and only !important is guaranteed to win over an
-     explicit value regardless of source order. */
+     base .kpi-row rule sets an explicit 5-column grid-template-columns,
+     and only !important is guaranteed to win over an explicit value
+     regardless of source order. */
   .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
   .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
-  .split-2col, .rec-thesis-grid, .news-grid { grid-template-columns: 1fr !important; }
+  .split-2col, .rec-thesis-grid, .news-grid, .technicals-grid { grid-template-columns: 1fr !important; }
   .rec-top { flex-direction: column; align-items: flex-start; }
+
+  /* Sidebar: a sticky vertical panel makes no sense once .dashboard-body
+     collapses to one column above a long scroll of panels -- becomes a
+     horizontally-scrolling pill row instead (the same pattern the old
+     top tab bar used pre-Field), not the Field mock's five-icon bottom
+     tab bar, which would need a curated icon-per-section mapping this
+     dashboard's real 9-tab set doesn't have a designed equivalent for.
+     Every tab stays reachable; see HANDOFF.md for this scoped-down
+     choice. */
+  .dashboard-body { grid-template-columns: 1fr; padding: 0 10px 16px; }
+  .subtabs.sidebar-nav {
+    flex-direction: row; flex-wrap: nowrap; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    position: static; padding: 4px; gap: 2px;
+  }
+  .subtabs.sidebar-nav::-webkit-scrollbar { display: none; }
+  .subtabs.sidebar-nav .subtab-btn {
+    flex-shrink: 0; border-radius: var(--radius-pill); padding: 7px 14px;
+  }
+  .subtabs.sidebar-nav .subtab-btn::before { display: none; }
 
   /* Dense multi-column tables (5-7 columns is common here -- rating
      actions, insider transactions, institutional holders) are cramped or
@@ -36,20 +62,20 @@
   table.data-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
   table.data-table, table.data-table tbody, table.data-table tr, table.data-table td { display: block; width: 100%; }
   table.data-table tr {
-    border: 1px solid var(--border); border-radius: 0;
-    padding: 4px 12px; margin-bottom: 10px; background: transparent;
+    border-radius: var(--radius-inner);
+    padding: 4px 12px; margin-bottom: 10px; background: var(--page-plane);
   }
   table.data-table tr:last-child { margin-bottom: 0; }
   table.data-table td {
     display: flex; justify-content: space-between; align-items: center;
-    gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gridline);
+    gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border);
     text-align: right; white-space: normal;
   }
   table.data-table td:last-child { border-bottom: none; }
   table.data-table td::before {
     content: attr(data-label);
     font-size: 10px; font-weight: 400; letter-spacing: .09em; text-transform: uppercase;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     text-align: left; flex-shrink: 0; padding-right: 12px;
   }
   .table-scroll { overflow-x: visible; }

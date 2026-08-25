@@ -265,14 +265,16 @@ class TestPriceHistoryChart:
 
     def test_builds_a_single_price_series(self):
         """No MA20/50/200 overlay, no volume subplot (an earlier version
-        had both) -- see price_history_chart's docstring for why."""
+        had both) -- see price_history_chart's docstring for why. The
+        unnamed scatter series alongside "Price" is the endpoint glow
+        dot, not a second data series."""
         import dashboard.generate_dashboard as gd
         gd._reset_chart_registry()
         html = price_history_chart(self._price_series())
         assert html is not None
         assert "echarts-container" in html
         option = _get_chart_option(html)
-        assert [s["name"] for s in option["series"]] == ["Price"]
+        assert [s.get("name") for s in option["series"]] == ["Price", None]
 
     def test_handles_missing_ohlc_gracefully(self):
         """A gap day (e.g. a genuinely missing bar) shouldn't crash chart
@@ -282,11 +284,12 @@ class TestPriceHistoryChart:
 
     def test_price_line_series_shape_and_color(self):
         """Price is a plain steel line (not candlesticks -- see
-        price_history_chart's docstring for why), no area fill and no
-        green/red-by-net-change coloring -- direction is carried by the
-        hero's own delta chip instead, so this line stays the structural
-        accent color regardless of whether the series is up or down, and
-        is topped with a dot at the latest close."""
+        price_history_chart's docstring for why), gradient area-filled in
+        the same accent (no green/red-by-net-change coloring -- direction
+        is carried by the hero's own delta chip instead, so this line
+        stays the structural accent color regardless of whether the
+        series is up or down), topped with a dot at the latest close plus
+        a larger translucent glow dot under it."""
         import dashboard.generate_dashboard as gd
         gd._reset_chart_registry()
         series = self._price_series(n=60)
@@ -296,11 +299,14 @@ class TestPriceHistoryChart:
         assert price["type"] == "line"
         assert len(price["data"]) == 60
         assert price["lineStyle"]["color"] == "var(--accent)"
-        assert "areaStyle" not in price
+        assert price["areaStyle"]["color"] == "__areaGradientAccent__"
         first = next(d for d in price["data"] if d is not None)
         assert isinstance(first["value"], (int, float))
         assert price["markPoint"]["data"][0]["coord"] == [59, series[-1]["close"]]
         assert price["markPoint"]["itemStyle"]["color"] == "var(--accent)"
+        glow = next(s for s in option["series"] if s.get("type") == "scatter")
+        assert glow["data"][0]["value"] == [59, series[-1]["close"]]
+        assert glow["itemStyle"]["opacity"] < 1
 
     def test_default_zoom_shows_roughly_last_year_for_long_history(self):
         """Only one dataZoom component now (type: inside, wheel/pinch --

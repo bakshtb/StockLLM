@@ -111,10 +111,22 @@
   --elevation-2: none;
   --elevation-3: 0 12px 32px color-mix(in srgb, #2b2b2d 22%, transparent);
 
-  /* Radius: everything square except the dialog */
+  /* Radius: everything square except the dialog -- the light theme's own
+     scale, unused while the app is forced into the Field dark theme (see
+     --radius-panel etc. below) but kept defined for when a light Field
+     variant exists. */
   --radius-sm: 0;
   --radius-md: 0;
   --radius-lg: 0;
+
+  /* Field radius scale -- a deliberate departure from Industry's square-
+     corner rule (client request). Global, not theme-scoped: the dark
+     (Field) theme is the only one live right now, but these aren't
+     color values, so there's nothing theme-specific about them. */
+  --radius-panel: 14px;
+  --radius-inner: 10px;
+  --radius-pill:  8px;
+  --radius-sheet: 20px;
 
   --font-heading: "Barlow Condensed", system-ui, sans-serif;
   --font-body:    "Barlow", system-ui, sans-serif;
@@ -134,14 +146,16 @@
        dark ground). Everything not listed here (the accent/neutral ramps,
        series-4..8, warning/serious status) stays the same across themes. */
     --page-plane:     #1d2d3d;   /* accent-900 -- steel as ground, type reversed to paper */
-    --surface-1:      #1d2d3d;
+    --surface-1:      #22364a;   /* Field: standard panel */
+    --surface-2:      #2c455d;   /* Field: raised panel -- verdict, callouts, secondary button */
     --text-primary:   #f2f2f3;
     --text-secondary: color-mix(in srgb, #f2f2f3 65%, transparent);
     --text-muted:     color-mix(in srgb, #f2f2f3 45%, transparent);
     --gridline:       color-mix(in srgb, #f2f2f3 10%, transparent);
     --baseline:       color-mix(in srgb, #f2f2f3 45%, transparent);
-    --border:         color-mix(in srgb, #f2f2f3 16%, transparent);
+    --border:         color-mix(in srgb, #f2f2f3 12%, transparent);
     --accent:         #94bce3;   /* accent-400 */
+    --accent-strong:  #5980a6;   /* accent-500 -- second chart series */
     --series-1:       #94bce3;
     --series-2:       #5980a6;
     --series-3:       #98989b;
@@ -157,14 +171,16 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page-plane:     #1d2d3d;
-  --surface-1:      #1d2d3d;
+  --surface-1:      #22364a;
+  --surface-2:      #2c455d;
   --text-primary:   #f2f2f3;
   --text-secondary: color-mix(in srgb, #f2f2f3 65%, transparent);
   --text-muted:     color-mix(in srgb, #f2f2f3 45%, transparent);
   --gridline:       color-mix(in srgb, #f2f2f3 10%, transparent);
   --baseline:       color-mix(in srgb, #f2f2f3 45%, transparent);
-  --border:         color-mix(in srgb, #f2f2f3 16%, transparent);
+  --border:         color-mix(in srgb, #f2f2f3 12%, transparent);
   --accent:         #94bce3;
+  --accent-strong:  #5980a6;
   --series-1:       #94bce3;
   --series-2:       #5980a6;
   --series-3:       #98989b;

@@ -25,8 +25,7 @@ var TOKEN_RICH_LABEL = '__richLabelFmt__';
 var TOKEN_AXIS_COMPACT = '__compactAxis__';
 var TOKEN_RANGE_TRACK_LABEL_LAYOUT = '__rangeTrackLabelLayout__';
 var TOKEN_VBAR_LABEL_STAGGER = '__verticalBarLabelStagger__';
-var TOKEN_AREA_GRADIENT_POS = '__areaGradientPos__';
-var TOKEN_AREA_GRADIENT_NEG = '__areaGradientNeg__';
+var TOKEN_AREA_GRADIENT_ACCENT = '__areaGradientAccent__';
 var VAR_RE = /^var\((--[\w-]+)\)$/;
 
 function cssVar(name) {
@@ -67,18 +66,18 @@ function hexToRgba(hex, alpha) {
   return 'rgba(' + ((num >> 16) & 255) + ',' + ((num >> 8) & 255) + ',' + (num & 255) + ',' + alpha + ')';
 }
 
-// price_history_chart's area fill, faded top-to-bottom like Google
-// Finance's quote chart -- top of the fill echoes the line color at low
-// opacity, fading to near-nothing at the axis. Built from the live
-// computed CSS var (not baked at generation time), so it re-themes
-// correctly on a dark-mode toggle exactly like every other chart color.
+// price_history_chart's area fill, faded top-to-bottom -- top of the
+// fill echoes the accent line color at .42 opacity, fading to fully
+// transparent at the axis (Field spec). Built from the live computed CSS
+// var (not baked at generation time), so it re-themes correctly on a
+// dark-mode toggle exactly like every other chart color.
 function areaGradient(varName) {
   var base = cssVar(varName);
   return {
     type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
     colorStops: [
-      { offset: 0, color: hexToRgba(base, 0.30) },
-      { offset: 1, color: hexToRgba(base, 0.02) },
+      { offset: 0, color: hexToRgba(base, 0.42) },
+      { offset: 1, color: hexToRgba(base, 0) },
     ],
   };
 }
@@ -295,8 +294,7 @@ function hydrateOption(node) {
     if (node === TOKEN_AXIS_COMPACT) return formatCompact;
     if (node === TOKEN_RANGE_TRACK_LABEL_LAYOUT) return makeRangeTrackLabelLayout();
     if (node === TOKEN_VBAR_LABEL_STAGGER) return makeVerticalBarLabelStagger();
-    if (node === TOKEN_AREA_GRADIENT_POS) return areaGradient('--diverge-pos');
-    if (node === TOKEN_AREA_GRADIENT_NEG) return areaGradient('--diverge-neg');
+    if (node === TOKEN_AREA_GRADIENT_ACCENT) return areaGradient('--accent');
     return node;
   }
   if (Array.isArray(node)) return node.map(hydrateOption);

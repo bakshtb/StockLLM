@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.41
+
+- Change: replaced the just-shipped "Industry" blueprint theme with
+  "Field" -- a deep steel ground + tonal panel aesthetic (no borders or
+  registration marks; depth from surface value contrast instead), a
+  sidebar nav replacing the top tab bar, a restructured hero row (price
+  panel + condensed Verdict/Consensus teaser panels), a 2x2 Technicals
+  summary grid, backtest equity-curve sparklines, and a gradient+glow
+  price chart. Dark-only for now (light theme untouched but unreachable
+  -- theme toggle disabled, `data-theme="dark"` forced). Full existing
+  detail kept everywhere; the mock's condensed widgets were added as new
+  summaries, not replacements. See HANDOFF.md item 64.
+
 ## 0.9.40
 
 - Change: restyled the dashboard to the "Industry" design system -- a

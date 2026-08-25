@@ -1,79 +1,142 @@
-/* .blueprint -- the frame primitive every card, figure and framed region
-   wears: square corners, a single hairline border, no fill, and four "+"
-   registration marks that sit outside the box at the corners. Any
-   blueprint element needs >=8px of clearance on all sides for the marks
-   (the 26px grid gap below is sized for this). Applied to .card,
-   .strategy-card, .rec-card and the At-a-Glance panel -- NOT to
-   .stat-tile, .viz-card, .glance-item, .news-item or .filing-row, which
-   are separated by rules and grid hairlines instead. */
-.blueprint { position: relative; border: 1px solid var(--border); border-radius: 0; }
-.blueprint > .corner,
-.card > .corner,
-.strategy-card > .corner,
-.rec-card > .corner {
-  position: absolute; width: 11px; height: 11px;
-  color: color-mix(in srgb, var(--text-primary) 55%, transparent);
-}
-.corner::before,
-.corner::after { content: ""; position: absolute; background: currentColor; }
-.corner::before { left: 5px; top: 0; width: 1px; height: 100%; }
-.corner::after  { top: 5px; left: 0; width: 100%; height: 1px; }
-.corner.tl { top: -6px; left: -6px; }
-.corner.tr { top: -6px; right: -6px; }
-.corner.bl { bottom: -6px; left: -6px; }
-.corner.br { bottom: -6px; right: -6px; }
+/* Field: a deep steel ground (--page-plane) with tonal panels (--surface-1
+   standard, --surface-2 raised) instead of the earlier wireframe/blueprint
+   frames. Depth comes from value, not borders or registration marks --
+   there is no .blueprint/.corner system in this theme. Every radius is
+   named: --radius-panel (14px, every panel), --radius-inner (10px, nested
+   cards/wells/buttons/popovers), --radius-pill (8px, range/tab pills). */
 
 /* Hero: the one focal point the page leads with, before any scrolling. */
-.hero { max-width: 1180px; margin: 0 auto; padding: 26px 24px 8px; }
-.hero-price-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.hero { max-width: 1180px; margin: 0 auto; padding: 26px 26px 0; }
+.hero-row { display: grid; grid-template-columns: 1fr 336px; gap: 22px; align-items: stretch; }
+.hero-price-panel {
+  background: var(--surface-1); border-radius: var(--radius-panel);
+  padding: 26px 28px; min-width: 0;
+}
+.hero-price-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.hero-identity {
+  font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-primary) 50%, transparent);
+}
+.range-well {
+  display: inline-flex; gap: 2px; padding: 4px;
+  background: var(--page-plane); border-radius: var(--radius-inner);
+}
+.hero-price-row { display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; margin-top: 14px; }
 .hero-price {
-  font-family: var(--font-heading); font-weight: 600; font-size: 64px;
-  line-height: .92; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  font-family: var(--font-heading); font-weight: 600; font-size: 92px;
+  line-height: .84; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
 }
-.hero-price-row .delta {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--diverge-pos); color: var(--page-plane);
-  padding: 4px 10px; font-size: 16px; border-radius: 0;
+.hero-delta-stack { display: flex; flex-direction: column; gap: 4px; }
+.hero-delta-stack .delta {
+  display: inline-flex; align-items: baseline; gap: 8px;
+  font-family: var(--font-heading); font-weight: 600; font-size: 18px;
 }
-.hero-price-row .delta.critical { background: var(--diverge-neg); }
-.hero-price-row .delta.neutral  { background: var(--neutral-600); }
-.hero-price-row .delta .caret { font-size: 10px; }
-/* .delta.good/.critical/.neutral below set a colored TEXT color for the
-   plain inline .delta elsewhere on the page -- same specificity (two
-   classes) as .hero-price-row .delta above, so without this the general
-   rule wins by source order and paints the hero chip's text the same
-   color as its own solid fill (found live: an invisible delta, text
-   color == background color). Re-assert page-plane text at higher
-   specificity so the hero chip stays legible regardless of source order. */
-.hero-price-row .delta.good,
-.hero-price-row .delta.critical,
-.hero-price-row .delta.neutral { color: var(--page-plane); }
-.hero-delta-label {
-  font-size: 11px; opacity: .75; letter-spacing: .06em;
-  text-transform: uppercase; margin-left: 0; font-weight: 400;
+.hero-delta-stack .delta.good     { color: var(--diverge-pos); }
+.hero-delta-stack .delta.critical { color: var(--diverge-neg); }
+.hero-delta-stack .delta.neutral  { color: var(--text-secondary); }
+.hero-delta-stack .caret { font-size: 12px; }
+.hero-delta-period {
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 400; font-family: var(--font-body);
 }
 .hero-dryrun {
-  font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
-  border: 1px solid var(--border); padding: 4px 9px; color: var(--text-secondary);
+  font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-muted);
 }
-.hero-rec { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.hero-rec-badge {
-  font-family: var(--font-heading); font-weight: 600; font-size: 15px;
-  letter-spacing: .3px; padding: 5px 14px; border-radius: 0; color: var(--page-plane);
+.price-chart-wrap { margin-top: 18px; }
+.hero-chart-footer {
+  display: flex; justify-content: space-between; gap: 12px; margin-top: 8px;
+  font-size: 11.5px; color: var(--text-muted); flex-wrap: wrap;
 }
-.hero-rec-badge.good { background: var(--diverge-pos); }
-.hero-rec-badge.critical { background: var(--diverge-neg); }
-.hero-rec-badge.warning { background: var(--accent-600); }
-.hero-rec-badge.neutral { background: var(--neutral-600); }
-.hero-rec-conf { font-size: 13px; color: var(--text-secondary); }
 
-/* KPI row: a hairline grid -- a 1px --border background showing through
-   1px gaps between tiles, with a 1px outer border. This is what makes the
-   row read as an instrument panel rather than a gapped list of numbers. */
+/* Verdict + Consensus: condensed hero-row teasers -- the full AI
+   recommendation breakdown (.rec-card) and full Analyst section keep all
+   their existing detail below; these are quick-glance summaries only. */
+.hero-side-col { display: flex; flex-direction: column; gap: 22px; }
+.verdict-panel {
+  background: var(--surface-2); border-radius: var(--radius-panel);
+  padding: 22px 24px; flex: 1; display: flex; flex-direction: column;
+}
+.verdict-kicker {
+  font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent);
+}
+.verdict-word {
+  font-family: var(--font-heading); font-weight: 600; font-size: 56px; line-height: 1;
+  margin-top: 6px;
+}
+.verdict-word.good     { color: var(--diverge-pos); }
+.verdict-word.critical { color: var(--diverge-neg); }
+.verdict-word.warning  { color: var(--accent); }
+.verdict-word.neutral  { color: var(--text-secondary); }
+.verdict-confidence { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.verdict-confidence-track {
+  flex: 1; height: 4px; border-radius: 2px;
+  background: color-mix(in srgb, var(--text-primary) 20%, transparent);
+}
+.verdict-confidence-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+.verdict-confidence-value { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.verdict-reasoning {
+  margin-top: 12px; font-size: 13px; line-height: 1.55;
+  color: color-mix(in srgb, var(--text-primary) 78%, transparent); text-wrap: pretty;
+}
+
+.consensus-panel { background: var(--surface-1); border-radius: var(--radius-panel); padding: 20px 24px; }
+.consensus-bar {
+  display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 1px;
+  background: var(--page-plane);
+}
+.consensus-counts {
+  display: flex; justify-content: space-between; gap: 8px; margin-top: 10px;
+  font-size: 11.5px; color: var(--text-secondary); flex-wrap: wrap;
+}
+.consensus-rule { height: 1px; background: var(--border); border: 0; margin: 14px 0; }
+.consensus-target-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.consensus-target-label { font-size: 12.5px; color: var(--text-secondary); }
+.consensus-target-value {
+  font-family: var(--font-heading); font-weight: 600; font-size: 19px;
+  font-variant-numeric: tabular-nums; color: var(--text-primary);
+}
+.consensus-target-value.critical { color: var(--diverge-neg); }
+.consensus-target-caption { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+/* At-a-glance: a 3px vertical bar in the statement's direction color. */
+.glance-list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.glance-item {
+  display: flex; align-items: flex-start; gap: 13px;
+  padding: 2px 0 2px 13px; border-left: 3px solid var(--text-muted);
+  font-size: 14px; line-height: 1.55; text-wrap: pretty;
+}
+.glance-item:has(.glance-icon.good)     { border-left-color: var(--diverge-pos); }
+.glance-item:has(.glance-icon.critical) { border-left-color: var(--diverge-neg); }
+.glance-item.is-valuation { border-left-color: var(--accent); }
+.glance-icon { display: none; } /* the direction now reads from the bar alone, per the Field mock */
+.glance-item b { font-weight: 700; }
+
+/* Technicals: a 2x2 grid of compact reading cells, each with a track
+   showing where the value sits in its own range -- the always-visible
+   summary. The fuller MA-marker / RSI-gauge charts below keep the same
+   detail this replaces at a glance, per "keep full detail, add teasers". */
+.technicals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 32px; }
+.tech-cell { min-width: 0; }
+.tech-cell-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.tech-cell-label {
+  font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted);
+}
+.tech-cell-value {
+  font-family: var(--font-heading); font-weight: 600; font-size: 23px;
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+.tech-cell-track {
+  height: 3px; border-radius: 2px; margin-top: 8px;
+  background: color-mix(in srgb, var(--text-primary) 18%, transparent);
+}
+.tech-cell-track-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+.tech-cell-caption { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
+/* KPI row: five equal panels. */
 .kpi-row {
-  display: grid; gap: 1px; background: var(--border);
-  border: 1px solid var(--border); margin-bottom: 20px;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  display: grid; gap: 22px; margin-bottom: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 .kpi-row.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .kpi-row.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -81,22 +144,22 @@
 .split-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
 .split-2col > div { min-width: 0; }
 .stat-tile {
-  min-width: 0;
-  background: var(--page-plane);
-  padding: 12px 13px; border-bottom: none;
+  min-width: 0; background: var(--surface-1); border-radius: var(--radius-panel);
+  padding: 18px 20px;
 }
 .stat-tile .label {
-  font-size: 10px; letter-spacing: .09em; text-transform: uppercase;
-  color: var(--text-secondary); display: flex; align-items: center; gap: 5px;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-primary) 50%, transparent);
+  display: flex; align-items: center; gap: 5px;
 }
 .stat-tile .value {
-  font-family: var(--font-heading); font-weight: 600; font-size: 25px;
-  line-height: 1.15; letter-spacing: 0; margin-top: 2px;
+  font-family: var(--font-heading); font-weight: 600; font-size: 34px;
+  line-height: 1.15; letter-spacing: 0; margin-top: 4px;
   font-variant-numeric: tabular-nums;
 }
 .stat-tile .value.good { color: var(--status-good); }
 .stat-tile .value.critical { color: var(--status-critical); }
-.stat-tile .sub { font-size: 11.5px; margin-top: 0; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.stat-tile .sub { font-size: 11px; margin-top: 2px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 .delta { font-weight: 500; font-variant-numeric: tabular-nums; }
 .delta.good     { color: var(--diverge-pos); }
@@ -104,40 +167,48 @@
 .delta.neutral  { color: var(--text-secondary); }
 
 .status-box {
-  margin-top: 14px; padding: 11px 13px; border-radius: 0;
-  background: transparent; border: 1px solid var(--accent);
-  color: var(--accent-700); font-size: 11.5px; line-height: 1.5;
+  margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-inner);
+  background: var(--surface-2); color: var(--text-secondary); font-size: 11.5px; line-height: 1.5;
 }
 .status-box-head {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   font-family: var(--font-heading); font-weight: 600; font-size: 12px;
-  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px;
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; color: var(--text-primary);
 }
-.status-box-caption { margin-top: 8px; font-size: 11.5px; color: var(--text-secondary); }
+.status-box-caption { margin-top: 8px; font-size: 11.5px; color: var(--text-muted); }
 
-/* One self-contained framed panel per backtest strategy. */
-.strategy-card-list { display: grid; gap: 20px; margin-top: 14px; }
+/* One self-contained nested panel per backtest strategy, on the darker
+   page ground so it reads as inset within the outer full-width panel.
+   The Field mock's 4-up sparkline-only cards assume much less content
+   per card than this dashboard keeps (full stats row, current-status
+   box, trade-chart disclosure alongside the new sparkline) -- 2-up
+   leaves room for it without cramming. */
+.strategy-card-list { display: grid; gap: 16px; margin-top: 14px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
 .strategy-card {
-  position: relative;
-  background: transparent; border: 1px solid var(--border);
-  border-radius: 0; padding: 18px 20px; box-shadow: none;
+  background: var(--page-plane); border-radius: var(--radius-inner);
+  padding: 16px 18px 14px; min-width: 0;
 }
 .strategy-card-head {
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 6px;
 }
-.strategy-card-title-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.strategy-card-title { font-family: var(--font-heading); font-weight: 600; font-size: 16px; color: var(--text-primary); }
+.strategy-card-title-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 34px; }
+.strategy-card-title { font-family: var(--font-heading); font-weight: 600; font-size: 15px; line-height: 1.15; color: var(--text-primary); }
 .strategy-card .card-sub { margin-bottom: 0; }
+.strategy-card-sparkline { margin-top: 6px; display: block; }
+.strategy-card-stats { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
+.strategy-card-win { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
+.strategy-card-return { font-family: var(--font-heading); font-weight: 600; font-size: 20px; font-variant-numeric: tabular-nums; }
+.strategy-card-return.good { color: var(--diverge-pos); }
+.strategy-card-return.neutral { color: color-mix(in srgb, var(--text-primary) 75%, transparent); }
 .backtest-stats-row {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px;
-  background: var(--border); border: 1px solid var(--border); margin-top: 14px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px;
 }
-.backtest-stats-row .stat-tile { background: var(--page-plane); }
+.backtest-stats-row .stat-tile { background: var(--page-plane); padding: 12px 13px; }
+.backtest-stats-row .stat-tile .value { font-size: 25px; }
 .chart-disclosure { margin-top: 14px; }
 .chart-disclosure > div { margin-top: 10px; }
 
-.price-chart-wrap { margin-top: 6px; }
 .chart-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .chart-range-pct {
   margin-left: auto; font-family: var(--font-heading); font-weight: 600; font-size: 17px;
@@ -147,99 +218,93 @@
 .chart-range-pct.critical { color: var(--diverge-neg); }
 .chart-range-pct.neutral  { color: var(--text-secondary); }
 .range-btn {
-  font-family: var(--font-heading); font-weight: 600; font-size: 12px;
-  border-radius: 0; border: 1px solid transparent;
-  background: none; color: var(--accent-700);
-  padding: 4px 12px; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
+  font-family: var(--font-heading); font-weight: 600; font-size: 12.5px;
+  border-radius: var(--radius-pill); border: none;
+  background: none; color: color-mix(in srgb, var(--text-primary) 60%, transparent);
+  padding: 5px 14px; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease;
 }
-.range-btn:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
-.range-btn.is-active { background: var(--accent); border-color: var(--accent); color: var(--page-plane); }
+.range-btn:hover { background: var(--surface-2); }
+.range-btn.is-active { background: var(--accent); color: var(--page-plane); }
+.range-well .range-btn { flex: 1; text-align: center; }
 
 /* Segmented tabs: splits one crowded section into focused sub-views. All
    panels render server-side; only the first has is-active by default, so
    a JS-disabled reader still sees a complete, correctly-laid-out first
    tab, just with no way to switch. */
 .subtabs { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
-.subtabs.page-tabs {
-  flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.subtabs.page-tabs::-webkit-scrollbar { display: none; }
-.subtabs.page-tabs .subtab-btn { flex-shrink: 0; }
 .subtab-btn {
   font-family: var(--font-heading); font-weight: 600; font-size: 12.5px;
-  border-radius: 0; border: 1px solid var(--border);
-  background: transparent; color: var(--text-primary);
+  border-radius: var(--radius-pill); border: none;
+  background: var(--surface-1); color: var(--text-primary);
   padding: 6px 14px; cursor: pointer; transition: background-color 0.15s ease;
 }
-.subtab-btn:hover { background: color-mix(in srgb, var(--text-primary) 7%, transparent); }
-.subtab-btn.is-active { background: var(--accent); border-color: var(--accent); color: var(--page-plane); }
+.subtab-btn:hover { background: var(--surface-2); }
+.subtab-btn.is-active { background: var(--accent); color: var(--page-plane); }
 .subtab-panel { display: none; }
 .subtab-panel.is-active { display: block; }
 
+/* Sidebar: replaces the old horizontal .page-tabs pill bar. Same
+   subtabs() markup/subtabs.js wiring underneath (data-group="main"), just
+   a vertical panel instead of a scrolling pill row -- see the "Sidebar
+   nav ... wire to the existing subtabs.js" instruction in the handoff. */
+.dashboard-body {
+  display: grid; grid-template-columns: 186px 1fr; gap: 22px;
+  max-width: 1180px; margin: 0 auto; padding: 0 26px 26px; align-items: start;
+}
+.dashboard-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.subtabs.sidebar-nav {
+  flex-direction: column; gap: 2px; flex-wrap: nowrap;
+  background: var(--surface-1); border-radius: var(--radius-panel);
+  padding: 16px 0; position: sticky; top: 12px; margin-bottom: 0;
+}
+.subtabs.sidebar-nav .subtab-btn {
+  display: flex; align-items: center; gap: 11px; text-align: left;
+  background: transparent; border-radius: 0; padding: 9px 18px;
+  font-size: 14.5px; letter-spacing: .06em; color: color-mix(in srgb, var(--text-primary) 60%, transparent);
+}
+.subtabs.sidebar-nav .subtab-btn::before {
+  content: ""; flex-shrink: 0; width: 5px; height: 5px; border-radius: 1px;
+  background: color-mix(in srgb, var(--text-primary) 25%, transparent);
+}
+.subtabs.sidebar-nav .subtab-btn:hover { background: var(--surface-2); }
+.subtabs.sidebar-nav .subtab-btn.is-active { background: var(--surface-2); color: var(--text-primary); }
+.subtabs.sidebar-nav .subtab-btn.is-active::before { background: var(--accent); }
+
 /* Info icon + popover: a plain-language explainer on every metric */
 .info-ic {
-  width: 15px; height: 15px; border-radius: 0;
-  background: transparent; border: 1px solid var(--border); color: var(--text-secondary);
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--surface-2); border: none; color: var(--text-secondary);
   font-family: var(--font-heading); font-weight: 600; font-size: 10px; font-style: normal;
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
   position: relative; transition: background-color 0.15s ease, color 0.15s ease;
   overflow: visible; /* .info-pop is an absolutely-positioned child that must escape this box */
 }
-.info-ic:hover { background: var(--accent); border-color: var(--accent); color: var(--page-plane); }
+.info-ic:hover { background: var(--accent); color: var(--page-plane); }
 .info-ic:focus-visible {
-  background: var(--accent); border-color: var(--accent); color: var(--page-plane);
+  background: var(--accent); color: var(--page-plane);
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
 .info-pop {
   display: none; position: absolute; z-index: 100; left: 0; top: 22px;
   width: 240px; max-width: min(240px, calc(100vw - 32px));
-  border-radius: 0; background: var(--text-primary); color: var(--page-plane);
+  border-radius: var(--radius-inner); background: var(--surface-2); color: var(--text-primary);
   font-family: var(--font-body); font-size: 12px; font-weight: 400; line-height: 1.5;
-  padding: 10px 12px; box-shadow: var(--elevation-3); text-align: left;
-  white-space: normal;
+  padding: 10px 12px; box-shadow: 0 12px 32px color-mix(in srgb, #0b141c 45%, transparent);
+  text-align: left; white-space: normal;
 }
 .info-ic.is-open .info-pop { display: block; }
 h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 
-/* At-a-glance plain-language summary: square hairline rows with a 3px
-   left rule in the item's direction color and a square icon. */
-.glance-list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.glance-item {
-  display: flex; align-items: flex-start; gap: 14px;
-  padding: 13px 15px; border-radius: 0; background: transparent;
-  border: 1px solid var(--border);
-  font-size: 14px; line-height: 1.55; text-wrap: pretty;
-}
-.glance-item:has(.glance-icon.good)     { border-left: 3px solid var(--diverge-pos); }
-.glance-item:has(.glance-icon.critical) { border-left: 3px solid var(--diverge-neg); }
-.glance-item:has(.glance-icon.neutral)  { border-left: 3px solid var(--neutral-500); }
-.glance-item.is-valuation { border-left: 3px solid var(--accent); }
-.glance-icon {
-  flex-shrink: 0; width: 24px; height: 24px; border-radius: 0;
-  display: grid; place-items: center; font-size: 11px; font-weight: 600;
-  font-family: var(--font-heading);
-}
-.glance-icon.good     { background: var(--diverge-pos); color: var(--page-plane); }
-.glance-icon.critical { background: var(--diverge-neg); color: var(--page-plane); }
-.glance-icon.neutral  { background: transparent; border: 1px solid var(--neutral-500); color: var(--neutral-700); }
-.glance-icon.is-valuation { background: transparent; border: 1px solid var(--accent); color: var(--accent-700); }
-.glance-item b { font-weight: 700; }
-
 .rec-card {
-  position: relative;
-  background: transparent; border: 1px solid var(--border);
-  border-radius: 0; padding: 20px 22px; margin-bottom: 20px;
+  background: var(--surface-1); border-radius: var(--radius-panel);
+  padding: 20px 22px; margin-bottom: 20px;
 }
-.rec-card.rec-good     { border-color: var(--diverge-pos); }
-.rec-card.rec-critical { border-color: var(--diverge-neg); }
-.rec-card.rec-warning  { border-color: var(--accent-600); }
 .rec-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
 .rec-badge-big { font-family: var(--font-heading); font-weight: 600; font-size: 28px; letter-spacing: .02em; }
 .rec-badge-big.good { color: var(--diverge-pos); }
 .rec-badge-big.critical { color: var(--diverge-neg); }
-.rec-badge-big.warning { color: var(--accent-700); }
+.rec-badge-big.warning { color: var(--accent); }
 .rec-badge-big.neutral { color: var(--text-secondary); }
 .rec-meta { font-size: 12px; color: var(--text-muted); }
 .rec-body { margin-top: 14px; font-size: 14px; line-height: 1.6; }
@@ -247,8 +312,7 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .rec-risks li { margin-bottom: 4px; }
 .rec-thesis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
 .rec-thesis {
-  min-width: 0; background: transparent; border: 1px solid var(--border);
-  border-radius: 0; padding: 12px 14px; font-size: 13px;
+  min-width: 0; background: var(--surface-2); border-radius: var(--radius-inner); padding: 12px 14px; font-size: 13px;
 }
 .rec-thesis .who {
   font-family: var(--font-heading); font-weight: 600; font-size: 12px;
@@ -264,23 +328,20 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .rec-trend-chart { flex: 1; min-width: 0; }
 
 .grid {
-  display: grid; gap: 26px;
+  display: grid; gap: 22px;
   grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-  align-items: start;
+  align-items: stretch;
 }
 .card {
-  position: relative;
-  background: transparent; border: 1px solid var(--border);
-  border-radius: 0; padding: 20px 22px;
-  box-shadow: none; min-width: 0;
+  background: var(--surface-1); border-radius: var(--radius-panel);
+  padding: 24px 26px; min-width: 0;
 }
-.card:hover { box-shadow: none; }
 .card.full { grid-column: 1 / -1; }
 .card h2 {
   font-family: var(--font-heading); font-weight: 600;
-  font-size: 20px; letter-spacing: 0; margin: 0 0 4px 0;
+  font-size: 17px; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 4px 0;
 }
-.card .card-sub { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px; }
+.card .card-sub { font-size: 11.5px; color: var(--text-muted); margin-bottom: 14px; }
 
 .viz-card { margin-top: 6px; }
 .viz-card-head {
@@ -289,10 +350,10 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 }
 .viz-card-head .viz-title {
   font-family: var(--font-heading); font-weight: 600; font-size: 13px;
-  text-transform: uppercase; letter-spacing: .08em; color: var(--accent-700);
+  text-transform: uppercase; letter-spacing: .08em; color: var(--accent);
 }
 .viz-toggle, .chart-disclosure summary {
-  border-radius: 0; border: 1px solid var(--border); background: transparent;
+  border-radius: var(--radius-pill); border: none; background: var(--surface-2);
   font-size: 11px; color: var(--text-secondary); padding: 3px 8px; cursor: pointer;
   transition: background-color 0.15s ease;
 }
@@ -300,9 +361,7 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
   font-weight: 600; list-style: none; display: inline-block;
 }
 .chart-disclosure summary::-webkit-details-marker { display: none; }
-.viz-toggle:hover, .chart-disclosure summary:hover {
-  background: color-mix(in srgb, var(--text-primary) 7%, transparent);
-}
+.viz-toggle:hover, .chart-disclosure summary:hover { background: color-mix(in srgb, var(--surface-2) 70%, var(--accent)); }
 .viz-card.is-table-view .viz-chart { display: none; }
 .viz-card:not(.is-table-view) .viz-table { display: none; }
 .viz-card .viz-table.viz-table-only { display: block; }
@@ -310,76 +369,79 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .echarts-container { width: 100%; }
 .viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 2px 0; font-size: 12px; color: var(--text-secondary); }
 .viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
-.viz-legend .swatch { width: 10px; height: 10px; border-radius: 0; display: inline-block; }
-.viz-note { font-size: 11.5px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; text-wrap: pretty; }
+.viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; text-wrap: pretty; }
 
 table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.data-table th {
   text-align: left; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
-  font-weight: 400; color: var(--text-secondary);
+  font-weight: 400; color: var(--text-muted);
   padding: 7px 10px; border-bottom: 1px solid var(--border);
 }
 table.data-table td {
-  padding: 7px 10px; border-bottom: 1px solid var(--gridline);
+  padding: 7px 10px; border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
 }
 table.data-table tr:last-child td { border-bottom: none; }
 table.data-table tbody tr { transition: background-color var(--motion-fast); }
-table.data-table tbody tr:hover { background: color-mix(in srgb, var(--text-primary) 4%, transparent); }
+table.data-table tbody tr:hover { background: var(--surface-2); }
 .table-scroll { overflow-x: auto; }
 
 .badge {
-  display: inline-flex; align-items: center; border-radius: 0;
+  display: inline-flex; align-items: center; border-radius: var(--radius-pill);
   font-size: 11px; letter-spacing: .02em; padding: 3px 10px; white-space: nowrap;
 }
-.badge.good     { background: color-mix(in srgb, var(--diverge-pos) 16%, transparent); color: oklch(0.40 0.10 150); }
-.badge.critical { background: color-mix(in srgb, var(--diverge-neg) 16%, transparent); color: oklch(0.40 0.13 28); }
-.badge.neutral  { background: color-mix(in srgb, var(--text-primary) 7%, transparent); color: var(--neutral-800); }
-.badge.info     { background: var(--accent-100); color: var(--accent-800); }
-.badge.warning  { border: 1px solid var(--accent); background: transparent; color: var(--accent-700); }
-.badge.serious  { border: 1px solid var(--accent-800); background: transparent; color: var(--accent-800); }
-.badge.outline  { border: 1px solid var(--accent); background: transparent; color: var(--accent-700); }
+.badge.good     { background: color-mix(in srgb, var(--diverge-pos) 20%, transparent); color: oklch(0.82 0.09 150); }
+.badge.critical { background: color-mix(in srgb, var(--diverge-neg) 20%, transparent); color: oklch(0.82 0.10 28); }
+.badge.neutral  { background: color-mix(in srgb, var(--text-primary) 12%, transparent); color: var(--text-secondary); }
+.badge.info     { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+.badge.warning  { background: var(--surface-2); color: var(--accent); }
+.badge.serious  { background: var(--surface-2); color: var(--text-primary); }
+.badge.outline  { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
 
 /* Two columns on wide screens; collapses to one in responsive.css's mobile
    breakpoint. Rules sit at the top of each item (not the bottom), and the
-   first item in each of the two grid columns gets a full-strength ink
-   rule -- the "sheet" convention also used by the topbar and news lead. */
+   first item in each of the two grid columns gets a full-strength rule. */
 .news-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 0 40px; }
-.news-item { padding: 14px 0; border-bottom: none; border-top: 1px solid var(--gridline); }
-.news-item:first-child, .news-item:nth-child(2) { border-top: 1px solid var(--text-primary); }
+.news-item { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); }
+.news-item:first-child, .news-item:nth-child(2) { border-top-color: color-mix(in srgb, var(--text-primary) 30%, transparent); }
+.news-item .news-index {
+  flex-shrink: 0; width: 24px; font-family: var(--font-heading); font-weight: 600; font-size: 13px;
+  color: color-mix(in srgb, var(--text-primary) 35%, transparent);
+}
+.news-item .news-body { min-width: 0; }
 .news-item .headline {
   font-family: var(--font-heading); font-weight: 600; font-size: 17px;
   line-height: 1.25; text-wrap: pretty;
 }
 .news-item.is-lead .headline { font-size: 18px; }
-.news-item .meta { font-size: 11.5px; color: var(--text-muted); margin: 5px 0 6px; }
+.news-item .meta { font-size: 11px; color: var(--text-muted); margin: 5px 0 6px; }
 .news-item .snippet {
   font-size: 13px; line-height: 1.5;
   color: color-mix(in srgb, var(--text-primary) 72%, transparent); text-wrap: pretty;
 }
-.news-item a { color: var(--accent-700); text-decoration: none; }
-.news-item a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.news-item a { color: var(--accent); text-decoration: none; }
+.news-item a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .filing-row {
   display: flex; align-items: center; gap: 18px; padding: 14px 0;
-  border-bottom: none; border-top: 1px solid var(--gridline);
+  border-top: 1px solid var(--border);
 }
-.filing-row:first-child { border-top: 1px solid var(--text-primary); }
-.filing-row:last-child  { border-bottom: 1px solid var(--gridline); }
+.filing-row:first-child { border-top-color: color-mix(in srgb, var(--text-primary) 30%, transparent); }
 .filing-row .name {
   width: 80px; flex: none;
   font-family: var(--font-heading); font-weight: 600; font-size: 17px; letter-spacing: .06em;
 }
-.filing-row .date { width: 110px; flex: none; font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-.filing-row .info { flex: 1; min-width: 0; font-size: 13.5px; color: var(--text-primary); }
+.filing-row .date { width: 110px; flex: none; font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.filing-row .info { flex: 1; min-width: 0; font-size: 13.5px; color: var(--text-secondary); }
 
 .empty { color: var(--text-muted); font-size: 13px; font-style: italic; }
 
 .hr, footer.disclaimer > .rule { height: 1px; border: 0; background: var(--border); margin: 18px 0; }
 
 footer.disclaimer {
-  max-width: 1180px; margin: 24px auto 0 auto; padding: 0 24px 48px;
-  font-size: 12px; color: var(--text-secondary); line-height: 1.65; text-wrap: pretty;
+  max-width: 900px; margin: 24px auto 0 auto; padding: 0 24px 48px;
+  font-size: 11.5px; color: var(--text-muted); line-height: 1.6; text-wrap: pretty;
 }
 
 /* Focus and selection (global) -- themed everywhere, never the browser

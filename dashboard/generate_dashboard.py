@@ -74,29 +74,11 @@ def load_built_assets() -> dict:
         ) from e
 
 
-THEME_INIT_SCRIPT = """
-(function () {
-  try {
-    var saved = localStorage.getItem('stockllm-theme');
-    if (saved) { document.documentElement.setAttribute('data-theme', saved); }
-  } catch (e) {}
-})();
-"""
-
 SERIES_ROLE = {
     1: "var(--series-1)", 2: "var(--series-2)", 3: "var(--series-3)",
     4: "var(--series-4)", 5: "var(--series-5)", 6: "var(--series-6)",
     7: "var(--series-7)", 8: "var(--series-8)",
 }
-
-# Four "+" registration marks emitted as the first children of every
-# .blueprint-framed element (.card, .strategy-card, .rec-card, the
-# At-a-Glance panel) -- see webui/src/styles/components.css's .corner
-# rules. Not applied to .stat-tile/.viz-card/.glance-item/.news-item/
-# .filing-row -- those read as a hairline grid or rule-separated list,
-# not a framed object.
-CORNERS = ('<i class="corner tl"></i><i class="corner tr"></i>'
-           '<i class="corner bl"></i><i class="corner br"></i>')
 
 # ============================================================================
 # Plain-language explanations, one per metric/section, written for someone
@@ -1154,11 +1136,15 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
 
 
 def price_history_chart(price_series, aria_label="price history"):
-    """A clean, minimal price chart -- a colored area line (green/red by
-    net change over the series, gradient-filled and topped with a filled
-    dot at the latest close) with drag-to-zoom (mouse wheel/pinch) and a
-    crosshair tooltip, in the spirit of a mainstream phone stock app's
-    chart: just the price, nothing else competing with it. No visible
+    """A clean, minimal price chart -- a single steel accent line,
+    gradient-filled and topped with a filled dot (plus a larger
+    translucent "glow" dot under it) at the latest close, with
+    drag-to-zoom (mouse wheel/pinch) and a crosshair tooltip, in the
+    spirit of a mainstream phone stock app's chart: just the price,
+    nothing else competing with it. Steel, not green/red by net change
+    over the series -- direction is already carried by the hero's own
+    delta chip above this chart, so the line stays the structural accent
+    voice, not a second, redundant directional signal. No visible
     date-range slider (an earlier version had one, a horizontal bar with
     draggable handles below the chart) -- user feedback, pointing at a
     reference screenshot of it: remove it. The range-preset buttons (see
@@ -1187,8 +1173,8 @@ def price_history_chart(price_series, aria_label="price history"):
 
     The gradient fill and end-of-line dot are real, theme-aware colors
     resolved client-side (see hydrate.js's areaGradient()/hexToRgba()),
-    not baked into this HTML -- the "__areaGradientPos__"/"Neg__" tokens
-    below are the same "leave a token, let JS resolve it" pattern this
+    not baked into this HTML -- the "__areaGradientAccent__" token
+    below is the same "leave a token, let JS resolve it" pattern this
     file already uses for every other formatter/color (see this module's
     top-of-file comment on register_chart()). No "previous close" dashed
     reference line, unlike a typical phone stock app's 1-day view: that's
@@ -1218,13 +1204,23 @@ def price_history_chart(price_series, aria_label="price history"):
     # A filled dot at the most recent close, like a phone stock app's
     # quote chart -- every range-preset button (see chart-toolbar.js)
     # zooms to end:100, so the latest point is always at the visible
-    # right edge.
+    # right edge. Marked twice per the Field spec: a larger translucent
+    # "glow" dot (a separate scatter series, since markPoint only carries
+    # one style per series) sitting under the small solid one.
     end_marker = (
         {
-            "symbol": "circle", "symbolSize": 3.5,
+            "symbol": "circle", "symbolSize": 7,
             "itemStyle": {"color": line_color},
             "label": {"show": False},
             "data": [{"coord": [last_idx, last_close]}],
+        }
+        if last_idx is not None else None
+    )
+    glow_series = (
+        {
+            "type": "scatter", "silent": True, "z": 2,
+            "symbolSize": 18, "itemStyle": {"color": line_color, "opacity": 0.25},
+            "data": [{"value": [last_idx, last_close]}],
         }
         if last_idx is not None else None
     )
@@ -1257,13 +1253,60 @@ def price_history_chart(price_series, aria_label="price history"):
             {
                 "name": "Price", "type": "line", "data": closes,
                 "showSymbol": False, "smooth": False,
-                "lineStyle": {"color": line_color, "width": 1.8, "join": "round"},
+                "lineStyle": {"color": line_color, "width": 2, "cap": "round"},
+                "areaStyle": {"color": "__areaGradientAccent__"},
                 "connectNulls": True, "z": 3,
                 **({"markPoint": end_marker} if end_marker else {}),
             },
+            *([glow_series] if glow_series else []),
         ],
     }
-    return register_chart(option, height_px=320, aria_label=aria_label)
+    return register_chart(option, height_px=210, aria_label=aria_label)
+
+
+def _equity_curve_path(price_series, trades, width=200, height=46):
+    """A per-strategy equity curve sparkline: flat while no position is
+    open, tracking price 1:1 (rescaled to the equity level at entry)
+    while a trade is open -- a real derivation from the same trades/
+    price_series strategy_trade_chart() already uses, not a fabricated
+    line. Returns an SVG path `d` string, or None if there's not enough
+    real data to draw one."""
+    if not price_series or not trades:
+        return None
+    price_by_date = {p["date"]: p["close"] for p in price_series if p.get("close") is not None}
+    dates = [p["date"] for p in price_series if p.get("close") is not None]
+    if len(dates) < 2:
+        return None
+    trades_sorted = sorted(
+        (t for t in trades if t.get("entry_date") in price_by_date and t.get("entry_price")),
+        key=lambda t: t["entry_date"],
+    )
+    if not trades_sorted:
+        return None
+
+    equity = 1.0
+    values = []
+    active = None  # (entry_price, entry_equity, exit_date)
+    ti = 0
+    for d in dates:
+        if active is None and ti < len(trades_sorted) and d >= trades_sorted[ti]["entry_date"]:
+            active = (trades_sorted[ti]["entry_price"], equity, trades_sorted[ti].get("exit_date"))
+        if active:
+            entry_price, entry_equity, exit_date = active
+            equity_now = entry_equity * (price_by_date[d] / entry_price)
+            values.append(equity_now)
+            if exit_date and d >= exit_date:
+                equity = equity_now
+                active = None
+                ti += 1
+        else:
+            values.append(equity)
+
+    lo, hi = min(values), max(values)
+    span = (hi - lo) or 1
+    n = len(values)
+    points = [(i / (n - 1) * width, height - (v - lo) / span * height) for i, v in enumerate(values)]
+    return "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in points)
 
 
 def strategy_trade_chart(price_series, trades, aria_label="strategy trades over time"):
@@ -1396,24 +1439,110 @@ def section_header(bundle):
         <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
       </svg>
     </a>
-    <div class="company-logo-wrap">{CORNERS}{logo_html}</div>
+    <span class="topbar-wordmark">STOCKLLM</span>
+    <span class="topbar-divider"></span>
+    <div class="company-logo-wrap">{logo_html}</div>
     <div class="topbar-title-group">
-      <div class="topbar-product-label">ADELE Research Dashboard</div>
       <h1>{esc(ticker)}</h1>
       <div class="meta">{esc(fetched_at)}{company_line}</div>
     </div>
   </div>
   <div class="topbar-actions">
-    <button type="button" class="chip chip-accent" id="llm-export-btn" data-ticker="{esc(ticker)}"
+    <button type="button" class="chip" id="llm-export-btn" data-ticker="{esc(ticker)}"
             title="Download a Markdown file with all this data plus instructions, to paste/upload into a free AI chat (Claude, ChatGPT, etc.) for an independent analysis">
       <svg class="chip-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>
       </svg>
-      Download for AI Chat
+      Export
     </button>
-    <button type="button" class="chip" id="theme-toggle">Dark mode</button>
   </div>
+</div>"""
+
+
+def _hero_delta(pct, period_label):
+    delta_cls = delta_class(pct)
+    caret = {"good": "▲", "critical": "▼"}.get(delta_cls, "")
+    caret_html = f'<span class="caret">{caret}</span>' if caret else ""
+    return (
+        f'<span class="delta {delta_cls}">{caret_html}{fmt_pct(pct)}</span>'
+        f'<span class="hero-delta-period">{esc(period_label)}</span>'
+    )
+
+
+def _verdict_panel(bundle, pipeline_result):
+    """Condensed hero-row teaser for the AI verdict -- the full bull/bear/
+    skeptic/quant-checker breakdown stays in section_ai_recommendation()
+    below, unabridged; this is a quick-glance summary only."""
+    ticker = esc(bundle.get("ticker", "This stock"))
+    if not pipeline_result:
+        return f"""
+<div class="verdict-panel">
+  <div class="verdict-kicker">AI verdict · bull / bear / skeptic / judge</div>
+  <div class="hero-dryrun" style="margin-top:10px;">Dry run · no AI verdict in this bundle</div>
+</div>"""
+    judge = pipeline_result.get("judge", {}) or {}
+    rec_key = (judge.get("recommendation") or "hold").lower()
+    rec_cls, rec_label = _REC_STYLE.get(rec_key, ("neutral", rec_key.upper()))
+    confidence = judge.get("confidence")
+    conf_pct = f"{confidence}%" if confidence is not None else "0%"
+    return f"""
+<div class="verdict-panel">
+  <div class="verdict-kicker">AI verdict · bull / bear / skeptic / judge</div>
+  <div class="verdict-word {rec_cls}">{esc(rec_label)}</div>
+  <div class="verdict-confidence">
+    <div class="verdict-confidence-track"><div class="verdict-confidence-fill" style="width:{conf_pct}"></div></div>
+    <span class="verdict-confidence-value">{esc(confidence) if confidence is not None else "—"}/100</span>
+  </div>
+  <div class="verdict-reasoning">{esc(judge.get('reasoning_summary') or 'No reasoning provided.')}</div>
+</div>"""
+
+
+def _consensus_panel(bundle):
+    """Condensed hero-row teaser for the analyst consensus -- the full
+    rating-actions table and EPS charts stay in section_analyst() below,
+    unabridged; this is a quick-glance summary only."""
+    fundamentals = bundle.get("fundamentals", {}) or {}
+    price = bundle.get("price", {}) or {}
+    current_price = price.get("current_price")
+    mean_target = fundamentals.get("target_mean_price")
+
+    rec_trend = (bundle.get("finnhub_signals", {}) or {}).get("recommendation_trend", []) or []
+    bar_html, counts_html = "", ""
+    if rec_trend:
+        latest = rec_trend[0]
+        segments = [
+            ("Strong buy", latest.get("strong_buy"), "var(--accent)"),
+            ("Buy", latest.get("buy"), "var(--accent-strong)"),
+            ("Hold", latest.get("hold"), "color-mix(in srgb, var(--text-primary) 30%, transparent)"),
+            ("Sell", (latest.get("sell") or 0) + (latest.get("strong_sell") or 0), "var(--diverge-neg)"),
+        ]
+        total = sum(v or 0 for _, v, _ in segments)
+        if total > 0:
+            bar_html = "".join(
+                f'<div style="flex:{v or 0};background:{color}" title="{esc(label)}: {v or 0}"></div>'
+                for label, v, color in segments if v
+            )
+            counts_html = "".join(f"<span>{esc(label)} {v or 0}</span>" for label, v, _ in segments if v)
+
+    target_html = ""
+    if mean_target is not None and current_price is not None:
+        upside = (mean_target / current_price - 1) * 100
+        target_cls = "critical" if current_price > mean_target else ""
+        target_html = f"""
+  <div class="consensus-rule"></div>
+  <div class="consensus-target-row">
+    <span class="consensus-target-label">Mean target</span>
+    <span class="consensus-target-value {target_cls}">{fmt_price(mean_target)}</span>
+  </div>
+  <div class="consensus-target-caption">{fmt_pct(abs(upside), signed=False)} {'above' if current_price > mean_target else 'below'} today's price · range {fmt_price(fundamentals.get('target_low_price'))} – {fmt_price(fundamentals.get('target_high_price'))}</div>"""
+
+    if not bar_html and not target_html:
+        return ""
+    bar_block = f'<div class="consensus-bar">{bar_html}</div><div class="consensus-counts">{counts_html}</div>' if bar_html else ""
+    return f"""
+<div class="consensus-panel">
+  {bar_block}{target_html}
 </div>"""
 
 
@@ -1421,41 +1550,42 @@ def section_hero(bundle, pipeline_result=None):
     """
     The one focal point the page leads with -- current price at true hero
     size (dataviz skill spec: >=48px, same sans as everything else, exactly
-    one per view) plus its 20-day move, and the AI verdict badge if a full
-    (non-dry-run) run was made. Everything else (KPIs, at-a-glance, the 9
-    section cards) follows below -- this is what's visible before any
-    scrolling on a phone.
+    one per view) plus its 20-day and 1-year moves, the always-visible
+    price chart, and condensed Verdict/Consensus teasers (the full detail
+    behind both stays further down the page, unabridged).
     """
+    ticker = esc(bundle.get("ticker", "?"))
     price = bundle.get("price", {}) or {}
     current_price = price.get("current_price")
     pct_20d = price.get("pct_change_20d")
-    delta_cls = delta_class(pct_20d)
-    caret = {"good": "▲", "critical": "▼"}.get(delta_cls, "")
-    caret_html = f'<span class="caret">{caret}</span>' if caret else ""
+    pct_1y = price.get("pct_change_1y")
 
-    rec_html = ""
-    dryrun_html = ""
-    if pipeline_result:
-        judge = pipeline_result.get("judge", {}) or {}
-        rec_key = (judge.get("recommendation") or "hold").lower()
-        rec_cls, rec_label = _REC_STYLE.get(rec_key, ("neutral", rec_key.upper()))
-        confidence = judge.get("confidence")
-        conf_html = f'<span class="hero-rec-conf">{esc(confidence)}% confidence</span>' if confidence is not None else ""
-        rec_html = f"""
-  <div class="hero-rec">
-    <span class="hero-rec-badge {rec_cls}">{esc(rec_label)}</span>
-    {conf_html}
-  </div>"""
-    else:
-        dryrun_html = '<span class="hero-dryrun">Dry run · No AI verdict in this bundle</span>'
+    dryrun_html = "" if pipeline_result else '<span class="hero-dryrun">Dry run · no AI verdict in this bundle</span>'
+
+    chart_html = section_price_chart(bundle)
 
     return f"""
 <div class="hero">
-  <div class="hero-price-row">
-    <span class="hero-price">{fmt_price(current_price)}</span>
-    <span class="delta {delta_cls}">{caret_html}{fmt_pct(pct_20d)}<span class="hero-delta-label">20d</span></span>
-    {dryrun_html}
-  </div>{rec_html}
+  <div class="hero-row">
+    <div class="hero-price-panel">
+      <div class="hero-price-head">
+        <span class="hero-identity">{ticker} · research sheet</span>
+      </div>
+      <div class="hero-price-row">
+        <span class="hero-price">{fmt_price(current_price)}</span>
+        <div class="hero-delta-stack">
+          {_hero_delta(pct_20d, "20D")}
+          {_hero_delta(pct_1y, "1Y")}
+        </div>
+        {dryrun_html}
+      </div>
+      {chart_html}
+    </div>
+    <div class="hero-side-col">
+      {_verdict_panel(bundle, pipeline_result)}
+      {_consensus_panel(bundle)}
+    </div>
+  </div>
 </div>"""
 
 
@@ -1546,7 +1676,6 @@ def section_ai_recommendation(bundle, pipeline_result):
 
     return f"""
 <div class="card full rec-card rec-{rec_cls}">
-  {CORNERS}
   <div class="rec-top">
     <div>
       <span class="rec-badge-big {rec_cls}">{esc(rec_label)}</span>
@@ -1692,52 +1821,52 @@ def section_at_a_glance(bundle):
 
     return f"""
 <div class="card full">
-  {CORNERS}
   <h2>At a Glance <span style="font-weight:400;color:var(--text-secondary);font-size:12px;">— plain-language summary, auto-generated from the data below</span></h2>
   <ul class="glance-list">{''.join(items)}</ul>
 </div>"""
 
 
 def section_kpis(bundle):
+    """Five headline tiles -- current price/1Y return/RSI/VIX/10Y-yield
+    moved elsewhere (hero delta stack, the Technicals grid, the Macro
+    panel; see HANDOFF.md), leaving room for the figures those panels
+    don't already cover."""
     price = bundle.get("price", {}) or {}
     fundamentals = bundle.get("fundamentals", {}) or {}
-    macro = bundle.get("macro_context", {}) or {}
-    rp = bundle.get("relative_performance", {}) or {}
+    bs = bundle.get("balance_sheet_health", {}) or {}
 
     tiles = []
-    tiles.append(stat_tile("Current price", fmt_price(price.get("current_price")),
-                            delta_text=f"{fmt_pct(price.get('pct_change_20d'))} (20d)",
-                            delta_cls=delta_class(price.get("pct_change_20d")),
-                            info="current_price"))
-    tiles.append(stat_tile("1-year return", fmt_pct(price.get("pct_change_1y")),
-                            delta_text=f"vs S&P500 {fmt_pct(rp.get('relative_vs_benchmark_1y_pct'))}",
-                            delta_cls=delta_class(rp.get("relative_vs_benchmark_1y_pct")),
-                            value_cls=delta_class(price.get("pct_change_1y")), info="1y_return"))
-    tiles.append(stat_tile("P/E ratio", fmt_num(fundamentals.get("pe_ratio"), 1),
-                            sub=f"Forward {fmt_num(fundamentals.get('forward_pe'), 1)}", info="pe_ratio"))
     tiles.append(stat_tile("Market cap", esc(fundamentals.get("market_cap") or "—"),
-                            sub=esc(fundamentals.get("sector") or ""), info="market_cap"))
-    tiles.append(stat_tile("RSI (14d)", fmt_num(price.get("rsi_14"), 1),
-                            sub="Overbought > 70, oversold < 30",
-                            value_cls=rsi_class(price.get("rsi_14")), info="rsi"))
-    tiles.append(stat_tile("VIX", fmt_num(macro.get("vix_level"), 1),
-                            delta_text=f"{fmt_num(macro.get('vix_change_20d'),1, )} (20d)" if macro.get("vix_change_20d") is not None else None,
-                            delta_cls=delta_class(macro.get("vix_change_20d"), invert=True), info="vix"))
-    tiles.append(stat_tile("10Y Treasury yield", fmt_pct(macro.get("treasury_10y_yield_pct"), signed=False),
-                            delta_text=f"{fmt_pct(macro.get('treasury_10y_yield_change_20d_pct'))} (20d)" if macro.get("treasury_10y_yield_change_20d_pct") is not None else None,
-                            delta_cls=delta_class(macro.get("treasury_10y_yield_change_20d_pct"), invert=True), info="treasury_10y"))
+                            sub="US dollars", info="market_cap"))
+    tiles.append(stat_tile("Forward P/E", fmt_num(fundamentals.get("forward_pe"), 1),
+                            sub=f"Trailing {fmt_num(fundamentals.get('pe_ratio'), 1)}", info="pe_ratio"))
+    tiles.append(stat_tile("Free cash flow", fmt_usd(bs.get("free_cash_flow")),
+                            sub="trailing twelve months", value_cls=delta_class(bs.get("free_cash_flow")),
+                            info="balance_sheet"))
+    low_52w, high_52w = price.get("52w_low"), price.get("52w_high")
+    range_sub = ""
+    if low_52w is not None and high_52w is not None and high_52w > low_52w and price.get("current_price") is not None:
+        pct_of_range = (price["current_price"] - low_52w) / (high_52w - low_52w) * 100
+        range_sub = f"{fmt_pct(pct_of_range, signed=False)} of the way up"
+    tiles.append(stat_tile("52-week range", f"{fmt_price(low_52w)} – {fmt_price(high_52w)}",
+                            sub=range_sub, info="price_vs_ma"))
+    mean_target = fundamentals.get("target_mean_price")
+    current_price = price.get("current_price")
+    target_sub, target_cls = "", None
+    if mean_target is not None and current_price is not None:
+        upside = (mean_target / current_price - 1) * 100
+        target_sub = f"{fmt_pct(abs(upside), signed=False)} {'above' if upside >= 0 else 'below'} today"
+        target_cls = "critical" if upside < 0 else None
+    tiles.append(stat_tile("Mean target", fmt_price(mean_target), sub=target_sub,
+                            value_cls=target_cls, info="analyst_target_range"))
     return f'<div class="kpi-row">{"".join(tiles)}</div>'
 
 
 def section_price_chart(bundle):
-    """The persistent, always-visible price chart -- promoted out of the
-    Price & Technicals tab (see build_dashboard()) per user feedback
-    pointing at a phone stock app's screenshot: price + chart always at
-    the top, page tabs come after, and the chart itself should be
-    minimal, not sharing space with MA overlays/volume (see
-    price_history_chart()'s docstring). No card wrapper here, matching
-    that reference's chart sitting directly on the page background, not
-    boxed."""
+    """The persistent, always-visible price chart, inside the hero's price
+    panel -- price + chart always at the top, page tabs come after, and
+    the chart itself stays minimal, not sharing space with MA overlays/
+    volume (see price_history_chart()'s docstring)."""
     # Reuses backtest/engine.py's price_series -- the same OHLCV history
     # already fetched once for the Strategy Backtests section -- rather
     # than fetching price history a second time here.
@@ -1752,7 +1881,7 @@ def section_price_chart(bundle):
     # below to that button's numbers, server-computed here rather than
     # re-derived from chart data in JS, same "server computes, client only
     # toggles" split as every other interactive piece on this page.
-    ranges = [("1M", 21), ("3M", 63), ("6M", 126), ("1Y", 252), ("2Y", 504), ("All", 0)]
+    ranges = [("1M", 21), ("6M", 126), ("1Y", 252), ("5Y", 1260)]
     default_days = 252
     buttons = []
     for label, days in ranges:
@@ -1763,14 +1892,80 @@ def section_price_chart(bundle):
             f'data-pct="{esc(fmt_pct(pct))}" data-pct-cls="{delta_class(pct)}">{esc(label)}</button>'
         )
     default_pct = _range_pct_change(price_series, default_days)
+
+    # Footer strip: start/high/low/% change over the default (1Y) window --
+    # a static snapshot of the range shown on load, not re-synced by
+    # chart-toolbar.js's range-button JS (which only swaps the .chart-
+    # range-pct badge, unchanged from before this section absorbed the
+    # footer strip; wiring the footer to every button click too is a real
+    # gap, not something this restyle silently papered over).
+    default_window = price_series if default_days == 0 or default_days >= len(price_series) else price_series[-default_days:]
+    closes_in_window = [p["close"] for p in default_window if p.get("close") is not None]
+    footer_html = ""
+    if closes_in_window:
+        footer_html = f"""
+  <div class="hero-chart-footer">
+    <span>{esc(default_window[0].get('date') or '—')}</span>
+    <span>High {fmt_price(max(closes_in_window))}</span>
+    <span>Low {fmt_price(min(closes_in_window))}</span>
+    <span class="delta {delta_class(default_pct)}">{fmt_pct(default_pct)}</span>
+  </div>"""
+
     return f"""
 <div class="price-chart-wrap">
   <div class="chart-toolbar">
-    {"".join(buttons)}
+    <div class="range-well">{"".join(buttons)}</div>
     <span class="chart-range-pct {delta_class(default_pct)}">{esc(fmt_pct(default_pct))}</span>
   </div>
   {history_chart_html}
+  {footer_html}
 </div>"""
+
+
+def _tech_cell(label, value, width_pct, caption, info=None):
+    icon = info_icon(info) if info else ""
+    w = max(0.0, min(100.0, width_pct)) if width_pct is not None else 0.0
+    return f"""
+<div class="tech-cell">
+  <div class="tech-cell-row"><span class="tech-cell-label">{esc(label)}{icon}</span><span class="tech-cell-value">{esc(value)}</span></div>
+  <div class="tech-cell-track"><div class="tech-cell-track-fill" style="width:{w:.0f}%"></div></div>
+  <div class="tech-cell-caption">{esc(caption)}</div>
+</div>"""
+
+
+def _technicals_grid(bundle):
+    """The always-visible 2x2 summary above the fuller MA/RSI charts below
+    -- each cell's track shows the reading's position on its own natural
+    scale where one exists (RSI's 0-100, price's own 52-week band); the
+    20-day-change and MACD cells don't have a natural bound the way those
+    two do, so their tracks are a fixed, disclosed +/-15% and +/-3%-of-
+    price scale respectively, not a fabricated "true" range."""
+    price = bundle.get("price", {}) or {}
+    low_52w, high_52w, current = price.get("52w_low"), price.get("52w_high"), price.get("current_price")
+    rsi = price.get("rsi_14")
+    pct_20d = price.get("pct_change_20d")
+    macd_hist = price.get("macd_histogram")
+
+    pos_in_range = None
+    if low_52w is not None and high_52w is not None and high_52w > low_52w and current is not None:
+        pos_in_range = (current - low_52w) / (high_52w - low_52w) * 100
+
+    macd_pct_of_price = None
+    if macd_hist is not None and current:
+        macd_pct_of_price = macd_hist / current * 100
+
+    cells = [
+        _tech_cell("RSI 14", fmt_num(rsi, 1) if rsi is not None else "—", rsi, "70 is overbought", info="rsi"),
+        _tech_cell("Position in 52w range", fmt_pct(pos_in_range, signed=False) if pos_in_range is not None else "—",
+                   pos_in_range, f"{fmt_price(low_52w)} → {fmt_price(high_52w)}", info="price_vs_ma"),
+        _tech_cell("20-day change", fmt_pct(pct_20d) if pct_20d is not None else "—",
+                   None if pct_20d is None else (pct_20d + 15) / 30 * 100,
+                   "above 50-day average" if (pct_20d or 0) > 0 else "below 50-day average", info="current_price"),
+        _tech_cell("MACD signal", fmt_num(macd_hist, 3) if macd_hist is not None else "—",
+                   None if macd_pct_of_price is None else (macd_pct_of_price + 3) / 6 * 100,
+                   "positive, widening" if (macd_hist or 0) > 0 else "negative, widening", info="macd_histogram"),
+    ]
+    return f'<div class="technicals-grid">{"".join(cells)}</div>'
 
 
 def section_price_technicals(bundle):
@@ -1815,12 +2010,14 @@ def section_price_technicals(bundle):
 
     return f"""
 <div class="card" id="sec-price">
-  {CORNERS}
   <h2>Price & Technicals {info_icon('section_price')}</h2>
   <div class="card-sub">20d volatility {fmt_pct(price.get('volatility_20d'), signed=False, decimals=2)} · volume trend: {esc(price.get('volume_trend') or '—')}</div>
+  {_technicals_grid(bundle)}
+  <div style="margin-top:22px;">
   {price_card}
   {rsi_card}
   {macd_html}
+  </div>
 </div>"""
 
 
@@ -1923,7 +2120,6 @@ def section_analyst(bundle):
 
     return f"""
 <div class="card full" id="sec-analyst">
-  {CORNERS}
   <h2>Analyst Ratings & Estimates {info_icon('section_analyst')}</h2>
   <div class="card-sub">Recommendation: {esc(fundamentals.get('analyst_recommendation') or '—')} · last {analyst_ratings.get('lookback_days', 60)} days of rating actions</div>
   <div class="split-2col">
@@ -1998,7 +2194,6 @@ def section_backtests(bundle):
     if not strategies:
         return f"""
 <div class="card full" id="sec-backtests">
-  {CORNERS}
   <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
   {empty_state(backtests.get("note") or "Not enough price history to run a backtest for this ticker.")}
 </div>"""
@@ -2039,9 +2234,18 @@ def section_backtests(bundle):
   <div>{chart_html}</div>
 </details>""" if chart_html else ""
 
+        curve_path = _equity_curve_path(price_series, trades)
+        beat = s.get("beat_buy_hold")
+        sparkline_html = (
+            f'<svg viewBox="0 0 200 46" width="100%" height="46" preserveAspectRatio="none" '
+            f'class="strategy-card-sparkline" aria-hidden="true">'
+            f'<path d="{curve_path}" fill="none" '
+            f'stroke="{"var(--accent)" if beat else "var(--series-3)"}" stroke-width="1.5" '
+            f'vector-effect="non-scaling-stroke"></path></svg>'
+        ) if curve_path else ""
+
         cards.append(f"""
 <div class="strategy-card">
-  {CORNERS}
   <div class="strategy-card-head">
     <span class="strategy-card-title-group">
       <span class="strategy-card-title">{esc(s.get('name') or '—')}</span>
@@ -2050,6 +2254,11 @@ def section_backtests(bundle):
     {_backtest_result_badge(s)}
   </div>
   <div class="card-sub">{esc(s.get('explanation') or '')}</div>
+  {sparkline_html}
+  <div class="strategy-card-stats">
+    <span class="strategy-card-win">win {fmt_pct(s.get('win_rate_pct'), signed=False) if s.get('win_rate_pct') is not None else '—'}</span>
+    <span class="strategy-card-return {delta_class(return_pct) if return_pct is not None else 'neutral'}">{fmt_pct(return_pct) if return_pct is not None else '—'}</span>
+  </div>
   {stats_row}
   {status_html}
   {chart_block}
@@ -2057,7 +2266,6 @@ def section_backtests(bundle):
 
     return f"""
 <div class="card full" id="sec-backtests">
-  {CORNERS}
   <h2>Strategy Backtests {info_icon('section_backtests')}</h2>
   <div class="card-sub">{esc(period_note)}</div>
   <div class="strategy-card-list">{''.join(cards)}</div>
@@ -2070,8 +2278,8 @@ def section_relative_performance(bundle):
 
     # (series name, color, 20d field, 1y field)
     series_specs = [
-        ("Stock", "var(--series-1)", "stock_pct_change_20d", "stock_pct_change_1y"),
-        ("S&P 500", "var(--series-2)", "benchmark_pct_change_20d", "benchmark_pct_change_1y"),
+        ("Stock", "var(--accent)", "stock_pct_change_20d", "stock_pct_change_1y"),
+        ("S&P 500", "var(--accent-strong)", "benchmark_pct_change_20d", "benchmark_pct_change_1y"),
     ]
     if rp.get("sector_etf"):
         series_specs.append((f"Sector ({rp.get('sector_etf')})", "var(--series-3)",
@@ -2103,7 +2311,6 @@ def section_relative_performance(bundle):
 
     return f"""
 <div class="card full" id="sec-relative">
-  {CORNERS}
   <h2>Relative Performance & Valuation {info_icon('section_relative')}</h2>
   <div class="card-sub">Returns and P/E vs. {esc(rp.get('benchmark','SPY'))} and sector ETF {esc(rp.get('sector_etf') or '—')} — two different questions, shown separately.</div>
   {perf_card}
@@ -2183,7 +2390,6 @@ def section_ownership(bundle):
     ownership_bar, ownership_panels = subtabs("ownership", [("Institutional", institutional_panel), ("Insiders", insiders_panel)])
     return f"""
 <div class="card full" id="sec-ownership">
-  {CORNERS}
   <h2>Ownership {info_icon('section_ownership')}</h2>
   <div class="card-sub">Snapshot of current holders — not a quarter-over-quarter 13F change (see data notes).</div>
   {ownership_bar}
@@ -2230,7 +2436,6 @@ def section_financials(bundle):
 
     return f"""
 <div class="card full" id="sec-financials">
-  {CORNERS}
   <h2>Financials {info_icon('section_financials')}</h2>
   {bs_tiles}
   {q_card}
@@ -2315,7 +2520,6 @@ def section_dividends_options_macro_social(bundle):
     ])
     return f"""
 <div class="card full" id="sec-extras">
-  {CORNERS}
   <h2>Dividends, Buybacks, Options & Sentiment {info_icon('section_extras')}</h2>
   {extras_bar}
   {extras_panels}
@@ -2335,16 +2539,18 @@ def section_news(bundle):
             snippet_html = f'<div class="snippet">{esc(n.get("snippet"))}</div>' if is_lead else ""
             items.append(f"""
 <div class="{item_cls}">
-  <div class="headline"><a href="{esc(url)}" target="_blank" rel="noopener">{esc(n.get('headline'))}</a></div>
-  <div class="meta">{esc(n.get('source'))} · {esc(n.get('date'))}</div>
-  {snippet_html}
+  <span class="news-index">{i + 1:02d}</span>
+  <div class="news-body">
+    <div class="headline"><a href="{esc(url)}" target="_blank" rel="noopener">{esc(n.get('headline'))}</a></div>
+    <div class="meta">{esc(n.get('source'))} · {esc(n.get('date'))}</div>
+    {snippet_html}
+  </div>
 </div>""")
         body = f'<div class="news-grid">{"".join(items)}</div>'
     digest = bundle.get("news_digest")
     digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else ""
     return f"""
 <div class="card full" id="sec-news">
-  {CORNERS}
   <h2>News</h2>
   {body}
   {digest_html}
@@ -2383,7 +2589,6 @@ def section_filings(bundle):
 
     return f"""
 <div class="card full" id="sec-filings">
-  {CORNERS}
   <h2>Filings & Proxy</h2>
   {''.join(rows)}
   {digest_html}
@@ -2426,11 +2631,14 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
             ("News", section_news(bundle)),
             ("Filings", section_filings(bundle)),
         ],
-        bar_class="page-tabs",
+        bar_class="sidebar-nav",
     )
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
     # Must be computed here, before the drain below -- not called inline
-    # inside the return f-string like it originally was. _drain_chart_
+    # inside the return f-string like it originally was (section_hero()
+    # itself calls section_price_chart(), a chart-registering function, so
+    # it's just as subject to this as every other chart-registering call
+    # used to be when it lived directly in the f-string). _drain_chart_
     # registry() resets register_chart()'s id counter back to 0 as a side
     # effect (see _reset_chart_registry()); calling a chart-registering
     # function *after* that point silently collides with an id already
@@ -2444,7 +2652,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     # just drew the wrong thing) -- caught by inspecting the actual SVG
     # paths and window.__CHARTS__ entry for that container id, not by
     # the shallow "is the container hydrated" check that looked fine.
-    price_chart_html = section_price_chart(bundle)
+    hero_html = section_hero(bundle, pipeline_result)
     charts_json = json.dumps(_drain_chart_registry())
     # Base64, not raw/escaped text: a <script> tag's content is parsed as
     # raw text by the HTML parser regardless of `type`, looking only for a
@@ -2456,7 +2664,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     llm_export_b64 = base64.b64encode(build_llm_export_markdown(bundle).encode("utf-8")).decode("ascii")
     built = load_built_assets()
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -2470,19 +2678,21 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <link rel="icon" type="image/png" href="assets/icon-dark.png" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <title>{ticker} — ADELE Research Dashboard</title>
-<script>{THEME_INIT_SCRIPT}</script>
 <link rel="stylesheet" href="assets/dist/{built['css']}">
 </head>
 <body>
 <div class="sticky-top">
 {section_header(bundle)}
 </div>
-{section_hero(bundle, pipeline_result)}
+{hero_html}
 <div class="wrap">
   {ai_section}
-  {price_chart_html}
+</div>
+<div class="dashboard-body">
   {main_tabs_bar}
-  {main_tabs_panels}
+  <div class="dashboard-main">
+    {main_tabs_panels}
+  </div>
 </div>
 <div class="hr" style="max-width:1180px;margin-left:auto;margin-right:auto;"></div>
 <footer class="disclaimer">

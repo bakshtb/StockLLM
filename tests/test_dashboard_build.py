@@ -432,10 +432,10 @@ class TestPageTabs:
     def test_page_tabs_bar_present_with_a_button_per_section(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")
-        bar = soup.find("div", class_=lambda c: c and "page-tabs" in c.split())
+        bar = soup.find("div", class_=lambda c: c and "sidebar-nav" in c.split())
         assert bar is not None
         buttons = bar.find_all("button", class_="subtab-btn")
-        assert buttons, "page-tabs bar has no tab buttons"
+        assert buttons, "sidebar-nav bar has no tab buttons"
         for btn in buttons:
             target = btn["data-target"]
             assert soup.find(attrs={"data-panel": target}) is not None, \
@@ -444,7 +444,7 @@ class TestPageTabs:
     def test_every_major_section_has_a_matching_tab(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")
-        bar = soup.find("div", class_=lambda c: c and "page-tabs" in c.split())
+        bar = soup.find("div", class_=lambda c: c and "sidebar-nav" in c.split())
         labels = {btn.get_text(strip=True) for btn in bar.find_all("button", class_="subtab-btn")}
         expected_labels = {
             "Price & Technicals", "Analyst", "Backtests", "Performance",
@@ -478,7 +478,7 @@ class TestHeroBlock:
     def test_no_rec_badge_without_pipeline_result(self, sample_bundle):
         html = build_dashboard(sample_bundle)
         soup = BeautifulSoup(html, "html.parser")
-        assert soup.find("span", class_="hero-rec-badge") is None
+        assert soup.find("div", class_="verdict-word") is None
 
     def test_rec_badge_present_with_pipeline_result(self):
         bundle = _minimal_bundle()
@@ -486,10 +486,10 @@ class TestHeroBlock:
         pipeline_result = {"judge": {"recommendation": "buy", "confidence": 80}}
         html = build_dashboard(bundle, pipeline_result)
         soup = BeautifulSoup(html, "html.parser")
-        badge = soup.find("span", class_="hero-rec-badge")
+        badge = soup.find("div", class_="verdict-word")
         assert badge is not None
         assert "BUY" in badge.get_text()
-        assert "80% confidence" in html
+        assert "80/100" in html
 
     def test_hero_no_leaked_values(self, sample_bundle):
         html = build_dashboard(sample_bundle)
