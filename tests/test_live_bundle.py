@@ -39,7 +39,7 @@ EXPECTED_TOP_LEVEL_KEYS = {
     "institutional_ownership", "news_headlines", "news_articles_raw",
     "filings_raw", "form144_notices", "beneficial_ownership", "proxy_raw",
     "fmp_valuation", "finnhub_signals", "backtests",
-    "news_digest", "filings_digest", "data_notes",
+    "news_digest", "filings_digest", "proxy_digest", "data_notes",
 }
 
 
@@ -75,6 +75,7 @@ class TestBuildResearchBundle:
         bundle, digest_calls = bundle_and_calls
         assert bundle["news_digest"] is None
         assert bundle["filings_digest"] is None
+        assert bundle["proxy_digest"] is None
         assert digest_calls == []
 
     def test_price_data_present_and_internally_consistent(self, bundle_and_calls):
@@ -485,3 +486,10 @@ class TestProxyRawFields:
         if proxy["text"] is not None:
             assert len(proxy["text"]) >= 200
         assert is_str_or_none(proxy["note"])
+
+    def test_digest_text_never_lands_in_the_bundle(self, bundle_and_calls):
+        # Same reasoning as filings_raw's own digest_text stripping above --
+        # the larger window meant only for the proxy digest LLM call must
+        # never leak into the shared bundle every reasoning agent sees.
+        bundle, _ = bundle_and_calls
+        assert "digest_text" not in bundle["proxy_raw"]

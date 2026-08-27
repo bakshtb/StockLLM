@@ -270,6 +270,13 @@
 .subtabs.sidebar-nav .subtab-btn.is-active { background: var(--surface-2); color: var(--text-primary); }
 .subtabs.sidebar-nav .subtab-btn.is-active::before { background: var(--accent); }
 
+/* Field's mobile bottom tab bar -- a second, curated way to reach the same
+   9 panels above, only relevant under responsive.css's 700px breakpoint.
+   Hidden by default here so it never affects desktop layout; see
+   _mobile_tabbar() in generate_dashboard.py for the group curation and
+   webui/src/js/mobile-tabbar.js for the click-proxy wiring. */
+.mobile-tabbar, .mobile-tabbar-chip-rail { display: none; }
+
 /* Info icon + popover: a plain-language explainer on every metric */
 .info-ic {
   width: 15px; height: 15px; border-radius: 50%;
@@ -371,6 +378,8 @@ h2 .info-ic, .viz-title .info-ic { margin-left: 2px; }
 .viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
 .viz-legend .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 .viz-note { font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; text-wrap: pretty; }
+.digest-points { margin: 4px 0 0; padding-left: 16px; }
+.digest-points li { margin-bottom: 3px; }
 
 table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.data-table th {
@@ -386,6 +395,17 @@ table.data-table tr:last-child td { border-bottom: none; }
 table.data-table tbody tr { transition: background-color var(--motion-fast); }
 table.data-table tbody tr:hover { background: var(--surface-2); }
 .table-scroll { overflow-x: auto; }
+/* Real overflow, not a bug -- a dense table (5+ columns) can be wider than
+   its container; this just makes that discoverable instead of reading as
+   the last column being cut off. .is-scrollable/.is-scrolled-to-end are
+   toggled from an actual scrollWidth measurement (table-scroll-hint.js),
+   not guessed from column count. */
+.table-scroll.is-scrollable:not(.is-scrolled-to-end)::after {
+  content: "Scroll for more →";
+  display: block; font-family: var(--font-heading); font-weight: 600;
+  font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-muted); text-align: right; padding: 4px 10px 0;
+}
 
 .badge {
   display: inline-flex; align-items: center; border-radius: var(--radius-pill);

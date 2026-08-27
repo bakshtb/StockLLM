@@ -38,28 +38,42 @@
   src: url("../assets/fonts/barlow-condensed-600.woff2") format("woff2");
 }
 
-/* Color roles -- Industry design system (blueprint/steel-on-paper), a mono
-   steel accent on a light ground with exactly one deliberate palette break:
-   the diverge pair for directional values (returns, EPS beat/miss, P/L,
-   sentiment), derived in OKLCH at the accent's own lightness so it sits
-   inside the palette rather than shouting over it. Everything else that
-   isn't directional (categorical chart series, warning/serious status,
-   badge.info) is re-derived from the steel + neutral ramps. Do not hand-tune
-   a hex here without checking the handoff doc this was derived from. */
+/* Color roles -- Field design system, light variant. Same tonal-surface
+   idea as the dark Field theme below (depth from surface-vs-ground VALUE
+   CONTRAST, not borders or shadows), just inverted: surfaces step up from
+   a light ground instead of down from a dark one, and the accent uses its
+   own base/darker steps instead of its lighter ones, for contrast against
+   paper rather than steel. Replaces the older Industry blueprint palette
+   this block used to hold (square corners, hairline cards, registration
+   marks) -- that markup/CSS no longer exists (see HANDOFF.md item 63/64),
+   so those tokens would otherwise sit unused. One deliberate palette break
+   carried over unchanged: the diverge pair for directional values (returns,
+   EPS beat/miss, P/L, sentiment), derived in OKLCH at the accent's own
+   lightness so it sits inside the palette rather than shouting over it.
+   Do not hand-tune a hex here without checking HANDOFF.md item 65. */
 :root, .viz-root {
   color-scheme: light;
 
-  /* Ground and ink */
+  /* Ground and tonal panels -- accent-100/200 (the same ramp the dark
+     theme's own surfaces are drawn from, just its light end) rather than a
+     flat near-white, so panels read as a distinct steel-tinted surface
+     against the page, mirroring how dark Field's surface-1/2 read as
+     distinct steel-tinted panels against its own dark ground. */
   --page-plane:     #f2f2f3;
-  --surface-1:      #f2f2f3;   /* surfaces == ground; cards are line drawings, not raised planes */
+  --surface-1:      #eef6ff;   /* accent-100 */
+  --surface-2:      #d6ebff;   /* accent-200 -- raised panel: verdict, callouts, secondary button */
   --text-primary:   #1d1f20;
   --text-secondary: color-mix(in srgb, #1d1f20 60%, transparent);
   --text-muted:     color-mix(in srgb, #1d1f20 45%, transparent);
   --gridline:       color-mix(in srgb, #1d1f20 8%,  transparent);
-  --baseline:       #1d1f20;   /* chart zero-lines are full-strength ink, 1px */
-  --border:         color-mix(in srgb, #1d1f20 16%, transparent);
+  --baseline:       color-mix(in srgb, #1d1f20 45%, transparent);
+  --border:         color-mix(in srgb, #1d1f20 12%, transparent);
 
-  /* The one accent, with its 100-900 ramp */
+  /* The one accent, with its 100-900 ramp -- light theme uses the base
+     accent (and accent-700 for the "strong" second step) for contrast
+     against a light ground; the dark theme below steps to the *lighter*
+     end (accent-400/500) for contrast against a dark one. */
+  --accent-strong:  #416180;   /* accent-700 -- second chart series, hover/pressed */
   --accent:      #5980a6;
   --accent-100:  #eef6ff;
   --accent-200:  #d6ebff;
@@ -84,8 +98,8 @@
      ramps, not eight hues. Order matters -- series-1 is the subject (the
      stock), series-2/3 are the references (benchmark, sector). */
   --series-1: var(--accent);
-  --series-2: var(--accent-400);
-  --series-3: var(--neutral-400);
+  --series-2: var(--accent-strong);
+  --series-3: var(--neutral-500);
   --series-4: var(--accent-700);
   --series-5: var(--accent-200);
   --series-6: var(--neutral-600);
@@ -105,24 +119,22 @@
   --status-serious:  var(--accent-800);
   --status-critical: oklch(0.48 0.13 28);
 
-  /* Elevation is gone -- depth comes from hairlines and registration marks,
-     not shadows. Kept defined so nothing breaks; zeroed except the dialog. */
+  /* Elevation is gone -- depth comes from surface value contrast, not
+     shadows. Kept defined so nothing breaks; zeroed except the dialog. */
   --elevation-1: none;
   --elevation-2: none;
   --elevation-3: 0 12px 32px color-mix(in srgb, #2b2b2d 22%, transparent);
 
-  /* Radius: everything square except the dialog -- the light theme's own
-     scale, unused while the app is forced into the Field dark theme (see
-     --radius-panel etc. below) but kept defined for when a light Field
-     variant exists. */
+  /* Leftover from the pre-Field Industry theme (square corners) -- no rule
+     references these any more (Field uses --radius-panel/-inner/-pill/
+     -sheet below instead), kept defined only so nothing breaks if
+     something still reads them. */
   --radius-sm: 0;
   --radius-md: 0;
   --radius-lg: 0;
 
-  /* Field radius scale -- a deliberate departure from Industry's square-
-     corner rule (client request). Global, not theme-scoped: the dark
-     (Field) theme is the only one live right now, but these aren't
-     color values, so there's nothing theme-specific about them. */
+  /* Field radius scale. Global, not theme-scoped -- these aren't color
+     values, so there's nothing theme-specific about them. */
   --radius-panel: 14px;
   --radius-inner: 10px;
   --radius-pill:  8px;

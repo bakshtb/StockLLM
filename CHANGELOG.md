@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.42
+
+- Add: closed out the six remaining items from the Field pass -- a
+  curated 5-group mobile bottom tab bar (replacing the horizontal pill
+  scroll), a real light Field variant (theme toggle re-enabled), the hero
+  chart's date/High/Low/%change footer strip now re-syncs on every range
+  button click instead of staying frozen on the default window, past real
+  (non-dry-run) AI recommendations now plot as markers on the hero price
+  chart (storage/db.get_recommendation_history()), and a DEF 14A proxy
+  digest (matching the existing filings digest). Also fixes two
+  pre-existing bugs found in the process: a dense table not signalling it
+  was horizontally scrollable, and overlapping labels on the Relative
+  Performance chart's near-zero bars -- plus a real crash bug found while
+  adding the proxy digest (every digest's real dict shape, appended
+  directly into markdown/HTML output, crashed the export and mis-rendered
+  the dashboard; fixed for all three digests). See HANDOFF.md item 65.
+
 ## 0.9.41
 
 - Change: replaced the just-shipped "Industry" blueprint theme with

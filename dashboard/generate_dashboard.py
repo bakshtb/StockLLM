@@ -27,6 +27,7 @@ calls and no judgment calls of its own about the data.
 
 import argparse
 import base64
+import bisect
 import datetime as dt
 import html
 import json
@@ -79,6 +80,20 @@ SERIES_ROLE = {
     4: "var(--series-4)", 5: "var(--series-5)", 6: "var(--series-6)",
     7: "var(--series-7)", 8: "var(--series-8)",
 }
+
+# Re-added now that a real light Field variant exists (was removed while
+# Field was dark-only-for-now and the toggle was disabled). Runs before the
+# stylesheet link so a saved manual choice applies before first paint --
+# without this, a dark-mode reader would see a flash of the light theme
+# every load until theme-toggle.js's own (later, post-paint) JS ran.
+THEME_INIT_SCRIPT = """
+(function () {
+  try {
+    var saved = localStorage.getItem('stockllm-theme');
+    if (saved) { document.documentElement.setAttribute('data-theme', saved); }
+  } catch (e) {}
+})();
+"""
 
 # ============================================================================
 # Plain-language explanations, one per metric/section, written for someone
@@ -241,6 +256,21 @@ def _range_pct_change(price_series, days):
     if not last_close or not start_close:
         return None
     return (last_close / start_close - 1) * 100
+
+
+def _range_footer_data(price_series, days):
+    """(start_date, high, low, pct_change) over one of the chart's
+    range-preset windows -- same start-index math as _range_pct_change(),
+    so the footer strip below the chart always describes the same window
+    a data-days button actually zooms to. Returns None if the window has
+    no usable close prices."""
+    n = len(price_series)
+    start_idx = 0 if days == 0 or days >= n else n - days
+    window = price_series[start_idx:]
+    closes = [p["close"] for p in window if p.get("close") is not None]
+    if not window or not closes:
+        return None
+    return window[0].get("date") or "—", max(closes), min(closes), _range_pct_change(price_series, days)
 
 
 def rsi_class(v):
@@ -562,6 +592,17 @@ def grouped_bar_horizontal(groups, value_fmt=None):
             "name": name, "type": "bar",
             "itemStyle": {"color": series_colors[name]},
             "label": {"show": True, "formatter": "__labelFmt__", "color": "var(--text-primary)", "fontFamily": "Barlow Condensed", "fontWeight": 600},
+            # Two or more series with values close to (or clamped near) zero
+            # put their outside-end labels within a few pixels of each
+            # other -- found live with -0.4%/-2.7% bars overlapping
+            # illegibly. ECharts' own overlap-avoidance pass (shift along Y,
+            # the axis these labels have room to move on) rather than a
+            # hand-rolled position, same "trust the built-in collision pass
+            # where it actually works" choice as elsewhere on this chart;
+            # unlike the two range-track label bugs in HANDOFF.md item 63,
+            # this is a plain bar chart with no rich-text/multi-row labels
+            # for that pass to trip over.
+            "labelLayout": {"moveOverlap": "shiftY"},
             "data": data,
         })
 
@@ -1135,7 +1176,92 @@ def diverging_stacked_ordinal(neg_segments, mid_value, pos_segments, mid_label="
     return chart_html, table, leg
 
 
-def price_history_chart(price_series, aria_label="price history"):
+# Marker shape per _REC_STYLE class (defined further below, referenced
+# here only at call time) -- a plain color swap wouldn't read as clearly
+# on a small chart as a genuinely different symbol per verdict.
+_REC_MARKER_SHAPE = {
+    "good": {"symbol": "triangle", "symbolRotate": 0},
+    "critical": {"symbol": "triangle", "symbolRotate": 180},
+    "neutral": {"symbol": "diamond", "symbolRotate": 0},
+    "warning": {"symbol": "rect", "symbolRotate": 0},
+}
+_REC_MARKER_COLOR = {
+    "good": "var(--status-good)", "critical": "var(--status-critical)",
+    "neutral": "var(--text-secondary)", "warning": "var(--status-warning)",
+}
+
+
+def _nearest_date_index(dates, target_date, max_gap_days=7):
+    """Index into `dates` (an ascending list of "YYYY-MM-DD" strings)
+    closest to target_date, or None if the nearest match is more than
+    max_gap_days away -- a real run's created_at timestamp rarely lands on
+    an exact trading day (weekends/holidays), but if the chart's own
+    price_series doesn't cover that period at all (e.g. an old run outside
+    the fetched window), silently placing the marker on some unrelated
+    nearby day would be worse than just not showing it."""
+    if not dates or not target_date:
+        return None
+    i = bisect.bisect_left(dates, target_date)
+    candidates = [j for j in (i - 1, i) if 0 <= j < len(dates)]
+    if not candidates:
+        return None
+    best = min(candidates, key=lambda j: abs(dt.date.fromisoformat(dates[j]) - dt.date.fromisoformat(target_date)))
+    gap = abs(dt.date.fromisoformat(dates[best]) - dt.date.fromisoformat(target_date)).days
+    return best if gap <= max_gap_days else None
+
+
+def _recommendation_marker_points(recommendation_history, dates, closes):
+    """markPoint.data entries for price_history_chart()'s "Price" line
+    series -- one per past real (non-dry-run) recommendation, at the price
+    actually recorded for that run (storage.db.get_recommendation_history's
+    price_at_run), not re-derived from the current price series. Falls
+    back to that day's close if price_at_run is missing (see
+    get_recommendation_history's LEFT JOIN). Empty list, not None, for
+    "nothing to show" -- callers just extend their existing data list with
+    this.
+
+    Also mutates `closes[idx]` in place, adding a `recFmt` field -- the
+    chart's tooltip is axis-triggered with a cross axisPointer (for the
+    price line's own crosshair-on-hover), which captures pointer events
+    across the whole plot area; a markPoint's own item-level hover tooltip
+    never fires while that's active (found live: hovering exactly on a
+    marker's center pixel, computed via echarts' own convertToPixel, still
+    showed only the axis tooltip's plain "Price: $X", no marker
+    day. hydrate.js's genericTooltipFormatter reads recFmt off the SAME
+    per-index data object the axis tooltip already uses for the price
+    line, appending it as an extra line -- not a second, competing
+    tooltip mechanism."""
+    points = []
+    for rec in recommendation_history or []:
+        target_date = (rec.get("created_at") or "")[:10]
+        idx = _nearest_date_index(dates, target_date)
+        if idx is None:
+            continue
+        price = rec.get("price_at_run")
+        if price is None and closes[idx] is not None:
+            price = closes[idx]["value"]
+        if price is None:
+            continue
+        rec_key = (rec.get("final_recommendation") or "hold").lower()
+        cls, label = _REC_STYLE.get(rec_key, ("neutral", rec_key.upper()))
+        confidence = rec.get("final_confidence")
+        conf_str = f" · {confidence}% confidence" if confidence is not None else ""
+        rec_fmt = esc(f"AI recommendation ({dates[idx]}): {label}{conf_str}")
+        if closes[idx] is not None:
+            closes[idx]["recFmt"] = rec_fmt
+        shape = _REC_MARKER_SHAPE.get(cls, _REC_MARKER_SHAPE["neutral"])
+        points.append({
+            "coord": [idx, price],
+            "symbol": shape["symbol"], "symbolRotate": shape["symbolRotate"], "symbolSize": 12,
+            "itemStyle": {"color": _REC_MARKER_COLOR.get(cls, "var(--text-secondary)"),
+                          "borderColor": "var(--page-plane)", "borderWidth": 1.5},
+            "label": {"show": False},
+            "tooltip": {"show": False},  # shown via recFmt on the axis tooltip instead, not this item's own
+        })
+    return points
+
+
+def price_history_chart(price_series, aria_label="price history", recommendation_history=None):
     """A clean, minimal price chart -- a single steel accent line,
     gradient-filled and topped with a filled dot (plus a larger
     translucent "glow" dot under it) at the latest close, with
@@ -1182,6 +1308,14 @@ def price_history_chart(price_series, aria_label="price history"):
     this chart shows daily closes over months/years, not intraday ticks --
     there's no single "previous close" value that stays meaningful across
     every zoom level here, so it's not faked in.
+
+    recommendation_history: optional, from storage.db.get_recommendation_
+    history(ticker) -- past real (non-dry-run) runs for this ticker, each
+    plotted as an extra markPoint on this same line at the price actually
+    recorded when that recommendation was made (see
+    _recommendation_marker_points()). None/empty shows nothing extra --
+    most bundles are dry runs or a ticker's first-ever run, with no history
+    yet.
     """
     if not price_series:
         return None
@@ -1206,15 +1340,24 @@ def price_history_chart(price_series, aria_label="price history"):
     # zooms to end:100, so the latest point is always at the visible
     # right edge. Marked twice per the Field spec: a larger translucent
     # "glow" dot (a separate scatter series, since markPoint only carries
-    # one style per series) sitting under the small solid one.
+    # one style per series) sitting under the small solid one. Past AI
+    # recommendations (if any) share this same markPoint set rather than a
+    # separate scatter series, so each can carry its own symbol/color
+    # override -- but their tooltip content comes from `closes` (see
+    # _recommendation_marker_points()), not their own item hover: this
+    # chart's tooltip is axis-triggered with a cross pointer for the price
+    # line's own crosshair, which swallows a markPoint's independent
+    # hover tooltip (found live, not assumed).
+    end_marker_data = [{"coord": [last_idx, last_close]}] if last_idx is not None else []
+    end_marker_data += _recommendation_marker_points(recommendation_history, dates, closes)
     end_marker = (
         {
             "symbol": "circle", "symbolSize": 7,
             "itemStyle": {"color": line_color},
             "label": {"show": False},
-            "data": [{"coord": [last_idx, last_close]}],
+            "data": end_marker_data,
         }
-        if last_idx is not None else None
+        if end_marker_data else None
     )
     glow_series = (
         {
@@ -1456,6 +1599,7 @@ def section_header(bundle):
       </svg>
       Export
     </button>
+    <button type="button" class="chip" id="theme-toggle">Dark mode</button>
   </div>
 </div>"""
 
@@ -1546,13 +1690,17 @@ def _consensus_panel(bundle):
 </div>"""
 
 
-def section_hero(bundle, pipeline_result=None):
+def section_hero(bundle, pipeline_result=None, recommendation_history=None):
     """
     The one focal point the page leads with -- current price at true hero
     size (dataviz skill spec: >=48px, same sans as everything else, exactly
     one per view) plus its 20-day and 1-year moves, the always-visible
     price chart, and condensed Verdict/Consensus teasers (the full detail
     behind both stays further down the page, unabridged).
+
+    recommendation_history: optional, see section_price_chart() -- past
+    real (non-dry-run) recommendations for this ticker, plotted as markers
+    on the price chart if non-empty.
     """
     ticker = esc(bundle.get("ticker", "?"))
     price = bundle.get("price", {}) or {}
@@ -1562,7 +1710,7 @@ def section_hero(bundle, pipeline_result=None):
 
     dryrun_html = "" if pipeline_result else '<span class="hero-dryrun">Dry run · no AI verdict in this bundle</span>'
 
-    chart_html = section_price_chart(bundle)
+    chart_html = section_price_chart(bundle, recommendation_history=recommendation_history)
 
     return f"""
 <div class="hero">
@@ -1862,16 +2010,22 @@ def section_kpis(bundle):
     return f'<div class="kpi-row">{"".join(tiles)}</div>'
 
 
-def section_price_chart(bundle):
+def section_price_chart(bundle, recommendation_history=None):
     """The persistent, always-visible price chart, inside the hero's price
     panel -- price + chart always at the top, page tabs come after, and
     the chart itself stays minimal, not sharing space with MA overlays/
-    volume (see price_history_chart()'s docstring)."""
+    volume (see price_history_chart()'s docstring).
+
+    recommendation_history: optional, see price_history_chart() -- past
+    real (non-dry-run) recommendations for this ticker, plotted as markers
+    on this same chart if non-empty."""
     # Reuses backtest/engine.py's price_series -- the same OHLCV history
     # already fetched once for the Strategy Backtests section -- rather
     # than fetching price history a second time here.
     price_series = ((bundle.get("backtests", {}) or {}).get("price_series")) or []
-    history_chart_html = price_history_chart(price_series, aria_label="interactive price history")
+    history_chart_html = price_history_chart(
+        price_series, aria_label="interactive price history", recommendation_history=recommendation_history,
+    )
     if not history_chart_html:
         return ""
 
@@ -1880,35 +2034,46 @@ def section_price_chart(bundle):
     # chart-toolbar.js) both zooms the chart and swaps the visible label
     # below to that button's numbers, server-computed here rather than
     # re-derived from chart data in JS, same "server computes, client only
-    # toggles" split as every other interactive piece on this page.
+    # toggles" split as every other interactive piece on this page. The
+    # data-footer-* attributes are the same idea applied to the footer
+    # strip below the chart (date/High/Low/%change) -- previously only
+    # computed once for the default window and left stale after clicking
+    # a different range button; every button now carries its own footer
+    # values too, swapped in by chart-toolbar.js on click.
     ranges = [("1M", 21), ("6M", 126), ("1Y", 252), ("5Y", 1260)]
     default_days = 252
     buttons = []
     for label, days in ranges:
         pct = _range_pct_change(price_series, days)
         active = " is-active" if days == default_days else ""
+        footer = _range_footer_data(price_series, days)
+        footer_attrs = ""
+        if footer:
+            f_date, f_high, f_low, f_pct = footer
+            footer_attrs = (
+                f' data-footer-date="{esc(f_date)}" data-footer-high="{esc(fmt_price(f_high))}" '
+                f'data-footer-low="{esc(fmt_price(f_low))}" data-footer-pct="{esc(fmt_pct(f_pct))}" '
+                f'data-footer-pct-cls="{delta_class(f_pct)}"'
+            )
         buttons.append(
             f'<button type="button" class="range-btn{active}" data-days="{days}" '
-            f'data-pct="{esc(fmt_pct(pct))}" data-pct-cls="{delta_class(pct)}">{esc(label)}</button>'
+            f'data-pct="{esc(fmt_pct(pct))}" data-pct-cls="{delta_class(pct)}"{footer_attrs}>{esc(label)}</button>'
         )
     default_pct = _range_pct_change(price_series, default_days)
 
-    # Footer strip: start/high/low/% change over the default (1Y) window --
-    # a static snapshot of the range shown on load, not re-synced by
-    # chart-toolbar.js's range-button JS (which only swaps the .chart-
-    # range-pct badge, unchanged from before this section absorbed the
-    # footer strip; wiring the footer to every button click too is a real
-    # gap, not something this restyle silently papered over).
-    default_window = price_series if default_days == 0 or default_days >= len(price_series) else price_series[-default_days:]
-    closes_in_window = [p["close"] for p in default_window if p.get("close") is not None]
+    # Footer strip: start/high/low/% change over the default (1Y) window on
+    # first render -- chart-toolbar.js re-syncs all four values from the
+    # clicked button's own data-footer-* attributes above.
+    default_footer = _range_footer_data(price_series, default_days)
     footer_html = ""
-    if closes_in_window:
+    if default_footer:
+        f_date, f_high, f_low, f_pct = default_footer
         footer_html = f"""
   <div class="hero-chart-footer">
-    <span>{esc(default_window[0].get('date') or '—')}</span>
-    <span>High {fmt_price(max(closes_in_window))}</span>
-    <span>Low {fmt_price(min(closes_in_window))}</span>
-    <span class="delta {delta_class(default_pct)}">{fmt_pct(default_pct)}</span>
+    <span class="footer-date">{esc(f_date)}</span>
+    <span class="footer-high">High {fmt_price(f_high)}</span>
+    <span class="footer-low">Low {fmt_price(f_low)}</span>
+    <span class="footer-pct delta {delta_class(f_pct)}">{fmt_pct(f_pct)}</span>
   </div>"""
 
     return f"""
@@ -2526,6 +2691,23 @@ def section_dividends_options_macro_social(bundle):
 </div>"""
 
 
+def _digest_html(digest):
+    """Every digest (news_digest/filings_digest/proxy_digest) is the parsed
+    JSON a summarize_*() function got back from its LLM call -- a dict like
+    {"key_points": [...]} or {"key_facts": [...]}, never a plain string.
+    Found live while adding the proxy digest: every call site here was
+    previously doing esc(digest) directly on that dict, which "worked" only
+    in the sense of not crashing (Python's str(dict) repr, not a real
+    rendering) -- e.g. "{'key_points': ['Revenue grew 8% YoY']}" shown
+    verbatim. Renders the actual list of points as a real bullet list;
+    falls back to the raw escaped value for any other shape."""
+    if isinstance(digest, dict):
+        points = digest.get("key_points") or digest.get("key_facts")
+        if isinstance(points, list) and points:
+            return "<ul class=\"digest-points\">" + "".join(f"<li>{esc(p)}</li>" for p in points) + "</ul>"
+    return esc(digest)
+
+
 def section_news(bundle):
     news = bundle.get("news_headlines", []) or []
     if not news:
@@ -2548,7 +2730,7 @@ def section_news(bundle):
 </div>""")
         body = f'<div class="news-grid">{"".join(items)}</div>'
     digest = bundle.get("news_digest")
-    digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else ""
+    digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {_digest_html(digest)}</div>' if digest else ""
     return f"""
 <div class="card full" id="sec-news">
   <h2>News</h2>
@@ -2585,21 +2767,85 @@ def section_filings(bundle):
         )
 
     digest = bundle.get("filings_digest")
-    digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Digest:</strong> {esc(digest)}</div>' if digest else '<div class="viz-note" style="margin-top:10px;">Filings digest not generated (dry run or no API key).</div>'
+    digest_html = f'<div class="viz-note" style="margin-top:10px;"><strong>Filings digest:</strong> {_digest_html(digest)}</div>' if digest else '<div class="viz-note" style="margin-top:10px;">Filings digest not generated (dry run or no API key).</div>'
+
+    proxy_digest = bundle.get("proxy_digest")
+    proxy_digest_html = f'<div class="viz-note" style="margin-top:6px;"><strong>Proxy digest:</strong> {_digest_html(proxy_digest)}</div>' if proxy_digest else '<div class="viz-note" style="margin-top:6px;">Proxy digest not generated (dry run, no API key, or no DEF 14A found).</div>'
 
     return f"""
 <div class="card full" id="sec-filings">
   <h2>Filings & Proxy</h2>
   {''.join(rows)}
   {digest_html}
+  {proxy_digest_html}
 </div>"""
+
+
+# Curated Field mobile bottom-tab-bar icons (hand-authored Lucide-style
+# paths, matching section_header()'s back-arrow/export icons -- no icon
+# library dependency). See _mobile_tabbar() for why 9 tabs became 5 groups.
+_ICON_PRICE = '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'
+_ICON_RESEARCH = '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'
+_ICON_TESTS = '<path d="M3 11a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 7.5"/><path d="M3 3v5h5"/><path d="M12 7v5l3.5 2"/>'
+_ICON_FINANCIALS = '<line x1="3" y1="21" x2="21" y2="21"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>'
+_ICON_DOCS = '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'
+
+
+def _mobile_tabbar(main_tab_defs):
+    """The Field design handoff's own mobile screen has a 5-icon bottom tab
+    bar, but for its own much smaller tab set (Sheet/Price/Tests/Filings/
+    Setup) -- this dashboard's real 9 top-level tabs don't map 1:1, and a
+    flat 9-icon bar would be too cramped to read. Curated into 5 groups
+    instead (explicit maintainer choice over a flat bar): a single-member
+    group behaves like a plain icon button; a multi-member group also shows
+    a small secondary chip row so every one of the original 9 tabs stays
+    reachable, just not literally one tap away from every other one on a
+    phone screen. Every button rendered here -- icon or chip -- carries the
+    real panel's data-target ("main-{i}", the same id subtabs() already
+    assigned) and is a pure click-proxy onto the real, existing
+    `.subtabs.sidebar-nav .subtab-btn` for that panel (see
+    webui/src/js/mobile-tabbar.js) -- panel-swapping and chart-resize logic
+    is not duplicated here, only a second, curated way to reach it on narrow
+    screens. Desktop is unaffected; both bars point at the same 9 panels."""
+    groups = [
+        ("price", "Price", _ICON_PRICE, [0]),
+        ("research", "Research", _ICON_RESEARCH, [1, 3]),
+        ("tests", "Tests", _ICON_TESTS, [2]),
+        ("financials", "Financials", _ICON_FINANCIALS, [4, 5, 6]),
+        ("docs", "Docs", _ICON_DOCS, [7, 8]),
+    ]
+    icon_btns, chip_rows = [], []
+    for i, (gid, glabel, icon_paths, members) in enumerate(groups):
+        active = " is-active" if i == 0 else ""
+        icon_btns.append(
+            f'<button type="button" class="mobile-tabbar-btn{active}" data-mobile-group="{gid}" data-target="main-{members[0]}">'
+            f'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            f'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{icon_paths}</svg>'
+            f'<span>{esc(glabel)}</span></button>'
+        )
+        if len(members) > 1:
+            chips = "".join(
+                f'<button type="button" class="mobile-tabbar-chip{" is-active" if j == 0 else ""}" data-target="main-{m}">{esc(main_tab_defs[m][0])}</button>'
+                for j, m in enumerate(members)
+            )
+            chip_rows.append(f'<div class="mobile-tabbar-chips" data-mobile-chips-for="{gid}">{chips}</div>')
+    return (
+        f'<div class="mobile-tabbar-chip-rail">{"".join(chip_rows)}</div>'
+        f'<nav class="mobile-tabbar" aria-label="Section navigation">{"".join(icon_btns)}</nav>'
+    )
 
 
 # ============================================================================
 # Assembly
 # ============================================================================
 
-def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
+def build_dashboard(bundle: dict, pipeline_result: dict | None = None, recommendation_history: list | None = None) -> str:
+    """recommendation_history: optional, from storage.db.get_recommendation_
+    history(bundle["ticker"]) -- past real (non-dry-run) runs for this
+    ticker. When non-empty, plotted as markers on the hero price chart
+    (see section_price_chart()/price_history_chart()). Callers that don't
+    have a DB handle (e.g. tests, main.py's standalone `dashboard` command
+    run against a bare JSON file) can simply omit it."""
     _reset_chart_registry()  # must run before any section/chart function below
     ticker = esc(bundle.get("ticker", "Ticker"))
     # One section visible at a time instead of one long scroll of ~9 full
@@ -2618,21 +2864,23 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     # above the tab bar per later user feedback (a phone stock app
     # reference: price + chart always at the top, tabs after).
     price_technicals_tab = section_kpis(bundle) + section_at_a_glance(bundle) + section_price_technicals(bundle)
-    main_tabs_bar, main_tabs_panels = subtabs(
-        "main",
-        [
-            ("Price & Technicals", price_technicals_tab),
-            ("Analyst", section_analyst(bundle)),
-            ("Backtests", section_backtests(bundle)),
-            ("Performance", section_relative_performance(bundle)),
-            ("Financials", section_financials(bundle)),
-            ("Ownership", section_ownership(bundle)),
-            ("Dividends & More", section_dividends_options_macro_social(bundle)),
-            ("News", section_news(bundle)),
-            ("Filings", section_filings(bundle)),
-        ],
-        bar_class="sidebar-nav",
-    )
+    # Index order below is load-bearing: _mobile_tabbar()'s curated groups
+    # reference tabs by position (e.g. Analyst=1, Performance=3), matching
+    # subtabs()'s own "main-{i}" panel ids -- reordering this list requires
+    # updating the group indices there too.
+    main_tab_defs = [
+        ("Price & Technicals", price_technicals_tab),
+        ("Analyst", section_analyst(bundle)),
+        ("Backtests", section_backtests(bundle)),
+        ("Performance", section_relative_performance(bundle)),
+        ("Financials", section_financials(bundle)),
+        ("Ownership", section_ownership(bundle)),
+        ("Dividends & More", section_dividends_options_macro_social(bundle)),
+        ("News", section_news(bundle)),
+        ("Filings", section_filings(bundle)),
+    ]
+    main_tabs_bar, main_tabs_panels = subtabs("main", main_tab_defs, bar_class="sidebar-nav")
+    mobile_tabbar_html = _mobile_tabbar(main_tab_defs)
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
     # Must be computed here, before the drain below -- not called inline
     # inside the return f-string like it originally was (section_hero()
@@ -2652,7 +2900,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     # just drew the wrong thing) -- caught by inspecting the actual SVG
     # paths and window.__CHARTS__ entry for that container id, not by
     # the shallow "is the container hydrated" check that looked fine.
-    hero_html = section_hero(bundle, pipeline_result)
+    hero_html = section_hero(bundle, pipeline_result, recommendation_history=recommendation_history)
     charts_json = json.dumps(_drain_chart_registry())
     # Base64, not raw/escaped text: a <script> tag's content is parsed as
     # raw text by the HTML parser regardless of `type`, looking only for a
@@ -2664,7 +2912,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     llm_export_b64 = base64.b64encode(build_llm_export_markdown(bundle).encode("utf-8")).decode("ascii")
     built = load_built_assets()
     return f"""<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -2678,6 +2926,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
 <link rel="icon" type="image/png" href="assets/icon-dark.png" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="assets/icon.png">
 <title>{ticker} — ADELE Research Dashboard</title>
+<script>{THEME_INIT_SCRIPT}</script>
 <link rel="stylesheet" href="assets/dist/{built['css']}">
 </head>
 <body>
@@ -2694,6 +2943,7 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None) -> str:
     {main_tabs_panels}
   </div>
 </div>
+{mobile_tabbar_html}
 <div class="hr" style="max-width:1180px;margin-left:auto;margin-right:auto;"></div>
 <footer class="disclaimer">
   ADELE is a research/decision-support tool. It is NOT financial advice and never places trades.

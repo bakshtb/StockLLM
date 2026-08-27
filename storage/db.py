@@ -138,6 +138,30 @@ def update_outcome_30d(run_id: int, price: float):
     conn.close()
 
 
+def get_recommendation_history(ticker: str) -> list[dict]:
+    """Every completed (status='complete') real run for this ticker,
+    oldest first -- the dashboard's price chart plots these as markers at
+    the price/date they were actually made (see dashboard/generate_
+    dashboard.py's price_history_chart()). Deliberately status='complete'
+    only: a dry run never calls create_run() at all (see main.py/webapp/
+    app.py), and a 'pending'/'failed' row never got a real judge
+    recommendation to plot. LEFT JOINs outcomes -- price_at_run can be
+    NULL if create_outcome() wasn't reached (e.g. the process died between
+    finalize_run() and create_outcome()); the caller decides whether to
+    skip those rather than this function silently dropping the run."""
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT r.id AS run_id, r.created_at, r.final_recommendation, r.final_confidence,
+               o.price_at_run
+        FROM runs r
+        LEFT JOIN outcomes o ON o.run_id = r.id
+        WHERE r.ticker = ? AND r.status = 'complete'
+        ORDER BY r.created_at ASC
+    """, (ticker,)).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def get_outcomes_report_data() -> list[dict]:
     """Every tracked outcome joined with its run's ticker/recommendation/
     confidence, most recent first -- the raw material for the track-record report."""

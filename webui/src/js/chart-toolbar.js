@@ -10,10 +10,15 @@ export function initChartToolbar() {
     var chartEl = toolbar.parentElement && toolbar.parentElement.querySelector('.echarts-container');
     if (!chartEl || !window.echarts) return;
     var buttons = toolbar.querySelectorAll('.range-btn');
-    // Precomputed server-side (data-pct/data-pct-cls on each button, see
-    // section_price_chart()) -- this just swaps which one is displayed,
-    // no client-side recomputation from chart data.
+    // Precomputed server-side (data-pct/data-pct-cls, data-footer-* on each
+    // button, see section_price_chart()) -- this just swaps which one is
+    // displayed, no client-side recomputation from chart data.
     var pctLabel = toolbar.querySelector('.chart-range-pct');
+    var footer = toolbar.parentElement && toolbar.parentElement.querySelector('.hero-chart-footer');
+    var footerDate = footer && footer.querySelector('.footer-date');
+    var footerHigh = footer && footer.querySelector('.footer-high');
+    var footerLow = footer && footer.querySelector('.footer-low');
+    var footerPct = footer && footer.querySelector('.footer-pct');
     buttons.forEach(function (btn) {
       btn.addEventListener('click', function () {
         var inst = echarts.getInstanceByDom(chartEl);
@@ -26,6 +31,16 @@ export function initChartToolbar() {
         if (pctLabel) {
           pctLabel.textContent = btn.getAttribute('data-pct');
           pctLabel.className = 'chart-range-pct ' + btn.getAttribute('data-pct-cls');
+        }
+        // A button with no usable window (see _range_footer_data()) omits
+        // the data-footer-* attributes entirely -- leave the footer as-is
+        // rather than blanking it out to "null"/"undefined".
+        if (footerDate && btn.hasAttribute('data-footer-date')) {
+          footerDate.textContent = btn.getAttribute('data-footer-date');
+          footerHigh.textContent = 'High ' + btn.getAttribute('data-footer-high');
+          footerLow.textContent = 'Low ' + btn.getAttribute('data-footer-low');
+          footerPct.textContent = btn.getAttribute('data-footer-pct');
+          footerPct.className = 'footer-pct delta ' + btn.getAttribute('data-footer-pct-cls');
         }
       });
     });

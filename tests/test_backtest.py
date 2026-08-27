@@ -330,6 +330,86 @@ class TestPriceHistoryChart:
         option = _get_chart_option(html)
         assert option["dataZoom"][0]["start"] == 0.0
 
+    def test_recommendation_history_adds_markers_after_the_end_marker(self):
+        """Past real recommendations (storage.db.get_recommendation_
+        history's shape) render as extra markPoint.data entries on the
+        same "Price" line -- the end-of-line dot (index 0, see
+        test_price_line_series_shape_and_color) must stay first."""
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        series = self._price_series(n=60)
+        history = [
+            {"created_at": series[10]["date"] + "T12:00:00Z", "final_recommendation": "buy",
+             "final_confidence": 80, "price_at_run": series[10]["close"]},
+            {"created_at": series[30]["date"] + "T12:00:00Z", "final_recommendation": "sell",
+             "final_confidence": 65, "price_at_run": series[30]["close"]},
+        ]
+        html = price_history_chart(series, recommendation_history=history)
+        option = _get_chart_option(html)
+        price = next(s for s in option["series"] if s["name"] == "Price")
+        points = price["markPoint"]["data"]
+        assert len(points) == 3  # end marker + 2 recommendations
+        assert points[0]["coord"] == [59, series[-1]["close"]]
+        assert points[1]["coord"] == [10, series[10]["close"]]
+        assert points[1]["symbol"] == "triangle" and points[1]["symbolRotate"] == 0  # buy
+        assert points[2]["coord"] == [30, series[30]["close"]]
+        assert points[2]["symbol"] == "triangle" and points[2]["symbolRotate"] == 180  # sell
+
+    def test_recommendation_tooltip_text_rides_on_the_price_lines_own_data(self):
+        """A markPoint's own item-hover tooltip never fires on this chart
+        (axis-triggered with a cross pointer for the price line's own
+        crosshair -- see _recommendation_marker_points()'s docstring), so
+        the tooltip text is attached to the SAME per-index data object the
+        axis tooltip already reads for the "Price" series at that index,
+        not the markPoint entry itself."""
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        series = self._price_series(n=60)
+        history = [{"created_at": series[10]["date"] + "T12:00:00Z", "final_recommendation": "buy",
+                    "final_confidence": 80, "price_at_run": series[10]["close"]}]
+        html = price_history_chart(series, recommendation_history=history)
+        option = _get_chart_option(html)
+        price = next(s for s in option["series"] if s["name"] == "Price")
+        assert "recFmt" not in (price["data"][9] or {})
+        assert "BUY" in price["data"][10]["recFmt"]
+        assert "80% confidence" in price["data"][10]["recFmt"]
+        assert series[10]["date"] in price["data"][10]["recFmt"]
+
+    def test_recommendation_falls_back_to_series_close_when_price_at_run_missing(self):
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        series = self._price_series(n=60)
+        history = [{"created_at": series[15]["date"] + "T12:00:00Z", "final_recommendation": "hold",
+                    "final_confidence": 50, "price_at_run": None}]
+        html = price_history_chart(series, recommendation_history=history)
+        option = _get_chart_option(html)
+        price = next(s for s in option["series"] if s["name"] == "Price")
+        rec_point = price["markPoint"]["data"][1]
+        assert rec_point["coord"] == [15, series[15]["close"]]
+
+    def test_recommendation_outside_price_series_window_is_dropped_not_misplaced(self):
+        """A run from long before this chart's own price history starts
+        (e.g. after a data refetch trimmed the window) must not silently
+        land on some unrelated nearby day."""
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        series = self._price_series(n=60)
+        history = [{"created_at": "2019-01-01T12:00:00Z", "final_recommendation": "buy",
+                    "final_confidence": 80, "price_at_run": 50.0}]
+        html = price_history_chart(series, recommendation_history=history)
+        option = _get_chart_option(html)
+        price = next(s for s in option["series"] if s["name"] == "Price")
+        assert len(price["markPoint"]["data"]) == 1  # just the end marker
+
+    def test_empty_recommendation_history_matches_no_history_arg(self):
+        import dashboard.generate_dashboard as gd
+        gd._reset_chart_registry()
+        series = self._price_series(n=60)
+        html_with_empty = price_history_chart(series, recommendation_history=[])
+        gd._reset_chart_registry()
+        html_without = price_history_chart(series)
+        assert _get_chart_option(html_with_empty) == _get_chart_option(html_without)
+
 
 class TestSectionPriceChart:
     """The interactive price chart lives in its own top-level

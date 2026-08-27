@@ -197,3 +197,47 @@ class TestOutcomes:
         rows = temp_db.get_outcomes_report_data()
         assert rows[0]["ticker"] == "MSFT"
         assert rows[1]["ticker"] == "AAPL"
+
+
+class TestGetRecommendationHistory:
+    def test_returns_completed_runs_oldest_first(self, temp_db):
+        conn = temp_db.get_connection()
+        conn.execute("INSERT INTO runs (ticker, created_at, status, final_recommendation, final_confidence) "
+                     "VALUES ('AAPL', '2026-06-01T00:00:00Z', 'complete', 'sell', 60)")
+        newer_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        conn.execute("INSERT INTO runs (ticker, created_at, status, final_recommendation, final_confidence) "
+                     "VALUES ('AAPL', '2026-01-01T00:00:00Z', 'complete', 'buy', 80)")
+        older_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        conn.commit()
+        conn.close()
+        temp_db.create_outcome(older_id, 180.0)
+        temp_db.create_outcome(newer_id, 210.0)
+
+        rows = temp_db.get_recommendation_history("AAPL")
+        assert len(rows) == 2
+        assert rows[0]["final_recommendation"] == "buy"
+        assert rows[0]["price_at_run"] == pytest.approx(180.0)
+        assert rows[1]["final_recommendation"] == "sell"
+        assert rows[1]["price_at_run"] == pytest.approx(210.0)
+
+    def test_excludes_dry_runs_and_other_tickers(self, temp_db):
+        # A dry run never calls create_run() at all in the real app -- this
+        # simulates the two DB-visible cases that must still be excluded:
+        # a pending/failed row (never got a real judge recommendation) and
+        # a different ticker.
+        run_id = temp_db.create_run("AAPL")  # left at default status='pending'
+        temp_db.create_run("MSFT")
+
+        assert temp_db.get_recommendation_history("AAPL") == []
+        assert temp_db.get_recommendation_history("MSFT") == []
+
+    def test_missing_outcome_gives_null_price_not_dropped_row(self, temp_db):
+        # LEFT JOIN, not INNER JOIN -- a run that never reached
+        # create_outcome() must still appear (with price_at_run=None),
+        # not silently vanish from the history.
+        run_id = temp_db.create_run("AAPL")
+        temp_db.finalize_run(run_id, "hold", 55, 0.1)
+
+        rows = temp_db.get_recommendation_history("AAPL")
+        assert len(rows) == 1
+        assert rows[0]["price_at_run"] is None

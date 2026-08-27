@@ -14,6 +14,8 @@ import { initLlmExport } from './js/llm-export.js';
 import { initThemeToggle } from './js/theme-toggle.js';
 import { initInfoPopovers } from './js/info-popovers.js';
 import { initSubtabs } from './js/subtabs.js';
+import { initMobileTabbar } from './js/mobile-tabbar.js';
+import { initTableScrollHints } from './js/table-scroll-hint.js';
 
 function initAll() {
   initVizToggle();
@@ -22,6 +24,8 @@ function initAll() {
   initThemeToggle();
   initInfoPopovers();
   initSubtabs();
+  initMobileTabbar();
+  initTableScrollHints();
 }
 
 if (document.readyState === 'loading') {

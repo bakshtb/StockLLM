@@ -271,9 +271,19 @@ def main():
                 sys.exit(1)
             output_path = _resolve_output_path(args.output, f"{ticker}_dashboard.html")
 
+        # Past real recommendations for this ticker, if any (see
+        # storage/db.get_recommendation_history()) -- this command itself
+        # never runs the paid pipeline, but the ticker may already have
+        # real history from an earlier `check` run or a webapp session
+        # sharing the same DB_PATH. db.init_db() is idempotent (CREATE
+        # TABLE IF NOT EXISTS) -- safe to call even if this is the very
+        # first thing touching the DB.
+        db.init_db()
+        recommendation_history = db.get_recommendation_history(bundle.get("ticker", ""))
+
         os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
-            f.write(build_dashboard(bundle))
+            f.write(build_dashboard(bundle, recommendation_history=recommendation_history))
         ensure_vendored_assets(os.path.dirname(output_path) or ".")
         print(f"Dashboard written to: {output_path}")
 

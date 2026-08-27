@@ -157,6 +157,16 @@ def _run_job(job_id: str, ticker: str, dry_run: bool) -> None:
             pipeline_result = run_pipeline(run_id, ticker, bundle, starting_cost_usd=digest_cost)
             db.create_outcome(run_id, bundle["price"]["current_price"])
 
+        # Past real recommendations for this ticker, if any -- independent
+        # of whether *this* generation is itself a dry run. db.init_db()
+        # only ran synchronously in run_check() for a *non*-dry-run
+        # submission (see the `if not dry_run:` guard there); a dry run on
+        # a fresh install would otherwise hit "no such table: runs" here --
+        # init_db() is idempotent (CREATE TABLE IF NOT EXISTS), so calling
+        # it again unconditionally is cheap and safe either way.
+        db.init_db()
+        recommendation_history = db.get_recommendation_history(ticker)
+
         set_stage("Finalizing dashboard…")
         os.makedirs(OUTPUT_DIR, exist_ok=True)
         bundle_path = os.path.join(OUTPUT_DIR, f"{ticker}.json")
@@ -165,7 +175,7 @@ def _run_job(job_id: str, ticker: str, dry_run: bool) -> None:
 
         dashboard_name = f"{ticker}_dashboard.html"
         with open(os.path.join(OUTPUT_DIR, dashboard_name), "w", encoding="utf-8") as f:
-            f.write(build_dashboard(bundle, pipeline_result))
+            f.write(build_dashboard(bundle, pipeline_result, recommendation_history=recommendation_history))
         ensure_vendored_assets(OUTPUT_DIR)
 
         with _jobs_lock:

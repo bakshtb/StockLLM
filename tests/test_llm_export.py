@@ -92,6 +92,44 @@ class TestBuildLlmExportMarkdown:
         assert "A concise AI-written summary of recent news." in md
         assert "A concise AI-written summary of the latest filing." in md
 
+    def test_dry_run_bundle_uses_raw_proxy_text_not_digest(self):
+        bundle = {
+            "ticker": "TEST",
+            "proxy_raw": {"text": "Full DEF 14A excerpt here.", "filing_date": "2026-01-08"},
+            "proxy_digest": None,
+        }
+        md = build_llm_export_markdown(bundle)
+        assert "Full DEF 14A excerpt here." in md
+        assert "not summarized -- this was a dry run" in md
+
+    def test_full_run_bundle_prefers_proxy_digest_over_raw(self):
+        bundle = {
+            "ticker": "TEST",
+            "proxy_raw": {"text": "Raw excerpt that should not appear.", "filing_date": "2026-01-08"},
+            "proxy_digest": "A concise AI-written summary of the proxy statement.",
+        }
+        md = build_llm_export_markdown(bundle)
+        assert "A concise AI-written summary of the proxy statement." in md
+        assert "Raw excerpt that should not appear." not in md
+
+    def test_real_shaped_digests_do_not_crash(self):
+        # Every summarize_*() function (news/filings/proxy) actually returns
+        # a parsed-JSON dict like {"key_points": [...]}/{"key_facts": [...]},
+        # never a plain string -- the tests above all use a string mock,
+        # which doesn't exercise this. Appending a dict straight into the
+        # markdown parts list used to crash "\n".join() outright; this pins
+        # the real shape doesn't.
+        bundle = {
+            "ticker": "TEST",
+            "news_digest": {"key_facts": ["Revenue beat estimates by 5%"]},
+            "filings_digest": {"key_points": ["Guidance raised for FY2026"]},
+            "proxy_digest": {"key_points": ["CEO total compensation rose 12% YoY"]},
+        }
+        md = build_llm_export_markdown(bundle)
+        assert "Revenue beat estimates by 5%" in md
+        assert "Guidance raised for FY2026" in md
+        assert "CEO total compensation rose 12% YoY" in md
+
 
 class TestFieldNameCorrectnessAgainstRealFixture:
     """Regression tests for real field-name bugs caught during manual

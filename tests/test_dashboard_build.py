@@ -464,6 +464,45 @@ class TestPageTabs:
         assert sticky_top.find(class_="price-chart-wrap") is None
 
 
+class TestMobileTabbar:
+    """The Field mobile bottom tab bar (_mobile_tabbar()) -- a second,
+    curated way to reach the same 9 sidebar-nav panels on narrow screens.
+    Every group icon and chip is a click-proxy (see mobile-tabbar.js) onto
+    a real sidebar-nav data-target, so a stale target here would silently
+    point at nothing."""
+
+    def test_every_button_and_chip_targets_a_real_panel(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        group_btns = soup.find_all("button", class_="mobile-tabbar-btn")
+        chips = soup.find_all("button", class_="mobile-tabbar-chip")
+        assert group_btns, "no mobile-tabbar-btn group icons rendered"
+        assert chips, "no mobile-tabbar-chip secondary buttons rendered"
+        for btn in group_btns + chips:
+            target = btn["data-target"]
+            assert soup.find(attrs={"data-panel": target}) is not None, \
+                f"mobile tabbar button targets panel {target!r} but no element has that data-panel"
+
+    def test_one_group_active_by_default(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        active = soup.find_all("button", class_=lambda c: c and "mobile-tabbar-btn" in c.split() and "is-active" in c.split())
+        assert len(active) == 1
+
+    def test_every_sidebar_tab_reachable_from_some_group_or_chip(self, sample_bundle):
+        html = build_dashboard(sample_bundle)
+        soup = BeautifulSoup(html, "html.parser")
+        sidebar_targets = {
+            btn["data-target"]
+            for btn in soup.find(class_="sidebar-nav").find_all("button", class_="subtab-btn")
+        }
+        mobile_targets = {
+            btn["data-target"]
+            for btn in soup.find_all("button", class_=lambda c: c and ("mobile-tabbar-btn" in c.split() or "mobile-tabbar-chip" in c.split()))
+        }
+        assert sidebar_targets == mobile_targets
+
+
 class TestHeroBlock:
     """The hero price block (HANDOFF.md: dashboard UX pass) -- the one
     focal point the page should lead with before any scrolling."""
@@ -526,6 +565,34 @@ class TestMobileSafeTables:
     def test_mobile_card_list_css_present(self, sample_bundle):
         build_dashboard(sample_bundle)
         assert "content: attr(data-label)" in _css_source_text()
+
+
+class TestFilingsAndProxyDigest:
+    """section_filings() renders both the 10-K/10-Q/8-K digest and the
+    DEF 14A proxy digest, added as a second digest step alongside the
+    existing filings one (see data/fetch_proxy.py's summarize_proxy())."""
+
+    def test_proxy_digest_shown_when_present(self):
+        bundle = _minimal_bundle()
+        bundle["proxy_digest"] = {"key_points": ["CEO total compensation rose 12% YoY"]}
+        html = build_dashboard(bundle)
+        assert "Proxy digest" in html
+        assert "CEO total compensation rose 12" in html
+
+    def test_proxy_digest_absent_shows_fallback_note(self):
+        html = build_dashboard(_minimal_bundle())
+        assert "Proxy digest not generated" in html
+
+    def test_filings_digest_renders_as_bullet_list_not_python_repr(self):
+        # _digest_html() renders the real {"key_points": [...]} shape every
+        # summarize_*() function actually returns as a <ul>, not
+        # str(dict)'s literal "{'key_points': [...]}" repr -- found live
+        # while adding the proxy digest (same dict shape, same bug).
+        bundle = _minimal_bundle()
+        bundle["filings_digest"] = {"key_points": ["Guidance raised for FY2026"]}
+        html = build_dashboard(bundle)
+        assert "Guidance raised for FY2026" in html
+        assert "key_points" not in html
 
 
 def _minimal_bundle():

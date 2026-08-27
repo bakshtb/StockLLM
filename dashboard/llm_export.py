@@ -42,6 +42,24 @@ def _label(key: str) -> str:
     return key.replace("_", " ").replace("pct", "%").strip().capitalize()
 
 
+def _digest_markdown(digest) -> str:
+    """Every digest (news_digest/filings_digest/proxy_digest) is the parsed
+    JSON a summarize_*() function got back from its LLM call -- a dict like
+    {"key_points": [...]} or {"key_facts": [...]}, never a plain string.
+    Found live while adding the proxy digest: every call site here was
+    previously appending that dict straight into a list of markdown lines,
+    which crashes "\n".join() outright (TypeError: sequence item: expected
+    str instance, dict found) the first time a real (non-mocked) digest
+    reached this function -- existing tests only ever passed in a plain
+    string, never the real shape. Renders the actual list of points as a
+    real bullet list; falls back to str() for any other shape."""
+    if isinstance(digest, dict):
+        points = digest.get("key_points") or digest.get("key_facts")
+        if isinstance(points, list) and points:
+            return "\n".join(f"- {p}" for p in points)
+    return str(digest)
+
+
 def _kv_list(d: dict, skip=()) -> str:
     """Flat scalar fields of a dict as a bullet list -- callers handle any
     nested dict/list fields separately, explicitly, so nothing silently
@@ -233,7 +251,7 @@ def _section_news(bundle: dict) -> str:
     parts = []
     if digest:
         parts.append("### News digest (AI-summarized, from the full run)")
-        parts.append(digest)
+        parts.append(_digest_markdown(digest))
     else:
         parts.append("### Recent headlines (not summarized -- this was a dry run)")
         parts.append(_list_of_dicts_table(headlines, [
@@ -248,7 +266,7 @@ def _section_filings(bundle: dict) -> str:
     parts = []
     if digest:
         parts.append("### Filings digest (AI-summarized, from the full run)")
-        parts.append(digest)
+        parts.append(_digest_markdown(digest))
     else:
         parts.append("### Raw filing excerpts (not summarized -- this was a dry run)")
         for filing_type, filing in filings_raw.items():
@@ -257,6 +275,16 @@ def _section_filings(bundle: dict) -> str:
                 continue
             parts.append(f"\n#### {filing_type}")
             parts.append(text)
+
+    proxy_digest = bundle.get("proxy_digest")
+    proxy_raw = bundle.get("proxy_raw", {}) or {}
+    proxy_text = proxy_raw.get("text")
+    if proxy_digest:
+        parts.append("\n### Proxy (DEF 14A) digest (AI-summarized, from the full run)")
+        parts.append(_digest_markdown(proxy_digest))
+    elif proxy_text:
+        parts.append("\n### Raw DEF 14A excerpt (not summarized -- this was a dry run)")
+        parts.append(proxy_text)
     return "\n".join(parts)
 
 

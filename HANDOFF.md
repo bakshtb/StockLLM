@@ -2573,6 +2573,167 @@ StockLLM/
       verified before this session; verified instead against a synthetic
       bundle built for this purpose (not committed).
 
+65. **Closed out the six remaining items from the Field pass** (0.9.42) --
+    user gave an explicit ordered list. Each below in that order.
+    - **Mobile bottom tab bar**: the Field mock's own 5-icon bottom bar
+      assumed a much smaller tab set (Sheet/Price/Tests/Filings/Setup) than
+      this dashboard's real 9 tabs -- asked the user, who chose curated
+      5-icon groups (a real navigation redesign) over a flat 9-icon bar.
+      `_mobile_tabbar()` groups the 9 tabs into 5 (Price alone; Analyst+
+      Performance as "Research"; Backtests alone as "Tests"; Financials+
+      Ownership+Dividends&More as "Financials"; News+Filings as "Docs");
+      a multi-member group also shows a secondary chip row
+      (`.mobile-tabbar-chips`) so every original tab stays reachable.
+      Every button -- icon or chip -- is a pure click-proxy onto the real,
+      existing `.subtabs.sidebar-nav .subtab-btn` for that panel
+      (`webui/src/js/mobile-tabbar.js`); no panel-swap logic duplicated.
+      Hand-authored Lucide-style SVG icons, matching the existing topbar
+      icon pattern (no icon library). One real bug found live: the chip
+      row's parent (`.mobile-tabbar-chip-rail`) was left `display:none` on
+      mobile (only the chip row itself was made visible) -- a
+      `display:none` ancestor removes the whole subtree from rendering
+      regardless of a descendant's own `display` value, so the chips
+      computed `display:flex` correctly and still didn't render (0×0
+      bounding rect) until the rail got `display:contents` too.
+    - **Light theme**: Field was dark-only pending a real light variant
+      (item 64). Derived one systematically rather than reusing the old
+      Industry light tokens as-is (that palette's `--surface-1` equals
+      `--page-plane` by design -- "cards are line drawings, not raised
+      planes" -- which would give Field's tonal panels zero contrast
+      against the ground, and `--surface-2`/`--accent-strong` don't exist
+      in it at all). New light `:root` block: `--surface-1`/`-2` reuse the
+      existing accent-100/200 tints (mirroring how dark Field's own
+      surfaces are literally accent-900/800-adjacent blues), `--accent`
+      stays the base accent value, new `--accent-strong` = accent-700 (one
+      step *darker*, the inverse of dark theme's "one step lighter" rule),
+      `--border`/`--baseline` opacities matched to dark Field's own for
+      symmetry. Diverge/status colors reused unchanged (already correct
+      for a light ground). Re-enabled: `THEME_INIT_SCRIPT` restored
+      (reads `localStorage` before first paint), `<html data-theme="dark">`
+      hardcoding removed, `#theme-toggle` button restored to the topbar.
+      One theme-scoped bug found live: `.mobile-tabbar`'s surface color was
+      the mock's literal `#22364a` hex (dark Field's own `--surface-1`
+      value) hardcoded rather than `var(--surface-1)` -- the bar stayed
+      dark even after toggling to light. Fixed to use the token; verified
+      by toggling both directions and re-screenshotting every tab.
+    - **Hero chart footer strip re-sync**: previously computed once
+      server-side for the default 1Y window and never updated on a range
+      click (flagged as a known gap in item 64 itself). Every range button
+      now carries its own `data-footer-date/-high/-low/-pct/-pct-cls`
+      attributes (`_range_footer_data()`, same start-index math as the
+      existing `data-pct` attribute), and `chart-toolbar.js`'s click
+      handler swaps all four `.hero-chart-footer` spans alongside the
+      existing zoom/pct-badge logic -- same "server computes every
+      variant, client only swaps" split already used for the pct badge.
+    - **Two pre-existing bugs from item 64's own findings, now fixed**:
+      (1) the Analyst "Recent rating actions" table's real (not
+      simulated) horizontal overflow had no visual signal that it was
+      scrollable -- added `table-scroll-hint.js`, which toggles
+      `.is-scrollable`/`.is-scrolled-to-end` from an actual `scrollWidth`
+      measurement (re-checked on every tab switch, since a table inside a
+      not-yet-active panel measures 0×0 while hidden) and a "Scroll for
+      more →" hint that appears/disappears accordingly -- not a redesign
+      of the table itself. (2) `grouped_bar_horizontal()`'s near-zero
+      bars (e.g. -0.4%/-2.7%) had overlapping outside-end labels -- fixed
+      with ECharts' own `labelLayout: {moveOverlap: "shiftY"}` per series
+      (a one-line declarative option, not a hand-rolled position/distance
+      workaround like the two label bugs in item 63).
+    - **DEF 14A digest**: `data/fetch_proxy.py` now mirrors
+      `fetch_filings.py`'s two-stage split -- `fetch_proxy_raw()` gains a
+      `digest_text` window (reuses `MAX_FILING_CHARS_FOR_DIGEST`, same
+      constant the filings digest uses) and a new `summarize_proxy()`
+      (Qwen, reuses `MODEL_FILINGS_DIGEST` rather than a near-duplicate
+      constant). Wired into `data/bundle.py`'s Stage 2 alongside the
+      filings/news digests, with its own cost-tracking entry and
+      `proxy_digest` bundle key; `digest_text` stripped back out before
+      bundling, same as filings. Displayed in `section_filings()` (now
+      shows both digests) and `llm_export.py`'s filings section.
+      **A real, severe bug found in the process, not introduced by it**:
+      every digest (`news_digest`/`filings_digest`, and now
+      `proxy_digest`) is the parsed-JSON dict a `summarize_*()` function
+      actually gets back (`{"key_points": [...]}` / `{"key_facts":
+      [...]}`), never a plain string -- but every existing render site in
+      both `generate_dashboard.py` (`esc(digest)`, silently printing
+      Python's `str(dict)` repr) and `llm_export.py` (`parts.append(digest)`,
+      which crashes `"\n".join()` outright with a `TypeError`) assumed a
+      string, because every existing test mocked the digest as one. This
+      means the "Export for AI Chat" button would have crashed on any
+      real (non-dry-run, non-mocked) bundle the moment a real
+      `filings_digest`/`news_digest` reached it -- never caught because
+      no test exercised the real shape. Fixed with a shared
+      `_digest_html()`/`_digest_markdown()` helper in each file (renders
+      `key_points`/`key_facts` as a real bullet list, falls back to
+      `str()`/`esc()` for any other shape) applied to all three digests;
+      regression tests added with the real dict shape, not a string mock,
+      in both `test_dashboard_build.py` and `test_llm_export.py`.
+    - **Recommendation-history markers on the hero price chart**: user's
+      own framing -- "a record of suggestions we got on no dry runs, if
+      not empty we will show it on a timepoints in the graph on top
+      itself." Investigated first rather than assumed: `storage/db.py`
+      already has exactly this record -- `runs` (ticker, created_at,
+      final_recommendation, final_confidence, status) written only for a
+      real (non-dry-run) pipeline run (`create_run()`/`finalize_run()`,
+      called from `main.py check` and `webapp/app.py`'s `_run_job`, never
+      from a dry-run path) plus `outcomes` (price_at_run). New
+      `get_recommendation_history(ticker)`: `status='complete'` only
+      (excludes pending/failed, which never got a real judge verdict),
+      LEFT JOINs outcomes (a run that never reached `create_outcome()`
+      still appears, with `price_at_run=None`, rather than silently
+      vanishing), oldest first.
+      - **Chart**: each past recommendation renders as an extra
+        `markPoint.data` entry on the existing "Price" line (not a
+        separate scatter series) -- shape+color by verdict (buy: green
+        triangle-up, sell: red triangle-down, hold: gray diamond,
+        insufficient_data: amber square, reusing `_REC_STYLE`'s existing
+        good/critical/neutral/warning classes), at the price actually
+        recorded for that run (`price_at_run`, not re-derived from the
+        current price series -- falls back to that day's close only if
+        `price_at_run` is null). `_nearest_date_index()` maps a run's
+        `created_at` to the closest trading day in the chart's own
+        `price_series` (a run rarely lands exactly on one), capped at a
+        7-day gap -- a run from outside the chart's retained price
+        history is dropped, not silently misplaced on some unrelated day.
+      - **Tooltip, a real bug found and fixed live, not assumed working
+        from the code**: this chart's tooltip is axis-triggered with a
+        cross `axisPointer` (the price line's own crosshair-on-hover) --
+        hovering a markPoint's exact center pixel (verified via
+        `echarts.getInstanceByDom(...).convertToPixel()`, not guessed)
+        still showed only the axis tooltip's plain "Price: $X", never the
+        marker's own content. An axis-triggered cross pointer captures
+        pointer events across the whole plot area, and a markPoint's
+        independent item-hover tooltip never fires while that's active.
+        Fixed by riding the marker's text on the SAME per-index data
+        object the axis tooltip already reads for the price line itself
+        (`closes[idx]["recFmt"]`, set by `_recommendation_marker_points()`)
+        rather than the markPoint entry's own (never-shown) tooltip
+        content; `hydrate.js`'s `genericTooltipFormatter()` appends
+        `d.recFmt` as an extra line when present. Confirmed by hovering
+        the exact marker pixel and screenshotting the real tooltip
+        ("Price: $242.52 / AI recommendation (2026-01-29): SELL · 71%
+        confidence"), not just checking the option JSON.
+      - **Wiring**: `build_dashboard()` gained an optional
+        `recommendation_history` parameter (same shape as the existing
+        `pipeline_result` parameter -- not baked into the bundle itself,
+        since it's ADELE's own history, not external research data).
+        `webapp/app.py`'s `_run_job` fetches it unconditionally (even for
+        a dry-run generation -- a ticker's PAST real history should still
+        show even when TODAY'S generation is just a preview), calling
+        `db.init_db()` first since that only ran synchronously for a
+        non-dry-run submission in `run_check()` and a fresh install's
+        first-ever dry run would otherwise hit "no such table: runs".
+        `main.py`'s standalone `dashboard` command does the same,
+        keyed off `bundle.get("ticker")` so it works for both its
+        ticker-fetch and JSON-file-source paths.
+    - **Verified for real**: full pytest suite green (525 passed;
+      new coverage in `test_backtest.py` for the markers/tooltip/nearest-
+      date-matching, `test_storage_db.py` for `get_recommendation_history`,
+      `test_dashboard_build.py`/`test_llm_export.py` for the digest
+      dict-rendering fix and the new mobile tabbar), plus Playwright
+      screenshots/toggling for every item above -- the mobile chip-rail
+      fix, the light-theme mobile-bar fix, and the marker-tooltip fix were
+      all found by actually looking at (or hovering) the rendered page,
+      not assumed correct from the option JSON alone.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

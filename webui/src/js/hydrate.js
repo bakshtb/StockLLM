@@ -106,7 +106,17 @@ function genericTooltipFormatter(params) {
       var d = p.data;
       var name = (d && typeof d === 'object' && d.name) || p.seriesName || p.name || '';
       var val = (d && typeof d === 'object' && d.fmt !== undefined) ? d.fmt : p.value;
-      return name ? (name + ': ' + val) : String(val);
+      var line = name ? (name + ': ' + val) : String(val);
+      // A past AI recommendation at this same date (see generate_dashboard.py's
+      // _recommendation_marker_points()) -- its own markPoint symbol has no
+      // usable hover tooltip of its own, since this chart's axis-triggered
+      // cross pointer (the price line's own crosshair) captures pointer
+      // events across the whole plot area and swallows a markPoint's
+      // independent item-hover tooltip (found live, not assumed). Riding
+      // along on the price line's own per-index data instead works because
+      // that's what this axis-trigger tooltip already reads.
+      if (d && typeof d === 'object' && d.recFmt) line += '<br/>' + d.recFmt;
+      return line;
     });
   return lines.join('<br/>');
 }

@@ -10,22 +10,24 @@ raw filing text (incl. 8-K earnings exhibits), raw proxy text, raw news
 article text, optional FMP DCF valuation + PEG ratio, optional Finnhub
 insider sentiment + analyst recommendation trend, a fixed set of well-known
 technical-strategy backtests against the ticker's own price history, filings
-digest, and news digest into a single structured "research bundle".
-This bundle is the ONLY source of truth the LLM reasoning agents
+digest, proxy digest, and news digest into a single structured "research
+bundle". This bundle is the ONLY source of truth the LLM reasoning agents
 (bull/bear/skeptic/judge) are allowed to reason from -- see
 agents/prompts/*.md for the grounding instructions.
 
 Two clearly separated stages:
-  1. RAW DATA -- everything above except the two digests. All deterministic,
-     free, no LLM calls. Runs in FULL every time, including --dry-run.
-  2. DIGESTS -- filings_digest (Qwen) and news_digest (Gemini) summarize the
-     raw filing text / raw article text above -- see config.MODEL_FILINGS_DIGEST
-     and config.MODEL_NEWS_DIGEST. This is the only stage that costs money
-     and requires GEMINI_API_KEY + QWEN_API_KEY. Controlled by run_digests;
-     skipped entirely in --dry-run, but the raw material it would summarize
-     is still present in the bundle either way. The filings digest reads a
-     larger window of each filing than `filings_raw` below carries (see
-     data/fetch_filings.py's `digest_text` field) -- that larger window
+  1. RAW DATA -- everything above except the three digests. All
+     deterministic, free, no LLM calls. Runs in FULL every time, including
+     --dry-run.
+  2. DIGESTS -- filings_digest/proxy_digest (Qwen) and news_digest (Gemini)
+     summarize the raw filing/proxy text / raw article text above -- see
+     config.MODEL_FILINGS_DIGEST and config.MODEL_NEWS_DIGEST. This is the
+     only stage that costs money and requires GEMINI_API_KEY + QWEN_API_KEY.
+     Controlled by run_digests; skipped entirely in --dry-run, but the raw
+     material it would summarize is still present in the bundle either way.
+     The filings/proxy digests each read a larger window than `filings_raw`/
+     `proxy_raw` below carry (see data/fetch_filings.py and
+     data/fetch_proxy.py's own `digest_text` field) -- that larger window
      never itself lands in the bundle, only its summary does.
 """
 
@@ -50,7 +52,7 @@ from data.fetch_institutional import fetch_institutional_ownership
 from data.fetch_filings import fetch_filings_raw, summarize_filing
 from data.fetch_form144 import fetch_form144_notices
 from data.fetch_beneficial_ownership import fetch_beneficial_ownership
-from data.fetch_proxy import fetch_proxy_raw
+from data.fetch_proxy import fetch_proxy_raw, summarize_proxy
 from data.fetch_fmp_valuation import fetch_fmp_valuation
 from data.fetch_finnhub_signals import fetch_finnhub_signals
 from backtest.engine import run_backtests
@@ -100,6 +102,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True, on_stage=None) 
 
     # --- Stage 2: digests, only when run_digests=True (costs money, needs API key) ---
     filings_digest = {"digest": None, "note": "Skipped (dry run)."}
+    proxy_digest = {"digest": None, "note": "Skipped (dry run)."}
     news_digest = {"digest": None, "note": "Skipped (dry run)."}
 
     if run_digests:
@@ -112,6 +115,15 @@ def build_research_bundle(ticker: str, run_digests: bool = True, on_stage=None) 
                 "input_tokens": filings_digest.get("input_tokens", 0),
                 "output_tokens": filings_digest.get("output_tokens", 0),
                 "model": filings_digest.get("model", MODEL_FILINGS_DIGEST),
+            })
+
+        proxy_digest = summarize_proxy(proxy_raw)
+        if proxy_digest.get("cost_usd"):
+            digest_calls.append({
+                "name": "proxy_digest", "cost_usd": proxy_digest["cost_usd"],
+                "input_tokens": proxy_digest.get("input_tokens", 0),
+                "output_tokens": proxy_digest.get("output_tokens", 0),
+                "model": proxy_digest.get("model", MODEL_FILINGS_DIGEST),
             })
 
         news_digest = summarize_news(news_articles_raw)
@@ -131,6 +143,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True, on_stage=None) 
         filing_type: {k: v for k, v in filing.items() if k != "digest_text"}
         for filing_type, filing in filings_raw.items()
     }
+    proxy_raw_for_bundle = {k: v for k, v in proxy_raw.items() if k != "digest_text"}
 
     bundle = {
         "ticker": ticker,
@@ -153,12 +166,13 @@ def build_research_bundle(ticker: str, run_digests: bool = True, on_stage=None) 
         "filings_raw": filings_raw_for_bundle,      # raw text for latest 10-K, 10-Q, AND 8-K (incl. earnings exhibit), no LLM
         "form144_notices": form144,                # proposed insider sales (leading signal), no LLM
         "beneficial_ownership": beneficial_ownership,  # 13D/13G >5% stakes, active vs passive, no LLM
-        "proxy_raw": proxy_raw,                    # raw DEF 14A text (comp/governance), no LLM
+        "proxy_raw": proxy_raw_for_bundle,          # raw DEF 14A text (comp/governance), no LLM
         "fmp_valuation": fmp_valuation,             # DCF fair value + PEG ratio, optional, no LLM
         "finnhub_signals": finnhub_signals,         # insider sentiment (MSPR) + analyst rec trend, optional, no LLM
         "backtests": backtests,                     # fixed well-known strategies vs. real price history, no LLM
         "news_digest": news_digest.get("digest"),
         "filings_digest": filings_digest.get("digest"),
+        "proxy_digest": proxy_digest.get("digest"),
         "data_notes": [
             n for n in [
                 fundamentals.get("note"),
@@ -169,7 +183,7 @@ def build_research_bundle(ticker: str, run_digests: bool = True, on_stage=None) 
                 *[f.get("note") for f in filings_raw.values()],
                 form144.get("note"), beneficial_ownership.get("note"), proxy_raw.get("note"),
                 fmp_valuation.get("note"), finnhub_signals.get("note"), backtests.get("note"),
-                filings_digest.get("note"), news_digest.get("note"),
+                filings_digest.get("note"), proxy_digest.get("note"), news_digest.get("note"),
             ] if n
         ],
     }

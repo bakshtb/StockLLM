@@ -35,24 +35,64 @@
   .rec-top { flex-direction: column; align-items: flex-start; }
 
   /* Sidebar: a sticky vertical panel makes no sense once .dashboard-body
-     collapses to one column above a long scroll of panels -- becomes a
-     horizontally-scrolling pill row instead (the same pattern the old
-     top tab bar used pre-Field), not the Field mock's five-icon bottom
-     tab bar, which would need a curated icon-per-section mapping this
-     dashboard's real 9-tab set doesn't have a designed equivalent for.
-     Every tab stays reachable; see HANDOFF.md for this scoped-down
-     choice. */
+     collapses to one column above a long scroll of panels. Replaced by the
+     Field mock's own bottom tab bar (below) -- curated into 5 groups since
+     this dashboard's real 9 tabs don't match the mock's own smaller set;
+     see _mobile_tabbar() in generate_dashboard.py. The desktop sidebar
+     itself is just hidden here, not removed -- it's still the thing every
+     .mobile-tabbar-btn/-chip click proxies onto (see mobile-tabbar.js). */
   .dashboard-body { grid-template-columns: 1fr; padding: 0 10px 16px; }
-  .subtabs.sidebar-nav {
-    flex-direction: row; flex-wrap: nowrap; overflow-x: auto;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none;
-    position: static; padding: 4px; gap: 2px;
+  .subtabs.sidebar-nav { display: none; }
+  /* display:contents, not flex/block -- the rail itself should generate no
+     box of its own (each .mobile-tabbar-chips child is already
+     position:fixed and positions itself against the viewport); a
+     display:none ancestor would otherwise remove the whole subtree from
+     rendering regardless of the children's own display value -- found live,
+     the chip row was computing display:flex correctly and still not
+     rendering (0x0 bounding rect) until this was fixed. */
+  .mobile-tabbar-chip-rail { display: contents; }
+
+  /* Bottom tab bar: fixed (not sticky -- needs to stay pinned to the
+     viewport regardless of which ancestor is scrolling), Field's own
+     spec (surface fill, 19px icons, 9px uppercase labels) -- --surface-1
+     rather than the mock's own literal #22364a, since that hex is the
+     *dark* theme's own surface-1 value; hardcoding it made the bar stay
+     dark even after the light theme (tokens.css) shipped, found live by
+     actually toggling. The page needs matching bottom padding so the
+     fixed bar never covers the footer disclaimer text at the bottom of a
+     scroll -- see .wrap below. */
+  .mobile-tabbar {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: var(--surface-1); padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
   }
-  .subtabs.sidebar-nav::-webkit-scrollbar { display: none; }
-  .subtabs.sidebar-nav .subtab-btn {
-    flex-shrink: 0; border-radius: var(--radius-pill); padding: 7px 14px;
+  .mobile-tabbar-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: none; padding: 4px 2px; cursor: pointer;
+    color: var(--text-muted);
+    font-family: var(--font-heading); font-weight: 600; font-size: 9px;
+    letter-spacing: .06em; text-transform: uppercase;
   }
-  .subtabs.sidebar-nav .subtab-btn::before { display: none; }
+  .mobile-tabbar-btn.is-active { color: var(--accent); }
+
+  /* Chip rail: sits just above the bottom bar, only for a group with more
+     than one member tab -- hidden until that group's icon is tapped. */
+  .mobile-tabbar-chips {
+    display: none; position: fixed; left: 0; right: 0; bottom: 58px; z-index: 39;
+    gap: 6px; padding: 8px 10px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; background: var(--surface-1);
+  }
+  .mobile-tabbar-chips::-webkit-scrollbar { display: none; }
+  .mobile-tabbar-chips.is-active { display: flex; }
+  .mobile-tabbar-chip {
+    flex-shrink: 0; font-family: var(--font-heading); font-weight: 600; font-size: 12.5px;
+    border-radius: var(--radius-pill); border: none; background: var(--surface-2);
+    color: var(--text-primary); padding: 6px 14px; cursor: pointer;
+  }
+  .mobile-tabbar-chip.is-active { background: var(--accent); color: var(--page-plane); }
+
+  /* Room for the fixed bottom bar so it never overlaps the footer
+     disclaimer text at the end of a scroll. */
+  footer.disclaimer { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
 
   /* Dense multi-column tables (5-7 columns is common here -- rating
      actions, insider transactions, institutional holders) are cramped or
