@@ -413,10 +413,11 @@ class TestPriceHistoryChart:
 
 class TestSectionPriceChart:
     """The interactive price chart lives in its own top-level
-    section_price_chart(), promoted out of section_price_technicals to
-    always-visible above the tab bar (see build_dashboard()) -- user
-    feedback, a phone stock app reference: price + chart always at the
-    top, tabs after."""
+    section_price_chart(), separate from section_price_technicals --
+    build_dashboard() places its output at the top of the "Price &
+    Technicals" tab (moved there from an always-visible hero placement:
+    user feedback -- with it visible on every tab, switching tabs didn't
+    read as an obvious change)."""
 
     def test_missing_backtests_key_omits_history_chart_not_crash(self):
         html = section_price_chart({"price": {}})

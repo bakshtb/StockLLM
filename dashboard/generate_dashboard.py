@@ -1690,17 +1690,22 @@ def _consensus_panel(bundle):
 </div>"""
 
 
-def section_hero(bundle, pipeline_result=None, recommendation_history=None):
+def section_hero(bundle, pipeline_result=None):
     """
     The one focal point the page leads with -- current price at true hero
     size (dataviz skill spec: >=48px, same sans as everything else, exactly
-    one per view) plus its 20-day and 1-year moves, the always-visible
-    price chart, and condensed Verdict/Consensus teasers (the full detail
-    behind both stays further down the page, unabridged).
+    one per view) plus its 20-day and 1-year moves, and condensed
+    Verdict/Consensus teasers (the full detail behind both stays further
+    down the page, unabridged).
 
-    recommendation_history: optional, see section_price_chart() -- past
-    real (non-dry-run) recommendations for this ticker, plotted as markers
-    on the price chart if non-empty.
+    The interactive price chart itself is NOT here -- it used to be
+    always-visible in this same panel, but user feedback: with it visible
+    on every tab, switching tabs didn't read as an obvious change (the
+    whole top of the page stayed identical, only the panel below the tab
+    bar changed). Moved into the "Price & Technicals" tab's own content
+    instead (see build_dashboard()), so it now only shows on that one tab
+    and disappears -- an intentional, visible cue -- the moment you switch
+    to any other one.
     """
     ticker = esc(bundle.get("ticker", "?"))
     price = bundle.get("price", {}) or {}
@@ -1709,8 +1714,6 @@ def section_hero(bundle, pipeline_result=None, recommendation_history=None):
     pct_1y = price.get("pct_change_1y")
 
     dryrun_html = "" if pipeline_result else '<span class="hero-dryrun">Dry run · no AI verdict in this bundle</span>'
-
-    chart_html = section_price_chart(bundle, recommendation_history=recommendation_history)
 
     return f"""
 <div class="hero">
@@ -1727,7 +1730,6 @@ def section_hero(bundle, pipeline_result=None, recommendation_history=None):
         </div>
         {dryrun_html}
       </div>
-      {chart_html}
     </div>
     <div class="hero-side-col">
       {_verdict_panel(bundle, pipeline_result)}
@@ -2859,11 +2861,17 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None, recommend
     # they were just outside the tab-switching entirely. Scoping them to
     # the one tab they actually belong with means every other tab
     # (Analyst, Financials, ...) shows only its own content when clicked.
-    # The interactive chart itself (section_price_chart) is NOT part of
-    # this tab -- see its own placement below, promoted to always-visible
-    # above the tab bar per later user feedback (a phone stock app
-    # reference: price + chart always at the top, tabs after).
-    price_technicals_tab = section_kpis(bundle) + section_at_a_glance(bundle) + section_price_technicals(bundle)
+    # The interactive chart itself (section_price_chart) IS part of this
+    # tab, at the top -- it used to be promoted to always-visible above the
+    # tab bar (a phone stock app reference: price + chart always at the
+    # top, tabs after), but later user feedback reversed that: with the
+    # chart visible on every tab, switching tabs didn't read as an obvious
+    # change. Scoping it to this one tab means it appears/disappears with
+    # the tab switch, the same visible cue section_hero()'s own docstring
+    # explains for why KPIs/At a Glance already moved down here earlier.
+    chart_card_html = section_price_chart(bundle, recommendation_history=recommendation_history)
+    chart_card_html = f'<div class="card">{chart_card_html}</div>' if chart_card_html else ""
+    price_technicals_tab = chart_card_html + section_kpis(bundle) + section_at_a_glance(bundle) + section_price_technicals(bundle)
     # Index order below is load-bearing: _mobile_tabbar()'s curated groups
     # reference tabs by position (e.g. Analyst=1, Performance=3), matching
     # subtabs()'s own "main-{i}" panel ids -- reordering this list requires
@@ -2882,26 +2890,24 @@ def build_dashboard(bundle: dict, pipeline_result: dict | None = None, recommend
     main_tabs_bar, main_tabs_panels = subtabs("main", main_tab_defs, bar_class="sidebar-nav")
     mobile_tabbar_html = _mobile_tabbar(main_tab_defs)
     ai_section = section_ai_recommendation(bundle, pipeline_result) if pipeline_result else ""
-    # Must be computed here, before the drain below -- not called inline
-    # inside the return f-string like it originally was (section_hero()
-    # itself calls section_price_chart(), a chart-registering function, so
-    # it's just as subject to this as every other chart-registering call
-    # used to be when it lived directly in the f-string). _drain_chart_
-    # registry() resets register_chart()'s id counter back to 0 as a side
-    # effect (see _reset_chart_registry()); calling a chart-registering
-    # function *after* that point silently collides with an id already
-    # baked into earlier HTML (both end up "chart-1"), and its actual
-    # option data -- serialized into charts_json below -- never includes
-    # the later call at all, since charts_json is already computed by
-    # then. The real, symptom-only-visible-by-inspecting-the-rendered-SVG
-    # bug this caused: the price chart's container silently got some
-    # *other* chart's option rendered into it instead of its own, while
-    # still ending up marked is-hydrated (setOption() didn't error, it
-    # just drew the wrong thing) -- caught by inspecting the actual SVG
-    # paths and window.__CHARTS__ entry for that container id, not by
-    # the shallow "is the container hydrated" check that looked fine.
-    hero_html = section_hero(bundle, pipeline_result, recommendation_history=recommendation_history)
+    # section_hero() itself registers no charts any more (the price chart
+    # moved into price_technicals_tab above, see its own comment) -- no
+    # ordering constraint against the drain below the way there used to
+    # be. Still computed as its own variable, not inlined into the return
+    # f-string, purely for readability alongside every other section here.
+    #
+    # The drain itself is still order-sensitive for whichever *does*
+    # register charts (price_technicals_tab, main_tab_defs's other
+    # sections): _drain_chart_registry() resets register_chart()'s id
+    # counter to 0 as a side effect (see _reset_chart_registry()), so any
+    # chart-registering call made *after* this point would silently
+    # collide with an id already baked into earlier HTML (both "chart-1"),
+    # its real option data never making it into charts_json below. A real
+    # bug of exactly this shape hit the price chart once already when it
+    # lived inside section_hero() and section_hero() was called after the
+    # drain -- see git history / HANDOFF.md for the full account.
     charts_json = json.dumps(_drain_chart_registry())
+    hero_html = section_hero(bundle, pipeline_result)
     # Base64, not raw/escaped text: a <script> tag's content is parsed as
     # raw text by the HTML parser regardless of `type`, looking only for a
     # literal "</script" terminator -- base64's alphabet can never contain

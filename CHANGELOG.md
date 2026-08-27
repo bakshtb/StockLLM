@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.43
+
+- Change: the interactive price chart moved out of the always-visible
+  hero and into the "Price & Technicals" tab's own panel -- it now only
+  shows on that one tab and disappears the moment you switch to any
+  other, an intentional, visible cue that the tab actually changed. The
+  hero itself (price, 20D/1Y deltas, Verdict/Consensus teasers) stays
+  visible on every tab, unchanged. See HANDOFF.md item 66.
+
 ## 0.9.42
 
 - Add: closed out the six remaining items from the Field pass -- a

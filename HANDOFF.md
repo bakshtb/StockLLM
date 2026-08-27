@@ -2734,6 +2734,37 @@ StockLLM/
       all found by actually looking at (or hovering) the rendered page,
       not assumed correct from the option JSON alone.
 
+66. **Moved the interactive price chart out of the always-visible hero,
+    into the "Price & Technicals" tab's own panel** (0.9.43) -- explicit
+    user request: with the chart visible on every tab (item 63's own
+    change, itself a reversal of an even earlier "chart inside the tab"
+    layout), switching tabs didn't read as an obvious change -- the whole
+    top of the page stayed identical, only the panel below the sidebar
+    changed. `section_hero()` no longer calls `section_price_chart()` at
+    all (down to just identity/price/delta-stack/dry-run marker +
+    Verdict/Consensus teasers); `build_dashboard()` now prepends the
+    chart, wrapped in a plain `.card`, to `price_technicals_tab` --
+    exactly the same "scope it to the one tab it belongs with" move KPIs/
+    At a Glance already went through earlier (see that comment in
+    `build_dashboard()`, still accurate, now joined by the chart).
+    `section_hero()` no longer registers any chart at all, so the old
+    "must compute hero_html before the registry drain" ordering
+    requirement (a real historical bug class, see item 63) no longer
+    applies to it -- the comment explaining that was rewritten rather
+    than left stale, and now points at `price_technicals_tab`'s own
+    (earlier, already-correct) chart registration instead. No CSS changes
+    needed: `.price-chart-wrap`/`.hero-chart-footer`/`.chart-toolbar` were
+    already standalone classes, not `.hero-price-panel`-scoped selectors,
+    so the chart carries its own look wherever it's placed; `.hero-row`'s
+    existing `align-items: stretch` handles the now-shorter left column
+    automatically, no visible gap against the taller Verdict/Consensus
+    column. Verified for real: full pytest suite green (527 passed; new
+    `TestPriceChartPlacement` in `test_dashboard_build.py` confirms the
+    chart is inside `data-panel="main-0"` and absent from every other
+    panel and from `.hero`), plus Playwright screenshots of a real tab
+    switch on both desktop and the mobile bottom-tab-bar, confirming the
+    chart visibly appears/disappears exactly as intended.
+
 ## Known limitations (stated honestly to the user already — don't silently "fix"
 ## these by faking data; if addressing them, do it for real or flag the tradeoff)
 

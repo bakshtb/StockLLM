@@ -452,11 +452,10 @@ class TestPageTabs:
         }
         assert expected_labels <= labels
         # Only the topbar itself is sticky -- the tab bar and its panels
-        # both live in .wrap, below the always-visible price chart, not
-        # inside .sticky-top (that would make the whole page's height
-        # sticky, or -- for the chart specifically -- fight with the
-        # user's own request that price+chart stay above the tabs, not
-        # collapse into the fixed header).
+        # both live in .wrap, not inside .sticky-top (that would make the
+        # whole page's height sticky). The interactive price chart lives
+        # inside the "Price & Technicals" tab panel now (see
+        # build_dashboard()), not the sticky topbar either.
         sticky_top = soup.find("div", class_="sticky-top")
         assert sticky_top.find("div", class_=lambda c: c and "page-tabs" in c.split()) is None
         assert soup.find(id="sec-price") is not None
@@ -501,6 +500,40 @@ class TestMobileTabbar:
             for btn in soup.find_all("button", class_=lambda c: c and ("mobile-tabbar-btn" in c.split() or "mobile-tabbar-chip" in c.split()))
         }
         assert sidebar_targets == mobile_targets
+
+
+class TestPriceChartPlacement:
+    """The interactive price chart moved out of the always-visible hero
+    and into the "Price & Technicals" tab's own panel (main-0) -- user
+    feedback: with it visible on every tab, switching tabs didn't read as
+    an obvious change. See section_hero()'s and build_dashboard()'s own
+    docstrings/comments for the full history (it was *previously* moved
+    the other way, into the hero, for the opposite reason)."""
+
+    def _bundle_with_price_series(self):
+        bundle = _minimal_bundle()
+        bundle["backtests"] = {"price_series": [
+            {"date": f"2026-01-{d:02d}", "open": 100.0, "high": 101.0, "low": 99.0, "close": 100.0 + d}
+            for d in range(1, 11)
+        ]}
+        return bundle
+
+    def test_chart_not_in_hero(self):
+        html = build_dashboard(self._bundle_with_price_series())
+        soup = BeautifulSoup(html, "html.parser")
+        hero = soup.find("div", class_="hero")
+        assert hero.find(class_="price-chart-wrap") is None
+
+    def test_chart_inside_price_technicals_panel(self):
+        html = build_dashboard(self._bundle_with_price_series())
+        soup = BeautifulSoup(html, "html.parser")
+        panel = soup.find(attrs={"data-panel": "main-0"})
+        assert panel is not None
+        assert panel.find(class_="price-chart-wrap") is not None
+        # Not in any other tab's panel.
+        for other in ["main-1", "main-2", "main-3", "main-4", "main-5", "main-6", "main-7", "main-8"]:
+            other_panel = soup.find(attrs={"data-panel": other})
+            assert other_panel.find(class_="price-chart-wrap") is None
 
 
 class TestHeroBlock:
